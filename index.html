@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="F90 CARD - متجرك للمنتجات الرقمية">
+  <title>F90 CARD | اف تسعين كارد</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a href="./" class="brand">
+      <span class="logo">F90</span>
+      <span>
+        <strong>اف تسعين كارد</strong>
+        <small>F90 CARD</small>
+      </span>
+    </a>
+
+    <nav>
+      <a href="#home">الرئيسية</a>
+      <a href="#categories">التصنيفات</a>
+      <a href="#products">المنتجات</a>
+    </nav>
+
+    <div class="header-actions">
+      <button id="accountButton" class="button secondary">
+        حسابي
+      </button>
+      <button id="cartButton" class="button primary">
+        السلة <span id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <span class="badge">✦ عالمك الرقمي في مكان واحد</span>
+        <h1>
+          كل ما تحتاجه<br>
+          <span>لعالمك الرقمي</span>
+        </h1>
+        <p>
+          اكتشف المنتجات الرقمية والبطاقات والخدمات المتنوعة
+          ضمن تجربة تسوق سهلة وواضحة.
+        </p>
+        <a href="#products" class="button primary">
+          اكتشف المنتجات ←
+        </a>
+      </div>
+
+      <div class="hero-art">
+        <div class="hero-card">
+          <span class="logo">F90</span>
+          <span class="hero-symbol">✦</span>
+          <h2>عالمك<br>بين يديك</h2>
+          <small>YOUR DIGITAL STORE</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="categories">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">تصفّح حسب اهتمامك</span>
+          <h2>التصنيفات</h2>
+        </div>
+      </div>
+      <div id="categoryGrid" class="category-grid">
+        <p class="loading">جاري تحميل التصنيفات...</p>
+      </div>
+    </section>
+
+    <section class="section" id="products">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">اختياراتنا الرقمية</span>
+          <h2>منتجات المتجر</h2>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="ابحث عن منتج..."
+          aria-label="البحث عن منتج"
+        >
+      </div>
+
+      <div id="productGrid" class="product-grid">
+        <p class="loading">جاري تحميل المنتجات...</p>
+      </div>
+    </section>
+
+    <section class="section" id="bannersSection">
+      <div id="bannerGrid" class="banner-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="notice">
+        <span>✦</span>
+        <div>
+          <h3>F90 CARD</h3>
+          <p>
+            منصة للمنتجات الرقمية
+            لتوفير تجربة تسوق منظمة وسهلة
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a href="./" class="brand">
+      <span class="logo">F90</span>
+      <strong>اف تسعين كارد</strong>
+    </a>
+    <p>© <span id="year"></span> F90 CARD — جميع الحقوق محفوظة.</p>
+  </footer>
+
+  <dialog id="accountDialog">
+    <form method="dialog" class="dialog-close">
+      <button aria-label="إغلاق">✕</button>
+    </form>
+
+    <h2>حسابي</h2>
+    <p>سجّل الدخول أو أنشئ حسابًا جديدًا.</p>
+
+    <form id="authForm">
+      <label for="authEmail">البريد الإلكتروني</label>
+      <input id="authEmail" type="email" required>
+
+      <label for="authPassword">كلمة المرور</label>
+      <input id="authPassword" type="password" minlength="8" required>
+
+      <button class="button primary" type="submit" id="loginButton">
+        تسجيل الدخول
+      </button>
+
+      <button class="button secondary" type="button" id="signupButton">
+        إنشاء حساب
+      </button>
+
+      <button class="button secondary" type="button" id="logoutButton" hidden>
+        تسجيل الخروج
+      </button>
+
+      <p id="authMessage" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="cartDialog">
+    <form method="dialog" class="dialog-close">
+      <button aria-label="إغلاق">✕</button>
+    </form>
+    <h2>سلة المشتريات</h2>
+    <div id="cartItems"></div>
+    <p id="cartTotal"></p>
+    <p class="muted">
+      إضافة الرصيد تواصل مع ادارة الموقع
+      +970568181910
+    </p>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+</body>
+</html>
