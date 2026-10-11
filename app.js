@@ -552,21 +552,35 @@
     $("authForm")?.addEventListener("submit", handleAuth);
 
     $("googleLoginButton")?.addEventListener("click", async () => {
-  const output = $("authMessage");
+      const output = $("authMessage");
+      const button = $("googleLoginButton");
 
-  if (output) output.textContent = "جارٍ الاتصال بحساب Google...";
+      try {
+      if (!db) {
+      throw new Error("اتصال Supabase غير جاهز.");
+    }
 
-  const { error } = await db.auth.signInWithOAuth({
-    provider: "google",
-    options: {
+      button.disabled = true;
+      if (output) output.textContent = "جارٍ فتح تسجيل الدخول باستخدام Google...";
+
+      const { error } = await db.auth.signInWithOAuth({
+      provider: "google",
+      options: {
       redirectTo: window.location.origin + window.location.pathname
     }
-  });
+    });
 
-  if (error && output) {
-    output.textContent = "تعذّر تسجيل الدخول: " + error.message;
-  }
-});
+      if (error) throw error;
+
+    } catch (error) {
+      if (output) {
+      output.textContent = "تعذّر تسجيل الدخول: " + error.message;
+    }
+
+      button.disabled = false;
+
+    }
+    });
 
     $("signupButton")?.addEventListener("click", handleSignup);
 
