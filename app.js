@@ -551,6 +551,23 @@
 
     $("authForm")?.addEventListener("submit", handleAuth);
 
+    $("googleLoginButton")?.addEventListener("click", async () => {
+  const output = $("authMessage");
+
+  if (output) output.textContent = "جارٍ الاتصال بحساب Google...";
+
+  const { error } = await db.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + window.location.pathname
+    }
+  });
+
+  if (error && output) {
+    output.textContent = "تعذّر تسجيل الدخول: " + error.message;
+  }
+});
+
     $("signupButton")?.addEventListener("click", handleSignup);
 
     $("logoutButton")?.addEventListener("click", async () => {
