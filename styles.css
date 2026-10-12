@@ -2276,3 +2276,6 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 .f90-api-examples strong{display:block;margin-bottom:9px}
 .f90-api-topics .code-window{max-width:100%;overflow:auto}
 @media(max-width:650px){.f90-api-reference{padding:16px}.f90-api-topics>section{padding:19px 0}.f90-api-topics h3{font-size:17px}.f90-api-jump a{font-size:12px}}
+
+.f90-api-jump button{display:inline-flex;align-items:center;min-height:38px;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer;font:inherit;font-size:13px;font-weight:700}
+.f90-api-jump button:hover,.f90-api-jump button:focus-visible{border-color:var(--accent)}
