@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "api.js"
+      - "tests/server-guards.test.mjs"
+      - "supabase/functions/f90-platform/index.ts"
       - "app.js"
       - "admin.js"
       - "sw.js"
@@ -13,6 +15,8 @@ on:
   pull_request:
     paths:
       - "api.js"
+      - "tests/server-guards.test.mjs"
+      - "supabase/functions/f90-platform/index.ts"
       - "app.js"
       - "tests/payment-safety.test.mjs"
       - "tests/session-resilience.test.mjs"
