@@ -2221,3 +2221,24 @@ tr:last-child td {
 .f90-category-search input{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:12px;color:var(--text)}
 .image-grid .image-tile[hidden],.packs-grid .pack[hidden]{display:none!important}
 @media(max-width:700px){.f90-back-link{font-size:12px;padding:8px}.header-inner{gap:7px}}
+
+/* Maintenance mode takes over the customer interface, without exposing shop actions. */
+body.f90-in-maintenance{overflow:hidden}
+body.f90-in-maintenance .site-header,body.f90-in-maintenance .drawer,body.f90-in-maintenance #footer,body.f90-in-maintenance footer,body.f90-in-maintenance .bottom-nav,body.f90-in-maintenance .floating-actions,body.f90-in-maintenance #installButton{display:none!important}
+body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!important;padding:0!important}
+.f90-maintenance-screen{position:fixed;inset:0;z-index:900;min-height:100dvh;overflow:auto;display:grid;place-items:center;text-align:center;color:#fff;background:radial-gradient(ellipse at 20% 10%,#7a203b 0%,transparent 47%),radial-gradient(ellipse at 85% 85%,#1b3a5b 0%,transparent 48%),#090b12;padding:28px 16px}
+.f90-maintenance-decor{position:absolute;inset:-50%;pointer-events:none;background:repeating-radial-gradient(circle at center,transparent 0 49px,#fa244409 50px 51px);animation:f90-maintenance-float 18s linear infinite}
+.f90-maintenance-content{position:relative;max-width:720px;width:100%;padding:30px 8px}
+.f90-maintenance-logo{width:110px;height:110px;object-fit:contain;border-radius:22px;box-shadow:0 12px 48px #fa244438;margin-bottom:16px}
+.f90-maintenance-tag{display:block;letter-spacing:3px;font-size:12px;color:#ff9eb1;font-weight:800;margin-bottom:17px}
+.f90-maintenance-content h1{font-size:clamp(26px,5vw,48px);line-height:1.45;margin:0 0 18px}
+.f90-maintenance-content p{font-size:clamp(15px,2.4vw,19px);line-height:1.9;color:#d5d9e4}
+.f90-maintenance-content small{display:block;color:#bbc2d0;margin-top:24px}
+.f90-maintenance-countdown{display:flex;justify-content:center;gap:clamp(6px,2vw,16px);margin-top:27px;flex-wrap:wrap}
+.f90-maintenance-countdown>div{min-width:65px;padding:12px 15px;border:1px solid #fa244470;border-radius:15px;background:#ffffff0b;backdrop-filter:blur(6px)}
+.f90-maintenance-countdown strong{display:block;font-size:clamp(24px,5vw,41px);font-variant-numeric:tabular-nums}
+.f90-maintenance-countdown span{display:block;color:#c9c9d3;font-size:12px;margin-top:5px}
+.f90-maintenance-countdown.urgent>div{border-color:#ffb247;color:#ffd3a1}
+.f90-maintenance-ended{flex-basis:100%;font-size:13px!important}
+@keyframes f90-maintenance-float{to{transform:rotate(12deg)}}
+@media(prefers-reduced-motion:reduce){.f90-maintenance-decor{animation:none}}
