@@ -104,6 +104,7 @@
     $("modalRoot").querySelector("input,button")?.focus();
   }
   function closeModal() {
+    S.priceSyncPreview = null;
     S.pendingProviderImport = null;
     $("modalRoot").innerHTML = "";
     document.body.style.overflow = "";
@@ -1675,16 +1676,32 @@
       } else if (action === "provider-sync") {
         const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
         if (!provider) throw new Error("لم يُعثر على المورّد");
-        modal("مراجعة مزامنة أسعار المورّد", `<div class="notice warning">مزامنة أسعار «${e(provider.name)}» عملية فعلية يمكن أن تغيّر أسعار بيع منتجات منشورة وتكلفتها المسجّلة. لا تؤثّر على الطلبات السابقة، لكن يُفضّل مراجعة الأسعار الحالية أولًا.</div><p>لن تبدأ العملية قبل موافقتك الصريحة.</p><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-sync" data-id="${e(provider.id)}">أوافق على تحديث أسعار المورّد</button></div>`);
-      } else if (action === "confirm-provider-sync") {
-        const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
-        if (!provider || !$("modalRoot").querySelector(".modal")) throw new Error("انتهت صلاحية التأكيد");
         if (b.disabled) return;
         b.disabled = true;
         try {
-          const result = await A.call("provider.sync_prices", { id: provider.id });
+          const preview = await A.call("provider.sync_prices", { id: provider.id, dry_run: true });
+          S.priceSyncPreview = { providerId: provider.id, preview };
+          modal("معاينة مزامنة أسعار " + provider.name,
+            `<div class="notice warning">هذا فحص للقراءة فقط. لا تتغير أسعار المنتجات إلا بعد تأكيدك. إذا تغيّرت بيانات المورّد قبل التأكيد سيعيد الخادم التحقق.</div><div class="f90-import-confirm-stats"><div><small>منتجات مرتبطة</small><strong>${e(preview.mapped)}</strong></div><div><small>خدمات متاحة</small><strong>${e(preview.ready)}</strong></div><div><small>أسعار ستتغير</small><strong>${e(preview.changing)}</strong></div><div><small>منتجات منشورة متأثرة</small><strong>${e(preview.activeChanging)}</strong></div></div>${preview.missing ? `<div class="notice warning">هناك ${e(preview.missing)} خدمات لم يُعثر عليها لدى المورّد، وسيتم تخطيها.</div>` : ""}<div class="table-wrap f90-import-confirm-table"><table><thead><tr><th>معرّف المنتج</th><th>السعر الحالي $</th><th>السعر الجديد $</th></tr></thead><tbody>${(preview.samples || []).map((item) => `<tr><td dir="ltr">${e(item.id)}</td><td>${e(C.money(item.old_price_usd))}</td><td>${e(C.money(item.new_price_usd))}</td></tr>`).join("") || '<tr><td colspan="3">لا توجد فروقات في الأسعار</td></tr>'}</tbody></table></div><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-sync" data-id="${e(provider.id)}">تأكيد المزامنة بعد مراجعة الأسعار</button></div>`);
+        } finally {
+          if (b.isConnected) b.disabled = false;
+        }
+      } else if (action === "confirm-provider-sync") {
+        const pending = S.priceSyncPreview;
+        const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
+        if (!pending || !provider || pending.providerId !== provider.id ||
+            !$("modalRoot").querySelector(".modal")) throw new Error("انتهت صلاحية المعاينة. عاين الأسعار مجددًا.");
+        if (b.disabled) return;
+        b.disabled = true;
+        try {
+          const result = await A.call("provider.sync_prices", {
+            id: provider.id,
+            confirm_count: String(pending.preview.changing),
+            confirm_ready: String(pending.preview.ready),
+          });
+          S.priceSyncPreview = null;
           closeModal();
-          toast("تمت مزامنة أسعار " + result.updated + " خدمة. راجع الأسعار المنشورة.");
+          toast("تمت مراجعة ومزامنة " + result.updated + " خدمة. تحقق من الأسعار المنشورة.");
         } finally {
           if (b.isConnected) b.disabled = false;
         }
