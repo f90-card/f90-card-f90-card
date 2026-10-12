@@ -692,8 +692,18 @@
     main.dataset.page = page || "home";
     const back = $("pageBack");
     if (back) {
+      let parentLink = "#/";
+      if (page === "product") {
+        const current = S.products.find((p) => p.slug === id || p.id === id);
+        const category = S.categories.find((c) => c.id === current?.category_id);
+        if (category) parentLink = href("category", category.slug || category.id);
+      } else if (page === "category") {
+        const current = S.categories.find((c) => c.slug === id || c.id === id);
+        const parent = S.categories.find((c) => c.id === current?.parent_id);
+        if (parent) parentLink = href("category", parent.slug || parent.id);
+      }
+      back.href = parentLink;
       back.hidden = !page;
-      back.href = page === "product" ? (S.products.find((p) => p.slug === id || p.id === id)?.category_id ? href("category", S.categories.find((c) => c.id === S.products.find((p) => p.slug === id || p.id === id)?.category_id)?.slug || S.products.find((p) => p.slug === id || p.id === id)?.category_id) : "#/") : page === "category" ? (S.categories.find((c) => c.slug === id || c.id === id)?.parent_id ? href("category", S.categories.find((x) => x.id === S.categories.find((c) => c.slug === id || c.id === id)?.parent_id)?.slug || S.categories.find((c) => c.slug === id || c.id === id)?.parent_id) : "#/") : "#/";
     }
     if (!["orders", "deposits", "history"].includes(page)) S.offset = 0;
     const privatePages = [
