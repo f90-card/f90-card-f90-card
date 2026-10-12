@@ -1305,29 +1305,43 @@
     if (form.id === "importForm") {
       if (S.importProvider?.adapter === "omega") throw new Error("استيراد أوميغا غير متاح قبل توثيق صيغة الأسعار والحقول");
       const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
-      if (!fx?.is_enabled || !(Number(fx.per_usd) > 0)) throw new Error("اضبط سعر صرف عملة المورّد قبل الاستيراد");
-      const selected = [],
-        names = {};
-      S.importServices.forEach((s, n) => {
-        if (form.elements["service_" + n]?.checked) {
-          selected.push(s.id);
-          const name = form.elements["name_" + n]?.value.trim();
-          if (!name) throw new Error("اكتب اسمًا عربيًا لكل خدمة تختارها");
-          names[s.id] = name;
-        }
+      const perUSD = Number(fx?.per_usd);
+      if (!fx?.is_enabled || !(perUSD > 0)) throw new Error("اضبط سعر صرف عملة المورّد قبل الاستيراد");
+      const margin = Number(d.margin_percent);
+      if (!Number.isFinite(margin) || margin < 0 || margin > 10000) throw new Error("هامش الربح غير صالح");
+      if (!d.category_id || !S.categories.some((category) => category.id === d.category_id))
+        throw new Error("اختر قسمًا صحيحًا لحفظ الخدمات");
+      const selected = [];
+      const names = {};
+      const quotes = [];
+      S.importServices.slice(0, 1000).forEach((service, n) => {
+        if (!form.elements["service_" + n]?.checked) return;
+        const name = form.elements["name_" + n]?.value.trim();
+        if (!name || name.length > 200) throw new Error("اكتب اسمًا صالحًا لكل خدمة تختارها");
+        if (!Number.isFinite(Number(service.rate)) || Number(service.rate) <= 0)
+          throw new Error("سعر المورّد غير صالح للخدمة " + String(service.id));
+        const rate = Math.round((Number(service.rate) / perUSD) * (1 + margin / 100) * 1e6) / 1e6;
+        if (!(rate > 0)) throw new Error("السعر المتوقع غير صالح للخدمة " + String(service.id));
+        selected.push(service.id);
+        names[service.id] = name;
+        quotes.push({ id: String(service.id), name, rate, unit: service.unit_quantity });
       });
       if (!selected.length) throw new Error("اختر خدمة واحدة على الأقل");
-      if (selected.length > 100)
-        throw new Error("استورد حتى مئة خدمة في المرة الواحدة");
-      await A.call("provider.import", {
-        id: S.importProvider.id,
-        service_ids: selected,
-        names,
+      if (selected.length > 100) throw new Error("استورد حتى مئة خدمة في المرة الواحدة");
+      if (new Set(selected.map(String)).size !== selected.length) throw new Error("توجد معرّفات خدمات مكررة؛ راجع قائمة المورّد");
+      const provider = S.importProvider;
+      S.pendingProviderImport = {
+        providerId: provider.id,
+        service_ids: [...selected],
+        names: { ...names },
         category_id: d.category_id,
-        margin_percent: Number(d.margin_percent),
-      });
-      toast("استُوردت الخدمات كمسودات مخفية");
-      location.hash = "#/products";
+        margin_percent: margin,
+      };
+      const category = S.categories.find((c) => c.id === d.category_id);
+      modal(
+        "تأكيد استيراد مسودات المورّد",
+        `<div class="notice warning">راجع البيانات قبل المتابعة. سيتم حفظ المنتجات كمسودات غير منشورة فقط. الأسعار النهائية تُحتسب على الخادم عند الاستيراد وقد تتغير إذا تغيّر سعر المورّد.</div><div class="f90-import-confirm-stats"><div><small>المورّد</small><strong>${e(provider.name)}</strong></div><div><small>القسم</small><strong>${e(category?.name || "")}</strong></div><div><small>الخدمات</small><strong>${selected.length}</strong></div><div><small>هامش الربح</small><strong>${e(margin)}%</strong></div></div><div class="table-wrap f90-import-confirm-table"><table><thead><tr><th>الخدمة</th><th>سعر البيع التقريبي بالدولار</th></tr></thead><tbody>${quotes.slice(0, 20).map((quote) => `<tr><td>${e(quote.name)}</td><td>${e(C.money(quote.rate))} / ${e(quote.unit)}</td></tr>`).join("")}</tbody></table></div>${quotes.length > 20 ? `<p class="muted">معروض 20 من ${quotes.length} خدمة. بقية الاختيارات محفوظة ضمن هذه الدفعة.</p>` : ""}<div class="actions"><button type="button" class="button secondary" data-action="close-modal">رجوع للمراجعة</button><button type="button" class="button" data-action="confirm-provider-import">تأكيد إنشاء المسودات</button></div>`,
+      );
       return;
     }
     if (form.id === "traderKeyForm") {
@@ -1392,6 +1406,27 @@
           "حذف صور التوثيق",
           `<p>ستُحذف الصور الخاصة، ويبقى سجل قرار المراجعة. استخدم ذلك بعد طلب العميل أو وفق سياسة الاحتفاظ.</p><button class="button danger" data-action="confirm-erase-identity">تأكيد حذف الصور</button>`,
         );
+      } else if (action === "confirm-provider-import") {
+        const pending = S.pendingProviderImport;
+        if (!pending || pending.providerId !== S.importProvider?.id || !$("importForm"))
+          throw new Error("انتهت صلاحية المعاينة. افتح استيراد المورّد من جديد.");
+        if (b.dataset.busy) return;
+        b.dataset.busy = "1";
+        b.disabled = true;
+        try {
+          const result = await A.call("provider.import", { id: pending.providerId,
+            service_ids: pending.service_ids, names: pending.names,
+            category_id: pending.category_id, margin_percent: pending.margin_percent });
+          S.pendingProviderImport = null;
+          closeModal();
+          toast("انتهى الاستيراد. راجع المنتجات المخفية قبل النشر.");
+          location.hash = "#/products";
+          if (location.hash === "#/products") await catalogPage("products");
+        } catch (err) {
+          toast(errorMessage(err));
+        } finally {
+          if (b.isConnected) { b.disabled = false; delete b.dataset.busy; }
+        }
       } else if (action === "confirm-erase-identity") {
         await A.call("staff.erase_verification", { id: S.detail.id });
         closeModal();
