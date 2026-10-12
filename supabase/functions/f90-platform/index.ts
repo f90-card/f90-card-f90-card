@@ -1478,6 +1478,28 @@ Deno.serve(async (req: Request) => {
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
       const product = uuid(b.product_id || b.service);
       const fields = b.fields || { account_id: b.link || b.account_id };
+      const reference = paymentReference(b.idempotency_key);
+      const requestedQuantity = integer(b.quantity || 1);
+      if (!fields || typeof fields !== "object" || Array.isArray(fields))
+        throw new AppError("F90_FIELDS", 400, "حقول العميل يجب أن تكون كائنًا");
+      const previous = check(await db.from("f90_orders")
+        .select("*").eq("user_id", a.id)
+        .eq("idempotency_key", reference).maybeSingle());
+      if (previous) {
+        const productInfo = check(await db.from("products")
+          .select("commerce").eq("id", previous.product_id).maybeSingle());
+        const storedFields = previous.customer_fields || {};
+        const sortFields = (obj: any) => JSON.stringify(
+          Object.keys(obj).sort().map((key) => [key, obj[key]]));
+        const mismatch = previous.product_id !== product ||
+          (productInfo?.commerce?.type === "quantity" &&
+            Number(previous.quantity) !== requestedQuantity) ||
+          sortFields(storedFields) !== sortFields(fields);
+        if (mismatch)
+          throw new AppError("F90_IDEMPOTENCY_CONFLICT", 409,
+            "هذا المرجع مرتبط بطلب آخر أو ببيانات عميل مختلفة. افتح الطلب السابق بدل تكرار الدفع.");
+        return out(customerOrder(previous), 200);
+      }
       const expected =
         b.expected_total_usd ??
         (a.keyId
@@ -1485,18 +1507,15 @@ Deno.serve(async (req: Request) => {
               await rpc("f90_quote", {
                 p_user: a.id,
                 p_product: product,
-                p_quantity: integer(b.quantity || 1),
+                p_quantity: requestedQuantity,
                 p_coupon: "",
               })
             ).total_usd
           : null);
-      const reference = paymentReference(b.idempotency_key);
-      if (!fields || typeof fields !== "object" || Array.isArray(fields))
-        throw new AppError("F90_FIELDS", 400, "حقول العميل يجب أن تكون كائنًا");
       const data = await rpc("f90_checkout", {
         p_user: a.id,
         p_product: product,
-        p_quantity: integer(b.quantity || 1),
+        p_quantity: requestedQuantity,
         p_fields: fields,
         p_key: reference,
         p_expected: expected,
