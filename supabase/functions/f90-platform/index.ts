@@ -1151,14 +1151,43 @@ async function staff(a: Actor, b: any) {
     );
     if (!rate.is_enabled || !rate.per_usd)
       throw new AppError("F90_RATE_MISSING");
-    const requested = (b.service_ids || []).slice(0, 100).map(String);
+    // Validate the entire batch before creating the first draft.
+    // Never silently truncate an import or accept unknown/duplicate services.
+    if (!Array.isArray(b.service_ids) || b.service_ids.length < 1 || b.service_ids.length > 100)
+      throw new AppError("F90_FIELDS", 400, "اختر من خدمة واحدة إلى مئة خدمة في كل دفعة");
+    const requested = b.service_ids.map((item: unknown) => text(item, 160));
+    if (requested.some((id: string) => !id) || new Set(requested).size !== requested.length)
+      throw new AppError("F90_FIELDS", 400, "توجد معرّفات خدمات فارغة أو مكررة");
+    const categoryId = uuid(b.category_id);
+    const category = check(
+      await db.from("categories").select("id").eq("id", categoryId).single(),
+    );
+    if (!category) throw new AppError("F90_FIELDS", 400, "القسم غير موجود");
+    const margin = Number(b.margin_percent ?? p.margin_percent);
+    if (!Number.isFinite(margin) || margin < 0 || margin > 10000)
+      throw new AppError("F90_FIELDS", 400, "هامش الربح غير صالح");
+    const exchange = Number(rate.per_usd);
+    if (!rate.is_enabled || !Number.isFinite(exchange) || exchange <= 0)
+      throw new AppError("F90_RATE_MISSING");
+    const serviceById = new Map(services.map((service: any) => [String(service.id), service]));
+    const preview = requested.map((id: string) => {
+      const service: any = serviceById.get(id);
+      if (!service) throw new AppError("F90_FIELDS", 400, "خدمة مختارة غير موجودة لدى المورّد: " + id);
+      const supplierPrice = Number(service.rate);
+      const unit = Number(service.unit_quantity);
+      const min = Number(service.min);
+      const max = Number(service.max);
+      const cost = supplierPrice / exchange;
+      const price = Math.round(cost * (1 + margin / 100) * 1e6) / 1e6;
+      if (![supplierPrice, unit, min, max, cost, price].every(Number.isFinite) ||
+          supplierPrice <= 0 || unit <= 0 || min <= 0 || max < min || price <= 0)
+        throw new AppError("F90_FIELDS", 400, "بيانات سعر أو كمية غير صالحة للخدمة " + id);
+      const name = text(b.names?.[id], 200);
+      if (!name) throw new AppError("F90_FIELDS", 400, "أدخل اسمًا للخدمة " + id);
+      return { service, name, cost, price };
+    });
     const saved = [];
-    for (const s of services.filter((s: any) => requested.includes(s.id))) {
-      const cost = s.rate / Number(rate.per_usd);
-      const price =
-        Math.round(
-          cost * (1 + Number(b.margin_percent ?? p.margin_percent) / 100) * 1e6,
-        ) / 1e6;
+    for (const { service: s, name, cost, price } of preview) {
       const existing = check(
         await db
           .from("f90_product_internal")
@@ -1174,8 +1203,8 @@ async function staff(a: Actor, b: any) {
       const product = await catalogSave(a, {
         kind: "product",
         data: {
-          name: text(b.names?.[s.id] || s.name, 200),
-          category_id: b.category_id,
+          name,
+          category_id: categoryId,
           is_active: false,
           image_url: b.image_url || "",
           commerce: {
