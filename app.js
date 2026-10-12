@@ -213,13 +213,19 @@
     } = await A.client.auth.getSession();
     if (!session) {
       S.me = null;
-      return;
+      return false;
     }
     try {
       S.me = await A.call("me");
+      return true;
     } catch (err) {
-      S.me = null;
-      if (err.code === "F90_FORBIDDEN") toast(message(err));
+      // A transient network fault is not a sign-out event. Keep the last
+      // known identity, but report that balances may be stale to callers.
+      if (err.code === "F90_FORBIDDEN" || err.code === "F90_AUTH") {
+        S.me = null;
+        toast(message(err));
+      }
+      return false;
     }
   }
   function promotions() {
@@ -938,13 +944,16 @@
       // so an unrelated UI error cannot leave the customer on the payment form.
       S.checkoutKey = C.key();
       location.hash = href("order", o.id);
+      let refreshed = false;
       try {
-        await refreshMe();
+        refreshed = await refreshMe();
         chrome();
       } catch {
-        // The confirmed order remains available from the order route.
+        // Never turn a committed checkout into a misleading payment error.
       }
-      toast("تم تسجيل طلب الشراء. يمكنك متابعة حالته من طلباتك.");
+      toast(refreshed
+        ? "تم تسجيل طلب الشراء. يمكنك متابعة حالته من طلباتك."
+        : "تم تسجيل طلب الشراء، لكن تعذّر تحديث المحفظة. الرصيد المعروض قديم؛ راجع طلباتك.");
       return;
     }
     if (form.id === "profileForm") {
