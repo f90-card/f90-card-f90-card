@@ -262,13 +262,13 @@
   }
   function categoryTile(c) {
     const disabled = C.categoryUnavailable(c, S.categories, S.products);
-    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("category", c.slug || c.id)}" aria-label="${e(c.name)}">${image(c.image_url, c.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</a>`;
+    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("category", c.slug || c.id)}" aria-label="${e(c.name)}">${image(c.image_url, c.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
   function productTile(p, pack = false) {
     const disabled = C.unavailable(p);
     if (pack)
       return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
-    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}" aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</a>`;
+    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}" aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function home() {
     const c = S.settings.config,
