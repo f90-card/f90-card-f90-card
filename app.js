@@ -912,13 +912,27 @@
         fields = {};
       for (const [k, v] of Object.entries(data))
         if (k.startsWith("customer_")) fields[k.slice(9)] = String(v);
-      const o = await A.call("checkout", {
-        product_id: p.id,
-        quantity: Number(data.quantity),
-        fields,
-        idempotency_key: S.checkoutKey,
-        expected_total_usd: S.quote.total_usd,
-      });
+      const reference = S.checkoutKey;
+      let o;
+      try {
+        o = await A.call("checkout", {
+          product_id: p.id,
+          quantity: Number(data.quantity),
+          fields,
+          idempotency_key: reference,
+          expected_total_usd: S.quote.total_usd,
+        });
+      } catch (error) {
+        let recovered;
+        try {
+          recovered = await A.call("transaction.lookup", { kind: "order", idempotency_key: reference });
+        } catch {
+          throw new Error("لم نتمكن من تأكيد نتيجة الشراء. افحص طلباتك قبل المحاولة من جديد؛ لن نرسل شراءً إضافيًا تلقائيًا.");
+        }
+        if (!recovered?.found || !recovered.order?.id)
+          throw new Error("لم يتأكد تسجيل عملية الشراء. راجع طلباتك قبل إرسال طلب آخر.");
+        o = recovered.order;
+      }
       S.checkoutKey = C.key();
       await refreshMe();
       chrome();
@@ -942,18 +956,43 @@
       return;
     }
     if (form.id === "depositForm") {
-      const receipt = await A.upload(data.receipt, "f90-receipts");
-      await A.call("deposit.submit", {
-        method_id: S.selectedMethod.id,
-        currency: data.currency,
-        amount: Number(data.amount),
-        reference: data.reference,
-        receipt_path: receipt.path,
-        idempotency_key: S.depositKey,
-      });
+      const reference = S.depositKey;
+      // Reuse the uploaded receipt on an uncertain retry, rather than uploading
+      // a different file path with the same idempotency key.
+      const file = data.receipt;
+      const signature = file ? [file.name, file.size, file.lastModified].join(":") : "";
+      let receiptPath = S.pendingDepositReceipt?.key === reference &&
+        S.pendingDepositReceipt.signature === signature
+          ? S.pendingDepositReceipt.path
+          : null;
+      if (!receiptPath) {
+        const receipt = await A.upload(file, "f90-receipts");
+        receiptPath = receipt.path;
+        S.pendingDepositReceipt = { key: reference, signature, path: receiptPath };
+      }
+      try {
+        await A.call("deposit.submit", {
+          method_id: S.selectedMethod.id,
+          currency: data.currency,
+          amount: Number(data.amount),
+          reference: data.reference,
+          receipt_path: receiptPath,
+          idempotency_key: reference,
+        });
+      } catch (error) {
+        let recovered;
+        try {
+          recovered = await A.call("transaction.lookup", { kind: "deposit", idempotency_key: reference });
+        } catch {
+          throw new Error("نتيجة الإيداع غير مؤكدة. راجع سجل إيداعاتك قبل إعادة الإرسال؛ لم نرسل طلبًا إضافيًا.");
+        }
+        if (!recovered?.found)
+          throw new Error("لم يتأكد تسجيل الإيداع. راجع سجله قبل المحاولة من جديد.");
+      }
+      S.pendingDepositReceipt = null;
       S.depositKey = C.key();
       location.hash = "#/deposits";
-      toast("تم تقديم الإيداع، بانتظار مراجعة الإدارة");
+      toast("تم تسجيل طلب الإيداع، بانتظار مراجعة الإدارة");
       return;
     }
     if (form.id === "verificationForm") {
