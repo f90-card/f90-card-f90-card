@@ -464,13 +464,15 @@
         "اسحب لترتيب العناصر، أو استخدم الأسهم. التكرار ينشئ نسخة مخفية حتى تنشرها.",
         `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>`,
       ) +
-      `<div class="toolbar">${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : ""}</div><div class="catalog-list">${
+      `<div class="toolbar">${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div><p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
         rows
           .filter(
             (r) =>
-              kind !== "products" ||
-              !S.categoryFilter ||
-              r.category_id === S.categoryFilter,
+              kind === "products"
+                ? (!S.categoryFilter || r.category_id === S.categoryFilter)
+                : kind === "categories"
+                  ? (S.sectionFilter === "all" || (!S.sectionFilter || S.sectionFilter === "root" ? !r.parent_id : r.parent_id === S.sectionFilter))
+                  : true,
           )
           .map(
             (r) =>
@@ -1516,10 +1518,12 @@
                 ? "products"
                 : "banners"
           ];
-        const ids = list.map((x) => x.id),
-          index = ids.indexOf(b.dataset.id),
-          to = index + (action === "move-up" ? -1 : 1);
-        if (to >= 0 && to < ids.length) {
+        const ids = list.map((x) => x.id);
+        const visible = [...main.querySelectorAll(".catalog-row[data-row-id]")].map((row) => row.dataset.rowId);
+        const position = visible.indexOf(b.dataset.id);
+        const neighbor = visible[position + (action === "move-up" ? -1 : 1)];
+        const index = ids.indexOf(b.dataset.id), to = ids.indexOf(neighbor);
+        if (position >= 0 && index >= 0 && to >= 0) {
           [ids[index], ids[to]] = [ids[to], ids[index]];
           await reorder(S.kind, ids);
         }
@@ -1635,6 +1639,9 @@
     } else if (ev.target.id === "categoryFilter") {
       S.categoryFilter = ev.target.value;
       catalogPage("products");
+    } else if (ev.target.id === "sectionFilter") {
+      S.sectionFilter = ev.target.value;
+      catalogPage("categories").catch((err) => toast(errorMessage(err)));
     } else if (ev.target.name === "image_file" && ev.target.files[0]) {
       const f = ev.target.files[0];
       if (f.size <= 5242880)
@@ -1684,8 +1691,9 @@
       from = ids.indexOf(dragId),
       to = ids.indexOf(row.dataset.rowId);
     if (from < 0 || to < 0 || from === to) return;
-    ids.splice(from, 1);
-    ids.splice(to, 0, dragId);
+    const visible = [...main.querySelectorAll(".catalog-row[data-row-id]")].map((item) => item.dataset.rowId);
+    if (!visible.includes(dragId) || !visible.includes(row.dataset.rowId)) return;
+    [ids[from], ids[to]] = [ids[to], ids[from]];
     try {
       await reorder(S.kind, ids);
     } catch (err) {
