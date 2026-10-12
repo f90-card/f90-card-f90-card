@@ -152,6 +152,7 @@
       ["vip", "مستويات التميّز", "crown"],
       ["security", "أمان الحساب", "shield"],
       ["verification", "توثيق الهوية", "check"],
+      ["install", "تثبيت التطبيق", "plus"],
       ["developers", "وكلاؤنا والمبرمجون", "link"],
       ["notifications", "الإشعارات", "bell"],
       ["policy/about", "من نحن", "doc"],
@@ -211,7 +212,7 @@
         )
         .join(
           "",
-        )}<button class="button ghost small" data-action="install">تثبيت التطبيق</button></nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>محفظة واحدة. عالم كامل.</span></div></div>`;
+        )}<a class="button ghost small" href="#/install">تثبيت التطبيق</a></nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>محفظة واحدة. عالم كامل.</span></div></div>`;
   }
   async function refreshMe() {
     const {
@@ -460,7 +461,10 @@
   function profile() {
     const me = S.me,
       p = me.profile;
-    main.innerHTML = `<section class="profile-cover">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold">مستوى ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور، أو قدّم توثيقًا اختياريًا لحسابك.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+    main.innerHTML = `<section class="profile-cover">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold">مستوى ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور، أو قدّم توثيقًا اختياريًا لحسابك.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+  }
+  function installPage() {
+    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "اختصار آمن لمتجرك على شاشة هاتفك، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="./assets/icons/icon-192.png" alt="شعار تطبيق F90 Card" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت الموقع كتطبيق للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>أندرويد</h3><p>افتح الموقع عبر Chrome، ثم من قائمة المتصفح اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</p></section><section><h3>آيفون وآيباد</h3><p>افتح الموقع في Safari، واضغط «مشاركة»، ثم «إضافة إلى الشاشة الرئيسية».</p></section></div><p class="muted small">إذا كان التطبيق مثبتًا بالفعل، يمكنك فتحه مباشرة من الشاشة الرئيسية.</p></section>`;
   }
   async function wallet() {
     const me = S.me;
@@ -736,6 +740,7 @@
       else if (page === "product") product(id);
       else if (page === "auth") auth();
       else if (page === "profile") profile();
+      else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
       else if (["orders", "deposits", "history"].includes(page))
