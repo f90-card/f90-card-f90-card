@@ -841,7 +841,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">جلب الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">جلب الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -1573,6 +1573,18 @@
       } else if (action === "provider-sync") {
         const r = await A.call("provider.sync_prices", { id: b.dataset.id });
         toast("حُدّث تسعير " + r.updated + " خدمة");
+      } else if (action === "provider-diagnose") {
+        const results = [];
+        for (const [label, endpoint] of [["الرصيد", "provider.balance"], ["الخدمات", "provider.services"]]) {
+          try {
+            const result = await A.call(endpoint, { id: b.dataset.id });
+            const detail = endpoint === "provider.services" ? ("عدد الخدمات: " + (Array.isArray(result) ? result.length : "استجابة غير متوقعة")) : ("الرصيد: " + String(result?.balance ?? result?.amount ?? "غير متاح") + " " + String(result?.currency ?? ""));
+            results.push("<p><strong>" + label + ": ناجح</strong> — " + e(detail) + "</p>");
+          } catch (error) {
+            results.push("<p><strong>" + label + ": فشل</strong> — " + e(String(error?.message || error).slice(0, 350)) + "</p>");
+          }
+        }
+        modal("تشخيص اتصال المورّد", results.join("") + "<p class=\"admin-note\">فحص قراءة فقط؛ لا ينشئ طلبات ولا يخصم رصيدًا.</p>");
       } else if (action === "provider-balance") {
         const r = await A.call("provider.balance", { id: b.dataset.id });
         modal(
