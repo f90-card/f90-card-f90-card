@@ -547,3 +547,11 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Touch-friendly catalog management and focused category filters. */
+.catalog-list .catalog-row{touch-action:pan-y}
+.catalog-list .catalog-row .row-content{overflow-wrap:anywhere}
+.catalog-list .catalog-row .row-actions{justify-content:flex-end}
+.catalog-list .catalog-row .row-actions .icon-button{min-height:42px;min-width:42px}
+.catalog-list .catalog-row.drag-over{outline:2px dashed var(--accent);outline-offset:2px}
+@media(max-width:650px){.catalog-list .catalog-row{gap:10px;padding:12px;flex-wrap:wrap}.catalog-list .catalog-row .row-image{width:60px;height:60px}.catalog-list .catalog-row .row-actions{width:100%;justify-content:space-between}.catalog-list .catalog-row .row-actions .icon-button{flex:1;min-width:42px;max-width:64px}.toolbar .field{max-width:none;min-width:0;width:100%}}
