@@ -1297,10 +1297,35 @@ async function staff(a: Actor, b: any) {
         id: item.id, old_price_usd: item.oldPrice, new_price_usd: item.price,
       })),
     };
+    // Bind confirmation to the full price snapshot, not only the count of changed products.
+    // Include cost-only updates and source pricing so unchanged change-counts cannot hide price differences.
+    const snapshotRows = planned.map((item) => ({
+      id: item.id,
+      previous_cost: Number(rows.find((row: any) => row.product_id === item.id)?.cost_usd ?? 0),
+      next_cost: item.cost,
+      previous_price: item.oldPrice,
+      next_price: item.price,
+      auto_margin: item.autoMargin,
+      active: item.isActive,
+    })).sort((left, right) => left.id.localeCompare(right.id));
+    const snapshotData = JSON.stringify({
+      provider_id: id,
+      currency: p.currency,
+      exchange: perUSD,
+      margin,
+      missing: rows.filter((row: any) => !byId.has(String(row.provider_service)))
+        .map((row: any) => String(row.product_id)).sort(),
+      rows: snapshotRows,
+    });
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(snapshotData));
+    const fingerprint = [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    preview.fingerprint = fingerprint;
     if (b.dry_run === true) return preview;
     // Require an explicit snapshot acknowledgement obtained from a read-only preview.
     // Prevent accidental execution through a stale UI or a stray click.
-    if (text(b.confirm_count, 15) !== String(preview.changing) ||
+    if (text(b.confirm_fingerprint, 64) !== fingerprint ||
+        text(b.confirm_count, 15) !== String(preview.changing) ||
         text(b.confirm_ready, 15) !== String(preview.ready))
       throw new AppError("F90_FIELDS", 409, "بيانات المزامنة تغيّرت. عاين الأسعار من جديد قبل التأكيد");
     for (const item of planned) {
