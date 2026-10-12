@@ -145,7 +145,7 @@ export async function callProvider(
     try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة أوميغا غير مفهومة"); }
     if (data?.status === "error" || data?.error)
       throw new ProviderError("رفض أوميغا الطلب، تحقق من صلاحية التوكن");
-    return action === "services" ? (Array.isArray(data) ? data : data?.data?.products ?? data?.products ?? data) : data;
+    return action === "services" ? (Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : Array.isArray(data?.data?.products) ? data.data.products : Array.isArray(data?.products) ? data.products : Array.isArray(data?.result) ? data.result : data) : data;
   }
   let body;
   if (provider.adapter === "smm") {
