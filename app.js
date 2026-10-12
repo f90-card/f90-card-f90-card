@@ -923,6 +923,7 @@
           expected_total_usd: S.quote.total_usd,
         });
       } catch (error) {
+        if (!error.uncertain) throw error;
         let recovered;
         try {
           recovered = await A.call("transaction.lookup", { kind: "order", idempotency_key: reference });
@@ -980,6 +981,7 @@
           idempotency_key: reference,
         });
       } catch (error) {
+        if (!error.uncertain) throw error;
         let recovered;
         try {
           recovered = await A.call("transaction.lookup", { kind: "deposit", idempotency_key: reference });
