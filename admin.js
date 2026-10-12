@@ -890,6 +890,19 @@
             `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}" ${omega ? "disabled" : ""}></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90" ${omega ? "disabled" : ""}></td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
           ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>${omega ? "استيراد أوميغا غير متاح حاليًا" : "استيراد الخدمات المحددة كمسودات"}</button></div></form></section>`;
   }
+  function updateProviderImportPreview() {
+    const form = $("importForm");
+    if (!form) return;
+    const rows = [...form.querySelectorAll("[data-provider-service-row]")];
+    const query = (form.querySelector("#providerServiceSearch")?.value || "").trim().toLocaleLowerCase("ar");
+    for (const row of rows) row.hidden = !!query && !row.dataset.search.includes(query);
+    const selected = rows.filter((row) => row.querySelector('input[type="checkbox"]')?.checked).length;
+    const visible = rows.filter((row) => !row.hidden).length;
+    const status = $("providerImportCount");
+    if (status) status.textContent = `المحدد: ${selected} من 100 كحد أقصى · المعروض: ${visible} من ${rows.length}`;
+    const submit = $("providerImportSubmit");
+    if (submit) submit.disabled = selected === 0 || selected > 100 || S.importProvider?.adapter === "omega";
+  }
   async function configSave(config) {
     await A.call("settings.save", {
       data: { ...S.settings, config: { ...S.settings.config, ...config } },
@@ -1274,6 +1287,7 @@
       return providers();
     }
     if (form.id === "importForm") {
+      if (S.importProvider?.adapter === "omega") throw new Error("استيراد أوميغا غير متاح قبل توثيق صيغة الأسعار والحقول");
       const selected = [],
         names = {};
       S.importServices.forEach((s, n) => {
@@ -1418,6 +1432,21 @@
       } else if (action === "copy-key") {
         await navigator.clipboard.writeText(b.dataset.key);
         toast("تم النسخ");
+      } else if (action === "import-clear-selection") {
+        document.querySelectorAll('#importForm [data-provider-service-row] input[type="checkbox"]').forEach((box) => { box.checked = false; });
+        updateProviderImportPreview();
+      } else if (action === "import-select-visible") {
+        if (S.importProvider?.adapter === "omega") return;
+        const form = $("importForm");
+        if (!form) return;
+        const rows = [...form.querySelectorAll("[data-provider-service-row]")];
+        let selected = rows.filter((row) => row.querySelector('input[type="checkbox"]')?.checked).length;
+        for (const row of rows) {
+          if (row.hidden || selected >= 100) continue;
+          const box = row.querySelector('input[type="checkbox"]');
+          if (box && !box.checked && !box.disabled) { box.checked = true; selected++; }
+        }
+        updateProviderImportPreview();
       } else if (action === "catalog-new") editCatalog(S.kind);
       else if (action === "catalog-edit") {
         const list =
@@ -1641,6 +1670,7 @@
     }
   });
   document.addEventListener("change", (ev) => {
+    if (ev.target.matches('#importForm input[type="checkbox"]')) { updateProviderImportPreview(); return; }
     if (ev.target.id === "listFilter") {
       S.filter = ev.target.value;
       S.offset = 0;
@@ -1664,6 +1694,7 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.id === "providerServiceSearch") updateProviderImportPreview();
     if (ev.target.id === "imageURL")
       $("imagePreview").innerHTML = image(
         ev.target.value,
