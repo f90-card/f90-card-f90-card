@@ -2212,3 +2212,12 @@ tr:last-child td {
 .f90-install-instructions h3{margin:0 0 9px}
 .f90-install-instructions p{line-height:1.8;margin:0}
 @media(max-width:650px){.profile-cover{padding:25px 14px}.profile-cover h1{font-size:26px}.f90-install-instructions{grid-template-columns:1fr}}
+
+/* Compact storefront header; browsing and searching happen in each category. */
+.site-header .top-nav,.site-header .header-search{display:none!important}
+.f90-back-link{flex:none;font-size:13px;font-weight:750;text-decoration:none;color:var(--text);padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface2)}
+.f90-back-link[hidden]{display:none!important}
+.f90-category-search{max-width:480px;margin:16px 0 20px}
+.f90-category-search input{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:12px;color:var(--text)}
+.image-grid .image-tile[hidden],.packs-grid .pack[hidden]{display:none!important}
+@media(max-width:700px){.f90-back-link{font-size:12px;padding:8px}.header-inner{gap:7px}}
