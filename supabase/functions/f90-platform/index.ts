@@ -1091,7 +1091,7 @@ async function staff(a: Actor, b: any) {
     const d = {
       name: text(b.name, 150),
       endpoint: text(b.endpoint, 2000),
-      adapter: b.adapter === "json" ? "json" : "smm",
+      adapter: ["smm", "json", "omega"].includes(b.adapter) ? b.adapter : "smm",
       currency: text(b.currency || "USD", 8),
       is_enabled: !!b.is_enabled,
       margin_percent: num(b.margin_percent ?? 20, 0, 10000),
