@@ -2,88 +2,84 @@
 <html lang="ar" dir="rtl" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#080a0f" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0d12" />
     <meta
       name="description"
-      content="F90 CARD | اف تسعين كارد — الخدمات والمنتجات الرقمية"
+      content="أف تسعين كارد — عالم الخدمات الرقمية. محفظتك، طلباتك، وكل ما تحتاجه في مكان واحد."
     />
-    <title>F90 CARD | اف تسعين كارد</title>
+    <title>أف تسعين كارد</title>
+    <link rel="icon" id="siteFavicon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./f90-logo.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
     <script>
       try {
         document.documentElement.dataset.theme =
           localStorage.getItem("f90-theme") === "cream" ? "cream" : "dark";
       } catch {}
     </script>
-    <link rel="stylesheet" href="./styles.css" />
     <script
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"
       defer
     ></script>
     <script src="./config.js" defer></script>
     <script src="./store-core.js" defer></script>
+    <script src="./api.js" defer></script>
+    <script src="./reports.js" defer></script>
     <script src="./app.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#mainContent" data-i18n="discover"
-      >اكتشف الخدمات</a
-    >
+    <a class="skip-link" href="#mainContent">إلى المحتوى</a>
     <header class="site-header">
       <div class="header-inner container">
-        <a href="#/" class="brand" id="headerBrand" aria-label="F90 CARD"></a>
-        <div class="header-search" id="headerSearchWrap">
-          <label class="sr-only" for="globalSearch" data-i18n="search"
-            >ابحث عن قسم أو خدمة…</label
-          ><span id="searchIcon"></span
+        <button
+          class="icon-button"
+          id="menuButton"
+          aria-label="القائمة"
+          aria-controls="drawer"
+          aria-expanded="false"
+        ></button
+        ><a
+          class="brand"
+          href="#/"
+          id="headerBrand"
+          aria-label="أف تسعين كارد"
+        ></a>
+        <form class="header-search" id="searchForm">
+          <label class="sr-only" for="globalSearch">ابحث عن خدمة</label
           ><input
             id="globalSearch"
             type="search"
-            data-placeholder="search"
-            placeholder="ابحث عن قسم أو خدمة…"
+            placeholder="ما الخدمة التي تبحث عنها؟"
             autocomplete="off"
-          />
-        </div>
+          /><button
+            class="icon-button"
+            type="submit"
+            id="searchButton"
+            aria-label="بحث"
+          ></button>
+        </form>
         <div class="header-actions">
-          <button
-            class="icon-button locale-button"
-            id="languageButton"
-            type="button"
-            aria-label="اللغة"
-          >
-            <span id="languageLabel">EN</span>
-          </button>
-          <button
+          <a class="wallet-chip" href="#/wallet" id="headerWallet"></a
+          ><button
             class="icon-button"
             id="themeButton"
-            type="button"
-            data-label="theme"
-            aria-label="تغيير الثيم"
-          ></button>
-          <a
-            class="icon-button notification-button"
-            href="#/notifications"
-            data-label="notifications"
-            aria-label="إشعارات الموقع"
-            ><span id="bellIcon"></span
-            ><span
-              class="notification-count"
-              id="notificationCount"
-              hidden
-            ></span
+            aria-label="تغيير المظهر"
+          ></button
+          ><a
+            class="avatar-button"
+            id="headerUser"
+            href="#/profile"
+            aria-label="حسابي"
           ></a>
-          <button
-            class="icon-button menu-button"
-            id="menuButton"
-            type="button"
-            aria-controls="drawer"
-            aria-expanded="false"
-            data-label="menu"
-            aria-label="القائمة"
-          ></button>
         </div>
       </div>
       <nav
-        class="category-nav container"
+        class="top-nav container"
         id="categoryNav"
         aria-label="أقسام المتجر"
       ></nav>
@@ -98,64 +94,40 @@
       hidden
     >
       <div class="drawer-head">
-        <strong id="drawerTitle" data-i18n="menu">القائمة</strong
+        <strong id="drawerTitle">عالمك الرقمي</strong
         ><button
-          type="button"
           class="icon-button"
           id="drawerClose"
-          data-label="close"
           aria-label="إغلاق"
         ></button>
       </div>
-      <div class="drawer-brand" id="drawerBrand"></div>
+      <div id="drawerProfile"></div>
       <nav id="drawerLinks"></nav>
       <div class="drawer-preferences">
-        <label for="currencySelect" data-i18n="currency">العملة</label
-        ><select id="currencySelect">
-          <option value="USD">USD</option>
-          <option value="JOD">JOD</option>
-          <option value="ILS">ILS</option>
-        </select>
-        <label for="themeSelect" data-i18n="theme">تغيير الثيم</label
-        ><select id="themeSelect">
-          <option value="dark" data-i18n="dark">أسود وأحمر</option>
-          <option value="cream" data-i18n="cream">حليبي هادئ</option>
-        </select>
-        <label for="languageSelect" data-i18n="language">اللغة</label
-        ><select id="languageSelect">
-          <option value="ar">العربية</option>
-          <option value="en">English</option>
-        </select>
+        <label>العملة<select id="currencySelect"></select></label
+        ><label
+          >مظهر الموقع<select id="themeSelect">
+            <option value="dark">أسود وأحمر</option>
+            <option value="cream">حليبي دافئ</option>
+          </select></label
+        >
       </div>
-      <div class="drawer-social" id="drawerSocial"></div>
+      <button class="button secondary" id="installButton" hidden>
+        تثبيت أف تسعين كارد
+      </button>
+      <p class="muted small">فلسطين · رام الله</p>
     </aside>
-    <main class="container main-content" id="mainContent" tabindex="-1">
-      <div class="loading-state" role="status" data-i18n="loading">
-        جارٍ تحميل الخدمات…
-      </div>
-    </main>
-    <footer class="site-footer" id="siteFooter"></footer>
-    <div
-      class="notification-stack"
-      id="notificationStack"
+    <div id="promotionBar" class="promotion" hidden></div>
+    <main
+      id="mainContent"
+      class="container main-content"
+      tabindex="-1"
       aria-live="polite"
-    ></div>
-    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-    <button
-      class="back-top icon-button"
-      id="backTop"
-      type="button"
-      data-label="top"
-      aria-label="إلى أعلى الصفحة"
-      hidden
     >
-      ↑
-    </button>
-    <noscript
-      ><p class="empty-state">
-        يرجى تفعيل JavaScript لعرض المتجر. Please enable JavaScript to browse
-        the store.
-      </p></noscript
-    >
+      <div class="loading">جارٍ تجهيز عالمك الرقمي…</div>
+    </main>
+    <footer class="site-footer" id="footer"></footer>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <div id="modalRoot"></div>
   </body>
 </html>

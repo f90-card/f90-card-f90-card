@@ -2,189 +2,56 @@
 <html lang="ar" dir="rtl" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#080a0f" />
-    <title>إدارة F90 CARD</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0b0d12" />
+    <title>إدارة أف تسعين كارد</title>
+    <link rel="icon" id="adminFavicon" href="./f90-logo.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./admin.css" />
     <script>
       try {
         document.documentElement.dataset.theme =
           localStorage.getItem("f90-theme") === "cream" ? "cream" : "dark";
       } catch {}
     </script>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="admin.css" />
     <script
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"
       defer
     ></script>
-    <script src="config.js" defer></script>
-    <script src="store-core.js" defer></script>
-    <script src="admin.js" defer></script>
+    <script src="./config.js" defer></script>
+    <script src="./store-core.js" defer></script>
+    <script src="./api.js" defer></script>
+    <script src="./reports.js" defer></script>
+    <script src="./admin.js" defer></script>
   </head>
-  <body class="admin-page">
-    <header class="admin-topbar">
-      <a href="./" class="brand" id="adminBrand"
-        ><img
-          class="brand-image brand-image-cover"
-          src="./f90-logo.png"
-          alt="F90 CARD" /></a
-      ><span class="admin-label" data-ar="لوحة الإدارة" data-en="Administration"
-        >لوحة الإدارة</span
-      >
-      <div class="admin-actions">
-        <button
-          type="button"
-          id="adminLanguage"
-          class="icon-button"
-          aria-label="Language"
-        >
-          EN</button
-        ><button
-          type="button"
-          id="adminTheme"
-          class="icon-button"
-          aria-label="Theme"
-        >
-          ☾</button
-        ><a
-          class="button small"
-          href="./"
-          target="_blank"
-          rel="noopener"
-          data-ar="عرض المتجر"
-          data-en="View store"
-          >عرض المتجر</a
-        ><button
-          type="button"
-          id="logoutButton"
-          class="button ghost small"
-          hidden
-          data-ar="تسجيل الخروج"
-          data-en="Sign out"
-        >
-          تسجيل الخروج
-        </button>
+  <body class="admin-body">
+    <header class="admin-top">
+      <button
+        class="icon-button"
+        id="adminMenu"
+        aria-label="قائمة الإدارة"
+      ></button
+      ><a class="brand" href="./index.html" id="adminBrand"></a>
+      <div class="admin-top-title">
+        <strong>مركز إدارة المتجر</strong
+        ><span id="adminIdentity" class="muted small"></span>
       </div>
+      <a class="button secondary small" href="./index.html">عرض المتجر</a>
     </header>
-    <main class="admin-container">
-      <section class="login-panel" id="loginSection">
-        <div class="login-graphic" aria-hidden="true">
-          <img class="login-logo" src="./f90-logo.png" alt="" />
-          <div class="login-grid"></div>
-        </div>
-        <div class="login-content">
-          <span
-            class="eyebrow"
-            data-ar="مساحتك لإدارة كل التفاصيل"
-            data-en="Your space to manage every detail"
-            >مساحتك لإدارة كل التفاصيل</span
-          >
-          <h1 data-ar="أهلًا بك مجددًا" data-en="Welcome back">
-            أهلًا بك مجددًا
-          </h1>
-          <p
-            data-ar="سجّل دخولك بحساب المدير."
-            data-en="Sign in with your administrator account."
-          >
-            سجّل دخولك بحساب المدير.
-          </p>
-          <form id="loginForm">
-            <div class="form-field">
-              <label for="email" data-ar="البريد الإلكتروني" data-en="Email"
-                >البريد الإلكتروني</label
-              ><input
-                id="email"
-                type="email"
-                autocomplete="username"
-                required
-              />
-            </div>
-            <div class="form-field">
-              <label for="password" data-ar="كلمة المرور" data-en="Password"
-                >كلمة المرور</label
-              ><input
-                id="password"
-                type="password"
-                autocomplete="current-password"
-                required
-              />
-            </div>
-            <button
-              class="button primary"
-              type="submit"
-              data-ar="دخول لوحة الإدارة"
-              data-en="Sign in"
-            >
-              دخول لوحة الإدارة
-            </button>
-            <p id="loginMessage" role="status"></p>
-          </form>
-        </div>
-      </section>
-      <div id="dashboard" class="admin-layout" hidden>
-        <aside class="admin-sidebar">
-          <div
-            class="sidebar-caption"
-            data-ar="إدارة المتجر"
-            data-en="Store management"
-          >
-            إدارة المتجر
-          </div>
-          <nav id="adminNavigation"></nav>
-          <div class="sidebar-note">
-            <span class="status-dot"></span
-            ><span
-              data-ar="طلبات الشراء عبر واتساب"
-              data-en="Requests via WhatsApp"
-              >طلبات الشراء عبر واتساب</span
-            >
-          </div>
-        </aside>
-        <div class="admin-workspace">
-          <div id="schemaNotice" class="schema-notice" hidden>
-            <strong
-              data-ar="تحديث قاعدة البيانات مطلوب للخيارات الجديدة"
-              data-en="A database update is required for the new options"
-              >تحديث قاعدة البيانات مطلوب للخيارات الجديدة</strong
-            >
-            <p
-              data-ar="شغّل ملف التحديث مرة واحدة في SQL Editor داخل مشروع Supabase الحالي، ثم أعد تحميل البيانات."
-              data-en="Run the migration once in your existing Supabase project's SQL Editor, then reload data."
-            >
-              شغّل ملف التحديث مرة واحدة في SQL Editor داخل مشروع Supabase
-              الحالي، ثم أعد تحميل البيانات.
-            </p>
-            <div class="form-actions">
-              <button
-                type="button"
-                id="copyMigration"
-                class="button small"
-                data-ar="نسخ كود التحديث"
-                data-en="Copy migration"
-              >
-                نسخ كود التحديث</button
-              ><a
-                class="button small"
-                href="supabase/migrations/20261012025306_storefront_v2.sql"
-                download
-                data-ar="تحميل ملف التحديث"
-                data-en="Download migration"
-                >تحميل ملف التحديث</a
-              ><button
-                type="button"
-                id="refreshData"
-                class="button small"
-                data-ar="إعادة تحميل البيانات"
-                data-en="Reload data"
-              >
-                إعادة تحميل البيانات
-              </button>
-            </div>
-          </div>
-          <p id="statusMessage" class="admin-status" role="status" hidden></p>
-          <div id="adminPanels"></div>
-        </div>
-      </div>
-    </main>
+    <div class="admin-layout">
+      <aside class="admin-sidebar" id="adminSidebar">
+        <nav id="adminNav"></nav>
+        <button class="button secondary" id="adminLogout">تسجيل الخروج</button>
+      </aside>
+      <main id="adminMain" class="admin-main" tabindex="-1">
+        <div class="loading">جارٍ التحقق من الصلاحيات…</div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <div id="modalRoot"></div>
   </body>
 </html>
