@@ -198,6 +198,12 @@
           )}</div><div class="admin-warning-list">${report.pending_deposits ? `<a href="#/deposits">${I("wallet")}راجع ${e(report.pending_deposits)} طلب إيداع</a>` : ""}${report.pending_orders ? `<a href="#/orders">${I("clock")}تابع ${e(report.pending_orders)} طلبًا جاريًا</a>` : ""}${report.unpriced_cost_orders ? `<a href="#/orders">${I("chart")}هناك ${e(report.unpriced_cost_orders)} طلب مكتمل لم تُسجّل تكلفته؛ لا يدخل في هامش الربح أعلاه.</a>` : ""}${S.rates.some((r) => ["ILS", "JOD"].includes(r.currency) && !r.is_enabled) ? `<a href="#/rates">${I("chart")}اضبط سعر صرف الشيكل والدينار لتفعيل عرضهما والإيداع بهما.</a>` : ""}</div>`,
       );
     const board = report.leaderboard || [];
+    if (leader) {
+      const logo = C.safeUrl(S.settings.logo_url);
+      const logoMarkup = logo ? `<img class="f90-board-logo" src="${e(logo)}" alt="شعار F90 Card">` : `<span class="f90-board-logo-text">F90</span>`;
+      const poster = `<section class="f90-board-poster" id="leaderboardPoster" aria-label="لوحة المتصدرين للنشر"><header class="f90-board-head">${logoMarkup}<div><span class="f90-board-kicker">F90 CARD</span><h2>نجوم المتجر</h2><p>متصدرون حسب الإنفاق المكتمل · ${e(S.month)}</p></div></header><div class="f90-board-podium">${board.slice(0, 10).map((u, n) => `<article class="f90-board-entry ${n < 3 ? "f90-board-top" : ""}"><span class="f90-board-place">${n + 1}</span><span class="f90-board-private-avatar" aria-hidden="true">${I("user")}</span><div class="f90-board-member"><strong>المتصدر ${n + 1}</strong><span>الهوية محفوظة للخصوصية</span></div><strong class="f90-board-amount">${e(C.money(u.spent_usd))}</strong></article>`).join("") || '<p class="f90-board-empty">لا توجد طلبات مكتملة لهذا الشهر</p>'}</div><footer class="f90-board-footer"><span>أف تسعين كارد</span><span>الترتيب بعد احتساب الاستردادات</span></footer></section>`;
+      main.insertAdjacentHTML("beforeend", `<div class="f90-board-tools"><p class="muted">لوحة جاهزة للتصوير والنشر دون عرض أسماء العملاء أو صورهم أو أرقام حساباتهم.</p><button class="button secondary small" data-action="print-leaderboard">${I("download")}حفظ أو طباعة لوحة المتصدرين</button></div>` + poster);
+    }
     main.insertAdjacentHTML(
       "beforeend",
       `<div class="section-head"><h2>أكثر العملاء إنفاقًا · ${e(S.month)}</h2><span>بعد الاسترداد</span></div>${
@@ -1628,6 +1634,7 @@
         toast("جرت متابعة " + r.processed + " طلب");
       } else if (action === "report")
         await window.F90Reports.admin(S.report, S.settings.store_name);
+      else if (action === "print-leaderboard") window.print();
       else if (action === "list-pdf")
         await window.F90Reports.staff(S.active, S.list, S.settings.store_name);
     } catch (err) {
