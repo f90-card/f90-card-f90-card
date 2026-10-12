@@ -104,6 +104,7 @@
     $("modalRoot").querySelector("input,button")?.focus();
   }
   function closeModal() {
+    S.pendingProviderImport = null;
     $("modalRoot").innerHTML = "";
     document.body.style.overflow = "";
   }
@@ -873,6 +874,7 @@
     );
   }
   async function importProvider(p) {
+    S.pendingProviderImport = null;
     S.importProvider = p;
     await catalogs();
     const services = await A.call("provider.services", { id: p.id });
