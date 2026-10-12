@@ -1105,6 +1105,16 @@
     settings();
     toast("تم تحديث هوية وإعدادات المتجر");
   }
+  function moveVisibleCatalogItem(items, visible, sourceId, targetId) {
+    const allIds = items.map((item) => item.id);
+    const slots = allIds.map((id, index) => visible.includes(id) ? index : -1).filter((index) => index >= 0);
+    const ordered = slots.map((index) => allIds[index]);
+    const from = ordered.indexOf(sourceId), to = ordered.indexOf(targetId);
+    if (from < 0 || to < 0 || from === to) return null;
+    ordered.splice(to, 0, ordered.splice(from, 1)[0]);
+    slots.forEach((index, n) => { allIds[index] = ordered[n]; });
+    return allIds;
+  }
   async function reorder(kind, ids) {
     await A.call("catalog.reorder", { kind, ids });
     await catalogPage(
@@ -1705,10 +1715,8 @@
     const items = S[kind === "category" ? "categories" : kind === "product" ? "products" : "banners"];
     const visible = [...drag.list.querySelectorAll(".catalog-row[data-row-id]")].map((row) => row.dataset.rowId);
     if (!visible.includes(drag.source) || !visible.includes(drag.target)) return;
-    const ids = items.map((item) => item.id);
-    const from = ids.indexOf(drag.source), to = ids.indexOf(drag.target);
-    if (from < 0 || to < 0) return;
-    [ids[from], ids[to]] = [ids[to], ids[from]];
+    const ids = moveVisibleCatalogItem(items, visible, drag.source, drag.target);
+    if (!ids) return;
     try {
       await reorder(kind, ids);
     } catch (err) {
@@ -1739,21 +1747,10 @@
     if (!row) return;
     ev.preventDefault();
     row.classList.remove("drag-over");
-    const list =
-        S[
-          S.kind === "category"
-            ? "categories"
-            : S.kind === "product"
-              ? "products"
-              : "banners"
-        ],
-      ids = list.map((x) => x.id),
-      from = ids.indexOf(dragId),
-      to = ids.indexOf(row.dataset.rowId);
-    if (from < 0 || to < 0 || from === to) return;
+    const list = S[S.kind === "category" ? "categories" : S.kind === "product" ? "products" : "banners"];
     const visible = [...main.querySelectorAll(".catalog-row[data-row-id]")].map((item) => item.dataset.rowId);
-    if (!visible.includes(dragId) || !visible.includes(row.dataset.rowId)) return;
-    [ids[from], ids[to]] = [ids[to], ids[from]];
+    const ids = moveVisibleCatalogItem(list, visible, dragId, row.dataset.rowId);
+    if (!ids) return;
     try {
       await reorder(S.kind, ids);
     } catch (err) {
