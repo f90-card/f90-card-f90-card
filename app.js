@@ -29,6 +29,7 @@
   let toastTimer,
     bannerTimer,
     quoteTimer,
+    maintenanceTimer,
     installPrompt,
     promoTimers = [];
   try {
@@ -679,6 +680,8 @@
   async function route() {
     const seq = ++S.route;
     clearInterval(bannerTimer);
+    clearInterval(maintenanceTimer);
+    document.body.classList.remove("f90-in-maintenance");
     clearTimeout(quoteTimer);
     closeModal();
     toggleDrawer(false);
@@ -735,11 +738,31 @@
         !["manager", "designer", "admin"].includes(S.me?.role) &&
         !["auth", "security", "support"].includes(page)
       ) {
-        main.innerHTML =
-          pageHead(
-            "نجهّز لك تجربة أفضل",
-            S.settings.config.maintenance.text_ar || "صيانة مؤقتة",
-          ) + supportLink();
+        const maintenance = S.settings.config.maintenance;
+        const until = maintenance.until ? new Date(maintenance.until).getTime() : NaN;
+        const hasCountdown = Number.isFinite(until);
+        document.body.classList.add("f90-in-maintenance");
+        main.innerHTML = `<section class="f90-maintenance-screen" role="status" aria-label="الموقع تحت الصيانة"><div class="f90-maintenance-decor" aria-hidden="true"></div><div class="f90-maintenance-content"><img class="f90-maintenance-logo" src="./assets/icons/icon-192.png" alt="شعار F90 Card" width="110" height="110"><span class="f90-maintenance-tag">F90 CARD</span><h1>نعتذر لكم، الموقع قيد الصيانة حاليًا</h1><p>${e(maintenance.text_ar || "نعمل على تحسين خدماتنا، وسنعود للعمل قريبًا.")}</p>${hasCountdown ? '<div class="f90-maintenance-countdown" id="maintenanceClock" aria-label="الوقت المتبقي حتى الموعد المحدد"></div>' : '<p class="muted">سيعود الموقع للعمل عند انتهاء الصيانة.</p>'}<small>نشكر لكم صبركم وتفهّمكم</small></div></section>`;
+        if (hasCountdown) {
+          const tick = () => {
+            const el = $("maintenanceClock");
+            if (!el) return;
+            const remaining = Math.max(0, until - Date.now());
+            const days = Math.floor(remaining / 86400000);
+            const hours = Math.floor((remaining % 86400000) / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            const format = (n) => String(n).padStart(2, "0");
+            el.classList.toggle("urgent", remaining > 0 && remaining < 3600000);
+            el.innerHTML = [[days, "يوم"], [hours, "ساعة"], [minutes, "دقيقة"], [seconds, "ثانية"]].map(([n, name]) => `<div><strong>${format(n)}</strong><span>${name}</span></div>`).join("");
+            if (!remaining) {
+              clearInterval(maintenanceTimer);
+              el.insertAdjacentHTML("beforeend", '<p class="f90-maintenance-ended">وصلنا إلى موعد العودة المتوقع. حدّث الصفحة للتحقق من انتهاء الصيانة.</p>');
+            }
+          };
+          tick();
+          maintenanceTimer = setInterval(tick, 1000);
+        }
         return;
       }
       if (!page) home();
