@@ -563,3 +563,29 @@
 .catalog-row.touch-dragging{opacity:.65;outline:2px solid var(--accent);outline-offset:2px}
 .catalog-row.drag-over{box-shadow:0 0 0 2px var(--accent)}
 @media(max-width:650px){.catalog-drag-handle{width:48px;height:60px;flex-basis:48px}}
+
+/* Shareable leaderboard poster. Never show private names, profile photos or account identifiers. */
+.f90-board-tools{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:25px 0 15px}
+.f90-board-tools p{margin:0}
+.f90-board-poster{width:100%;max-width:860px;margin:0 auto 34px;padding:clamp(20px,4vw,43px);border-radius:24px;border:1px solid #f7547390;background:radial-gradient(circle at 95% 5%,#ed3a6336,transparent 45%),linear-gradient(140deg,#0e101b,#1b1426 60%,#240f21);color:#fff;box-shadow:0 22px 65px #0003;position:relative;overflow:hidden}
+.f90-board-head{display:flex;align-items:center;gap:20px;border-bottom:1px solid #ffffff25;padding-bottom:23px;margin-bottom:24px}
+.f90-board-logo{width:94px;height:94px;object-fit:contain;border-radius:18px;background:#ffffff10}
+.f90-board-logo-text{width:94px;height:94px;display:grid;place-items:center;border-radius:20px;font-size:30px;font-weight:900;color:#fff;background:#fa2444}
+.f90-board-kicker{color:#ff9db2;font-size:12px;letter-spacing:3px;font-weight:800}
+.f90-board-head h2{font-size:clamp(26px,4vw,42px);margin:4px 0 6px;color:#fff}
+.f90-board-head p{margin:0;color:#ccd0dd;font-size:13px}
+.f90-board-podium{display:grid;gap:11px}
+.f90-board-entry{display:flex;align-items:center;gap:15px;padding:14px 17px;background:#ffffff0d;border:1px solid #ffffff1b;border-radius:17px;min-width:0}
+.f90-board-entry.f90-board-top{background:linear-gradient(110deg,#fa244422,#ffffff0c);border-color:#ff5a784a}
+.f90-board-place{flex:0 0 37px;width:37px;height:37px;display:grid;place-items:center;border-radius:50%;background:#fa2444;color:#fff;font-size:18px;font-weight:900}
+.f90-board-top:first-child .f90-board-place{background:#e9b849;color:#15131b}
+.f90-board-private-avatar{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;background:#c5cbd327;border:1px solid #ffffff25;border-radius:50%;filter:blur(1.3px)}
+.f90-board-private-avatar svg{width:26px;height:26px;color:#d4d5dc}
+.f90-board-member{flex:1;min-width:0}
+.f90-board-member strong{display:block;font-size:16px}
+.f90-board-member span{display:block;color:#aeb4c3;font-size:11px;margin-top:4px}
+.f90-board-amount{direction:ltr;white-space:nowrap;color:#f9ccd5;font-size:clamp(13px,2vw,19px)}
+.f90-board-footer{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #ffffff25;margin-top:24px;padding-top:16px;font-size:12px;color:#ccd0dd}
+.f90-board-empty{text-align:center;color:#cbd0dc;padding:30px}
+@media(max-width:550px){.f90-board-poster{padding:15px;border-radius:14px}.f90-board-head{gap:12px}.f90-board-logo,.f90-board-logo-text{width:64px;height:64px}.f90-board-entry{gap:8px;padding:12px 9px}.f90-board-private-avatar{width:32px;height:32px;flex-basis:32px}.f90-board-place{flex-basis:27px;width:27px;height:27px;font-size:13px}.f90-board-member strong{font-size:13px}.f90-board-member span{font-size:9px}.f90-board-footer{font-size:10px}}
+@media print{body:has(#leaderboardPoster) .admin-top,body:has(#leaderboardPoster) .admin-sidebar,body:has(#leaderboardPoster) .page-head,body:has(#leaderboardPoster) .toolbar,body:has(#leaderboardPoster) .f90-board-tools,body:has(#leaderboardPoster) .section-head,body:has(#leaderboardPoster) .leaderboard-top,body:has(#leaderboardPoster) .table-wrap,body:has(#leaderboardPoster) .admin-note{display:none!important}body:has(#leaderboardPoster) .admin-main{padding:0!important;margin:0!important;max-width:none!important}body:has(#leaderboardPoster) .f90-board-poster{display:block!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;border-radius:0!important;background-color:#14101c!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}body:has(#leaderboardPoster){background:#14101c!important}@page{margin:10mm}}
