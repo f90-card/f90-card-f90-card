@@ -346,7 +346,7 @@ async function privatePath(a: Actor, bucket: string, path: unknown) {
     throw new AppError("F90_FIELDS");
   return p;
 }
-async function provider(id: string) {
+async function provider(id: string, readOnly = false) {
   const p = check(
     await db.from("f90_providers").select("*").eq("id", id).single(),
   );
@@ -354,7 +354,7 @@ async function provider(id: string) {
     p_actor: null,
     p_provider: id,
   });
-  if (!secret || !p.is_enabled) throw new ProviderError("المورّد غير مفعّل");
+  if (!secret || (!p.is_enabled && !readOnly)) throw new ProviderError("المورّد غير مفعّل");
   return { p, secret };
 }
 async function dns(host: string) {
@@ -365,7 +365,7 @@ async function dns(host: string) {
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }
 async function providerAction(id: string, action: string, args: any = {}) {
-  const { p, secret } = await provider(id);
+  const { p, secret } = await provider(id, action === "services" || action === "balance");
   return callProvider(p, secret, action, args, fetch, dns);
 }
 async function work() {
@@ -1133,6 +1133,8 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.import") {
     requireRole(a, "manager");
+    const importAdapter = check(await db.from("f90_providers").select("adapter").eq("id", uuid(b.id)).single());
+    if (importAdapter.adapter === "omega") throw new AppError("F90_FIELDS", 400, "استيراد أوميغا يحتاج تهيئة حقول المنتجات والأسعار");
     const id = uuid(b.id);
     const p = check(
       await db.from("f90_providers").select("*").eq("id", id).single(),
