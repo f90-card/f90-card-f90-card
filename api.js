@@ -12,21 +12,34 @@
       apikey: window.F90_CONFIG.SUPABASE_KEY,
     };
     if (session) headers.Authorization = "Bearer " + session.access_token;
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ action, ...data }),
-      cache: "no-store",
-    });
+    let response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action, ...data }),
+        cache: "no-store",
+      });
+    } catch {
+      // The server may have committed a payment before the connection failed.
+      const err = new Error("انقطع الاتصال قبل تأكيد نتيجة العملية");
+      err.uncertain = true;
+      throw err;
+    }
     let body;
     try {
       body = await response.json();
     } catch {
-      throw new Error("تعذّر الاتصال بالخدمة. حاول مجددًا");
+      const err = new Error("تعذّر قراءة رد الخادم");
+      // A successful or server-error response without valid JSON is ambiguous.
+      err.uncertain = response.ok || response.status >= 500;
+      throw err;
     }
     if (!response.ok || body.error) {
       const err = new Error(body.error?.message || "تعذّر إكمال العملية");
       err.code = body.error?.code;
+      err.status = response.status;
+      err.uncertain = response.status >= 500;
       throw err;
     }
     return body.data;
