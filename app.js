@@ -934,11 +934,17 @@
           throw new Error("لم يتأكد تسجيل عملية الشراء. راجع طلباتك قبل إرسال طلب آخر.");
         o = recovered.order;
       }
+      // The order exists now. Navigate before optional account/chrome refreshes,
+      // so an unrelated UI error cannot leave the customer on the payment form.
       S.checkoutKey = C.key();
-      await refreshMe();
-      chrome();
       location.hash = href("order", o.id);
-      toast("تم دفع طلبك من المحفظة");
+      try {
+        await refreshMe();
+        chrome();
+      } catch {
+        // The confirmed order remains available from the order route.
+      }
+      toast("تم تسجيل طلب الشراء. يمكنك متابعة حالته من طلباتك.");
       return;
     }
     if (form.id === "profileForm") {
@@ -962,14 +968,27 @@
       // a different file path with the same idempotency key.
       const file = data.receipt;
       const signature = file ? [file.name, file.size, file.lastModified].join(":") : "";
-      let receiptPath = S.pendingDepositReceipt?.key === reference &&
-        S.pendingDepositReceipt.signature === signature
-          ? S.pendingDepositReceipt.path
-          : null;
+      const depositDetails = JSON.stringify({
+        method_id: S.selectedMethod?.id,
+        currency: data.currency,
+        amount: Number(data.amount),
+        reference: data.reference || "",
+      });
+      // Once a receipt was uploaded for this reference, do not silently reuse
+      // the key for different amounts, payment destinations or image files.
+      if (S.pendingDepositReceipt?.key === reference &&
+          (S.pendingDepositReceipt.signature !== signature ||
+           S.pendingDepositReceipt.details !== depositDetails)) {
+        throw new Error("غيّرت بيانات الإيداع بعد محاولة سابقة. راجع سجل الإيداعات قبل تقديم طلب جديد من صفحة الإيداع.");
+      }
+      let receiptPath = S.pendingDepositReceipt?.key === reference
+        ? S.pendingDepositReceipt.path : null;
       if (!receiptPath) {
         const receipt = await A.upload(file, "f90-receipts");
         receiptPath = receipt.path;
-        S.pendingDepositReceipt = { key: reference, signature, path: receiptPath };
+        S.pendingDepositReceipt = {
+          key: reference, signature, details: depositDetails, path: receiptPath,
+        };
       }
       try {
         await A.call("deposit.submit", {
