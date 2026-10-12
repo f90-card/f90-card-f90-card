@@ -41,7 +41,6 @@
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
-    ["coupons", "رموز الخصم", "doc", ["manager"]],
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
     ["policies", "المعلومات والسياسات", "doc", ["manager"]],
@@ -664,6 +663,7 @@
     return d.toISOString().slice(0, 16);
   };
   function publicListPage(kind) {
+    if (kind === "coupons") { main.innerHTML = head("رموز الخصم غير متاحة", "تم إيقاف إدارة الكوبونات؛ خصومات VIP ما زالت مستقلة."); return; }
     const list = S.settings.config[kind] || [];
     S.dynamicKind = kind;
     S.dynamicItems = list;
@@ -687,6 +687,7 @@
       `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row">${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions"><button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
   }
   function editDynamic(kind, item = null, index = -1) {
+    if (kind === "coupons") throw new Error("إدارة الكوبونات متوقفة");
     S.edit = item;
     S.editIndex = index;
     S.dynamicKind = kind;
@@ -1039,6 +1040,7 @@
     );
   }
   async function saveDynamic(form, d) {
+    if (S.dynamicKind === "coupons") throw new Error("إدارة الكوبونات متوقفة");
     const old = S.edit || {},
       kind = S.dynamicKind,
       key = configKey(kind);
@@ -1188,7 +1190,7 @@
       else if (["categories", "products", "banners"].includes(page))
         await catalogPage(page);
       else if (
-        ["payments", "promotions", "notifications", "coupons"].includes(page)
+        ["payments", "promotions", "notifications"].includes(page)
       )
         publicListPage(page);
       else if (page === "settings") await settings();
