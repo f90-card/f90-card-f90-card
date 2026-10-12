@@ -876,22 +876,19 @@
     S.importProvider = p;
     await catalogs();
     const services = await A.call("provider.services", { id: p.id });
+    if (!Array.isArray(services)) throw new Error("قائمة خدمات المورّد غير صالحة");
     S.importServices = services;
+    const visibleServices = services.slice(0, 1000);
+    const omega = p.adapter === "omega";
     main.innerHTML =
       head(
-        "جلب خدمات " + p.name,
-        "الخدمات المستوردة تبدأ مخفية حتى تراجع أسماءها العربية وصورها وتسعيرها.",
-        `<a class="button secondary small" href="#/providers">رجوع</a>`,
+        "معاينة خدمات " + p.name,
+        "هذه الصفحة تستعلم عن القائمة فقط. لا يحدث خصم أو شراء أو نشر تلقائي.",
+        `<a class="button secondary small" href="#/providers">رجوع إلى المورّدين</a>`,
       ) +
-      `<form id="importForm"><section class="panel"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>الاسم عند المورّد</th><th>الاسم بالعربية</th><th>سعر المورّد</th><th>الحدود</th></tr></thead><tbody>${services
-        .slice(0, 1000)
-        .map(
-          (s, n) =>
-            `<tr><td><input type="checkbox" name="service_${n}" value="${e(s.id)}" aria-label="اختيار الخدمة"></td><td>${e(s.name)}</td><td><input type="text" name="name_${n}" placeholder="اكتب الاسم بالعربية" aria-label="اسم الخدمة بالعربية"></td><td>${e(s.rate)} / ${e(s.unit_quantity)}</td><td>${e(s.min)}–${e(s.max)}</td></tr>`,
-        )
-        .join(
-          "",
-        )}</tbody></table></div><button class="button" style="margin-top:20px" type="submit">استيراد الخدمات المختارة</button></section></form>`;
+      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة فقط؛ صفِّ القائمة من لوحة المورّد إذا احتجت غيرها." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: استعراض فقط.</strong> الاستيراد غير متاح بعد حتى نتحقق من صيغة الخدمات والأسعار. لا توجد أي عملية مالية في هذه الصفحة.</div>' : ""}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible" ${omega ? "disabled" : ""}>اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>سعر المورّد</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
+            `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}" ${omega ? "disabled" : ""}></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90" ${omega ? "disabled" : ""}></td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
+          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>${omega ? "استيراد أوميغا غير متاح حاليًا" : "استيراد الخدمات المحددة كمسودات"}</button></div></form></section>`;
   }
   async function configSave(config) {
     await A.call("settings.save", {
