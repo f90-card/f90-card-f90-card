@@ -6,6 +6,7 @@ on:
       - "api.js"
       - "app.js"
       - "tests/payment-safety.test.mjs"
+      - "tests/session-resilience.test.mjs"
       - ".github/workflows/payment-safety.yml"
   pull_request:
     paths:
@@ -30,5 +31,7 @@ jobs:
         run: |
           node --check api.js
           node --check app.js
+          node --check admin.js
+          node --check sw.js
       - name: Run payment safety regression tests
-        run: node --test tests/payment-safety.test.mjs
+        run: node --test tests/*.test.mjs
