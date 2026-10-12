@@ -589,3 +589,15 @@
 .f90-board-empty{text-align:center;color:#cbd0dc;padding:30px}
 @media(max-width:550px){.f90-board-poster{padding:15px;border-radius:14px}.f90-board-head{gap:12px}.f90-board-logo,.f90-board-logo-text{width:64px;height:64px}.f90-board-entry{gap:8px;padding:12px 9px}.f90-board-private-avatar{width:32px;height:32px;flex-basis:32px}.f90-board-place{flex-basis:27px;width:27px;height:27px;font-size:13px}.f90-board-member strong{font-size:13px}.f90-board-member span{font-size:9px}.f90-board-footer{font-size:10px}}
 @media print{body:has(#leaderboardPoster) .admin-top,body:has(#leaderboardPoster) .admin-sidebar,body:has(#leaderboardPoster) .page-head,body:has(#leaderboardPoster) .toolbar,body:has(#leaderboardPoster) .f90-board-tools,body:has(#leaderboardPoster) .section-head,body:has(#leaderboardPoster) .leaderboard-top,body:has(#leaderboardPoster) .table-wrap,body:has(#leaderboardPoster) .admin-note{display:none!important}body:has(#leaderboardPoster) .admin-main{padding:0!important;margin:0!important;max-width:none!important}body:has(#leaderboardPoster) .f90-board-poster{display:block!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;border-radius:0!important;background-color:#14101c!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}body:has(#leaderboardPoster){background:#14101c!important}@page{margin:10mm}}
+
+/* Supplier catalogue: searchable read-only preview and controlled draft import. */
+.f90-import-toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:23px 0 9px}
+.f90-import-toolbar .field{flex:1;min-width:220px;max-width:430px;margin:0}
+.f90-import-toolbar .actions{display:flex;flex-wrap:wrap;gap:8px}
+.service-select [data-provider-service-row][hidden]{display:none!important}
+.service-select td{vertical-align:middle}
+.service-select td input[type=text]{min-width:170px;max-width:330px;width:100%;padding:9px;border-radius:8px;background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.service-select td input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);cursor:pointer}
+.f90-import-actions{display:flex;align-items:center;justify-content:space-between;gap:17px;flex-wrap:wrap;margin-top:21px}
+.f90-import-actions p{max-width:570px;margin:0}
+@media(max-width:650px){.f90-import-toolbar .field{width:100%;max-width:none}.f90-import-actions .button{width:100%}}
