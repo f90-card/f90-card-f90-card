@@ -93,9 +93,9 @@
     toastTimer = setTimeout(() => ($("toast").hidden = true), 5000);
   }
   function errorMessage(err) {
-    return /[\u0600-\u06ff]/.test(err.message)
-      ? err.message
-      : "تعذّر إكمال العملية. تحقق من البيانات والصلاحيات";
+    const message = String(err?.message || "تعذّر إكمال العملية");
+    const code = err?.code ? " (" + String(err.code).slice(0, 60) + ")" : "";
+    return message.slice(0, 280) + code;
   }
   function modal(title, body) {
     $("modalRoot").innerHTML =
