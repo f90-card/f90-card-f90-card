@@ -841,7 +841,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">جلب الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">جلب الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -1573,6 +1573,23 @@
       } else if (action === "provider-sync") {
         const r = await A.call("provider.sync_prices", { id: b.dataset.id });
         toast("حُدّث تسعير " + r.updated + " خدمة");
+      } else if (action === "provider-diagnose-all") {
+        const output = $("providerDiagnostics");
+        if (output) output.textContent = "جارٍ فحص المورّدين...";
+        const lines = [];
+        for (const provider of S.providerRows) {
+          const checks = [];
+          for (const [label, operation] of [["الرصيد", "provider.balance"], ["الخدمات", "provider.services"]]) {
+            try {
+              const result = await A.call(operation, { id: provider.id });
+              checks.push(label + ": ناجح" + (operation === "provider.services" ? " (" + (Array.isArray(result) ? result.length : 0) + ")" : ""));
+            } catch (err) {
+              checks.push(label + ": " + String(err?.message || err).slice(0, 180));
+            }
+          }
+          lines.push("<p><strong>" + e(provider.name) + "</strong>: " + checks.map(e).join(" | ") + "</p>");
+          if (output) output.innerHTML = lines.join("");
+        }
       } else if (action === "provider-diagnose") {
         const results = [];
         for (const [label, endpoint] of [["الرصيد", "provider.balance"], ["الخدمات", "provider.services"]]) {
