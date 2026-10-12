@@ -2190,3 +2190,10 @@ tr:last-child td {
     font-size: 11px;
   }
 }
+
+/* F90: readable labels below square category and product artwork. */
+.image-grid .image-tile{aspect-ratio:auto;overflow:visible;background:transparent;display:flex;flex-direction:column;gap:7px;text-decoration:none}
+.image-grid .image-tile>img,.image-grid .image-tile>.image-placeholder{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:var(--surface2)}
+.image-grid .tile-caption{display:block;text-align:center;font-size:clamp(11px,1.8vw,14px);font-weight:650;line-height:1.45;color:var(--text);overflow-wrap:anywhere;padding:0 2px}
+.image-grid .image-tile .refill-badge{inset:auto 6px 32px}
+@media(max-width:700px){.image-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.image-grid .image-tile{gap:5px}.image-grid .tile-caption{font-size:11px}}
