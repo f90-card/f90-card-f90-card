@@ -121,6 +121,13 @@ function text(v: unknown, max = 2000) {
     .trim()
     .slice(0, max);
 }
+function paymentReference(value: unknown) {
+  if (typeof value !== "string" || value.length < 8 || value.length > 160 ||
+      value.trim() !== value || /[\\x00-\\x1f\\x7f]/.test(value))
+    throw new AppError("F90_IDEMPOTENCY", 400,
+      "مرجع العملية مطلوب بطول 8 إلى 160 حرفًا، دون فراغات طرفية أو رموز تحكم");
+  return value;
+}
 function uuid(v: unknown) {
   const s = text(v, 40);
   if (
@@ -1482,13 +1489,15 @@ Deno.serve(async (req: Request) => {
               })
             ).total_usd
           : null);
-      if (a.keyId && !b.idempotency_key) throw new AppError("F90_IDEMPOTENCY");
+      const reference = paymentReference(b.idempotency_key);
+      if (!fields || typeof fields !== "object" || Array.isArray(fields))
+        throw new AppError("F90_FIELDS", 400, "حقول العميل يجب أن تكون كائنًا");
       const data = await rpc("f90_checkout", {
         p_user: a.id,
         p_product: product,
         p_quantity: integer(b.quantity || 1),
         p_fields: fields,
-        p_key: text(b.idempotency_key, 160),
+        p_key: reference,
         p_expected: expected,
         p_coupon: "",
       });
@@ -1542,6 +1551,7 @@ Deno.serve(async (req: Request) => {
       });
     }
     if (action === "deposit.submit") {
+      const reference = paymentReference(b.idempotency_key);
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       return out(
