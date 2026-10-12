@@ -1388,6 +1388,8 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "checkout" || action === "add") {
       scoped(a, "orders");
+      const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
+      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
       const product = uuid(b.product_id || b.service);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const expected =
@@ -1461,7 +1463,9 @@ Deno.serve(async (req: Request) => {
         count: r.count,
       });
     }
-    if (action === "deposit.submit")
+    if (action === "deposit.submit") {
+      const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
+      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       return out(
         await rpc("f90_submit_deposit", {
           p_user: a.id,
@@ -1474,6 +1478,7 @@ Deno.serve(async (req: Request) => {
         }),
         201,
       );
+    }
     if (action === "profile.save") {
       const d: any = {
         display_name: text(b.display_name, 100),
