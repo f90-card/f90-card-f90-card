@@ -55,6 +55,7 @@ const errors: Record<string, [number, string]> = {
   F90_PRICE_CHANGED: [409, "تغيّر السعر. راجع الإجمالي وأكد الشراء مجددًا"],
   F90_ACCOUNT_ID: [400, "أدخل معرّف حسابك"],
   F90_FIELDS: [400, "أكمل بيانات الطلب المطلوبة"],
+  F90_IDEMPOTENCY_CONFLICT: [409, "مرجع العملية مستخدم ببيانات مختلفة"],
   F90_PROVIDER_NOT_READY: [409, "الخدمة الآلية غير جاهزة للتنفيذ بعد"],
   F90_COUPON: [400, "رمز الخصم غير صالح"],
   F90_RECEIPT: [400, "ارفع إيصال الإيداع من حسابك"],
@@ -1554,14 +1555,29 @@ Deno.serve(async (req: Request) => {
       const reference = paymentReference(b.idempotency_key);
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
+      const method = text(b.method_id, 100);
+      const currency = text(b.currency, 8);
+      const amount = num(b.amount, 0.000001, 1000000);
+      const receipt = text(b.receipt_path, 500);
+      const memo = text(b.reference, 300);
+      // Read-only collision check. The database RPC still owns atomic insert/deduplication.
+      const previous = check(await db.from("f90_deposits")
+        .select("method_id,currency,amount,receipt_path,reference")
+        .eq("user_id", a.id).eq("idempotency_key", reference).maybeSingle());
+      if (previous &&
+          (previous.method_id !== method || previous.currency !== currency ||
+           Number(previous.amount) !== amount || previous.receipt_path !== receipt ||
+           (previous.reference || "") !== memo))
+        throw new AppError("F90_IDEMPOTENCY_CONFLICT", 409,
+          "مرجع الإيداع مستخدم لبيانات مختلفة. راجع الطلب السابق ولا تكرر الإرسال بمفتاح جديد تلقائيًا.");
       return out(
         await rpc("f90_submit_deposit", {
           p_user: a.id,
-          p_method: text(b.method_id, 100),
-          p_currency: text(b.currency, 8),
-          p_amount: num(b.amount, 0.000001, 1000000),
-          p_receipt: text(b.receipt_path, 500),
-          p_reference: text(b.reference, 300),
+          p_method: method,
+          p_currency: currency,
+          p_amount: amount,
+          p_receipt: receipt,
+          p_reference: memo,
           p_key: reference,
         }),
         201,
