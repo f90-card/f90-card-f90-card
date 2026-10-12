@@ -1287,7 +1287,7 @@ async function staff(a: Actor, b: any) {
         oldPrice, autoMargin: !!row.auto_margin, isActive: !!product.is_active });
     }
     const changing = planned.filter((item) => item.autoMargin && item.price !== item.oldPrice);
-    const preview = {
+    const preview: any = {
       mapped: rows.length,
       ready: planned.length,
       missing,
