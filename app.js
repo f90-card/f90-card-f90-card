@@ -472,6 +472,10 @@
     return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p><div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><strong class="record-price">${e(C.money(d.usd_amount, "USD", true))}</strong></article>`;
   }
   function deposit(methodId) {
+    if (!S.me?.profile?.is_verified) {
+      main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") + `<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>`;
+      return;
+    }
     const methods = (S.settings.config.payment_methods || []).filter(
       (m) => m.enabled,
     );
@@ -897,6 +901,10 @@
       }
       if (S.me.needs_mfa) {
         await mfaChallenge();
+        return;
+      }
+      if (!S.me.profile?.is_verified) {
+        modal("توثيق الحساب مطلوب", `<p>يلزم توثيق حسابك وموافقة الإدارة قبل تنفيذ الشراء.</p><a class="button" href="#/verification">انتقل إلى توثيق الهوية</a>`);
         return;
       }
       if (!S.quote) throw new Error("انتظر تحديث السعر قبل التأكيد");
