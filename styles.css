@@ -2197,3 +2197,18 @@ tr:last-child td {
 .image-grid .tile-caption{display:block;text-align:center;font-size:clamp(11px,1.8vw,14px);font-weight:650;line-height:1.45;color:var(--text);overflow-wrap:anywhere;padding:0 2px}
 .image-grid .image-tile .refill-badge{inset:auto 6px 32px}
 @media(max-width:700px){.image-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.image-grid .image-tile{gap:5px}.image-grid .tile-caption{font-size:11px}}
+
+/* Profile identity and install experience, consistent with F90 visual identity. */
+.profile-cover{flex-direction:column;text-align:center;justify-content:center;gap:14px}
+.profile-cover .avatar.large{margin-inline:auto}
+.profile-cover .badges,.f90-profile-links{display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+.profile-cover .profile-id{text-align:center;direction:ltr;margin-top:10px;overflow-wrap:anywhere}
+.f90-install-page{text-align:center;max-width:790px;margin-inline:auto;padding:clamp(22px,4vw,48px)}
+.f90-install-icon{width:128px;height:128px;margin:0 auto 15px;display:grid;place-items:center;border-radius:28px;background:linear-gradient(135deg,#fa244429,var(--surface2));border:1px solid #fa244455;box-shadow:0 16px 40px #0002}
+.f90-install-icon img{width:104px;height:104px;object-fit:contain;border-radius:18px}
+.f90-install-page>h2{margin:8px 0}
+.f90-install-instructions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;text-align:start;margin:28px 0}
+.f90-install-instructions section{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--surface2)}
+.f90-install-instructions h3{margin:0 0 9px}
+.f90-install-instructions p{line-height:1.8;margin:0}
+@media(max-width:650px){.profile-cover{padding:25px 14px}.profile-cover h1{font-size:26px}.f90-install-instructions{grid-template-columns:1fr}}
