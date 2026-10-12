@@ -1397,7 +1397,7 @@ Deno.serve(async (req: Request) => {
           p_user: a && !a.needsMfa ? a.id : null,
           p_product: uuid(b.product_id),
           p_quantity: integer(b.quantity || 1),
-          p_coupon: text(b.coupon, 100),
+          p_coupon: "",
         }),
       );
     }
@@ -1490,7 +1490,7 @@ Deno.serve(async (req: Request) => {
         p_fields: fields,
         p_key: text(b.idempotency_key, 160),
         p_expected: expected,
-        p_coupon: text(b.coupon, 100),
+        p_coupon: "",
       });
       if (a.keyId)
         await db
