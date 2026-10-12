@@ -476,7 +476,7 @@
           )
           .map(
             (r) =>
-              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
+              `<article class="catalog-row" draggable="true" data-row-id="${r.id}"><button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
           )
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
@@ -1657,6 +1657,66 @@
         "editor-preview",
       );
   });
+  // Pointer Events support both touchscreens and mouse without dragging the whole row.
+  let touchSorting = null;
+  document.addEventListener("pointerdown", (ev) => {
+    const handle = ev.target.closest(".catalog-drag-handle");
+    const row = handle?.closest(".catalog-row[data-row-id]");
+    if (!row || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+    if (touchSorting) return;
+    const list = row.closest(".catalog-list");
+    if (!list || !main.contains(list)) return;
+    ev.preventDefault();
+    touchSorting = {
+      pointerId: ev.pointerId,
+      handle,
+      list,
+      source: row.dataset.rowId,
+      target: row.dataset.rowId,
+      x: ev.clientX,
+      y: ev.clientY,
+      active: false,
+    };
+    handle.setPointerCapture?.(ev.pointerId);
+  });
+  document.addEventListener("pointermove", (ev) => {
+    const drag = touchSorting;
+    if (!drag || ev.pointerId !== drag.pointerId) return;
+    if (!drag.active && Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 9) return;
+    drag.active = true;
+    const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".catalog-row[data-row-id]");
+    drag.list.querySelectorAll(".drag-over, .touch-dragging").forEach((row) => row.classList.remove("drag-over", "touch-dragging"));
+    const source = [...drag.list.querySelectorAll(".catalog-row[data-row-id]")].find((row) => row.dataset.rowId === drag.source);
+    source?.classList.add("touch-dragging");
+    if (target && drag.list.contains(target)) {
+      drag.target = target.dataset.rowId;
+      target.classList.add("drag-over");
+    }
+    ev.preventDefault();
+  }, { passive: false });
+  async function endPointerSort(ev, cancel = false) {
+    const drag = touchSorting;
+    if (!drag || ev.pointerId !== drag.pointerId) return;
+    touchSorting = null;
+    drag.list.querySelectorAll(".drag-over, .touch-dragging").forEach((row) => row.classList.remove("drag-over", "touch-dragging"));
+    if (drag.handle.hasPointerCapture?.(ev.pointerId)) drag.handle.releasePointerCapture(ev.pointerId);
+    if (cancel || !drag.active || drag.source === drag.target || !drag.list.isConnected) return;
+    const kind = S.kind;
+    const items = S[kind === "category" ? "categories" : kind === "product" ? "products" : "banners"];
+    const visible = [...drag.list.querySelectorAll(".catalog-row[data-row-id]")].map((row) => row.dataset.rowId);
+    if (!visible.includes(drag.source) || !visible.includes(drag.target)) return;
+    const ids = items.map((item) => item.id);
+    const from = ids.indexOf(drag.source), to = ids.indexOf(drag.target);
+    if (from < 0 || to < 0) return;
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    try {
+      await reorder(kind, ids);
+    } catch (err) {
+      toast(errorMessage(err));
+    }
+  }
+  document.addEventListener("pointerup", (ev) => { void endPointerSort(ev); });
+  document.addEventListener("pointercancel", (ev) => { void endPointerSort(ev, true); });
   document.addEventListener("dragstart", (ev) => {
     const row = ev.target.closest("[data-row-id]");
     if (row) {
