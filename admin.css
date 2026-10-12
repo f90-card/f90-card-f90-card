@@ -601,3 +601,12 @@
 .f90-import-actions{display:flex;align-items:center;justify-content:space-between;gap:17px;flex-wrap:wrap;margin-top:21px}
 .f90-import-actions p{max-width:570px;margin:0}
 @media(max-width:650px){.f90-import-toolbar .field{width:100%;max-width:none}.f90-import-actions .button{width:100%}}
+
+/* Confirmation step: supplier imports remain unpublished until reviewed. */
+.f90-import-confirm-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.f90-import-confirm-stats>div{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:11px;min-width:0}
+.f90-import-confirm-stats small{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}
+.f90-import-confirm-stats strong{display:block;overflow-wrap:anywhere}
+.f90-import-confirm-table{max-height:260px;overflow:auto;margin-bottom:18px}
+.f90-import-confirm-table td{overflow-wrap:anywhere}
+@media(max-width:520px){.f90-import-confirm-stats{grid-template-columns:1fr 1fr}.f90-import-confirm-table{max-height:200px}}
