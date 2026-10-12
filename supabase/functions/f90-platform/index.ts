@@ -1239,58 +1239,82 @@ async function staff(a: Actor, b: any) {
   if (action === "provider.sync_prices") {
     requireRole(a, "manager");
     const id = uuid(b.id);
-    const p = check(
-      await db.from("f90_providers").select("*").eq("id", id).single(),
-    );
+    const p = check(await db.from("f90_providers").select("*").eq("id", id).single());
     const services = (await providerAction(id, "services"))
       .map(normalizeService)
       .filter(Boolean);
-    const rate = check(
-      await db
-        .from("f90_rates")
-        .select("per_usd,is_enabled")
-        .eq("currency", p.currency)
-        .single(),
+    const exchange = check(
+      await db.from("f90_rates").select("per_usd,is_enabled").eq("currency", p.currency).single(),
     );
-    if (!rate.is_enabled || !rate.per_usd)
+    const perUSD = Number(exchange.per_usd);
+    if (!exchange.is_enabled || !Number.isFinite(perUSD) || perUSD <= 0)
       throw new AppError("F90_RATE_MISSING");
+    const margin = Number(p.margin_percent);
+    if (!Number.isFinite(margin) || margin < 0 || margin > 10000)
+      throw new AppError("F90_FIELDS", 400, "هامش ربح المورّد غير صالح");
     const rows = check(
       await db.from("f90_product_internal").select("*").eq("provider_id", id),
     );
-    let n = 0;
-    for (const i of rows) {
-      const s = services.find((s: any) => s.id === i.provider_service);
-      if (!s) continue;
-      const cost = s.rate / Number(rate.per_usd);
-      check(
-        await db
-          .from("f90_product_internal")
-          .update({ cost_usd: cost })
-          .eq("product_id", i.product_id),
-      );
-      if (i.auto_margin) {
-        const product = check(
-          await db
-            .from("products")
-            .select("commerce")
-            .eq("id", i.product_id)
-            .single(),
-        );
-        const price =
-          Math.round(cost * (1 + Number(p.margin_percent) / 100) * 1e6) / 1e6;
-        check(
-          await db
-            .from("products")
-            .update({
-              price,
-              commerce: { ...product.commerce, prices: { USD: price } },
-            })
-            .eq("id", i.product_id),
-        );
-      }
-      n++;
+    // Preflight ALL mapped services and current product pricing before any database writes.
+    const byId = new Map<string, any>();
+    for (const service of services) {
+      const key = String(service.id);
+      if (byId.has(key)) throw new AppError("F90_FIELDS", 400, "المورّد يعيد معرّفات خدمات مكررة");
+      byId.set(key, service);
     }
-    return { updated: n };
+    const productIds = rows.map((row: any) => row.product_id);
+    const products = productIds.length
+      ? check(await db.from("products").select("id,commerce,price,is_active").in("id", productIds))
+      : [];
+    const productsById = new Map(products.map((product: any) => [product.id, product]));
+    const planned: any[] = [];
+    let missing = 0;
+    for (const row of rows) {
+      const service = byId.get(String(row.provider_service));
+      if (!service) { missing++; continue; }
+      const supplierRate = Number(service.rate);
+      const cost = supplierRate / perUSD;
+      const proposed = Math.round(cost * (1 + margin / 100) * 1e6) / 1e6;
+      const product: any = productsById.get(row.product_id);
+      if (!product || !Number.isFinite(supplierRate) || supplierRate <= 0 ||
+          !Number.isFinite(cost) || cost <= 0 || cost > 1000000 ||
+          !Number.isFinite(proposed) || proposed <= 0 || proposed > 1000000)
+        throw new AppError("F90_FIELDS", 400, "سعر غير صالح أو منتج مفقود. لم تتغير الأسعار");
+      const oldPrice = Number(product.commerce?.prices?.USD ?? product.price);
+      if (row.auto_margin && (!Number.isFinite(oldPrice) || oldPrice < 0))
+        throw new AppError("F90_FIELDS", 400, "سعر المنتج الحالي غير صالح. لم تتغير الأسعار");
+      planned.push({ id: row.product_id, product, cost, price: proposed,
+        oldPrice, autoMargin: !!row.auto_margin, isActive: !!product.is_active });
+    }
+    const changing = planned.filter((item) => item.autoMargin && item.price !== item.oldPrice);
+    const preview = {
+      mapped: rows.length,
+      ready: planned.length,
+      missing,
+      changing: changing.length,
+      activeChanging: changing.filter((item) => item.isActive).length,
+      samples: changing.slice(0, 15).map((item) => ({
+        id: item.id, old_price_usd: item.oldPrice, new_price_usd: item.price,
+      })),
+    };
+    if (b.dry_run === true) return preview;
+    // Require an explicit snapshot acknowledgement obtained from a read-only preview.
+    // Prevent accidental execution through a stale UI or a stray click.
+    if (text(b.confirm_count, 15) !== String(preview.changing) ||
+        text(b.confirm_ready, 15) !== String(preview.ready))
+      throw new AppError("F90_FIELDS", 409, "بيانات المزامنة تغيّرت. عاين الأسعار من جديد قبل التأكيد");
+    for (const item of planned) {
+      check(await db.from("f90_product_internal")
+        .update({ cost_usd: item.cost }).eq("product_id", item.id).eq("provider_id", id));
+      if (item.autoMargin) {
+        check(await db.from("products")
+          .update({ price: item.price,
+            commerce: { ...item.product.commerce,
+              prices: { ...(item.product.commerce?.prices || {}), USD: item.price } } })
+          .eq("id", item.id));
+      }
+    }
+    return { updated: planned.length, ...preview };
   }
   if (action === "staff.worker") {
     requireRole(a, "manager");
