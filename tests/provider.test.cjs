@@ -111,3 +111,19 @@ test("recovery keeps the password route and only accepts an approved HTTPS origi
   ])
     assert.throws(() => P.recoveryRedirect(url, origins));
 });
+
+test("omega reads products with api-token and never creates paid orders", async () => {
+  const calls = [];
+  const provider = { endpoint: "https://api.mr-omegastore.shop", adapter: "omega" };
+  const fetcher = async (url, options) => {
+    calls.push({ url: String(url), method: options.method, token: options.headers["api-token"] });
+    return new Response(JSON.stringify([{ id: 7, name: "Test", price: 2 }]));
+  };
+  const products = await P.callProvider(provider, "test-key", "services", {}, fetcher);
+  assert.equal(products[0].id, 7);
+  assert.equal(calls[0].url, "https://api.mr-omegastore.shop/client/api/products");
+  assert.equal(calls[0].method, "GET");
+  assert.equal(calls[0].token, "test-key");
+  await assert.rejects(P.callProvider(provider, "test-key", "add", {}, fetcher), /غير متاحة/);
+  assert.equal(calls.length, 1);
+});
