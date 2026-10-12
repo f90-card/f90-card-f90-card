@@ -1698,6 +1698,7 @@
             id: provider.id,
             confirm_count: String(pending.preview.changing),
             confirm_ready: String(pending.preview.ready),
+            confirm_fingerprint: pending.preview.fingerprint,
           });
           S.priceSyncPreview = null;
           closeModal();
