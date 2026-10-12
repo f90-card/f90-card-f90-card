@@ -68,7 +68,7 @@ export function normalizeService(s) {
   return {
     id: String(s.service ?? s.id),
     name: String(s.name ?? "خدمة").slice(0, 200),
-    category: String(s.category ?? ""),
+    category: String(s.category ?? s.category_name ?? ""),
     rate,
     min,
     max,
@@ -122,6 +122,31 @@ export async function callProvider(
       throw new ProviderError("عنوان الشبكة الخاص بالمورّد غير مسموح");
   }
   const headers = { Accept: "application/json" };
+  if (provider.adapter === "omega") {
+    if (!["services", "balance"].includes(action))
+      throw new ProviderError("طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
+    const target = new URL(action === "services" ? "/client/api/products" : "/client/api/profile", u.origin);
+    let response;
+    try {
+      response = await fetcher(target, {
+        method: "GET",
+        headers: { Accept: "application/json", "api-token": key },
+        redirect: "manual",
+        signal: AbortSignal.timeout(20000),
+      });
+    } catch {
+      throw new ProviderError("تعذر الاتصال بأوميغا");
+    }
+    if (!response.ok || response.status >= 300)
+      throw new ProviderError("رفض أوميغا الاتصال، تحقق من الرابط والتوكن");
+    const raw = await response.text();
+    if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا");
+    let data;
+    try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة أوميغا غير مفهومة"); }
+    if (data?.status === "error" || data?.error)
+      throw new ProviderError("رفض أوميغا الطلب، تحقق من صلاحية التوكن");
+    return action === "services" ? (Array.isArray(data) ? data : data?.data?.products ?? data?.products ?? data) : data;
+  }
   let body;
   if (provider.adapter === "smm") {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
