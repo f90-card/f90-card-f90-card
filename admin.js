@@ -1673,8 +1673,21 @@
         b.disabled = true;
         await importProvider(S.providerRows.find((x) => x.id === b.dataset.id));
       } else if (action === "provider-sync") {
-        const r = await A.call("provider.sync_prices", { id: b.dataset.id });
-        toast("حُدّث تسعير " + r.updated + " خدمة");
+        const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
+        if (!provider) throw new Error("لم يُعثر على المورّد");
+        modal("مراجعة مزامنة أسعار المورّد", `<div class="notice warning">مزامنة أسعار «${e(provider.name)}» عملية فعلية يمكن أن تغيّر أسعار بيع منتجات منشورة وتكلفتها المسجّلة. لا تؤثّر على الطلبات السابقة، لكن يُفضّل مراجعة الأسعار الحالية أولًا.</div><p>لن تبدأ العملية قبل موافقتك الصريحة.</p><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-sync" data-id="${e(provider.id)}">أوافق على تحديث أسعار المورّد</button></div>`);
+      } else if (action === "confirm-provider-sync") {
+        const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
+        if (!provider || !$("modalRoot").querySelector(".modal")) throw new Error("انتهت صلاحية التأكيد");
+        if (b.disabled) return;
+        b.disabled = true;
+        try {
+          const result = await A.call("provider.sync_prices", { id: provider.id });
+          closeModal();
+          toast("تمت مزامنة أسعار " + result.updated + " خدمة. راجع الأسعار المنشورة.");
+        } finally {
+          if (b.isConnected) b.disabled = false;
+        }
       } else if (action === "provider-diagnose-all") {
         const output = $("providerDiagnostics");
         if (output) output.textContent = "جارٍ فحص المورّدين...";
@@ -1711,8 +1724,17 @@
           `<p>${e(r.balance ?? r.amount ?? "غير متاح")} ${e(C.currencyNames[r.currency] || r.currency || "")}</p>`,
         );
       } else if (action === "worker") {
-        const r = await A.call("staff.worker");
-        toast("جرت متابعة " + r.processed + " طلب");
+        modal("تأكيد تشغيل متابعة الطلبات", '<div class="notice warning">هذه ليست عملية فحص فقط. قد ترسل المتابعة طلبات تنفيذ فعلية إلى المورّدين المفعّلين. شغّلها فقط بعد مراجعة حالة الطلبات واتصال المورّد.</div><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-worker">تأكيد تشغيل المتابعة</button></div>');
+      } else if (action === "confirm-provider-worker") {
+        if (!$("modalRoot").querySelector(".modal") || b.disabled) return;
+        b.disabled = true;
+        try {
+          const result = await A.call("staff.worker");
+          closeModal();
+          toast("جرت متابعة " + result.processed + " طلب");
+        } finally {
+          if (b.isConnected) b.disabled = false;
+        }
       } else if (action === "report")
         await window.F90Reports.admin(S.report, S.settings.store_name);
       else if (action === "print-leaderboard") window.print();
