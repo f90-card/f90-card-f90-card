@@ -1,187 +1,190 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>لوحة إدارة F90 CARD</title>
-  <link rel="stylesheet" href="admin.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="admin.js" defer></script>
-</head>
-<body>
-  <header class="topbar">
-    <h1>F90 CARD</h1>
-    <span>لوحة الإدارة</span>
-    <button id="logoutButton" hidden>تسجيل الخروج</button>
-  </header>
-
-  <main class="container">
-    <section id="loginSection" class="panel">
-      <h2>تسجيل دخول المدير</h2>
-      <form id="loginForm">
-        <label for="email">البريد الإلكتروني</label>
-        <input id="email" type="email" required autocomplete="username">
-
-        <label for="password">كلمة المرور</label>
-        <input id="password" type="password" required autocomplete="current-password">
-
-        <button type="submit">دخول</button>
-      </form>
-      <p id="loginMessage" role="status"></p>
-    </section>
-
-    <section id="dashboard" hidden>
-      <nav class="navigation">
-        <button data-tab="products">المنتجات</button>
-        <button data-tab="categories">التصنيفات</button>
-        <button data-tab="banners">الإعلانات</button>
-        <button data-tab="settings">إعدادات المتجر</button>
-      </nav>
-
-      <section id="products" class="panel admin-tab">
-        <h2>إدارة المنتجات</h2>
-
-        <form id="productForm">
-          <input id="productId" type="hidden">
-
-          <label for="productName">اسم المنتج</label>
-          <input id="productName" required maxlength="150">
-
-          <label for="productSlug">الرابط المختصر (Slug)</label>
-          <input id="productSlug" required maxlength="150">
-
-          <label for="productDescription">الوصف</label>
-          <textarea id="productDescription"></textarea>
-
-          <label for="productPrice">السعر</label>
-          <input id="productPrice" type="number" min="0" step="0.01" required>
-
-          <label for="productCurrency">العملة</label>
-          <select id="productCurrency">
-            <option value="ILS">شيكل (ILS)</option>
-            <option value="USD">دولار (USD)</option>
-            <option value="JOD">دينار (JOD)</option>
-          </select>
-
-          <label for="productCategory">التصنيف</label>
-          <select id="productCategory">
-            <option value="">بدون تصنيف</option>
-          </select>
-
-          <label for="productStock">المخزون</label>
-          <input id="productStock" type="number" min="0" placeholder="اتركه فارغًا للمخزون غير المحدد">
-
-          <label for="productImage">صورة المنتج</label>
-          <input id="productImage" type="file" accept="image/jpeg,image/png,image/webp">
-
-          <label>
-            <input id="productActive" type="checkbox">
-            نشر المنتج
-          </label>
-
-          <label>
-            <input id="productFeatured" type="checkbox">
-            منتج مميز
-          </label>
-
-          <button type="submit">حفظ المنتج</button>
-          <button type="button" id="cancelProduct">إلغاء التعديل</button>
-        </form>
-
-        <div id="productList"></div>
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080a0f" />
+    <title>إدارة F90 CARD</title>
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("f90-theme") === "cream" ? "cream" : "dark";
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"
+      defer
+    ></script>
+    <script src="config.js" defer></script>
+    <script src="store-core.js" defer></script>
+    <script src="admin.js" defer></script>
+  </head>
+  <body class="admin-page">
+    <header class="admin-topbar">
+      <a href="./" class="brand" id="adminBrand"
+        ><img
+          class="brand-image brand-image-cover"
+          src="./f90-logo.png"
+          alt="F90 CARD" /></a
+      ><span class="admin-label" data-ar="لوحة الإدارة" data-en="Administration"
+        >لوحة الإدارة</span
+      >
+      <div class="admin-actions">
+        <button
+          type="button"
+          id="adminLanguage"
+          class="icon-button"
+          aria-label="Language"
+        >
+          EN</button
+        ><button
+          type="button"
+          id="adminTheme"
+          class="icon-button"
+          aria-label="Theme"
+        >
+          ☾</button
+        ><a
+          class="button small"
+          href="./"
+          target="_blank"
+          rel="noopener"
+          data-ar="عرض المتجر"
+          data-en="View store"
+          >عرض المتجر</a
+        ><button
+          type="button"
+          id="logoutButton"
+          class="button ghost small"
+          hidden
+          data-ar="تسجيل الخروج"
+          data-en="Sign out"
+        >
+          تسجيل الخروج
+        </button>
+      </div>
+    </header>
+    <main class="admin-container">
+      <section class="login-panel" id="loginSection">
+        <div class="login-graphic" aria-hidden="true">
+          <img class="login-logo" src="./f90-logo.png" alt="" />
+          <div class="login-grid"></div>
+        </div>
+        <div class="login-content">
+          <span
+            class="eyebrow"
+            data-ar="مساحتك لإدارة كل التفاصيل"
+            data-en="Your space to manage every detail"
+            >مساحتك لإدارة كل التفاصيل</span
+          >
+          <h1 data-ar="أهلًا بك مجددًا" data-en="Welcome back">
+            أهلًا بك مجددًا
+          </h1>
+          <p
+            data-ar="سجّل دخولك بحساب المدير."
+            data-en="Sign in with your administrator account."
+          >
+            سجّل دخولك بحساب المدير.
+          </p>
+          <form id="loginForm">
+            <div class="form-field">
+              <label for="email" data-ar="البريد الإلكتروني" data-en="Email"
+                >البريد الإلكتروني</label
+              ><input
+                id="email"
+                type="email"
+                autocomplete="username"
+                required
+              />
+            </div>
+            <div class="form-field">
+              <label for="password" data-ar="كلمة المرور" data-en="Password"
+                >كلمة المرور</label
+              ><input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+            <button
+              class="button primary"
+              type="submit"
+              data-ar="دخول لوحة الإدارة"
+              data-en="Sign in"
+            >
+              دخول لوحة الإدارة
+            </button>
+            <p id="loginMessage" role="status"></p>
+          </form>
+        </div>
       </section>
-
-      <section id="categories" class="panel admin-tab" hidden>
-        <h2>إدارة التصنيفات</h2>
-
-        <form id="categoryForm">
-          <input id="categoryId" type="hidden">
-
-          <label for="categoryName">اسم التصنيف</label>
-          <input id="categoryName" required>
-
-          <label for="categorySlug">Slug</label>
-          <input id="categorySlug" required>
-
-          <label for="categoryDescription">الوصف</label>
-          <textarea id="categoryDescription"></textarea>
-
-          <label for="categoryImage">الصورة</label>
-          <input id="categoryImage" type="file" accept="image/jpeg,image/png,image/webp">
-
-          <label>
-            <input id="categoryActive" type="checkbox" checked>
-            تصنيف نشط
-          </label>
-
-          <button type="submit">حفظ التصنيف</button>
-        </form>
-
-        <div id="categoryList"></div>
-      </section>
-
-      <section id="banners" class="panel admin-tab" hidden>
-        <h2>إدارة الإعلانات</h2>
-
-        <form id="bannerForm">
-          <input id="bannerId" type="hidden">
-
-          <label for="bannerTitle">عنوان الإعلان</label>
-          <input id="bannerTitle" required>
-
-          <label for="bannerSubtitle">الوصف</label>
-          <textarea id="bannerSubtitle"></textarea>
-
-          <label for="bannerImage">صورة الإعلان</label>
-          <input id="bannerImage" type="file" accept="image/jpeg,image/png,image/webp">
-
-          <label for="bannerLink">رابط الإعلان</label>
-          <input id="bannerLink" type="url" placeholder="https://example.com">
-
-          <label>
-            <input id="bannerActive" type="checkbox">
-            نشر الإعلان
-          </label>
-
-          <button type="submit">حفظ الإعلان</button>
-        </form>
-
-        <div id="bannerList"></div>
-      </section>
-
-      <section id="settings" class="panel admin-tab" hidden>
-        <h2>إعدادات المتجر</h2>
-
-        <form id="settingsForm">
-          <label for="storeName">اسم المتجر</label>
-          <input id="storeName" required>
-
-          <label for="storeLogo">الشعار</label>
-          <input id="storeLogo" type="file" accept="image/jpeg,image/png,image/webp">
-
-          <label for="storeColor">اللون الرئيسي</label>
-          <input id="storeColor" type="color" value="#2563eb">
-
-          <label for="storeCurrency">العملة الافتراضية</label>
-          <select id="storeCurrency">
-            <option value="ILS">ILS</option>
-            <option value="USD">USD</option>
-            <option value="JOD">JOD</option>
-          </select>
-
-          <label for="storeAnnouncement">الإعلان العلوي</label>
-          <textarea id="storeAnnouncement"></textarea>
-
-          <label for="storeEmail">بريد التواصل</label>
-          <input id="storeEmail" type="email">
-
-          <button type="submit">حفظ الإعدادات</button>
-        </form>
-      </section>
-    </section>
-
-    <p id="statusMessage" role="status"></p>
-  </main>
-</body>
+      <div id="dashboard" class="admin-layout" hidden>
+        <aside class="admin-sidebar">
+          <div
+            class="sidebar-caption"
+            data-ar="إدارة المتجر"
+            data-en="Store management"
+          >
+            إدارة المتجر
+          </div>
+          <nav id="adminNavigation"></nav>
+          <div class="sidebar-note">
+            <span class="status-dot"></span
+            ><span
+              data-ar="طلبات الشراء عبر واتساب"
+              data-en="Requests via WhatsApp"
+              >طلبات الشراء عبر واتساب</span
+            >
+          </div>
+        </aside>
+        <div class="admin-workspace">
+          <div id="schemaNotice" class="schema-notice" hidden>
+            <strong
+              data-ar="تحديث قاعدة البيانات مطلوب للخيارات الجديدة"
+              data-en="A database update is required for the new options"
+              >تحديث قاعدة البيانات مطلوب للخيارات الجديدة</strong
+            >
+            <p
+              data-ar="شغّل ملف التحديث مرة واحدة في SQL Editor داخل مشروع Supabase الحالي، ثم أعد تحميل البيانات."
+              data-en="Run the migration once in your existing Supabase project's SQL Editor, then reload data."
+            >
+              شغّل ملف التحديث مرة واحدة في SQL Editor داخل مشروع Supabase
+              الحالي، ثم أعد تحميل البيانات.
+            </p>
+            <div class="form-actions">
+              <button
+                type="button"
+                id="copyMigration"
+                class="button small"
+                data-ar="نسخ كود التحديث"
+                data-en="Copy migration"
+              >
+                نسخ كود التحديث</button
+              ><a
+                class="button small"
+                href="supabase/migrations/20261012025306_storefront_v2.sql"
+                download
+                data-ar="تحميل ملف التحديث"
+                data-en="Download migration"
+                >تحميل ملف التحديث</a
+              ><button
+                type="button"
+                id="refreshData"
+                class="button small"
+                data-ar="إعادة تحميل البيانات"
+                data-en="Reload data"
+              >
+                إعادة تحميل البيانات
+              </button>
+            </div>
+          </div>
+          <p id="statusMessage" class="admin-status" role="status" hidden></p>
+          <div id="adminPanels"></div>
+        </div>
+      </div>
+    </main>
+  </body>
 </html>
