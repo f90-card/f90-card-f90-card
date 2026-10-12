@@ -5,6 +5,8 @@ on:
     paths:
       - "api.js"
       - "app.js"
+      - "admin.js"
+      - "sw.js"
       - "tests/payment-safety.test.mjs"
       - "tests/session-resilience.test.mjs"
       - ".github/workflows/payment-safety.yml"
@@ -13,6 +15,7 @@ on:
       - "api.js"
       - "app.js"
       - "tests/payment-safety.test.mjs"
+      - "tests/session-resilience.test.mjs"
       - ".github/workflows/payment-safety.yml"
 
 permissions:
