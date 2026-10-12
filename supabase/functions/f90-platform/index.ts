@@ -1528,6 +1528,25 @@ Deno.serve(async (req: Request) => {
           .eq("id", a.keyId);
       return out(customerOrder(data), 201);
     }
+    if (action === "transaction.lookup") {
+      // Read-only recovery by original reference: never places orders or credits a wallet.
+      // Authentication is required and only the current user's records are visible.
+      if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      const reference = paymentReference(b.idempotency_key);
+      const kind = text(b.kind, 20);
+      if (kind === "order") {
+        const prior = check(await db.from("f90_orders").select("*")
+          .eq("user_id", a.id).eq("idempotency_key", reference).maybeSingle());
+        return out(prior ? { found: true, kind, order: customerOrder(prior) } : { found: false, kind });
+      }
+      if (kind === "deposit") {
+        const prior = check(await db.from("f90_deposits")
+          .select("id,status,amount,currency,usd_amount,created_at,method_id")
+          .eq("user_id", a.id).eq("idempotency_key", reference).maybeSingle());
+        return out(prior ? { found: true, kind, deposit: prior } : { found: false, kind });
+      }
+      throw new AppError("F90_FIELDS", 400, "نوع العملية غير مدعوم");
+    }
     if (action === "status" || action === "order") {
       scoped(a, "orders");
       const o = check(
