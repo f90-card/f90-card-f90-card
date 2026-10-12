@@ -1,0 +1,43 @@
+-- Integration fixtures exist only inside this transaction; no email is sent.
+BEGIN;
+DO $test$
+DECLARE manager_id uuid:=gen_random_uuid();fixture_customer_id uuid:=gen_random_uuid();other_id uuid:=gen_random_uuid();
+ product_id uuid:=gen_random_uuid();category_id uuid:=gen_random_uuid();deposit_id uuid;order_id uuid;
+ quote jsonb;result jsonb;original_config jsonb;balance numeric;count_orders integer;rejected boolean;tests text[]:=ARRAY[]::text[];
+BEGIN
+ INSERT INTO auth.users(id,email,raw_user_meta_data) VALUES(manager_id,'manager-'||manager_id||'@example.invalid','{"display_name":"مدير اختبار"}'),(fixture_customer_id,'customer-'||fixture_customer_id||'@example.invalid','{"display_name":"عميل اختبار"}'),(other_id,'other-'||other_id||'@example.invalid','{}');
+ UPDATE public.f90_user_roles SET role='manager' WHERE user_id=manager_id;
+ ASSERT (SELECT count(*) FROM public.f90_wallets WHERE user_id IN(manager_id,fixture_customer_id,other_id))=3,'auth trigger missing wallets';tests:=array_append(tests,'auth profile / role / wallet creation');
+ SELECT config INTO original_config FROM public.site_settings WHERE id=1;
+ UPDATE public.site_settings SET config=jsonb_set(config,'{payment_methods}',coalesce(config->'payment_methods','[]')||jsonb_build_array(jsonb_build_object('id','fixture','name_ar','طريقة اختبار','enabled',true))) WHERE id=1;
+ INSERT INTO storage.objects(bucket_id,name) VALUES('f90-receipts',fixture_customer_id||'/receipt.png');
+ result:=public.f90_submit_deposit(fixture_customer_id,'fixture','USD',30,fixture_customer_id||'/receipt.png','اختبار','deposit-test-001');deposit_id:=(result->>'id')::uuid;
+ result:=public.f90_review_deposit(manager_id,deposit_id,true,'اختبار');result:=public.f90_review_deposit(manager_id,deposit_id,true,'اختبار مكرر');
+ ASSERT (SELECT balance_usd FROM public.f90_wallets WHERE user_id=fixture_customer_id)=30,'deposit credited twice';
+ ASSERT (SELECT count(*) FROM public.f90_wallet_ledger WHERE reference_id=deposit_id)=1,'duplicate ledger credit';tests:=array_append(tests,'deposit approval exactly once');
+ rejected:=false;BEGIN PERFORM public.f90_review_deposit(other_id,deposit_id,true,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_FORBIDDEN%';END;ASSERT rejected,'customer approved deposit';tests:=array_append(tests,'customer cannot approve a deposit');
+ INSERT INTO public.categories(id,name,slug) VALUES(category_id,'قسم اختبار','fixture-'||category_id);
+ INSERT INTO public.products(id,category_id,name,slug,price,currency,stock,commerce) VALUES(product_id,category_id,'خدمة اختبار','fixture-'||product_id,5,'USD',3,'{"type":"quantity","unit_quantity":1000,"quantity_min":1000,"quantity_max":100000,"quantity_step":1000,"fulfillment":"manual","prices":{"USD":5},"fields":[{"id":"account_id","label_ar":"معرف الحساب","required":true}]}');
+ quote:=public.f90_quote(fixture_customer_id,product_id,2000,'');ASSERT (quote->>'total_usd')::numeric=10,'quantity pricing incorrect';tests:=array_append(tests,'unit pricing from canonical USD');
+ result:=public.f90_checkout(fixture_customer_id,product_id,2000,'{"account_id":"fixture"}','checkout-test-001',10,'');order_id:=(result->>'id')::uuid;
+ result:=public.f90_checkout(fixture_customer_id,product_id,2000,'{"account_id":"fixture"}','checkout-test-001',10,'');
+ ASSERT (SELECT balance_usd FROM public.f90_wallets WHERE user_id=fixture_customer_id)=20,'double debit';ASSERT (SELECT count(*) FROM public.f90_orders WHERE user_id=fixture_customer_id)=1,'duplicate order';ASSERT (SELECT stock FROM public.products WHERE id=product_id)=2,'incorrect reservation';tests:=array_append(tests,'wallet debit / order / stock idempotency');
+ rejected:=false;BEGIN PERFORM public.f90_checkout(fixture_customer_id,product_id,50000,'{"account_id":"fixture"}','checkout-no-funds',250,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_INSUFFICIENT_BALANCE%';END;
+ ASSERT rejected,'insufficient funds accepted';ASSERT (SELECT balance_usd FROM public.f90_wallets WHERE user_id=fixture_customer_id)=20,'insufficient purchase changed balance';ASSERT (SELECT count(*) FROM public.f90_orders WHERE user_id=fixture_customer_id)=1,'insufficient purchase created order';tests:=array_append(tests,'no purchase without adequate balance');
+ rejected:=false;BEGIN PERFORM public.f90_checkout(fixture_customer_id,product_id,1000,'{}','checkout-missing-id',5,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_FIELDS%';END;ASSERT rejected,'account id missing accepted';tests:=array_append(tests,'required account fields');
+ rejected:=false;BEGIN PERFORM public.f90_checkout(fixture_customer_id,product_id,1000,'{"account_id":"fixture"}','checkout-stale-price',4,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_PRICE_CHANGED%';END;ASSERT rejected,'stale quote accepted';tests:=array_append(tests,'stale quote rejected before debit');
+ result:=public.f90_order_transition(manager_id,order_id,'failed','اختبار');result:=public.f90_order_transition(manager_id,order_id,'failed','إعادة');
+ ASSERT (SELECT balance_usd FROM public.f90_wallets WHERE user_id=fixture_customer_id)=30,'refund incorrect or duplicate';ASSERT (SELECT stock FROM public.products WHERE id=product_id)=3,'stock not restored';ASSERT (SELECT count(*) FROM public.f90_wallet_ledger WHERE reference_id=order_id AND kind='refund')=1,'duplicate refund ledger';tests:=array_append(tests,'refund and stock restoration exactly once');
+ UPDATE public.profiles SET vip_override=2 WHERE id=fixture_customer_id;quote:=public.f90_quote(fixture_customer_id,product_id,1000,'');ASSERT (quote->>'discount_usd')::numeric=0.000050,'VIP2 micro precision lost';tests:=array_append(tests,'VIP2 0.001 percent preserves micro-dollar precision');
+ UPDATE public.profiles SET vip_override=NULL WHERE id=fixture_customer_id;UPDATE public.products SET commerce=jsonb_set(commerce,'{availability}','"refilling"') WHERE id=product_id;
+ rejected:=false;BEGIN PERFORM public.f90_quote(fixture_customer_id,product_id,1000,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_REFILLING%';END;ASSERT rejected,'refilling purchased';tests:=array_append(tests,'refilling services blocked');
+ rejected:=false;BEGIN UPDATE public.categories SET parent_id=id WHERE id=category_id;EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_CATEGORY_CYCLE%';END;ASSERT rejected,'category cycle accepted';tests:=array_append(tests,'category cycle rejected');
+ UPDATE public.products SET commerce=jsonb_set(commerce,'{availability}','"available"') WHERE id=product_id;
+ UPDATE public.profiles SET account_status='banned' WHERE id=fixture_customer_id;
+ rejected:=false;BEGIN PERFORM public.f90_quote(fixture_customer_id,product_id,1000,'');EXCEPTION WHEN OTHERS THEN rejected:=SQLERRM LIKE '%F90_FORBIDDEN%';END;ASSERT rejected,'banned account purchased';
+ ASSERT NOT has_function_privilege('authenticated','public.f90_checkout(uuid,uuid,bigint,jsonb,text,numeric,text)','EXECUTE'),'client RPC bypass';ASSERT NOT has_column_privilege('authenticated','public.profiles','is_verified','UPDATE'),'client can self verify';ASSERT NOT has_table_privilege('authenticated','public.f90_wallets','UPDATE'),'client can alter wallet';ASSERT NOT has_table_privilege('anon','public.f90_providers','SELECT'),'provider credentials exposed';tests:=array_append(tests,'privileged writes and provider tables denied to clients');
+ PERFORM set_config('f90.test_result',jsonb_build_object('passed',cardinality(tests),'checks',tests)::text,true);
+END;
+$test$;
+SELECT current_setting('f90.test_result')::jsonb AS result;
+ROLLBACK;
