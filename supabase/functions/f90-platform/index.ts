@@ -123,7 +123,7 @@ function text(v: unknown, max = 2000) {
 }
 function paymentReference(value: unknown) {
   if (typeof value !== "string" || value.length < 8 || value.length > 160 ||
-      value.trim() !== value || /[\\x00-\\x1f\\x7f]/.test(value))
+      value.trim() !== value || value.split("").some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127))
     throw new AppError("F90_IDEMPOTENCY", 400,
       "مرجع العملية مطلوب بطول 8 إلى 160 حرفًا، دون فراغات طرفية أو رموز تحكم");
   return value;
@@ -1562,7 +1562,7 @@ Deno.serve(async (req: Request) => {
           p_amount: num(b.amount, 0.000001, 1000000),
           p_receipt: text(b.receipt_path, 500),
           p_reference: text(b.reference, 300),
-          p_key: text(b.idempotency_key, 160),
+          p_key: reference,
         }),
         201,
       );
