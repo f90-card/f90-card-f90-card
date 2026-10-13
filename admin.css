@@ -610,3 +610,10 @@
 .f90-import-confirm-table{max-height:260px;overflow:auto;margin-bottom:18px}
 .f90-import-confirm-table td{overflow-wrap:anywhere}
 @media(max-width:520px){.f90-import-confirm-stats{grid-template-columns:1fr 1fr}.f90-import-confirm-table{max-height:200px}}
+
+/* Bulk product workspace */
+.f90-bulk-bar{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:13px;margin:8px 0 16px;border:1px solid var(--line);background:var(--surface2);border-radius:13px}
+.f90-bulk-bar .button{min-height:35px}
+.f90-bulk-bar #bulkSelectionCount{margin-inline:auto;font-weight:800}
+.f90-bulk-check{width:21px;height:21px;flex:none;accent-color:var(--accent);cursor:pointer}
+@media(max-width:650px){.f90-bulk-bar .button{flex:1;min-width:120px}.f90-bulk-bar #bulkSelectionCount{width:100%;text-align:center;order:-1}}
