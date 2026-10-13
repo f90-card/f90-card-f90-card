@@ -105,3 +105,14 @@ test("back navigation removed from markup and route controller", () => {
   assert.doesNotMatch(site, /id="pageBack"/);
   assert.doesNotMatch(app, /\$\("pageBack"\)/);
 });
+
+test("category tiles open the existing product form in place without another route", () => {
+  assert.match(app, /function productTile\(p, pack = false, inline = false\)/);
+  assert.match(app, /data-action="quick-product"/);
+  assert.match(app, /id="quickProductPanel"/);
+  assert.match(app, /function product\(slug, inline = false\)/);
+  assert.match(app, /product\(button\.dataset\.id, true\)/);
+  assert.match(app, /quoteProduct\(p\)/);
+  assert.match(app, /data-action="close-quick-product"/);
+  assert.match(styles, /\.f90-quick-product/);
+});
