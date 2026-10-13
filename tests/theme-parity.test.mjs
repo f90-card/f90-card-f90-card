@@ -78,3 +78,18 @@ test("cinematic weather can switch modes without network or financial actions", 
   assert.match(styles, /data-weather-mode="hearts"/);
   assert.doesNotMatch(bot, /fetch\(|A\.call\(|\.submit\(/);
 });
+
+test("mascot roams without interrupting modal dialogs or invoking purchase", () => {
+  const bot = read("theme-effects.js");
+  assert.match(bot, /document\.hidden \|\| reduced\.matches \|\| bot\.hidden/);
+  assert.match(bot, /\.modal, \.modal-backdrop, #drawer:not\(\[hidden\]\)/);
+  assert.match(bot, /f90-bot-peek/);
+  assert.match(bot, /routeHint\(\)/);
+  assert.doesNotMatch(bot, /\.click\(\)|A\.call\(|fetch\(/);
+});
+test("full snowfall only frosts decoration and respects reduced motion", () => {
+  const bot = read("theme-effects.js");
+  assert.match(bot, /root\.classList\.toggle\("f90-frosted"/);
+  assert.match(styles, /\.f90-frosted/);
+  assert.match(styles, /\.f90-mascot-still/);
+});
