@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - "api.js"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
       - "tests/server-guards.test.mjs"
       - "tests/omega-import.test.mjs"
       - "tests/omega-bulk-import.test.mjs"
@@ -26,6 +29,9 @@ on:
   pull_request:
     paths:
       - "api.js"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
       - "tests/server-guards.test.mjs"
       - "tests/omega-import.test.mjs"
       - "tests/omega-bulk-import.test.mjs"
