@@ -15,7 +15,7 @@
     <link rel="icon" id="siteFavicon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./f90-logo.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=20261014-1" />
+    <link rel="stylesheet" href="./styles.css?v=20261014-3" />
     <script>
       try {
         document.documentElement.dataset.theme =
@@ -30,7 +30,7 @@
     <script src="./store-core.js" defer></script>
     <script src="./api.js" defer></script>
     <script src="./reports.js?v=20261013-12" defer></script>
-    <script src="./app.js?v=20261014-1" defer></script>
+    <script src="./app.js?v=20261014-3" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#mainContent">إلى المحتوى</a>
@@ -57,7 +57,7 @@
           ></button>
         </form>
         <div class="header-actions">
-          <a class="icon-button f90-header-bell" href="#/notifications" aria-label="الأخبار والإشعارات" title="الأخبار والإشعارات"><span aria-hidden="true">🔔</span></a>
+          <a class="icon-button f90-header-bell" id="storeBell" href="#/notifications" aria-label="الأخبار والإشعارات" title="الأخبار والإشعارات"><span aria-hidden="true">🔔</span><span class="f90-bell-count" id="storeBellCount" hidden></span></a>
           <a class="wallet-chip" href="#/wallet" id="headerWallet"></a>
           <button
             class="icon-button"

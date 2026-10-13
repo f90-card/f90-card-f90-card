@@ -617,3 +617,8 @@
 .f90-bulk-bar #bulkSelectionCount{margin-inline:auto;font-weight:800}
 .f90-bulk-check{width:21px;height:21px;flex:none;accent-color:var(--accent);cursor:pointer}
 @media(max-width:650px){.f90-bulk-bar .button{flex:1;min-width:120px}.f90-bulk-bar #bulkSelectionCount{width:100%;text-align:center;order:-1}}
+
+.f90-admin-bell { margin-inline-start: auto; display: inline-grid; place-items: center; text-decoration: none; font-size: 20px; }
+.f90-admin-bell span:not([hidden]) { position: absolute; inset-inline-end: -6px; top: -5px; min-width: 20px; height: 20px; border-radius: 999px; background: #db334a; color: white; font: 700 11px/20px system-ui; text-align: center; box-shadow: 0 0 10px #db334a88; }
+.f90-alert-card { color: inherit; text-decoration: none; }
+.f90-order-requests .record { align-items: flex-start; }

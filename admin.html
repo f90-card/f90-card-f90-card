@@ -10,8 +10,8 @@
     <meta name="theme-color" content="#0b0d12" />
     <title>إدارة أف تسعين كارد</title>
     <link rel="icon" id="adminFavicon" href="./f90-logo.png" />
-    <link rel="stylesheet" href="./styles.css?v=20261013-13" />
-    <link rel="stylesheet" href="./admin.css" />
+    <link rel="stylesheet" href="./styles.css?v=20261014-3" />
+    <link rel="stylesheet" href="./admin.css?v=20261014-1" />
     <script>
       try {
         document.documentElement.dataset.theme =
@@ -26,7 +26,7 @@
     <script src="./store-core.js" defer></script>
     <script src="./api.js" defer></script>
     <script src="./reports.js?v=20261013-9" defer></script>
-    <script src="./admin.js?v=20261013-13" defer></script>
+    <script src="./admin.js?v=20261014-1" defer></script>
   </head>
   <body class="admin-body">
     <header class="admin-top">
@@ -40,6 +40,7 @@
         <strong>مركز إدارة المتجر</strong
         ><span id="adminIdentity" class="muted small"></span>
       </div>
+      <a class="icon-button f90-admin-bell" id="adminBell" href="#/alerts" aria-label="تنبيهات الإدارة" title="تنبيهات الإدارة">🔔<span id="adminBellCount" hidden></span></a>
       <button class="button secondary small" id="adminThemeToggle" type="button" aria-label="التبديل بين الثيم الأسود والأحمر والثيم الحليبي">الثيم الحليبي</button>
       <a class="button secondary small" href="./index.html">عرض المتجر</a>
     </header>

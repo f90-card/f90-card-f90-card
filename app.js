@@ -139,6 +139,7 @@
     const me = S.me,
       p = me?.profile,
       c = S.settings.config || {};
+    updateStoreBell();
     $("headerWallet").innerHTML =
       I("wallet") +
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "الرصيد يحتاج تحديث" : e(C.money(me.wallet?.balance_usd, "USD"))) : "المحفظة"}</span>`;
@@ -216,6 +217,16 @@
         .join(
           "",
         )}<a class="button ghost small" href="#/install">تثبيت التطبيق</a></nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div></div>`;
+  }
+  function updateStoreBell() {
+    const badge = $("storeBellCount");
+    if (!badge) return;
+    let seen = "";
+    try { seen = localStorage.getItem("f90-news-seen") || ""; } catch {}
+    const unread = (S.news || []).filter((n) => n.created_at && n.created_at > seen).length;
+    badge.hidden = !unread;
+    badge.textContent = unread > 9 ? "9+" : String(unread);
+    $("storeBell")?.setAttribute("aria-label", unread ? `الأخبار والإشعارات · ${unread} جديدة` : "الأخبار والإشعارات");
   }
   async function refreshMe() {
     const {
@@ -532,7 +543,7 @@
   function profile() {
     const me = S.me,
       p = me.profile;
-    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/orders">سجل طلباتي</a><a class="button secondary small" href="#/history">سجل الحركات</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
   }
   function recipientStorageKey() {
     return S.me?.profile?.id || S.me?.profile?.customer_id
@@ -681,9 +692,11 @@
   async function order(id) {
     const seq = S.route;
     main.innerHTML = '<div class="loading">جارٍ تحميل تفاصيل طلبك…</div>';
-    const { order: o, events } = await A.call("order", { id });
+    const { order: o, events, requests = [] } = await A.call("order", { id });
     if (seq !== S.route) return;
     S.currentOrder = o;
+    const openKinds = new Set(requests.filter((r) => r.status === "pending").map((r) => r.kind));
+    const requestPanel = `<section class="panel f90-order-requests"><h2>الاعتراض وطلب الإلغاء</h2><p class="muted small">يصل الطلب إلى الإدارة للمراجعة. لا يُلغى الشراء ولا يُرد الرصيد تلقائيًا.</p>${requests.map((r) => `<article class="record"><div class="record-main"><strong>${r.kind === "cancel" ? "طلب إلغاء" : "اعتراض"}</strong><p>${e(r.reason)}</p><small>${e(C.date(r.created_at))}</small>${r.review_note ? `<p>${e(r.review_note)}</p>` : ""}</div>${status(r.status)}</article>`).join("")}${(!openKinds.has("cancel") && !["completed", "partial", "failed", "refunded"].includes(o.status)) || !openKinds.has("dispute") ? `<form id="orderRequestForm">${select("kind", "نوع الطلب", [...(!openKinds.has("cancel") && !["completed", "partial", "failed", "refunded"].includes(o.status) ? [["cancel", "طلب إلغاء"]] : []), ...(!openKinds.has("dispute") ? [["dispute", "اعتراض"]] : [])], "")}${field("reason", "اشرح السبب للإدارة", "textarea", "", 'required minlength="5" maxlength="2000"')}<button class="button secondary" type="submit">إرسال للمراجعة</button></form>` : ""}</section>`;
     main.innerHTML = `${pageHead("طلبك #" + o.order_number, o.product_name, `<button class="button secondary small" data-action="order-pdf">${I("download")}تنزيل تفاصيل الطلب</button>`)}<div class="split"><section class="panel"><div class="record" style="padding:0;border:0;margin-bottom:24px">${image(o.product_image, o.product_name, "record-image")}<div>${status(o.status)}<p class="muted small">${o.fulfillment === "automatic" ? "تنفيذ آلي عبر المورّد" : "تنفيذ يدوي من الإدارة"}</p></div></div><div class="profile-stats"><div><strong>${e(C.money(o.total_usd))}</strong><span>المبلغ المدفوع</span></div><div><strong>${e(o.quantity)}</strong><span>الكمية</span></div><div><strong>${e(C.duration(o))}</strong><span>مدة التنفيذ</span></div></div><p class="muted small">التقديم: ${e(C.date(o.created_at))}<br>الوقت المتوقع: ${o.expected_minutes ? e(o.expected_minutes) + " دقيقة" : "حسب الخدمة وحالة التنفيذ"}<br>الإكمال: ${e(C.date(o.completed_at))}</p>${Number(o.refunded_usd) > 0 ? `<div class="notice success">استُرد ${e(C.money(o.refunded_usd, "USD", true))} إلى محفظتك.</div>` : ""}<h3>بيانات طلبك</h3>${Object.entries(
       o.customer_fields || {},
     )
@@ -693,7 +706,7 @@
       )
       .join(
         "",
-      )}<div class="actions"><button class="button secondary" data-action="refresh-route">تحديث الحالة</button>${supportLink("مساعدة في الطلب " + o.order_number)}</div></section><section class="panel"><h2>رحلة طلبك</h2><div class="timeline">${events.map((ev) => `<div class="timeline-item"><h3>${e(C.statuses[ev.status] || ev.status)}</h3><p>${e(ev.note)}</p><small>${e(C.date(ev.created_at))}</small></div>`).join("")}</div></section></div>`;
+      )}<div class="actions"><button class="button secondary" data-action="refresh-route">تحديث الحالة</button>${supportLink("مساعدة في الطلب " + o.order_number)}</div></section><section class="panel"><h2>رحلة طلبك</h2><div class="timeline">${events.map((ev) => `<div class="timeline-item"><h3>${e(C.statuses[ev.status] || ev.status)}</h3><p>${e(ev.note)}</p><small>${e(C.date(ev.created_at))}</small></div>`).join("")}</div></section></div>${requestPanel}`;
   }
   function vip() {
     const me = S.me,
@@ -938,6 +951,13 @@
             ? `<div class="image-grid">${ps.map((p) => productTile(p)).join("")}</div>`
             : empty("لم تضف خدمة للمفضلة بعد", "heart"));
       } else if (page === "notifications") {
+        const fresh = await A.call("catalog");
+        if (seq !== S.route) return;
+        S.news = fresh.news || [];
+        if (S.news[0]?.created_at) {
+          try { localStorage.setItem("f90-news-seen", S.news[0].created_at); } catch {}
+        }
+        updateStoreBell();
         const news = (S.news || []).map((n) =>
           `<a class="panel f90-news-item" href="${n.product_id ? href("product", n.product_id) : "#/"}"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.body_ar)}</p><small>${e(C.date(n.created_at))}</small></a>`).join("");
         main.innerHTML =
@@ -955,14 +975,14 @@
             empty("لا توجد إشعارات جديدة", "bell"),
           );
       } else if (page === "search") {
-        const q = id || $("globalSearch").value;
+        const q = (id || $("globalSearch").value).trim().toLocaleLowerCase("ar");
         main.innerHTML =
           pageHead("نتائج البحث", q) +
           `<div class="image-grid">${S.categories
-            .filter((c) => c.name.includes(q))
+            .filter((c) => c.name.toLocaleLowerCase("ar").includes(q))
             .map(categoryTile)
             .join("")}${S.products
-            .filter((p) => p.name.includes(q))
+            .filter((p) => (p.name + " " + (p.commerce?.search_aliases || []).join(" ")).toLocaleLowerCase("ar").includes(q))
             .map((p) => productTile(p))
             .join("")}</div>`;
         if (!main.querySelector(".image-tile"))
@@ -1051,6 +1071,18 @@
       saveLocalRecipients(rows);
       toast("تم حفظ البيانات في دفتر العملاء");
       await recipients();
+      return;
+    }
+    if (form.id === "orderRequestForm") {
+      const o = S.currentOrder;
+      if (!o) throw new Error("تعذّر تحديد الطلب");
+      const kind = data.kind;
+      const reason = String(data.reason || "").trim();
+      if (!["cancel", "dispute"].includes(kind) || reason.length < 5)
+        throw new Error("اكتب سبب الطلب بوضوح");
+      await A.call("order.request", { order_id: o.id, kind, reason });
+      toast("وصل طلبك للإدارة ويمكنك متابعة القرار هنا");
+      await order(o.id);
       return;
     }
     if (form.id === "checkoutForm") {
@@ -1298,6 +1330,7 @@
         "checkoutForm",
         "profileForm",
         "recipientForm",
+        "orderRequestForm",
         "depositForm",
         "verificationForm",
         "passwordForm",

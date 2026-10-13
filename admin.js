@@ -30,7 +30,9 @@
   };
   const sections = [
     ["dashboard", "نظرة عامة", "chart", ["manager", "admin"]],
+    ["alerts", "تنبيهات الإدارة", "bell", ["manager", "admin", "support"]],
     ["orders", "إدارة الطلبات", "clock", ["manager", "admin", "support"]],
+    ["order-requests", "الاعتراضات والإلغاء", "bell", ["manager", "admin", "support"]],
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
@@ -70,7 +72,7 @@
     ["services", "خدمات الموقع"],
     ["hero", "إعلان أف تسعين"],
   ];
-  let toastTimer, dragId;
+  let toastTimer, dragId, alertsTimer;
   const manager = () => S.me?.role === "manager";
   const field = (name, label, type = "text", value = "", attrs = "") =>
     `<label class="field"><span>${label}</span>${type === "textarea" ? `<textarea name="${e(name)}" ${attrs}>${e(value)}</textarea>` : `<input name="${e(name)}" type="${type}" value="${e(value)}" ${attrs}>`}</label>`;
@@ -162,6 +164,43 @@
   }
   function pagination() {
     return `<div class="pagination"><button class="button secondary small" data-action="prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, S.count))} من ${e(S.count)}</span><button class="button secondary small" data-action="next" ${S.offset + 50 >= S.count ? "disabled" : ""}>التالي</button></div>`;
+  }
+  async function refreshAdminAlerts() {
+    if (!S.me || S.me.needs_mfa) return;
+    const r = await A.call("staff.alerts");
+    S.alerts = r;
+    const count = Number(r.orders || 0) + Number(r.requests || 0) +
+      (S.me.role === "support" ? 0 : Number(r.deposits || 0) + Number(r.verification || 0));
+    const badge = $("adminBellCount");
+    badge.hidden = !count;
+    badge.textContent = count > 99 ? "99+" : String(count);
+    return r;
+  }
+  async function alertsPage() {
+    const r = await refreshAdminAlerts();
+    if (!r) return;
+    const cards = [
+      ["orders", "طلبات قيد المتابعة", r.orders, true],
+      ["order-requests", "اعتراضات وطلبات إلغاء", r.requests, true],
+      ["deposits", "إيداعات تنتظر المراجعة", r.deposits, S.me.role !== "support"],
+      ["verification", "طلبات توثيق الهوية", r.verification, S.me.role !== "support"],
+      ["users", "مستخدمون جدد خلال ٢٤ ساعة", r.new_users_24h, manager()],
+    ];
+    main.innerHTML = head("تنبيهات الإدارة", "أعداد حية من قاعدة البيانات. افتح كل قائمة للتعامل مع طلباتها.") +
+      `<div class="metric-grid">${cards.filter((x) => x[3]).map(([route, label, count]) => `<a class="metric f90-alert-card" href="#/${route}">${I("bell")}<strong>${e(count)}</strong><span>${e(label)}</span></a>`).join("")}</div><button class="button secondary" data-action="refresh-alerts">تحديث التنبيهات</button>`;
+  }
+  async function orderRequestsPage() {
+    const seq = S.token;
+    const result = await A.call("staff.order_requests", {
+      offset: S.offset, status: S.filter !== "all" ? "pending" : undefined,
+    });
+    if (seq !== S.token) return;
+    S.count = result.count;
+    S.list = result.items;
+    main.innerHTML = head("الاعتراضات وطلبات الإلغاء",
+      "طلبات العملاء تصل للمراجعة. الموافقة هنا تسجل القرار فقط؛ غيّر حالة الطلب والاسترداد من صفحة الطلب بعد التحقق من المورّد.") +
+      `<div class="toolbar"><label class="field"><span>الحالة</span><select id="requestFilter"><option value="pending" ${S.filter !== "all" ? "selected" : ""}>بانتظار القرار</option><option value="all" ${S.filter === "all" ? "selected" : ""}>الكل</option></select></label></div>` +
+      (S.list.length ? `<div class="records">${S.list.map((r) => `<article class="record"><div class="record-main"><h3>${r.kind === "cancel" ? "طلب إلغاء" : "اعتراض"} · #${e(r.order?.order_number || "—")}</h3><p>${e(r.order?.product_name || "طلب سابق")} · ${e(r.customer?.display_name || "عميل")} · ${e(r.customer?.customer_id || "")}</p><p>${e(r.reason)}</p><small>${e(C.date(r.created_at))} · حالة الشراء: ${e(C.statuses[r.order?.status] || r.order?.status || "—")}</small>${r.review_note ? `<p>${e(r.review_note)}</p>` : ""}</div><div class="actions">${status(r.status)}${r.status === "pending" && (manager() || S.me.role === "admin") ? `<button class="button secondary small" data-action="review-order-request" data-id="${e(r.id)}">اتخاذ قرار</button>` : ""}<button class="button ghost small" data-action="request-order" data-id="${e(r.id)}">تفاصيل الطلب</button></div></article>`).join("")}</div>` : empty("لا توجد طلبات مراجعة في هذه القائمة")) + pagination();
   }
   function ledgerQuery(offset = S.offset) {
     const f = S.ledgerFilter;
@@ -664,6 +703,7 @@
           "textarea",
           d.description || "",
         ) +
+        field("search_aliases", "أسماء بحث مخفية <small>مثال: الاسم الإنجليزي عندما يظهر الاسم بالعربية؛ افصلها بفاصلة</small>", "text", (c.search_aliases || []).join("، "), 'maxlength="1500"') +
         select(
           "availability",
           "حالة الخدمة",
@@ -1157,6 +1197,7 @@
       data.commerce = {
         ...old.commerce,
         availability: d.availability,
+        search_aliases: String(d.search_aliases || "").split(/[,،]/).map((x) => x.trim()).filter(Boolean).slice(0, 20),
         fields: parseFields(form),
       };
       if (manager()) {
@@ -1357,7 +1398,10 @@
     const page =
       (location.hash || "#/dashboard").replace(/^#\/?/, "").split("/")[0] ||
       "dashboard";
-    if (S.active !== page) S.offset = 0;
+    if (S.active !== page) {
+      S.offset = 0;
+      S.filter = "";
+    }
     S.active = page;
     navigation();
     const allowed = sections.find(
@@ -1371,6 +1415,8 @@
     try {
       if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
+      else if (page === "alerts") await alertsPage();
+      else if (page === "order-requests") await orderRequestsPage();
       else if (
         ["orders", "deposits", "verification", "users", "ledger", "audit"].includes(page)
       )
@@ -1394,6 +1440,14 @@
     }
   }
   async function submit(form, d, submitter) {
+    if (form.id === "orderRequestReviewForm") {
+      await A.call("staff.review_order_request", {
+        id: S.reviewRequestId, status: d.status, note: d.note,
+      });
+      closeModal();
+      toast("حُفظ القرار وسيظهر للعميل في صفحة طلبه");
+      return orderRequestsPage();
+    }
     if (form.id === "ledgerFilterForm") {
       if (d.from && d.to && d.from > d.to) throw new Error("تاريخ البداية بعد تاريخ النهاية");
       S.ledgerFilter = { ledger_kind: d.ledger_kind, customer_id: d.customer_id.trim(), from: d.from, to: d.to };
@@ -1612,6 +1666,16 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
+      if (action === "review-order-request") {
+        S.reviewRequestId = b.dataset.id;
+        modal("قرار طلب العميل", `<form id="orderRequestReviewForm">${select("status", "القرار", [["approved", "موافقة على المراجعة"], ["rejected", "رفض الطلب"]], "approved")}${field("note", "السبب والنتيجة للعميل", "textarea", "", 'required minlength="3" maxlength="2000"')}<p class="muted small">هذا القرار لا يلغي الطلب ولا يعيد الرصيد تلقائيًا. راجع حالة التنفيذ لدى المورّد أولًا.</p><button class="button" type="submit">حفظ القرار</button></form>`);
+      } else if (action === "request-order") {
+        const linked = S.list.find((x) => x.id === b.dataset.id)?.order;
+        if (!linked?.id) throw new Error("تعذّر تحميل الطلب المرتبط");
+        detailOrder(linked);
+      } else if (action === "refresh-alerts") {
+        await alertsPage();
+      } else
       if (action === "provider-toggle") {
         const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
         if (!provider) throw new Error("المورّد غير موجود");
@@ -1749,7 +1813,7 @@
       else if (action === "reload") await route();
       else if (action === "next" || action === "prev") {
         S.offset = Math.max(0, S.offset + (action === "next" ? 50 : -50));
-        await (S.active === "traders" ? traders() : listPage(S.active));
+        await (S.active === "traders" ? traders() : S.active === "order-requests" ? orderRequestsPage() : listPage(S.active));
       } else if (action === "detail-order")
         detailOrder(S.list.find((x) => x.id === b.dataset.id));
       else if (action === "detail-deposit")
@@ -2101,6 +2165,12 @@
     }
   });
   document.addEventListener("change", (ev) => {
+    if (ev.target.id === "requestFilter") {
+      S.filter = ev.target.value;
+      S.offset = 0;
+      orderRequestsPage().catch((err) => toast(errorMessage(err)));
+      return;
+    }
     if (ev.target.matches('#providerForm [name="adapter"]')) {
       const automatic = ev.target.form.elements.automatic_orders_enabled;
       automatic.disabled = ev.target.value === "omega";
@@ -2312,6 +2382,9 @@
       if (!location.hash || !allowed.some((s) => "#/" + s[0] === location.hash))
         location.hash = "#/" + allowed[0][0];
       await route();
+      clearInterval(alertsTimer);
+      refreshAdminAlerts().catch(() => {});
+      alertsTimer = setInterval(() => refreshAdminAlerts().catch(() => {}), 45000);
     } catch (err) {
       main.innerHTML =
         head("تعذّر الاتصال") +

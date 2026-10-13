@@ -563,7 +563,13 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
   if (designer)
     return {
       ...existing,
-      availability: c.availability === "refilling" ? "refilling" : "available",
+      availability: existing.supplier_refilling === true ? "refilling" :
+        c.availability === "refilling" ? "refilling" : "available",
+      ...(existing.supplier_refilling === true ? {
+        supplier_previous_availability: c.availability === "refilling" ? "refilling" : "available",
+      } : {}),
+      search_aliases: (Array.isArray(c.search_aliases) ? c.search_aliases : existing.search_aliases || [])
+        .slice(0, 20).map((value: unknown) => text(value, 120)).filter(Boolean),
       fields: Array.isArray(c.fields)
         ? c.fields.slice(0, 15).map((f: any) => ({
             id: text(f.id, 60),
@@ -591,9 +597,16 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     delivery_time: text(c.delivery_time, 200),
     expected_minutes: integer(c.expected_minutes || 0, 0, 525600),
     prices: { USD: num(c.prices?.USD || 0, 0, 1000000) },
+    search_aliases: (Array.isArray(c.search_aliases) ? c.search_aliases : existing.search_aliases || [])
+      .slice(0, 20).map((value: unknown) => text(value, 120)).filter(Boolean),
     fields: cleanCommerce(c, existing, true).fields,
     pricing_tiers: [],
   };
+  if (existing.supplier_refilling === true) {
+    result.supplier_refilling = true;
+    result.supplier_previous_availability = result.availability;
+    result.availability = "refilling";
+  }
   if (result.quantity_max < result.quantity_min)
     throw new AppError("F90_QUANTITY");
   result.pricing_tiers = (Array.isArray(c.pricing_tiers) ? c.pricing_tiers : [])
@@ -720,6 +733,62 @@ async function catalogSave(a: Actor, b: any) {
 }
 async function staff(a: Actor, b: any) {
   const action = b.action;
+  if (action === "staff.alerts") {
+    requireRole(a, "manager", "admin", "support");
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const checks = await Promise.all([
+      db.from("f90_orders").select("id", { count: "exact", head: true })
+        .in("status", ["pending", "queued", "submitting", "processing", "review"]),
+      db.from("f90_deposits").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      db.from("f90_verifications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      db.from("f90_order_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      db.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since),
+    ]);
+    checks.forEach((r) => { if (r.error) throw r.error; });
+    return { orders: checks[0].count || 0, deposits: checks[1].count || 0,
+      verification: checks[2].count || 0, requests: checks[3].count || 0,
+      new_users_24h: checks[4].count || 0,
+    };
+  }
+  if (action === "staff.order_requests") {
+    requireRole(a, "manager", "admin", "support");
+    const offset = integer(b.offset || 0, 0, 100000);
+    let query = db.from("f90_order_requests")
+      .select("id,order_id,user_id,kind,reason,status,review_note,created_at,reviewed_at", { count: "exact" })
+      .order("created_at", { ascending: false }).range(offset, offset + 49);
+    if (b.status === "pending") query = query.eq("status", "pending");
+    const response = await query;
+    const items = check(response);
+    const orderIds = [...new Set(items.map((x: any) => x.order_id))];
+    const userIds = [...new Set(items.map((x: any) => x.user_id))];
+    const orders = orderIds.length ? check(await db.from("f90_orders")
+      .select("*")
+      .in("id", orderIds)) : [];
+    const users = userIds.length ? check(await db.from("profiles")
+      .select("id,customer_id,display_name").in("id", userIds)) : [];
+    return { count: response.count, items: items.map((x: any) => ({ ...x,
+      order: { ...orders.find((o: any) => o.id === x.order_id),
+        customer: users.find((u: any) => u.id === x.user_id) },
+      customer: users.find((u: any) => u.id === x.user_id),
+    })) };
+  }
+  if (action === "staff.review_order_request") {
+    requireRole(a, "manager", "admin");
+    if (!["approved", "rejected"].includes(b.status)) throw new AppError("F90_FIELDS");
+    const id = uuid(b.id);
+    const note = text(b.note, 2000).trim();
+    if (note.length < 3) throw new AppError("F90_FIELDS", 400, "اكتب سبب القرار للعميل");
+    const request = check(await db.from("f90_order_requests")
+      .update({ status: b.status, review_note: note, reviewed_by: a.id,
+        reviewed_at: new Date().toISOString() })
+      .eq("id", id).eq("status", "pending")
+      .select("id,order_id,user_id,kind,status,review_note,reviewed_at")
+      .maybeSingle());
+    if (!request) throw new AppError("F90_NOT_FOUND", 409, "الطلب راجعه مدير آخر أو لم يعد متاحًا");
+    await auditSafe(a.id, "order.request.review", request.order_id,
+      { request_id: id, kind: request.kind, status: request.status });
+    return request;
+  }
   if (action === "staff.catalog") {
     requireRole(a, "manager", "designer");
     const rows = await Promise.all(
@@ -1886,7 +1955,35 @@ Deno.serve(async (req: Request) => {
           .eq("order_id", o.id)
           .order("created_at"),
       );
-      return out({ order: customerOrder(o), events });
+      const requests = action === "order" ? check(await db.from("f90_order_requests")
+        .select("id,kind,reason,status,review_note,created_at,reviewed_at")
+        .eq("order_id", o.id).eq("user_id", a.id)
+        .order("created_at", { ascending: false })) : [];
+      return out({ order: customerOrder(o), events, requests });
+    }
+    if (action === "order.request") {
+      if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      const orderId = uuid(b.order_id);
+      const kind = text(b.kind, 20);
+      const reason = text(b.reason, 2000).trim();
+      if (!["cancel", "dispute"].includes(kind) || reason.length < 5)
+        throw new AppError("F90_FIELDS", 400, "اكتب سبب الطلب بخمسة أحرف على الأقل");
+      const order = check(await db.from("f90_orders")
+        .select("id,status,order_number").eq("id", orderId)
+        .eq("user_id", a.id).maybeSingle());
+      if (!order) throw new AppError("F90_NOT_FOUND");
+      if (kind === "cancel" && ["completed", "partial", "failed", "refunded"].includes(order.status))
+        throw new AppError("F90_FIELDS", 409, "الطلب انتهى؛ استخدم الاعتراض للمراجعة");
+      const prior = check(await db.from("f90_order_requests")
+        .select("id").eq("order_id", orderId).eq("kind", kind)
+        .eq("status", "pending").maybeSingle());
+      if (prior) throw new AppError("F90_FIELDS", 409, "يوجد طلب مراجعة مفتوح بالفعل");
+      const request = check(await db.from("f90_order_requests")
+        .insert({ order_id: orderId, user_id: a.id, kind, reason })
+        .select("id,kind,reason,status,created_at").single());
+      await auditSafe(a.id, "order.request", orderId,
+        { request_id: request.id, kind, order_number: order.order_number });
+      return out(request, 201);
     }
     if (action === "history") {
       const table = (

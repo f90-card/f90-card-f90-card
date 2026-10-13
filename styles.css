@@ -2748,3 +2748,6 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
   .button, .icon-button, #drawerLinks a { transition: none; }
   .button:hover, .icon-button:hover, #drawerLinks a:hover { transform: none; }
 }
+.f90-order-requests { margin-top: 20px; }
+.f90-order-requests .record { align-items: flex-start; }
+.f90-header-bell .f90-bell-count:not([hidden]) { position: absolute; top: -5px; inset-inline-end: -6px; min-width: 18px; height: 18px; border-radius: 999px; background: #e32f4d; color: #fff; font: 700 10px/18px system-ui; text-align: center; box-shadow: 0 0 9px #e32f4d88; }
