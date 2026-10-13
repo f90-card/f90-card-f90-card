@@ -86,14 +86,14 @@
     else $("menuButton").focus();
   }
   function theme(v) {
-    v = ["dark", "cream", "melon"].includes(v) ? v : "dark";
+    v = ["dark", "cream"].includes(v) ? v : "dark";
     document.documentElement.dataset.theme = v;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = v === "cream" ? "#ded9d1" : v === "melon" ? "#e1f4f1" : "#090b10";
+    if (meta) meta.content = v === "cream" ? "#ded9d1" : "#090b10";
     const color = S.settings.primary_color || "#fa2444";
     document.documentElement.style.setProperty(
       "--accent",
-      v === "cream" && color === "#fa2444" ? "#a91d3d" : v === "melon" && color === "#fa2444" ? "#ed687d" : color,
+      v === "cream" && color === "#fa2444" ? "#a91d3d" : color,
     );
     try {
       localStorage.setItem("f90-theme", v);
@@ -211,7 +211,7 @@
         .filter((s) => s.enabled && C.safeUrl(s.url))
         .map(
           (s) =>
-            `<a href="${e(C.safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${e(s.name_ar || "تواصل معنا")}</a>`,
+            `<a href="${e(C.safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${C.safeUrl(s.icon_url) ? image(s.icon_url, s.name_ar || "تواصل معنا", "f90-social-icon") : ""}${e(s.name_ar || "تواصل معنا")}</a>`,
         )
         .join(
           "",
@@ -289,7 +289,6 @@
   function welcome() {
     const c = S.settings.config || {};
     const w = c.welcome || {};
-    const roots = S.categories.filter((category) => !category.parent_id).slice(0, 6);
     const methods = (c.payment_methods || []).filter((method) => method.enabled);
     const art = C.safeUrl(w.image_url || c.hero_image || "./assets/sections/hero.png");
     main.innerHTML = `<div class="f90-welcome">
@@ -298,12 +297,12 @@
           <span class="eyebrow">F90 CARD · أف تسعين كارد</span>
           <h1>${e(w.title_ar || "عالمك الرقمي يبدأ هنا")}</h1>
           <p>${e(w.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.")}</p>
-          <div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/register">إنشاء حساب</a><a class="button ghost" href="#/auth">تسجيل الدخول</a></div>
+          <div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/install">تنزيل التطبيق</a><a class="button ghost" href="#/register">إنشاء حساب</a><a class="button ghost" href="#/auth">تسجيل الدخول</a></div>
         </div>
         ${art ? `<img src="${e(art)}" alt="${e(w.image_alt_ar || "استكشف متجر F90 Card")}" fetchpriority="high" decoding="async">` : ""}
       </section>
-      <section class="f90-welcome-section"><div class="section-head"><h2>اكتشف الخدمات</h2><a href="#/">جميع الأقسام</a></div>
-        ${roots.length ? `<div class="image-grid">${roots.map(categoryTile).join("")}</div>` : '<p class="muted">تُجهّز الأقسام حاليًا.</p>'}
+      <section class="f90-welcome-section"><div class="section-head"><h2>لمحة عن الخدمات</h2><a href="#/">استعرض المتجر</a></div>
+        <div class="f90-welcome-showcase">${S.products.filter((p) => p.is_active && !C.unavailable(p)).slice(0, 8).map((p) => `<a class="f90-welcome-service panel" href="${href("product", p.slug || p.id)}">${image(p.image_url, p.name)}<strong>${e(p.name)}</strong></a>`).join("") || '<p class="muted">الخدمات الجديدة ستظهر هنا فور نشرها.</p>'}</div>
       </section>
       <section class="f90-welcome-features">
         <a class="panel" href="#/wallet">${I("wallet")}<h3>محفظتك</h3><p>راجع رصيدك وطلبات الإيداع بعد تسجيل الدخول.</p></a>
@@ -535,11 +534,31 @@
       p = me.profile;
     main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
   }
+  function recipientStorageKey() {
+    return S.me?.profile?.id ? "f90-recipients:" + S.me.profile.id : null;
+  }
+  function localRecipients() {
+    const key = recipientStorageKey();
+    if (!key) return [];
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(data) ? data.filter((row) =>
+        row && typeof row.id === "string" && typeof row.label === "string" &&
+        typeof row.value === "string" && ["phone", "account_id"].includes(row.kind)).slice(0, 100) : [];
+    } catch { return []; }
+  }
+  function saveLocalRecipients(rows) {
+    const key = recipientStorageKey();
+    if (!key) throw new Error("سجّل الدخول لحفظ دفتر العملاء");
+    try { localStorage.setItem(key, JSON.stringify(rows)); }
+    catch { throw new Error("تعذّر الحفظ على هذا الجهاز؛ تحقق من مساحة المتصفح وإعدادات الخصوصية"); }
+    S.savedRecipients = rows;
+  }
   async function recipients() {
     const seq = S.route;
     main.innerHTML = pageHead("دفتر العملاء", "احفظ معرّفات الألعاب وأرقام الهاتف التي تستخدمها للشحن. لا تحفظ كلمات مرور أو بيانات دفع هنا.") +
       '<div id="recipientsContent" class="loading">جارٍ تحميل البيانات المحفوظة…</div>';
-    const result = await A.call("recipients.list");
+    const result = { items: localRecipients() };
     if (seq !== S.route) return;
     S.savedRecipients = result.items || [];
     $("recipientsContent").outerHTML = `<div class="f90-recipient-layout">
@@ -549,7 +568,7 @@
           ${field("label", "اسم مختصر", "text", "", 'required maxlength="50" placeholder="مثال: حساب ببجي"')}
           ${select("kind", "نوع المعرّف", [["account_id", "معرّف حساب أو لعبة"], ["phone", "رقم هاتف"]], "account_id")}
           ${field("value", "المعرّف أو رقم الهاتف", "text", "", 'required minlength="2" maxlength="120" autocomplete="off" dir="ltr"')}
-          <p class="muted small">يمكنك اختيار البيانات المحفوظة عند شراء خدمة تطلب معرّف حساب أو رقم هاتف. لا يُنشئ حفظها أي طلب أو خصم.</p>
+          <p class="muted small">تُحفظ البيانات على هذا الجهاز لهذا الحساب فقط، وتظهر عند الشراء من المتصفح نفسه. حذف بيانات المتصفح يمحوها. لا تحفظ كلمات مرور أو بيانات دفع.</p>
           <div class="actions"><button class="button" type="submit">حفظ</button><button class="button secondary" type="button" data-action="recipient-reset">إلغاء التحرير</button></div>
         </form>
       </section>
@@ -562,7 +581,7 @@
     const select = form.querySelector("#savedRecipient");
     if (!select) return;
     try {
-      const result = await A.call("recipients.list");
+      const result = { items: localRecipients() };
       if (!form.isConnected) return;
       S.savedRecipients = result.items || [];
       const kinds = [...form.elements].filter((el) => el.name?.startsWith("customer_"))
@@ -581,7 +600,7 @@
   }
   async function wallet() {
     const me = S.me;
-    main.innerHTML = `${pageHead("محفظتك الرقمية", "رصيد واحد بالدولار، لكل خدماتك")}<section class="wallet-showcase"><div>${I("wallet")}<p style="margin-top:13px;margin-bottom:5px">رصيدك الحالي</p><div class="amount">${e(C.money(me.wallet.balance_usd, "USD", true))}</div><small>الرصيد متاح بعد اعتماد إيداعك من الإدارة</small></div><div class="wallet-actions"><a class="button" href="#/deposit">${I("plus")}إضافة رصيد</a><a class="button secondary" href="#/history">سجل الحركات</a></div></section><div class="section-head"><h2>آخر الإيداعات</h2><a href="#/deposits" class="muted small">عرض السجل الكامل</a></div><div id="walletDeposits" class="loading">جارٍ تحميل السجل…</div>`;
+    main.innerHTML = `${pageHead("محفظتك الرقمية", "كل المبالغ بالدولار الأمريكي")}<section class="wallet-showcase"><div>${I("wallet")}<p style="margin-top:13px;margin-bottom:5px">رصيدك الحالي</p><div class="amount">${e(C.money(me.wallet.balance_usd, "USD", true))}</div><small>الرصيد متاح بعد اعتماد إيداعك من الإدارة</small></div><div class="wallet-actions"><a class="button" href="#/deposit">${I("plus")}إضافة رصيد</a><a class="button secondary" href="#/history">سجل الحركات</a></div></section><div class="profile-stats f90-wallet-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>المتاح الآن</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>مشتريات مكتملة</span></div><div><strong>—</strong><span>الرصيد المدين غير متاح في المحفظة مسبقة الدفع</span></div></div><div class="section-head"><h2>آخر الإيداعات</h2><a href="#/deposits" class="muted small">عرض السجل الكامل</a></div><div id="walletDeposits" class="loading">جارٍ تحميل السجل…</div><div class="actions"><a class="button secondary" href="#/history">الحركات والرصيد بعد كل عملية</a><a class="button secondary" href="#/orders">الطلبات وتفاصيلها</a></div>`;
     const r = await A.call("history", { kind: "deposits" });
     if ($("walletDeposits"))
       $("walletDeposits").outerHTML = r.items.length
@@ -876,7 +895,13 @@
         return;
       }
       if (page === "welcome") welcome();
-      else if (!page) home();
+      else if (!page) {
+        home();
+        if (!S.greetedStore) {
+          S.greetedStore = true;
+          toast("أهلًا " + (S.me?.profile?.display_name || "بك") + " في أف تسعين كارد");
+        }
+      }
       else if (page === "category") category(id);
       else if (page === "product") product(id);
       else if (page === "auth") auth();
@@ -907,6 +932,8 @@
             ? `<div class="image-grid">${ps.map((p) => productTile(p)).join("")}</div>`
             : empty("لم تضف خدمة للمفضلة بعد", "heart"));
       } else if (page === "notifications") {
+        const news = (S.news || []).map((n) =>
+          `<a class="panel f90-news-item" href="${n.product_id ? href("product", n.product_id) : "#/"}"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.body_ar)}</p><small>${e(C.date(n.created_at))}</small></a>`).join("");
         main.innerHTML =
           pageHead("كل جديد، هنا") +
           (S.settings.config.notifications || [])
@@ -915,7 +942,7 @@
               (n) =>
                 `<section class="panel" style="margin-bottom:15px"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.text_ar || n.body_ar)}</p></section>`,
             )
-            .join("");
+            .join("") + news;
         if (!main.querySelector(".panel"))
           main.insertAdjacentHTML(
             "beforeend",
@@ -1005,7 +1032,17 @@
       return;
     }
     if (form.id === "recipientForm") {
-      await A.call("recipients.save", { id: data.id || undefined, kind: data.kind, label: data.label, value: data.value });
+      const rows = localRecipients();
+      const kind = data.kind === "phone" ? "phone" : "account_id";
+      const label = String(data.label || "").trim().slice(0, 50);
+      const value = String(data.value || "").trim().slice(0, 120);
+      if (!label || value.length < 2) throw new Error("أدخل الاسم والمعرّف الصحيح");
+      const id = data.id || C.key();
+      const index = rows.findIndex((item) => item.id === id);
+      if (index < 0 && rows.length >= 100) throw new Error("دفتر العملاء ممتلئ");
+      const item = { id, kind, label, value };
+      if (index < 0) rows.push(item); else rows[index] = item;
+      saveLocalRecipients(rows);
       toast("تم حفظ البيانات في دفتر العملاء");
       await recipients();
       return;
@@ -1329,7 +1366,10 @@
     }
     const action = button.dataset.action;
     try {
-      if (action === "recipient-reset") {
+      if (action === "popup-read") {
+        try { localStorage.setItem(button.dataset.key, "1"); } catch {}
+        closeModal();
+      } else if (action === "recipient-reset") {
         const form = $("recipientForm");
         form?.reset();
         if (form) form.elements.id.value = "";
@@ -1350,7 +1390,7 @@
         if (!item) return;
         modal("حذف البيانات المحفوظة", `<p>حذف ${e(item.label)} من دفتر العملاء؟ لن يؤثر ذلك على الطلبات السابقة.</p><div class="actions"><button class="button secondary" data-close-modal>إلغاء</button><button class="button" data-action="recipient-delete-confirm" data-id="${e(item.id)}">حذف</button></div>`);
       } else if (action === "recipient-delete-confirm") {
-        await A.call("recipients.delete", { id: button.dataset.id });
+        saveLocalRecipients(localRecipients().filter((item) => item.id !== button.dataset.id));
         closeModal();
         toast("حُذفت البيانات المحفوظة");
         await recipients();
@@ -1587,6 +1627,16 @@
       theme(initialTheme);
       promotions();
       await route();
+      const popup = S.settings.config?.popup_announcement;
+      if (popup?.enabled && popup.text_ar) {
+        const key = "f90-popup-read:" + (popup.revision || popup.text_ar);
+        let read = false;
+        try { read = localStorage.getItem(key) === "1"; } catch {}
+        if (!read) {
+          modal("تنبيه من أف تسعين كارد",
+            `<p class="f90-popup-copy">${e(popup.text_ar)}</p><button class="button" data-action="popup-read" data-key="${e(key)}">قرأت التنبيه</button>`);
+        }
+      }
       if ("serviceWorker" in navigator)
         navigator.serviceWorker.register("./sw.js").catch(() => {});
     } catch (err) {
