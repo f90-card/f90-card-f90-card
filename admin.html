@@ -15,7 +15,7 @@
     <script>
       try {
         document.documentElement.dataset.theme =
-          localStorage.getItem("f90-theme") === "cream" ? "cream" : "dark";
+          ["dark", "cream", "melon"].includes(localStorage.getItem("f90-theme")) ? localStorage.getItem("f90-theme") : "dark";
       } catch {}
     </script>
     <script
