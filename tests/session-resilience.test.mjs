@@ -11,7 +11,7 @@ const end = source.indexOf("  function promotions() {", start);
 assert.ok(start >= 0 && end > start, "refreshMe function not found");
 
 function harness({ session = "token", result, failure, existing = { profile: { display_name: "سابق" }, wallet: { balance_usd: 10 } } } = {}) {
-  const S = { me: existing };
+  const S = { me: existing, walletStale: false };
   const messages = [];
   const A = {
     client: { auth: { getSession: async () => ({ data: { session: session ? { access_token: session } : null } }) } },
@@ -33,6 +33,7 @@ test("successful session refresh replaces stale user and reports success", async
   assert.equal(await h.refreshMe(), true);
   assert.equal(h.S.me.profile.display_name, "محدّث");
   assert.equal(h.S.me.wallet.balance_usd, 4);
+  assert.equal(h.S.walletStale, false);
 });
 
 test("network failure keeps last known user but reports a stale refresh", async () => {
@@ -40,6 +41,7 @@ test("network failure keeps last known user but reports a stale refresh", async 
   assert.equal(await h.refreshMe(), false);
   assert.equal(h.S.me.profile.display_name, "سابق");
   assert.equal(h.S.me.wallet.balance_usd, 10);
+  assert.equal(h.S.walletStale, true);
   assert.equal(h.messages.length, 0);
 });
 
@@ -49,6 +51,7 @@ test("expired account credentials clear the cached user", async () => {
   assert.equal(await h.refreshMe(), false);
   assert.equal(h.S.me, null);
   assert.equal(h.messages.length, 1);
+  assert.equal(h.S.walletStale, false);
 });
 
 test("forbidden account clears cached identity", async () => {
@@ -62,6 +65,7 @@ test("real sign-out clears identity rather than using cached wallet", async () =
   const h = harness({ session: null });
   assert.equal(await h.refreshMe(), false);
   assert.equal(h.S.me, null);
+  assert.equal(h.S.walletStale, false);
 });
 
 test("confirmed checkout navigates before optional account refresh", () => {
@@ -69,4 +73,9 @@ test("confirmed checkout navigates before optional account refresh", () => {
   const navigation = source.indexOf('location.hash = href("order", o.id);', checkout);
   const refresh = source.indexOf('refreshed = await refreshMe();', checkout);
   assert.ok(checkout >= 0 && navigation > checkout && refresh > navigation);
+});
+
+test("stale wallet amount is never shown as current balance in header", () => {
+  const header = source.slice(source.indexOf("function chrome()"), source.indexOf("  async function refreshMe()"));
+  assert.match(header, /S\.walletStale \? "الرصيد يحتاج تحديث"/);
 });
