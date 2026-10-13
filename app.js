@@ -917,6 +917,15 @@
         return;
       }
       if (!S.quote) throw new Error("انتظر تحديث السعر قبل التأكيد");
+      // A cached balance must never authorize a new checkout after a failed refresh.
+      if (S.walletStale) {
+        const refreshed = await refreshMe();
+        chrome();
+        if (!refreshed)
+          throw new Error("تعذّر تحديث المحفظة. تأكد من اتصالك وحاول مجددًا قبل إجراء شراء جديد.");
+        if (!S.me?.profile?.is_verified)
+          throw new Error("يلزم توثيق الحساب قبل إجراء الشراء.");
+      }
       if (Number(S.me.wallet.balance_usd) < Number(S.quote.total_usd))
         throw new Error("رصيد محفظتك غير كافٍ. قدّم إيداعًا وانتظر اعتماده");
       const p = S.products.find((p) => p.id === form.dataset.product),
