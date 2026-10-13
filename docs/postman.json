@@ -1,0 +1,306 @@
+{
+  "info": {
+    "name": "F90 Card API",
+    "description": "العمليات الحقيقية في F90. املأ base_url وpublishable_key ومفتاح التاجر في بيئتك. طلب الشراء مثال غير جاهز للإرسال؛ راجع السعر والحقول والتوثيق أولًا.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "الكتالوج العام",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"catalog\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "خدمات التاجر",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"services\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "الرصيد",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"balance\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "عرض السعر",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"quote\",\n  \"product_id\": \"PRODUCT_UUID\",\n  \"quantity\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "إنشاء طلب بعد المراجعة",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"checkout\",\n  \"product_id\": \"PRODUCT_UUID\",\n  \"quantity\": 1,\n  \"fields\": {\n    \"account_id\": \"CUSTOMER_ID\"\n  },\n  \"idempotency_key\": \"UNIQUE_STORE_ORDER_REFERENCE\",\n  \"expected_total_usd\": \"REPLACE_WITH_QUOTE_TOTAL\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "حالة طلب",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"status\",\n  \"order\": \"ORDER_UUID\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "سجل الطلبات",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"history\",\n  \"kind\": \"orders\",\n  \"offset\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://xzqnrpycjxfbyrfaolud.supabase.co"
+    },
+    {
+      "key": "publishable_key",
+      "value": "SET_PUBLIC_SUPABASE_KEY"
+    },
+    {
+      "key": "f90_api_key",
+      "value": "SET_SERVER_SIDE_TRADER_KEY"
+    }
+  ]
+}
