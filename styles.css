@@ -2685,3 +2685,14 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 #drawerLinks .f90-drawer-group:first-child{border:0;margin-top:0}
 
 .f90-footer-logo{width:54px;height:54px;object-fit:contain;margin-bottom:12px;border-radius:10px}
+
+/* Per-account reusable checkout identifiers */
+.f90-recipient-layout{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:20px;align-items:start}
+.f90-recipient-list{display:grid;gap:10px}
+.f90-recipient-item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.f90-recipient-item>div:first-child{display:grid;gap:5px;min-width:0}
+.f90-recipient-item code{font-size:13px;overflow-wrap:anywhere;unicode-bidi:plaintext}
+.f90-recipient-item .actions{display:flex;flex-wrap:wrap;gap:7px}
+.f90-recipient-chooser{padding:12px;background:var(--surface2);border-radius:12px}
+.f90-recipient-chooser[hidden]{display:none!important}
+@media(max-width:780px){.f90-recipient-layout{grid-template-columns:1fr}.f90-recipient-item{align-items:start;flex-direction:column}}
