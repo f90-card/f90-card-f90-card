@@ -348,7 +348,16 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length ? `<div class="image-grid">${children.map(categoryTile).join("")}</div>` : ""}${products.length ? `${children.length ? '<div class="section-head"><h2>خدمات القسم</h2></div>' : ""}<div class="${c.presentation?.layout === "packs" ? "packs-grid" : "image-grid"}">${products.map((p) => productTile(p, c.presentation?.layout === "packs", true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<section id="quickProductPanel" class="f90-quick-product" hidden aria-live="polite"></section>' : ""}`;
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length ? `<div class="image-grid">${children.map(categoryTile).join("")}</div>` : ""}${products.length ? `${children.length ? '<div class="section-head"><h2>خدمات القسم</h2></div>' : ""}<div class="${c.presentation?.layout === "packs" ? "packs-grid" : "image-grid"}">${products.map((p) => productTile(p, c.presentation?.layout === "packs", true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
+  }
+  function closeQuickProduct() {
+    const panel = $("quickProductPanel");
+    if (!panel || panel.hidden) return;
+    panel.hidden = true;
+    $("quickProductBackdrop").hidden = true;
+    panel.replaceChildren();
+    S.quote = null;
+    S.quoteSeq++;
   }
   function priceBoard(total) {
     return ["USD", "ILS", "JOD"]
@@ -426,7 +435,8 @@
       if (!panel) return;
       panel.innerHTML = `<div class="f90-quick-product-toolbar"><strong>${disabled ? "متوقف مؤقتًا" : "تفاصيل الخدمة"} · ${e(p.name)}</strong><button type="button" class="button secondary small" data-action="close-quick-product">إغلاق</button></div>` + productHtml;
       panel.hidden = false;
-      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      $("quickProductBackdrop").hidden = false;
+      panel.querySelector('[data-action="close-quick-product"]')?.focus();
     } else {
       main.innerHTML = productHtml;
     }
@@ -1238,13 +1248,7 @@
         if (!button.dataset.id) return;
         product(button.dataset.id, true);
       } else if (action === "close-quick-product") {
-        const panel = $("quickProductPanel");
-        if (panel) {
-          panel.hidden = true;
-          panel.replaceChildren();
-          S.quote = null;
-          S.quoteSeq++;
-        }
+        closeQuickProduct();
       } else if (action === "favorite") {
         const id = button.dataset.id;
         S.favorites = S.favorites.includes(id)
@@ -1349,12 +1353,14 @@
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
       closeModal();
+      closeQuickProduct();
       if (!$("drawer").hidden) toggleDrawer(false);
     }
     if (ev.key === "Tab") {
       const dialog =
         document.querySelector(".modal") ||
-        (!$("drawer").hidden ? $("drawer") : null);
+        (!$("drawer").hidden ? $("drawer") : null) ||
+        (!$("quickProductPanel")?.hidden ? $("quickProductPanel") : null);
       if (!dialog) return;
       const focusables = [
         ...dialog.querySelectorAll("a,button,input,select,textarea"),
