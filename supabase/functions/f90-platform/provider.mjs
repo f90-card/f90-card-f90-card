@@ -131,6 +131,10 @@ export async function callProvider(
   resolver = null,
 ) {
   const u = endpointURL(provider.endpoint);
+  const configuredTimeout = Number(provider.config?.request_timeout_ms ?? 20000);
+  const timeout = Number.isSafeInteger(configuredTimeout) &&
+    configuredTimeout >= 5000 && configuredTimeout <= 30000
+    ? configuredTimeout : 20000;
   if (resolver && !u.hostname.includes(":") && !/^\d+\./.test(u.hostname)) {
     const addresses = await resolver(u.hostname);
     if (!addresses.length || addresses.some((x) => !publicAddress(x)))
@@ -147,7 +151,7 @@ export async function callProvider(
         method: "GET",
         headers: { Accept: "application/json", "api-token": key },
         redirect: "manual",
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(timeout),
       });
     } catch {
       throw new ProviderError("تعذر الاتصال بأوميغا");
@@ -184,7 +188,7 @@ export async function callProvider(
       headers,
       body,
       redirect: "manual",
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(timeout),
     });
   } catch {
     throw new ProviderError("تعذّر تأكيد نتيجة المورّد", action === "add");
@@ -206,3 +210,4 @@ export async function callProvider(
   if (data?.error) throw new ProviderError("رفض المورّد تنفيذ الطلب");
   return data;
 }
+
