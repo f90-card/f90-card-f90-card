@@ -33,3 +33,21 @@ test("Omega cannot submit paid orders, even when adapter receives a token", asyn
     /طلبات أوميغا الآلية غير متاحة/,
   );
 });
+
+test("Omega amount-type services accept variable quantities with no supplied limits", () => {
+  const p = normalizeService({
+    id: 47, name: "خدمة كمية", price: "0.002", available: true,
+    product_type: "amount", qty_values: null,
+  });
+  assert.equal(p.min, 1);
+  assert.equal(p.max, 1000000);
+  assert.equal(p.unit_quantity, 1);
+});
+test("Omega known zero stock is rejected, unlike unspecified stock", () => {
+  assert.equal(normalizeService({
+    id: 48, name: "غير متوفر", price: 2, product_type: "digital", stock: 0,
+  }), null);
+  assert.notEqual(normalizeService({
+    id: 49, name: "مخزون غير محدد", price: 2, product_type: "digital",
+  }), null);
+});
