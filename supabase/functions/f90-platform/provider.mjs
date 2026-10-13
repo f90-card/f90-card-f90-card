@@ -48,12 +48,16 @@ export function endpointURL(value) {
   return u;
 }
 export function normalizeService(s) {
+  if (!s || typeof s !== "object" || s.available === false) return null;
+  // Omega's product API uses qty_values and product_type, and prices one
+  // product unit. SMM panels conventionally quote per 1000 units.
+  const omega = s.product_type != null || s.qty_values != null;
   const rate = Number(s.rate ?? s.price);
-  const min = Number(s.min ?? 1),
-    max = Number(s.max ?? 1000000),
-    unit = Number(s.unit_quantity ?? 1000);
+  const min = Number(s.min ?? s.qty_values?.min ?? 1),
+    max = Number(s.max ?? s.qty_values?.max ?? (omega ? 1 : 1000000)),
+    unit = Number(s.unit_quantity ?? (omega ? 1 : 1000));
   if (
-    (!s.service && !s.id) ||
+    (s.service == null && s.id == null) ||
     !Number.isFinite(rate) ||
     rate <= 0 ||
     !Number.isSafeInteger(min) ||
@@ -65,15 +69,21 @@ export function normalizeService(s) {
     max < min
   )
     return null;
+  const params = Array.isArray(s.params)
+    ? s.params.filter((v) => typeof v === "string" && v.trim())
+      .slice(0, 20).map((v) => v.trim().slice(0, 120))
+    : [];
+  const name = String(s.name ?? "").trim();
+  if (!name) return null;
   return {
     id: String(s.service ?? s.id),
-    name: String(s.name ?? "خدمة").slice(0, 200),
-    category: String(s.category ?? s.category_name ?? ""),
-    rate,
-    min,
-    max,
-    type: String(s.type ?? "Default"),
+    name: name.slice(0, 200),
+    category: String(s.category_name ?? s.category ?? "").slice(0, 200),
+    rate, min, max,
+    type: String(s.product_type ?? s.type ?? "Default"),
     unit_quantity: unit,
+    params,
+    omega,
     raw: s,
   };
 }
