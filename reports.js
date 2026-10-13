@@ -145,6 +145,33 @@
               ["التاريخ", C.date(r.created_at)],
             ],
     );
+  function historyCSV(kind, items) {
+    const columns = kind === "orders"
+      ? [["order_number", "رقم الطلب"], ["product_name", "الخدمة"], ["quantity", "الكمية"], ["status", "الحالة"], ["total_usd", "الإجمالي بالدولار"], ["created_at", "التاريخ"], ["id", "المعرف"]]
+      : kind === "deposits"
+        ? [["method_name", "طريقة الإيداع"], ["amount", "المبلغ"], ["currency", "العملة"], ["usd_amount", "المبلغ بالدولار"], ["status", "الحالة"], ["created_at", "التاريخ"], ["id", "المعرف"]]
+        : [["description", "البيان"], ["amount_usd", "الحركة بالدولار"], ["balance_after", "الرصيد بعدها"], ["created_at", "التاريخ"], ["id", "المعرف"]];
+    const cell = (value) => {
+      let text = String(value ?? "");
+      // Spreadsheet applications can execute formulas from imported CSV cells.
+      if (/^[\s\x00-\x1f]*[=+@-]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+    const rows = [columns.map(([, heading]) => heading), ...(items || []).map((item) => columns.map(([key]) => item[key]))];
+    const csv = "\uFEFF" + rows.map((row) => row.map(cell).join(",")).join("\r\n");
+    return csv;
+  }
+  function downloadHistoryCSV(kind, items) {
+    const blob = new Blob([historyCSV(kind, items)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "F90-" + kind + "-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   const api = {
     history: (kind, items, store) =>
       save(
@@ -228,6 +255,8 @@
               ["سجلات الصفحة الحالية فقط."],
             ),
     createReport,
+    historyCSV,
+    downloadHistoryCSV,
   };
   root.F90Reports = api;
   if (typeof module === "object" && module.exports) module.exports = api;
