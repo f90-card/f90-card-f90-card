@@ -83,20 +83,20 @@
     else $("menuButton").focus();
   }
   function theme(v) {
-    v = v === "cream" ? "cream" : "dark";
+    v = ["dark", "cream", "melon"].includes(v) ? v : "dark";
     document.documentElement.dataset.theme = v;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = v === "cream" ? "#ded9d1" : "#090b10";
+    if (meta) meta.content = v === "cream" ? "#ded9d1" : v === "melon" ? "#e1f4f1" : "#090b10";
     const color = S.settings.primary_color || "#fa2444";
     document.documentElement.style.setProperty(
       "--accent",
-      v === "cream" && color === "#fa2444" ? "#a91d3d" : color,
+      v === "cream" && color === "#fa2444" ? "#a91d3d" : v === "melon" && color === "#fa2444" ? "#ed687d" : color,
     );
     try {
       localStorage.setItem("f90-theme", v);
     } catch {}
     $("themeSelect").value = v;
-    $("themeButton").innerHTML = I(v === "cream" ? "moon" : "sun");
+    $("themeButton").innerHTML = I(v === "dark" ? "sun" : "moon");
   }
   function brand() {
     const c = S.settings.config || {},
@@ -1280,7 +1280,7 @@
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
   $("themeButton").addEventListener("click", () =>
-    theme(document.documentElement.dataset.theme === "dark" ? "cream" : "dark"),
+    theme(document.documentElement.dataset.theme === "dark" ? "cream" : document.documentElement.dataset.theme === "cream" ? "melon" : "dark"),
   );
   $("themeSelect").addEventListener("change", (ev) => theme(ev.target.value));
   $("currencySelect").addEventListener("change", (ev) => {
