@@ -5,9 +5,10 @@ const edge = readFileSync(new URL("../supabase/functions/f90-platform/index.ts",
 const admin = readFileSync(new URL("../admin.js", import.meta.url), "utf8");
 test("supplier suspension hides linked catalog products and preserves others", () => {
   assert.match(edge, /async function publicCatalog\(\)/);
-  assert.match(edge, /inactiveProviderIds/);
+  assert.match(edge, /providerById/);
   assert.match(edge, /hiddenProductIds/);
   assert.match(edge, /!hiddenProductIds\.has\(p\.id\)/);
+  assert.match(edge, /automatic_orders_enabled !== true/);
   assert.match(edge, /\.not\("provider_id", "is", null\)/);
 });
 test("disabled suppliers are blocked for quotes and new orders", () => {
@@ -32,3 +33,4 @@ test("admin asks for confirmation before supplier toggle", () => {
   assert.match(admin, /data-action="provider-toggle-confirm"/);
   assert.match(admin, /A\.call\("provider.toggle", \{ id: pending\.id, is_enabled: pending\.enable \}\)/);
 });
+
