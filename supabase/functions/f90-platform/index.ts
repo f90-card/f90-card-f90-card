@@ -171,6 +171,9 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
     api: any;
   if (key) {
     if (key.length > 200) throw new AppError("F90_AUTH");
+    const apiSetting = check(await db.from("site_settings").select("config").eq("id", 1).single());
+    if (apiSetting.config?.merchant_api_enabled === false)
+      throw new AppError("F90_FORBIDDEN", 403, "واجهة التجار متوقفة مؤقتًا");
     api = check(
       await db
         .from("f90_api_keys")
@@ -1986,6 +1989,9 @@ Deno.serve(async (req: Request) => {
     if (action === "key.create") {
       requireRole(a, "trader", "manager");
       if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      const apiSetting = check(await db.from("site_settings").select("config").eq("id", 1).single());
+      if (apiSetting.config?.merchant_api_enabled === false)
+        throw new AppError("F90_FORBIDDEN", 403, "واجهة التجار متوقفة مؤقتًا");
       const owner = a.role === "manager" && b.user_id ? uuid(b.user_id) : a.id;
       const [target, profile] = await Promise.all([
         db
