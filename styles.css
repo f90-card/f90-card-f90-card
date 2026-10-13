@@ -2596,3 +2596,20 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
  .f90-quick-product {padding:14px;scroll-margin-top:85px;}
  .f90-quick-product .product-page {grid-template-columns:minmax(0,1fr);}
 }
+
+/* Server-quoted wallet checkout review: legible in every theme. */
+.f90-checkout-review {padding:4px 0 8px;max-width:520px;margin-inline:auto;}
+.f90-review-brand{display:flex;align-items:center;gap:11px;margin-bottom:15px;font-weight:900;}
+.f90-review-brand img{object-fit:contain;background:var(--surface2);border-radius:11px;padding:4px;}
+.f90-checkout-review h3{font-size:clamp(18px,4vw,25px);margin-bottom:16px;}
+.f90-checkout-review dl{margin:0;display:grid;gap:3px;}
+.f90-checkout-review dl>div{display:flex;justify-content:space-between;gap:16px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line);}
+.f90-checkout-review dt{color:var(--muted);}
+.f90-checkout-review dd{margin:0;text-align:left;font-weight:800;direction:ltr;white-space:nowrap;}
+.f90-review-remaining{margin-top:8px;background:var(--surface2);border-radius:11px;padding-inline:12px!important;color:var(--green);}
+.f90-review-remaining dt{color:inherit;}
+.f90-checkout-review .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px;}
+.f90-checkout-review .actions button{flex:1;min-width:145px;}
+:root[data-theme="melon"] .f90-checkout-review .f90-review-brand{color:var(--accent2);}
+:root[data-theme="melon"] .f90-checkout-review .f90-review-remaining{background:#d5f3e7;}
+@media(max-width:440px){.f90-checkout-review dl>div{font-size:13px;}.f90-checkout-review .actions button{width:100%;}}
