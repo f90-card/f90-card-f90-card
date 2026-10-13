@@ -103,7 +103,7 @@ async function harness(file = "index.html", options = {}) {
       customer_id: "F90-123",
       email: "user@example.invalid",
       account_status: "active",
-      is_verified: false,
+      is_verified: options.verified ?? true,
     },
     role: options.role || "customer",
     wallet: { balance_usd: wallet },
