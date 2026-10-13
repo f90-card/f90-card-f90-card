@@ -32,7 +32,8 @@
     quoteTimer,
     maintenanceTimer,
     installPrompt,
-    promoTimers = [];
+    promoTimers = [],
+    quickProductOpener = null;
   try {
     S.currencyPreference = !!localStorage.getItem("f90-currency");
     S.currency = localStorage.getItem("f90-currency") || "USD";
@@ -358,6 +359,8 @@
     panel.replaceChildren();
     S.quote = null;
     S.quoteSeq++;
+    if (quickProductOpener?.isConnected) quickProductOpener.focus();
+    quickProductOpener = null;
   }
   function priceBoard(total) {
     return ["USD", "ILS", "JOD"]
@@ -1246,6 +1249,7 @@
       } else if (action === "quick-product") {
         ev.preventDefault();
         if (!button.dataset.id) return;
+        quickProductOpener = button;
         product(button.dataset.id, true);
       } else if (action === "close-quick-product") {
         closeQuickProduct();
