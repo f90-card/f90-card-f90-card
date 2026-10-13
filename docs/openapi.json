@@ -1,0 +1,326 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "F90 Card API",
+    "version": "3",
+    "description": "واجهة F90 Card الفعلية. أرسل POST JSON إلى مسار واحد مع action. catalog عام، والعمليات الأخرى تحتاج مفتاح تاجر فعّال أو جلسة مستخدم مناسبة. quote لا يخصم رصيدًا؛ checkout يخصم بعد التحقق الخادمي من الحساب والسعر والرصيد وتوفر الخدمة. احتفظ بالمفتاح على الخادم فقط."
+  },
+  "servers": [
+    {
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co"
+    }
+  ],
+  "paths": {
+    "/functions/v1/f90-platform": {
+      "post": {
+        "summary": "تنفيذ عملية F90",
+        "operationId": "f90Action",
+        "description": "مفتاح التاجر في x-f90-key، أو Authorization: Bearer لجلسة مستخدم. قد يلزم إرسال apikey بمفتاح Supabase العام بحسب إعدادات البوابة. العمليات المالية يجب تنفيذها على خادمك. لا تعاود checkout بمفتاح idempotency_key مختلف إذا كانت النتيجة مجهولة.",
+        "security": [
+          {},
+          {
+            "TraderKey": []
+          },
+          {
+            "UserBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "apikey",
+            "in": "header",
+            "required": false,
+            "description": "مفتاح Supabase العام عند الحاجة؛ لا تضع service_role هنا.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Catalog"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Services"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Balance"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Quote"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Checkout"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Status"
+                  },
+                  {
+                    "$ref": "#/components/schemas/History"
+                  }
+                ]
+              },
+              "examples": {
+                "catalog": {
+                  "value": {
+                    "action": "catalog"
+                  }
+                },
+                "quote": {
+                  "value": {
+                    "action": "quote",
+                    "product_id": "00000000-0000-0000-0000-000000000000",
+                    "quantity": 1
+                  }
+                },
+                "checkout": {
+                  "summary": "مثال شكلي؛ استبدل السعر والمعرّف قبل أي طلب حقيقي",
+                  "value": {
+                    "action": "checkout",
+                    "product_id": "00000000-0000-0000-0000-000000000000",
+                    "quantity": 1,
+                    "fields": {
+                      "account_id": "CUSTOMER_ID"
+                    },
+                    "idempotency_key": "your-order-10001",
+                    "expected_total_usd": 2.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "نتيجة العملية داخل data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "402": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "TraderKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-f90-key",
+        "description": "مفتاح تاجر من لوحة الحساب؛ لا يُخزن في المتصفح."
+      },
+      "UserBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Catalog": {
+        "type": "object",
+        "title": "الكتالوج العام",
+        "properties": {
+          "action": {
+            "const": "catalog"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "Services": {
+        "type": "object",
+        "title": "خدمات التاجر",
+        "properties": {
+          "action": {
+            "const": "services"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "Balance": {
+        "type": "object",
+        "title": "رصيد التاجر",
+        "properties": {
+          "action": {
+            "const": "balance"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "Quote": {
+        "type": "object",
+        "title": "عرض السعر",
+        "properties": {
+          "action": {
+            "const": "quote"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "action",
+          "product_id"
+        ],
+        "additionalProperties": false
+      },
+      "Checkout": {
+        "type": "object",
+        "title": "إنشاء طلب",
+        "properties": {
+          "action": {
+            "const": "checkout"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8
+          },
+          "expected_total_usd": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "idempotency_key",
+          "expected_total_usd"
+        ],
+        "additionalProperties": false
+      },
+      "Status": {
+        "type": "object",
+        "title": "حالة طلب",
+        "properties": {
+          "action": {
+            "const": "status"
+          },
+          "order": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "action",
+          "order"
+        ],
+        "additionalProperties": false
+      },
+      "History": {
+        "type": "object",
+        "title": "سجل التاجر",
+        "properties": {
+          "action": {
+            "const": "history"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "orders",
+              "deposits",
+              "ledger"
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          }
+        },
+        "required": [
+          "action",
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "خطأ F90",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "error"
+              ],
+              "properties": {
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
