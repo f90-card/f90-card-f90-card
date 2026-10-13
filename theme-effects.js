@@ -82,6 +82,19 @@
       bot.classList.toggle("f90-bot-left", scene % 2 === 0);
       drawWeather();
     });
+    // Hide the decorative mascot while a dialog, drawer or payment form is active.
+    const syncObstruction = () => {
+      if (!bot) return;
+      const dialogs = [...document.querySelectorAll(".modal, [role=dialog], #drawer")];
+      const obstructed = dialogs.some((el) => !el.hidden && el.getAttribute("aria-hidden") !== "true" && el.offsetParent !== null);
+      const focusedForm = !!document.activeElement?.closest("input,textarea,select");
+      bot.classList.toggle("f90-bot-paused", obstructed || focusedForm);
+    };
+    const visibilityObserver = new MutationObserver(syncObstruction);
+    visibilityObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "class", "style", "aria-hidden"] });
+    document.addEventListener("focusin", syncObstruction);
+    document.addEventListener("focusout", () => requestAnimationFrame(syncObstruction));
+    syncObstruction();
     const changeVisibility = () => {
       store("f90-bot-hidden", read("f90-bot-hidden", "0") === "1" ? "0" : "1");
       speech.hidden = true;
