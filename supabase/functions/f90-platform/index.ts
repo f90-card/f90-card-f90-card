@@ -432,7 +432,7 @@ async function provider(id: string, readOnly = false) {
     p_actor: null,
     p_provider: id,
   });
-  if (!secret || (!p.is_enabled && !readOnly)) throw new ProviderError("المورّد غير مفعّل");
+  if (p.config?.archived_at || !secret || (!p.is_enabled && !readOnly)) throw new ProviderError("المورّد غير مفعّل");
   if (!readOnly && (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new ProviderError("الطلبات الآلية غير مفعّلة لهذا المورّد");
   return { p, secret };
@@ -458,11 +458,32 @@ async function work() {
           o.customer_fields.link ||
           o.customer_fields.account_id ||
           Object.values(o.customer_fields)[0];
+        const currentProvider = check(await db.from("f90_providers")
+          .select("adapter").eq("id", o.provider_id).single());
+        let params: Record<string, string> = {};
+        if (currentProvider.adapter === "yassen") {
+          const products = (await providerAction(o.provider_id, "services"))
+            .map(normalizeService).filter(Boolean);
+          const service = products.find((item: any) => item.id === String(o.provider_service));
+          if (!service) throw new ProviderError("خدمة ياسين غير متاحة");
+          const permitted = service.allowed_quantities;
+          if (permitted && !permitted.includes(Number(o.quantity)))
+            throw new ProviderError("الكمية غير مدعومة لدى ياسين");
+          if (o.quantity < service.min || o.quantity > service.max)
+            throw new ProviderError("الكمية خارج حدود ياسين");
+          for (let i = 0; i < service.params.length; i++) {
+            const value = o.customer_fields["param_" + (i + 1)];
+            if (typeof value !== "string" || !value.trim())
+              throw new ProviderError("بيانات خدمة ياسين غير مكتملة");
+            params[service.params[i]] = value;
+          }
+        }
         const response = await providerAction(o.provider_id, "add", {
           service: o.provider_service,
           quantity: o.quantity,
           link,
           client_reference: o.id,
+          params,
           ...(o.customer_fields.comments
             ? { comments: o.customer_fields.comments }
             : {}),
@@ -1208,7 +1229,7 @@ async function staff(a: Actor, b: any) {
           "id,name,endpoint,adapter,currency,is_enabled,margin_percent,config,created_at",
         )
         .order("created_at"),
-    );
+    ).filter((p: any) => !p.config?.archived_at);
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
@@ -1216,8 +1237,11 @@ async function staff(a: Actor, b: any) {
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,config")
       .eq("id", uuid(b.id)).single()) : null;
+    if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (!old && !b.token) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
-    const adapter = ["smm", "json", "omega"].includes(b.adapter) ? b.adapter : "smm";
+    const adapter = ["smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
+      throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
     const endpoint = text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
@@ -1268,6 +1292,9 @@ async function staff(a: Actor, b: any) {
   if (action === "provider.toggle") {
     requireRole(a, "manager");
     const id = uuid(b.id);
+    const current = check(await db.from("f90_providers").select("config")
+      .eq("id", id).single());
+    if (current.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (typeof b.is_enabled !== "boolean") throw new AppError("F90_FIELDS");
     if (b.is_enabled) {
       const services = await providerAction(id, "services");
@@ -1288,6 +1315,13 @@ async function staff(a: Actor, b: any) {
       details: { is_enabled: b.is_enabled },
     });
     return changed;
+  }
+  if (action === "provider.archive") {
+    requireRole(a, "manager");
+    const id = uuid(b.id);
+    await rpc("f90_archive_provider", { p_actor: a.id, p_provider: id });
+    await auditSafe(a.id, "provider.archive", id, {});
+    return { id, archived: true };
   }
   if (action === "provider.services") {
     requireRole(a, "manager");
@@ -1390,12 +1424,16 @@ async function staff(a: Actor, b: any) {
           image_url: b.image_url || "",
           commerce: {
             type: "quantity",
-            fulfillment: p.adapter === "omega" ? "manual" : "automatic",
+            fulfillment: p.config?.automatic_orders_enabled === true &&
+              !s.allowed_quantities && p.adapter !== "omega" ? "automatic" : "manual",
             prices: { USD: price },
             unit_quantity: s.unit_quantity,
             quantity_min: s.min,
             quantity_max: s.max,
-            quantity_step: 1,
+            quantity_step: s.allowed_quantities?.length > 1 &&
+              s.allowed_quantities.every((v: number, i: number, ar: number[]) =>
+                i === 0 || v - ar[i - 1] === ar[1] - ar[0])
+              ? s.allowed_quantities[1] - s.allowed_quantities[0] : 1,
             fields: s.params?.length
               ? s.params.map((label: string, i: number) => ({
                   id: "param_" + (i + 1),
