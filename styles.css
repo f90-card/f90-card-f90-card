@@ -2652,3 +2652,5 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 @media (max-width: 650px) {
   .f90-quick-product { max-height: 90dvh; padding: 14px; }
 }
+
+body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
