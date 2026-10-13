@@ -154,7 +154,7 @@
       ["recipients", "دفتر العملاء", "doc"],
       ["wallet", "محفظتي", "wallet"],
       ["deposit", "إضافة رصيد", "plus"],
-      ["orders", "تتبع طلباتي", "clock"],
+      ["orders", "سجل حركات الخدمات", "clock"],
       ["history", "سجل الحركات", "doc"],
       ["@membership", "المزايا والأمان"],
       ["vip", "مستويات التميّز", "crown"],
@@ -535,7 +535,8 @@
     main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
   }
   function recipientStorageKey() {
-    return S.me?.profile?.id ? "f90-recipients:" + S.me.profile.id : null;
+    return S.me?.profile?.id || S.me?.profile?.customer_id
+      ? "f90-recipients:" + (S.me.profile.id || S.me.profile.customer_id) : null;
   }
   function localRecipients() {
     const key = recipientStorageKey();
@@ -657,7 +658,7 @@
           ? "من الدفع حتى التنفيذ. كل خطوة واضحة."
           : "سجلك محفوظ داخل حسابك",
         `<button class="button secondary small" data-action="report" data-kind="${kind}">${I("download")}PDF</button><button class="button secondary small" data-action="report-csv" data-kind="${kind}">${I("download")}CSV كامل</button>`,
-      ) + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
+      ) + (orders ? '<label class="field f90-record-search"><span>ابحث عن خدمة في هذه الصفحة</span><input id="orderHistorySearch" type="search" placeholder="اسم الخدمة أو رقم الطلب" autocomplete="off"></label>' : "") + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
     const r = await A.call("history", {
       kind: orders ? "orders" : deposits ? "deposits" : "ledger",
       offset: S.offset,
@@ -667,7 +668,7 @@
     S.reportKind = kind;
     const items = r.items;
     $("records").outerHTML = items.length
-      ? `<div class="records">${items.map((x) => (orders ? orderRecord(x) : deposits ? depositRecord(x) : `<article class="record"><span class="avatar">${I(Number(x.amount_usd) > 0 ? "plus" : "wallet")}</span><div class="record-main"><h3>${e(x.description)}</h3><p>${e(C.date(x.created_at))} · الرصيد بعد الحركة ${e(C.money(x.balance_after, "USD", true))}</p></div><strong class="record-price ${Number(x.amount_usd) > 0 ? "ledger-plus" : "ledger-minus"}">${Number(x.amount_usd) > 0 ? "+" : ""}${e(C.money(x.amount_usd, "USD", true))}</strong></article>`)).join("")}</div><div class="pagination"><button class="button secondary small" data-action="page-prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, r.count))} من ${e(r.count)}</span><button class="button secondary small" data-action="page-next" ${S.offset + 50 >= r.count ? "disabled" : ""}>التالي</button></div>`
+      ? `<div class="records" id="historyRecords">${items.map((x) => (orders ? orderRecord(x) : deposits ? depositRecord(x) : `<article class="record"><span class="avatar">${I(Number(x.amount_usd) > 0 ? "plus" : "wallet")}</span><div class="record-main"><h3>${e(x.description)}</h3><p>${e(C.date(x.created_at))} · الرصيد بعد الحركة ${e(C.money(x.balance_after, "USD", true))}</p></div><strong class="record-price ${Number(x.amount_usd) > 0 ? "ledger-plus" : "ledger-minus"}">${Number(x.amount_usd) > 0 ? "+" : ""}${e(C.money(x.amount_usd, "USD", true))}</strong></article>`)).join("")}</div><div class="pagination"><button class="button secondary small" data-action="page-prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, r.count))} من ${e(r.count)}</span><button class="button secondary small" data-action="page-next" ${S.offset + 50 >= r.count ? "disabled" : ""}>التالي</button></div>`
       : empty(
           orders
             ? "ليس لديك طلبات بعد"
@@ -1328,6 +1329,13 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target?.id === "orderHistorySearch") {
+      const term = ev.target.value.trim().toLocaleLowerCase("ar");
+      document.querySelectorAll("#historyRecords .record").forEach((row) => {
+        row.hidden = !!term && !row.textContent.toLocaleLowerCase("ar").includes(term);
+      });
+      return;
+    }
     if (ev.target.id === "savedRecipient") return;
     if (ev.target.closest("#checkoutForm")) {
       S.quote = null;
@@ -1383,10 +1391,10 @@
         const item = S.savedRecipients.find((row) => row.id === button.dataset.id);
         const form = $("recipientForm");
         if (!item || !form) return;
-        form.elements.id.value = item.id;
-        form.elements.label.value = item.label;
-        form.elements.kind.value = item.kind;
-        form.elements.value.value = item.value;
+        form.elements.namedItem("id").value = item.id;
+        form.elements.namedItem("label").value = item.label;
+        form.elements.namedItem("kind").value = item.kind;
+        form.elements.namedItem("value").value = item.value;
         $("recipientFormTitle").textContent = "تعديل جهة";
         form.scrollIntoView({ behavior: "smooth", block: "start" });
         form.elements.label.focus();
@@ -1605,6 +1613,7 @@
   });
   window.addEventListener("hashchange", () => {
     S.offset = 0;
+    window.scrollTo({ top: 0, behavior: "auto" });
     route();
   });
   window.addEventListener("beforeinstallprompt", (ev) => {

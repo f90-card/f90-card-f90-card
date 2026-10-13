@@ -1260,7 +1260,9 @@ async function staff(a: Actor, b: any) {
     const endpoint = text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
-      old.adapter !== adapter || old.currency !== currency);
+      old.adapter !== adapter);
+    if (old && old.currency !== currency)
+      throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
     if (connectionChanged && !b.token)
       throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد بعد تغيير رابط أو بروتوكول الاتصال");
     const autoOrders = b.automatic_orders_enabled == null

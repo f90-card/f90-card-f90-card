@@ -2722,3 +2722,29 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 @media(prefers-reduced-motion:reduce){.f90-welcome-hero::before,.f90-welcome-method{animation:none}}
 
 .f90-google-mark{font-family:Arial,sans-serif;font-size:22px;font-weight:800;line-height:1;background:conic-gradient(#4285f4 0 85deg,#34a853 85deg 165deg,#fbbc05 165deg 220deg,#ea4335 220deg 295deg,#4285f4 295deg);color:transparent;background-clip:text;-webkit-background-clip:text;margin-inline-end:9px}
+
+/* Compact interior pages; keep the full footer on the store and welcome page. */
+.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer {
+  padding: 16px 0;
+}
+.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer .footer-grid {
+  display: none;
+}
+.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer .footer-bottom {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+.f90-record-search { max-width: 420px; margin: 0 0 18px; }
+.button, .icon-button, #drawerLinks a {
+  position: relative;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.button:hover, .icon-button:hover, #drawerLinks a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(255,72,86,.38), 0 0 13px rgba(255,42,68,.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .button, .icon-button, #drawerLinks a { transition: none; }
+  .button:hover, .icon-button:hover, #drawerLinks a:hover { transform: none; }
+}
