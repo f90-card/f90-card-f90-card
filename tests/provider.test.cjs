@@ -74,15 +74,15 @@ test("partial upstream result refunds proportional unfulfilled units", () => {
 });
 test("upstream service import rejects malformed prices and invalid bounds", () => {
   assert.equal(
-    P.normalizeService({ service: 1, rate: -2, min: 1, max: 100 }),
+    P.normalizeService({ service: 1, name: "خدمة اختبار", rate: -2, min: 1, max: 100 }),
     null,
   );
   assert.equal(
-    P.normalizeService({ service: 1, rate: 2, min: 100, max: 1 }),
+    P.normalizeService({ service: 1, name: "خدمة اختبار", rate: 2, min: 100, max: 1 }),
     null,
   );
   assert.equal(
-    P.normalizeService({ service: 1, rate: 2, min: 1, max: 100 }).unit_quantity,
+    P.normalizeService({ service: 1, name: "خدمة اختبار", rate: 2, min: 1, max: 100 }).unit_quantity,
     1000,
   );
   for (const unit_quantity of [0, -1, 0.5, 1000000001, "invalid"])
