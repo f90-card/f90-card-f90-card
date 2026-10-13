@@ -142,6 +142,10 @@ test("Yassen uses the documented api-token endpoints and normalizes real product
   assert.deepEqual(calls[0].slice(1), ["GET", "fixture", "manual"]);
   assert.equal(P.normalizeService(products[0]).unit_quantity, 1);
   assert.equal(P.normalizeService(products[0]).max, 15000);
+  const tiny = P.normalizeService({ id: 366, name: "Amount", price: 0.000002,
+    product_type: "amount", qty_values: { min: 1000, max: 100000 }, _f90_yassen: true });
+  assert.equal(tiny.unit_quantity, 1000000);
+  assert.equal(tiny.rate, 2);
   await assert.rejects(P.callProvider({ ...provider, endpoint: "https://example.com" },
     "fixture", "services", {}, fetcher), /عنوان API/);
 });
