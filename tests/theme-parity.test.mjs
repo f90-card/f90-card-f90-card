@@ -127,3 +127,16 @@ test("wallet checkout always reviews a server quote before spending", () => {
   assert.match(app, /await submit\(pending\.form, true\)/);
   assert.match(styles, /\.f90-checkout-review/);
 });
+
+
+test("RTL header keeps profile in drawer and menu beside wallet", () => {
+  const header = site.slice(site.indexOf('<header class="site-header">'), site.indexOf("</header>"));
+  const brand = header.indexOf('id="headerBrand"');
+  const wallet = header.indexOf('id="headerWallet"');
+  const menu = header.indexOf('id="menuButton"');
+  assert.ok(brand >= 0 && wallet > brand && menu > wallet);
+  assert.doesNotMatch(header, /id="headerUser"|id="themeButton"/);
+  assert.match(site, /id="drawerProfile"/);
+  assert.match(site, /id="themeSelect"/);
+  assert.doesNotMatch(app, /\$\("headerUser"\)|\$\("themeButton"\)/);
+});
