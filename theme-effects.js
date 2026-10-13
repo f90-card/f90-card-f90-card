@@ -5,23 +5,31 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const store = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
   const read = (key, fallback) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
-  let bot, weather, hideButton, levelInput;
+  let bot, weather, hideButton, levelInput, modeInput;
+  let lastWeatherKey = "";
   let scene = 0;
   const messages = ["أهلًا من F90!", "كل شيء تمام؟", "تأكد من الآيدي قبل الشحن.", "غير ثيم المتجر من القائمة.", "أنا هنا للمساعدة!", "استمتع بوقتك!"];
   const objects = ["❄", "♥", "✦", "☁", "❋", "🕊"];
+  const modes = { snow: ["❄", "❅", "❆"], rain: ["╱", "╲", "│"], wind: ["⌁", "➰", "·"], hearts: ["♥", "♡", "❤"], mix: objects };
   function drawWeather() {
     if (!weather) return;
-    weather.replaceChildren();
     const level = read("f90-effects-level", "soft");
+    const modeValue = read("f90-weather-mode", "mix");
+    const mode = Object.hasOwn(modes, modeValue) ? modeValue : "mix";
     const active = root.dataset.theme === "melon" && level !== "off" && !reduced.matches;
     root.classList.toggle("f90-weather-active", active);
+    root.dataset.weatherMode = active ? mode : "off";
+    const key = [active, level, mode, scene % 6].join(":");
+    if (key === lastWeatherKey) return;
+    lastWeatherKey = key;
+    weather.replaceChildren();
     if (!active) return;
     const count = level === "full" ? 22 : 9;
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < count; i++) {
       const flake = document.createElement("span");
       flake.className = "f90-weather-particle";
-      flake.textContent = objects[(i + scene) % objects.length];
+      flake.textContent = modes[mode][(i + scene) % modes[mode].length];
       flake.style.setProperty("--particle-x", ((i * 37 + scene * 13) % 97) + "%");
       flake.style.setProperty("--particle-delay", "-" + ((i * 7) % 19) + "s");
       flake.style.setProperty("--particle-duration", (13 + (i * 3) % 12) + "s");
@@ -37,11 +45,13 @@
       hideButton.setAttribute("aria-pressed", String(!hidden));
     }
     if (levelInput) levelInput.value = read("f90-effects-level", "soft");
+    if (modeInput) modeInput.value = Object.hasOwn(modes, read("f90-weather-mode", "mix")) ? read("f90-weather-mode", "mix") : "mix";
     drawWeather();
   }
   function start() {
     hideButton = document.getElementById("f90BotToggle");
     levelInput = document.getElementById("f90EffectsLevel");
+    modeInput = document.getElementById("f90WeatherMode");
     weather = document.createElement("div");
     weather.className = "f90-weather";
     weather.setAttribute("aria-hidden", "true");
@@ -70,6 +80,10 @@
     hideButton?.addEventListener("click", changeVisibility);
     levelInput?.addEventListener("change", () => {
       store("f90-effects-level", levelInput.value);
+      refresh();
+    });
+    modeInput?.addEventListener("change", () => {
+      store("f90-weather-mode", modeInput.value);
       refresh();
     });
     reduced.addEventListener?.("change", refresh);
