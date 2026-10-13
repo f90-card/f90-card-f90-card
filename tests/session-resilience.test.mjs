@@ -69,10 +69,11 @@ test("real sign-out clears identity rather than using cached wallet", async () =
 });
 
 test("confirmed checkout navigates before optional account refresh", () => {
-  const checkout = source.indexOf('if (form.id === "checkoutForm")');
+  const handler = source.indexOf('if (form.id === "checkoutForm")');
+  const checkout = source.indexOf('o = await A.call("checkout"', handler);
   const navigation = source.indexOf('location.hash = href("order", o.id);', checkout);
-  const refresh = source.indexOf('refreshed = await refreshMe();', checkout);
-  assert.ok(checkout >= 0 && navigation > checkout && refresh > navigation);
+  const refresh = source.indexOf('refreshed = await refreshMe();', navigation);
+  assert.ok(handler >= 0 && checkout > handler && navigation > checkout && refresh > navigation);
 });
 
 test("stale wallet amount is never shown as current balance in header", () => {
