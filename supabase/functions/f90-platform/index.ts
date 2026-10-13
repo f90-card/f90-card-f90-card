@@ -347,7 +347,7 @@ async function publicCatalog() {
             }
           : c,
       ),
-    products
+    products: products
       .filter((p: any) => !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         parentRefilling(p.category_id, categories)
