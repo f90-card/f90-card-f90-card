@@ -2654,3 +2654,29 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 }
 
 body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
+
+/* Visitor introduction */
+.f90-welcome{display:grid;gap:clamp(28px,5vw,58px);padding-bottom:24px}
+.f90-welcome-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:clamp(20px,5vw,60px);padding:clamp(22px,5vw,64px);border:1px solid var(--line);border-radius:28px;background:var(--surface);overflow:hidden}
+.f90-welcome-copy h1{font-size:clamp(32px,5vw,64px);line-height:1.14;margin:14px 0 20px}
+.f90-welcome-copy p{color:var(--muted);font-size:clamp(16px,2vw,21px);line-height:1.8;max-width:580px}
+.f90-welcome-copy .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.f90-welcome-hero>img{width:100%;height:auto;max-height:430px;aspect-ratio:4/3;object-fit:contain;border-radius:18px}
+.f90-welcome-section h2,.f90-welcome-bottom h2{margin-top:0}
+.f90-welcome-features{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.f90-welcome-features>a{text-decoration:none;color:inherit;transition:transform .18s}
+.f90-welcome-features>a:hover{transform:translateY(-3px)}
+.f90-welcome-features svg{color:var(--accent);width:30px;height:30px}
+.f90-welcome-features p{color:var(--muted);line-height:1.6;margin-bottom:0}
+.f90-welcome-methods{display:flex;flex-wrap:wrap;gap:12px}
+.f90-welcome-method{display:flex;align-items:center;gap:10px;padding:10px 15px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.f90-welcome-method img{width:44px;height:44px;object-fit:contain;border-radius:9px}
+.f90-welcome-faq{display:grid;gap:10px}
+.f90-welcome-faq details{padding:17px 20px;background:var(--surface);border:1px solid var(--line);border-radius:13px}
+.f90-welcome-faq summary{cursor:pointer;font-weight:700}
+.f90-welcome-faq p{margin-bottom:0;color:var(--muted);line-height:1.7}
+.f90-welcome-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.f90-welcome-policies{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+@media(max-width:860px){.f90-welcome-features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.f90-welcome-hero{grid-template-columns:1fr;padding:20px}.f90-welcome-hero>img{max-height:240px}.f90-welcome-features{gap:9px}.f90-welcome-features .panel{padding:14px}.f90-welcome-copy .actions>a{flex:1;text-align:center;justify-content:center;min-width:140px}}
+@media(max-width:360px){.f90-welcome-features{grid-template-columns:1fr}}
