@@ -88,3 +88,9 @@ test("Omega classifier holds unknown or conflicting services for human review", 
   assert.equal(resolve({ name: "متابعين PUBG UC", category: "غير معروف" }).review, true);
   assert.equal(resolve({ name: "PUBG UC 60 شدة", category: "الألعاب" }).review, false);
 });
+
+test("manual Omega import preselects only confident classifications", () => {
+  assert.match(source, /omega \? \(!providerServiceCategory\(service\)\.review/);
+  assert.match(source, /providerServiceCategory\(service\)\.id === c\.id/);
+  assert.match(source, /" · يحتاج مراجعة"/);
+});
