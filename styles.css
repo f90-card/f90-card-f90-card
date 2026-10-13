@@ -2680,3 +2680,6 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 @media(max-width:860px){.f90-welcome-features{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.f90-welcome-hero{grid-template-columns:1fr;padding:20px}.f90-welcome-hero>img{max-height:240px}.f90-welcome-features{gap:9px}.f90-welcome-features .panel{padding:14px}.f90-welcome-copy .actions>a{flex:1;text-align:center;justify-content:center;min-width:140px}}
 @media(max-width:360px){.f90-welcome-features{grid-template-columns:1fr}}
+
+#drawerLinks .f90-drawer-group{padding:20px 16px 7px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.04em;border-top:1px solid var(--line);margin-top:6px}
+#drawerLinks .f90-drawer-group:first-child{border:0;margin-top:0}
