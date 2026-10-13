@@ -895,9 +895,9 @@
         "هذه الصفحة تستعلم عن القائمة فقط. لا يحدث خصم أو شراء أو نشر تلقائي.",
         `<a class="button secondary small" href="#/providers">رجوع إلى المورّدين</a>`,
       ) +
-      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة فقط؛ صفِّ القائمة من لوحة المورّد إذا احتجت غيرها." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: استعراض فقط.</strong> الاستيراد غير متاح بعد حتى نتحقق من صيغة الخدمات والأسعار. لا توجد أي عملية مالية في هذه الصفحة.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible" ${omega ? "disabled" : ""}>اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
-            `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}" ${omega ? "disabled" : ""}></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90" ${omega ? "disabled" : ""}></td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td data-import-preview data-supplier-rate="${e(service.rate)}">${ratePerUSD ? e(C.money(Math.round((Number(service.rate) / ratePerUSD) * (1 + (Number(p.margin_percent) || 0) / 100) * 1e6) / 1e6)) : "سعر الصرف غير متاح"}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
-          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>${omega ? "استيراد أوميغا غير متاح حاليًا" : "استيراد الخدمات المحددة كمسودات"}</button></div></form></section>`;
+      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة فقط؛ صفِّ القائمة من لوحة المورّد إذا احتجت غيرها." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
+            `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}"></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90"></td><td>${select("category_" + n, "قسم " + service.name, S.categories.map((c) => [c.id, c.name]), S.categories.find((c) => c.name === service.category)?.id || "")}</td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td data-import-preview data-supplier-rate="${e(service.rate)}">${ratePerUSD ? e(C.money(Math.round((Number(service.rate) / ratePerUSD) * (1 + (Number(p.margin_percent) || 0) / 100) * 1e6) / 1e6)) : "سعر الصرف غير متاح"}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
+          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button></div></form></section>`;
   }
   function updateProviderImportPreview() {
     const form = $("importForm");
@@ -921,7 +921,7 @@
     const status = $("providerImportCount");
     if (status) status.textContent = `المحدد: ${selected} من 100 كحد أقصى · المعروض: ${visible} من ${rows.length}`;
     const submit = $("providerImportSubmit");
-    if (submit) submit.disabled = selected === 0 || selected > 100 || S.importProvider?.adapter === "omega" || !ratePerUSD || !validMargin;
+    if (submit) submit.disabled = selected === 0 || selected > 100 || !ratePerUSD || !validMargin;
   }
   async function configSave(config) {
     await A.call("settings.save", {
@@ -1308,7 +1308,6 @@
       return providers();
     }
     if (form.id === "importForm") {
-      if (S.importProvider?.adapter === "omega") throw new Error("استيراد أوميغا غير متاح قبل توثيق صيغة الأسعار والحقول");
       const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
       const perUSD = Number(fx?.per_usd);
       if (!fx?.is_enabled || !(perUSD > 0)) throw new Error("اضبط سعر صرف عملة المورّد قبل الاستيراد");
@@ -1318,6 +1317,7 @@
         throw new Error("اختر قسمًا صحيحًا لحفظ الخدمات");
       const selected = [];
       const names = {};
+      const categoryIds = {};
       const quotes = [];
       S.importServices.slice(0, 1000).forEach((service, n) => {
         if (!form.elements["service_" + n]?.checked) return;
@@ -1329,7 +1329,10 @@
         if (!(rate > 0)) throw new Error("السعر المتوقع غير صالح للخدمة " + String(service.id));
         selected.push(service.id);
         names[service.id] = name;
-        quotes.push({ id: String(service.id), name, rate, unit: service.unit_quantity });
+        categoryIds[service.id] = form.elements["category_" + n]?.value || d.category_id;
+        if (!S.categories.some((c) => c.id === categoryIds[service.id]))
+          throw new Error("اختر قسمًا صالحًا للخدمة " + service.id);
+        quotes.push({ id: String(service.id), name, rate, unit: service.unit_quantity, category: S.categories.find((c) => c.id === categoryIds[service.id])?.name || "" });
       });
       if (!selected.length) throw new Error("اختر خدمة واحدة على الأقل");
       if (selected.length > 100) throw new Error("استورد حتى مئة خدمة في المرة الواحدة");
@@ -1339,6 +1342,7 @@
         providerId: provider.id,
         service_ids: [...selected],
         names: { ...names },
+        category_ids: { ...categoryIds },
         category_id: d.category_id,
         margin_percent: margin,
       };
@@ -1421,6 +1425,7 @@
         try {
           const result = await A.call("provider.import", { id: pending.providerId,
             service_ids: pending.service_ids, names: pending.names,
+            category_ids: pending.category_ids,
             category_id: pending.category_id, margin_percent: pending.margin_percent });
           S.pendingProviderImport = null;
           closeModal();
