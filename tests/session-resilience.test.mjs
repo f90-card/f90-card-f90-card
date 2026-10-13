@@ -79,3 +79,14 @@ test("stale wallet amount is never shown as current balance in header", () => {
   const header = source.slice(source.indexOf("function chrome()"), source.indexOf("  async function refreshMe()"));
   assert.match(header, /S\.walletStale \? "الرصيد يحتاج تحديث"/);
 });
+
+test("checkout refuses stale wallet balance unless refresh succeeds", () => {
+  const checkout = source.slice(source.indexOf('if (form.id === "checkoutForm")'), source.indexOf('if (form.id === "profileForm")'));
+  const freshness = checkout.indexOf("if (S.walletStale)");
+  const balanceCheck = checkout.indexOf("Number(S.me.wallet.balance_usd)");
+  const checkoutCall = checkout.indexOf('A.call("checkout"');
+  assert.ok(freshness >= 0 && freshness < balanceCheck && balanceCheck < checkoutCall);
+  assert.match(checkout, /const refreshed = await refreshMe\(\);/);
+  assert.match(checkout, /if \(!refreshed\)/);
+  assert.match(checkout, /if \(!S\.me\?\.profile\?\.is_verified\)/);
+});
