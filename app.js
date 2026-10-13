@@ -773,6 +773,11 @@
       )}</nav><article class="policy-content"><div class="eyebrow">دليل تعاملنا معك</div><h1>${e(titles[id] || "المعلومات")}</h1><p class="policy-mark small">${e(S.settings.store_name)} · فلسطين، رام الله · ${e(S.settings.config.policy_updated || "١٢ أكتوبر ٢٠٢٦")}</p><div class="policy-text">${e(page?.ar || "يجري إعداد محتوى هذه الصفحة. تواصل مع الإدارة للحصول على التفاصيل.")}</div><div class="notice">لأي سؤال عن هذه السياسة، <a href="#/support">تواصل معنا</a>.</div></article></div>`;
   }
   function developers() {
+    if (S.settings.config?.merchant_api_enabled === false) {
+      main.innerHTML = pageHead("واجهة التجار", "الربط البرمجي متوقف مؤقتًا من إدارة المتجر") +
+        '<section class="panel"><p>مفاتيح التجار محفوظة، وتعود للعمل عند إعادة تفعيل الخدمة.</p><a class="button secondary" href="#/support">تواصل مع الدعم</a></section>';
+      return;
+    }
     const example = JSON.stringify(
       {
         action: "add",
