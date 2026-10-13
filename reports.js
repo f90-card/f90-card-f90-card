@@ -146,7 +146,9 @@
             ],
     );
   function historyCSV(kind, items) {
-    const columns = kind === "orders"
+    const columns = kind === "staff-ledger"
+      ? [["created_at", "التاريخ"], ["customer_name", "العميل"], ["customer_id", "رقم العميل"], ["kind", "نوع الحركة"], ["amount_usd", "الحركة بالدولار"], ["balance_before", "الرصيد قبل"], ["balance_after", "الرصيد بعد"], ["reference_id", "المرجع"], ["description", "البيان"], ["id", "المعرف"]]
+      : kind === "orders"
       ? [["order_number", "رقم الطلب"], ["product_name", "الخدمة"], ["quantity", "الكمية"], ["status", "الحالة"], ["total_usd", "الإجمالي بالدولار"], ["created_at", "التاريخ"], ["id", "المعرف"]]
       : kind === "deposits"
         ? [["method_name", "طريقة الإيداع"], ["amount", "المبلغ"], ["currency", "العملة"], ["usd_amount", "المبلغ بالدولار"], ["status", "الحالة"], ["created_at", "التاريخ"], ["id", "المعرف"]]
@@ -248,7 +250,16 @@
               ]),
               ["لا يتضمن التقرير صور أو أرقام المستندات."],
             )
-          : save(
+          : kind === "ledger"
+            ? save("السجل المالي", store, items.flatMap((x) => [
+                ["العميل", (x.customer?.display_name || "") + " · " + (x.customer?.customer_id || "")],
+                ["التاريخ", C.date(x.created_at)],
+                ["الحركة", ({ deposit: "إيداع", purchase: "شراء", refund: "استرداد", adjustment: "تسوية" })[x.kind] || x.kind],
+                ["المبلغ", C.money(x.amount_usd)],
+                ["الرصيد بعد", C.money(x.balance_after)],
+                ["المرجع", x.reference_id || x.id],
+              ]), ["سجلات الصفحة الحالية فقط."])
+            : save(
               "سجل الإدارة: " + (kind === "orders" ? "الطلبات" : "الإيداعات"),
               store,
               recordRows(kind, items),
@@ -261,3 +272,4 @@
   root.F90Reports = api;
   if (typeof module === "object" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
+
