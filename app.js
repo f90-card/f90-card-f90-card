@@ -272,11 +272,12 @@
     const disabled = C.categoryUnavailable(c, S.categories, S.products);
     return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("category", c.slug || c.id)}" aria-label="${e(c.name)}">${image(c.image_url, c.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
-  function productTile(p, pack = false) {
+  function productTile(p, pack = false, inline = false) {
     const disabled = C.unavailable(p);
+    const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
-      return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
-    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}" aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
+      return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick}><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
+    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function home() {
     const c = S.settings.config,
@@ -351,7 +352,7 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length ? `<div class="image-grid">${children.map(categoryTile).join("")}</div>` : ""}${products.length ? `${children.length ? '<div class="section-head"><h2>خدمات القسم</h2></div>' : ""}<div class="${c.presentation?.layout === "packs" ? "packs-grid" : "image-grid"}">${products.map((p) => productTile(p, c.presentation?.layout === "packs")).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}`;
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length ? `<div class="image-grid">${children.map(categoryTile).join("")}</div>` : ""}${products.length ? `${children.length ? '<div class="section-head"><h2>خدمات القسم</h2></div>' : ""}<div class="${c.presentation?.layout === "packs" ? "packs-grid" : "image-grid"}">${products.map((p) => productTile(p, c.presentation?.layout === "packs", true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<section id="quickProductPanel" class="f90-quick-product" hidden aria-live="polite"></section>' : ""}`;
   }
   function priceBoard(total) {
     return ["USD", "ILS", "JOD"]
@@ -399,7 +400,7 @@
       $("buyButton").disabled = true;
     }
   }
-  function product(slug) {
+  function product(slug, inline = false) {
     const p = S.products.find((p) => p.slug === slug || p.id === slug);
     if (!p) {
       main.innerHTML = empty("الخدمة غير موجودة");
@@ -422,8 +423,17 @@
             required: true,
           },
         ];
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)}</h1><div class="badges"><span class="badge">${I(c.fulfillment === "automatic" ? "link" : "user")}${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي"}</span>${c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="actions"><button class="button secondary small" data-action="share">${I("copy")}نسخ الرابط</button><button class="button secondary small" data-action="favorite" data-id="${p.id}">${I("heart")}${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "أضف للمفضلة"}</button></div><div class="price-board" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
+    const productHtml = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)}</h1><div class="badges"><span class="badge">${I(c.fulfillment === "automatic" ? "link" : "user")}${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي"}</span>${c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="actions"><button class="button secondary small" data-action="share">${I("copy")}نسخ الرابط</button><button class="button secondary small" data-action="favorite" data-id="${p.id}">${I("heart")}${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "أضف للمفضلة"}</button></div><div class="price-board" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
  <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "تأكيد الشراء من المحفظة" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
+    if (inline) {
+      const panel = $("quickProductPanel");
+      if (!panel) return;
+      panel.innerHTML = `<div class="f90-quick-product-toolbar"><strong>شحن مباشر · ${e(p.name)}</strong><button type="button" class="button secondary small" data-action="close-quick-product">إغلاق</button></div>` + productHtml;
+      panel.hidden = false;
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      main.innerHTML = productHtml;
+    }
     if (!disabled) quoteProduct(p);
     else
       $("quoteError").textContent = "الخدمة قيد التعبئة ولا يمكن شراؤها حاليًا";
@@ -1174,6 +1184,18 @@
           throw new Error(
             "تعذّر دخول جوجل. يحتاج الربط إلى تفعيل مزوّد جوجل من الإدارة",
           );
+      } else if (action === "quick-product") {
+        ev.preventDefault();
+        if (!button.dataset.id) return;
+        product(button.dataset.id, true);
+      } else if (action === "close-quick-product") {
+        const panel = $("quickProductPanel");
+        if (panel) {
+          panel.hidden = true;
+          panel.replaceChildren();
+          S.quote = null;
+          S.quoteSeq++;
+        }
       } else if (action === "favorite") {
         const id = button.dataset.id;
         S.favorites = S.favorites.includes(id)
