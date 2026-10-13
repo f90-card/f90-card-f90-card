@@ -171,6 +171,8 @@
     return { kind: "ledger", offset, ledger_kind: f.ledger_kind || undefined,
       customer_id: f.customer_id || undefined, from: start, to: end };
   }
+  const ledgerBalanceBefore = (x) =>
+    (Number(x.balance_after || 0) - Number(x.amount_usd || 0)).toFixed(6);
   async function dashboard(leader = false) {
     const seq = S.token;
     const report = await A.call("staff.report", { month: S.month });
@@ -260,7 +262,7 @@
           ]
         : kind === "users"
           ? ["active", "suspended", "banned"]
-          : kind === "audit"
+          : kind === "audit" || kind === "ledger"
             ? []
             : ["pending", "approved", "rejected"];
     main.innerHTML =
@@ -341,7 +343,7 @@
       columns = ["التاريخ", "العميل", "الحركة", "المبلغ", "الرصيد قبل / بعد", "المرجع", "البيان"];
       rows = r.items.map((x) => {
         const amount = Number(x.amount_usd || 0);
-        const before = Number(x.balance_after || 0) - amount;
+        const before = ledgerBalanceBefore(x);
         const label = { deposit: "إيداع", purchase: "شراء", refund: "استرداد", adjustment: "تسوية" }[x.kind] || x.kind;
         return `<tr><td>${e(C.date(x.created_at))}</td><td>${customer(x.customer)}</td><td>${e(label)}</td><td class="${amount >= 0 ? "ledger-plus" : "ledger-minus"}">${e(C.money(amount))}</td><td>${e(C.money(before))}<br><strong>${e(C.money(x.balance_after))}</strong></td><td><small>${e(x.reference_id || x.id)}</small></td><td>${e(x.description || "—")}</td></tr>`;
       }).join("");
@@ -2017,7 +2019,7 @@
           customer_name: x.customer?.display_name || "",
           customer_id: x.customer?.customer_id || "",
           kind: x.kind, amount_usd: x.amount_usd,
-          balance_before: Number(x.balance_after || 0) - Number(x.amount_usd || 0),
+          balance_before: ledgerBalanceBefore(x),
           balance_after: x.balance_after, reference_id: x.reference_id || "",
           description: x.description, created_at: x.created_at, id: x.id,
         })));
