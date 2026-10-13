@@ -40,11 +40,14 @@ test("checkout and deposit use idempotency keys and reject conflicting payloads"
   assert.match(deposit, /p_key: reference/);
 });
 
-test("supplier imports are drafts and Omega imports stay blocked", () => {
+test("Omega imports are hidden manual drafts with validated category IDs", () => {
   const imports = slice('if (action === "provider.import")', 'if (action === "provider.sync_prices")');
-  assert.match(imports, /importAdapter\.adapter === "omega"/);
   assert.match(imports, /is_active: false/);
+  assert.match(imports, /p\.adapter === "omega" \? "manual" : "automatic"/);
+  assert.match(imports, /categoryIds\.has\(chosenCategoryId\)/);
+  assert.match(imports, /category_id: chosenCategoryId/);
   assert.match(imports, /b\.service_ids\.length > 100/);
+  assert.match(imports, /s\.params\?\.length/);
 });
 
 test("supplier price updates require preview fingerprint confirmation", () => {
