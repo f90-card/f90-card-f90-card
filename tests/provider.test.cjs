@@ -128,6 +128,24 @@ test("omega reads products with api-token and never creates paid orders", async 
   assert.equal(calls.length, 1);
 });
 
+test("Yassen uses the documented api-token endpoints and normalizes real product shapes", async () => {
+  const calls = [];
+  const provider = { endpoint: "https://api.yassen-card.com", adapter: "yassen" };
+  const fetcher = async (url, options) => {
+    calls.push([String(url), options.method, options.headers["api-token"], options.redirect]);
+    return new Response(JSON.stringify([{ id: 365, name: "UC 60", price: 0.104,
+      category_name: "PUBG", available: true, qty_values: { min: 1, max: "15000" },
+      product_type: "amount", params: ["playerId"] }]));
+  };
+  const products = await P.callProvider(provider, "fixture", "services", {}, fetcher);
+  assert.equal(calls[0][0], "https://api.yassen-card.com/client/api/products");
+  assert.deepEqual(calls[0].slice(1), ["GET", "fixture", "manual"]);
+  assert.equal(P.normalizeService(products[0]).unit_quantity, 1);
+  assert.equal(P.normalizeService(products[0]).max, 15000);
+  await assert.rejects(P.callProvider({ ...provider, endpoint: "https://example.com" },
+    "fixture", "services", {}, fetcher), /عنوان API/);
+});
+
 test("provider request timeout follows validated operational settings", async () => {
   const original = AbortSignal.timeout;
   const observed = [];
