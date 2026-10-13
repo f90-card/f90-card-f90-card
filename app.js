@@ -83,7 +83,10 @@
     else $("menuButton").focus();
   }
   function theme(v) {
+    v = v === "cream" ? "cream" : "dark";
     document.documentElement.dataset.theme = v;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = v === "cream" ? "#ded9d1" : "#090b10";
     const color = S.settings.primary_color || "#fa2444";
     document.documentElement.style.setProperty(
       "--accent",
