@@ -881,7 +881,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -1504,7 +1504,25 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
-      if (action === "bulk-select-visible") {
+      if (action === "provider-toggle") {
+        const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
+        if (!provider) throw new Error("المورّد غير موجود");
+        const enable = b.dataset.enabled === "true";
+        S.pendingProviderToggle = { id: provider.id, enable };
+        modal(enable ? "إعادة تفعيل المورّد" : "إيقاف خدمات المورّد",
+          `<p>${enable ? "ستعود خدمات المورّد المنشورة سابقًا للظهور، وتبقى المنتجات المخفية يدويًا مخفية." : "ستُخفى جميع خدمات هذا المورّد من كتالوج العملاء، ويُمنع شراء خدماته الجديدة. تبقى الطلبات السابقة وسجلاتها محفوظة."}</p><strong>${e(provider.name)}</strong><div class="actions" style="margin-top:16px"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button" data-action="provider-toggle-confirm">تأكيد</button></div>`);
+      } else if (action === "provider-toggle-confirm") {
+        const pending = S.pendingProviderToggle;
+        if (!pending || b.disabled) return;
+        b.disabled = true;
+        try {
+          await A.call("provider.toggle", { id: pending.id, is_enabled: pending.enable });
+          S.pendingProviderToggle = null;
+          closeModal();
+          toast(pending.enable ? "تم تفعيل المورّد" : "تم إيقاف خدمات المورّد");
+          await providers();
+        } finally { if (b.isConnected) b.disabled = false; }
+      } else if (action === "bulk-select-visible") {
         document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = true; });
         updateBulkCount();
       } else if (action === "bulk-clear") {
