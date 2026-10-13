@@ -57,9 +57,10 @@ export function normalizeService(s) {
   // Unknown stock is deliberately not treated as zero.
   if (omega && s.stock != null && Number(s.stock) === 0) return null;
   const rate = Number(s.rate ?? s.price);
-  const min = Number(s.min ?? s.qty_values?.min ?? 1),
+  const allowed = Array.isArray(s.qty_values) ? s.qty_values.map(Number) : null;
+  const min = Number(s.min ?? s.qty_values?.min ?? (allowed?.length ? Math.min(...allowed) : 1)),
     max = Number(s.max ?? s.qty_values?.max ??
-      (omega && productType !== "amount" ? 1 : 1000000)),
+      (allowed?.length ? Math.max(...allowed) : omega && productType !== "amount" ? 1 : 1000000)),
     unit = Number(s.unit_quantity ?? (omega ? 1 : 1000));
   if (
     (s.service == null && s.id == null) ||
@@ -71,7 +72,9 @@ export function normalizeService(s) {
     unit < 1 ||
     unit > 1000000000 ||
     min < 1 ||
-    max < min
+    max < min ||
+    max > 1000000000 ||
+    (allowed && (!allowed.length || allowed.some((v) => !Number.isSafeInteger(v) || v < 1)))
   )
     return null;
   const params = Array.isArray(s.params)
@@ -88,6 +91,7 @@ export function normalizeService(s) {
     type: String(s.product_type ?? s.type ?? "Default"),
     unit_quantity: unit,
     params,
+    allowed_quantities: allowed,
     omega,
     raw: s,
   };
@@ -141,10 +145,36 @@ export async function callProvider(
       throw new ProviderError("عنوان الشبكة الخاص بالمورّد غير مسموح");
   }
   const headers = { Accept: "application/json" };
-  if (provider.adapter === "omega") {
-    if (!["services", "balance"].includes(action))
-      throw new ProviderError("طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
-    const target = new URL(action === "services" ? "/client/api/products" : "/client/api/profile", u.origin);
+  if (provider.adapter === "omega" || provider.adapter === "yassen") {
+    const yassen = provider.adapter === "yassen";
+    if (yassen && u.origin !== "https://api.yassen-card.com")
+      throw new ProviderError("عنوان API ياسين الفعلي هو https://api.yassen-card.com");
+    if (yassen && action === "add") {
+      if (!/^[0-9]+$/.test(String(args.service ?? "")) ||
+          !Number.isSafeInteger(Number(args.quantity)) || Number(args.quantity) < 1 ||
+          !/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(String(args.client_reference ?? "")))
+        throw new ProviderError("بيانات الطلب لدى ياسين غير صالحة");
+    } else if (yassen && action === "status") {
+      if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(args.order ?? "")))
+        throw new ProviderError("معرّف طلب ياسين غير صالح");
+    } else if (!["services", "balance"].includes(action))
+      throw new ProviderError(yassen ? "عملية المورّد غير متاحة" : "طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
+    let path = "/client/api/products";
+    if (action === "balance") path = "/client/api/profile";
+    if (action === "status") path = "/client/api/check";
+    if (action === "add") path = `/client/api/newOrder/${args.service}/params`;
+    const target = new URL(path, u.origin);
+    if (action === "status") target.searchParams.set("orders", `[${args.order}]`);
+    if (action === "add") {
+      target.searchParams.set("qty", String(args.quantity));
+      target.searchParams.set("order_uuid", String(args.client_reference));
+      for (const [name, value] of Object.entries(args.params || {})) {
+        if (!name || name.length > 120 || ["qty", "order_uuid"].includes(name) ||
+            typeof value !== "string" || value.length > 500)
+          throw new ProviderError("حقول طلب ياسين غير صالحة");
+        target.searchParams.set(name, value);
+      }
+    }
     let response;
     try {
       response = await fetcher(target, {
@@ -154,16 +184,27 @@ export async function callProvider(
         signal: AbortSignal.timeout(timeout),
       });
     } catch {
-      throw new ProviderError("تعذر الاتصال بأوميغا");
+      throw new ProviderError("تعذر الاتصال بالمورّد", action === "add");
     }
     if (!response.ok || response.status >= 300)
-      throw new ProviderError("رفض أوميغا الاتصال، تحقق من الرابط والتوكن");
+      throw new ProviderError("رفض المورّد الاتصال، تحقق من الرابط والتوكن", action === "add" && response.status >= 500);
     const raw = await response.text();
     if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا");
     let data;
-    try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة أوميغا غير مفهومة"); }
+    try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة المورّد غير مفهومة", action === "add"); }
     if (data?.status === "error" || data?.error)
-      throw new ProviderError("رفض أوميغا الطلب، تحقق من صلاحية التوكن");
+      throw new ProviderError("رفض المورّد الطلب، تحقق من الصلاحيات");
+    if (yassen && action === "add") {
+      if (data?.status !== "OK" || !data?.data?.order_id)
+        throw new ProviderError("نتيجة إرسال الطلب تحتاج مراجعة", true);
+      return { order_id: data.data.order_id, status: data.data.status };
+    }
+    if (yassen && action === "status") {
+      if (data?.status !== "OK" || !Array.isArray(data.data) || data.data.length !== 1)
+        throw new ProviderError("حالة طلب ياسين غير واضحة");
+      return { ...data.data[0], status: data.data[0].status === "reject" ? "rejected" :
+        data.data[0].status === "accept" ? "completed" : "processing" };
+    }
     return action === "services" ? (Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : Array.isArray(data?.data?.products) ? data.data.products : Array.isArray(data?.products) ? data.products : Array.isArray(data?.result) ? data.result : data) : data;
   }
   let body;
