@@ -897,7 +897,72 @@
       ) +
       `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة فقط؛ صفِّ القائمة من لوحة المورّد إذا احتجت غيرها." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
             `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}"></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90"></td><td>${`<label class="field"><span>${e(service.category || "اختر قسم الخدمة")}</span><select name="category_${n}" aria-label="قسم ${e(service.name)}"><option value="">اختر القسم</option>${S.categories.map((c) => `<option value="${e(c.id)}" ${c.name === service.category ? "selected" : ""}>${e(c.name)}</option>`).join("")}</select></label>`}</td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td data-import-preview data-supplier-rate="${e(service.rate)}">${ratePerUSD ? e(C.money(Math.round((Number(service.rate) / ratePerUSD) * (1 + (Number(p.margin_percent) || 0) / 100) * 1e6) / 1e6)) : "سعر الصرف غير متاح"}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
-          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button></div></form></section>`;
+          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button>${omega ? '<button class="button secondary" type="button" data-action="omega-import-all">استيراد جميع خدمات أوميغا كمسودات</button>' : ""}</div></form></section>`;
+  }
+  function providerServiceCategory(service) {
+    const norm = (x) => String(x || "").toLocaleLowerCase("ar").trim();
+    const supplier = norm(service.category);
+    const matching = S.categories.find((c) => norm(c.name) === supplier);
+    if (matching) return { id: matching.id, review: false };
+    const combined = norm(service.category + " " + service.name);
+    const groups = [
+      [/ببجي|pubg|playerunknown/, "قسم-ألالعاب"],
+      [/ألعاب|العاب|game|gaming|free fire|فري فاير|roblox|روبلوكس|steam|ستيم/, "قسم-ألالعاب"],
+      [/بطاق|gift.?card|voucher|قسيم|itunes|آيتونز|جوجل بلاي|google play|amazon|أمازون/, "digital-cards"],
+      [/نتفلكس|netflix|شاهد|spotify|سبوتيفاي|stream|مشاهدة|disney|ديزني/, "streaming"],
+      [/ذكاء اصطناعي|chatgpt|openai|ai tools|artificial intelligence|midjourney/, "artificial-intelligence"],
+      [/فيسبوك|facebook|انستغرام|instagram|تيك.?توك|tiktok|يوتيوب|youtube|متابع|لايك|social media|سوشيال/, "social-media"],
+      [/جوال|اتصالات|رصيد هاتف|شحن هاتف|mobile credit|airtime/, "mobile-credit"],
+      [/تطبيق|application|app store|برنامج|لايف|live/, "applications"],
+    ];
+    for (const [pattern, slug] of groups) {
+      if (!pattern.test(combined)) continue;
+      const category = S.categories.find((c) => c.slug === slug);
+      if (category) return { id: category.id, review: false };
+    }
+    const fallback = S.categories.find((c) => c.slug === "store-services");
+    return { id: fallback?.id || S.categories[0]?.id || "", review: true };
+  }
+  async function importAllProviderDrafts(provider, status) {
+    if (!provider || provider.adapter !== "omega")
+      throw new Error("الاستيراد الشامل مخصص لأوميغا في الوقت الحالي");
+    const services = S.importServices;
+    if (!Array.isArray(services) || !services.length)
+      throw new Error("تعذّر جلب قائمة الخدمات؛ أعد فتح استيراد أوميغا");
+    const ids = new Set();
+    const entries = [];
+    let review = 0;
+    for (const item of services) {
+      const id = String(item.id);
+      if (ids.has(id)) continue;
+      ids.add(id);
+      if (!(Number(item.rate) > 0) || !item.name) continue;
+      const category = providerServiceCategory(item);
+      if (!category.id) throw new Error("لا توجد أقسام في المتجر لاستيراد الخدمات");
+      if (category.review) review++;
+      entries.push({ id, name: String(item.name).slice(0, 200), category: category.id });
+    }
+    if (!entries.length) throw new Error("لا توجد خدمات صالحة للاستيراد");
+    const count = Math.ceil(entries.length / 50);
+    let imported = 0, skipped = 0;
+    for (let index = 0; index < entries.length; index += 50) {
+      const batch = entries.slice(index, index + 50);
+      if (status) status.textContent = "جاري استيراد الدفعة " + (Math.floor(index / 50) + 1) + " من " + count + " · تم فحص " + index + " من " + entries.length + " خدمة.";
+      const payload = {
+        id: provider.id,
+        service_ids: batch.map((item) => item.id),
+        names: Object.fromEntries(batch.map((item) => [item.id, item.name])),
+        category_ids: Object.fromEntries(batch.map((item) => [item.id, item.category])),
+        category_id: batch[0].category,
+        margin_percent: Number(provider.margin_percent),
+      };
+      // Each batch is idempotent: the server skips existing mapped services.
+      // Never create orders or enable product visibility here.
+      const response = await A.call("provider.import", payload);
+      imported += response.filter((item) => !item.skipped).length;
+      skipped += response.filter((item) => item.skipped).length;
+    }
+    return { found: services.length, accepted: entries.length, imported, skipped, needsReview: review };
   }
   function updateProviderImportPreview() {
     const form = $("importForm");
@@ -1415,6 +1480,34 @@
           "حذف صور التوثيق",
           `<p>ستُحذف الصور الخاصة، ويبقى سجل قرار المراجعة. استخدم ذلك بعد طلب العميل أو وفق سياسة الاحتفاظ.</p><button class="button danger" data-action="confirm-erase-identity">تأكيد حذف الصور</button>`,
         );
+      } else if (action === "omega-import-all") {
+        const provider = S.importProvider;
+        if (!provider || provider.adapter !== "omega") throw new Error("المورّد ليس أوميغا");
+        const count = S.importServices?.length || 0;
+        if (!count) throw new Error("لا توجد خدمات للاستيراد");
+        modal("تأكيد استيراد جميع خدمات أوميغا",
+          `<div class="notice warning">سيتم محاولة حفظ ${e(count)} خدمة كمسودات مخفية مع هامش ${e(provider.margin_percent)}٪. الأقسام غير المعروفة تُحفظ في قسم خدمات الموقع لمراجعتها، ولن تنفذ أي طلبات مدفوعة.</div><div id="omegaBulkStatus" role="status">لم يبدأ الاستيراد بعد.</div><div class="actions"><button class="button secondary" data-action="close-modal">إلغاء</button><button class="button" data-action="omega-import-all-confirm">بدء استيراد كل الخدمات</button></div>`);
+      } else if (action === "omega-import-all-confirm") {
+        if (S.omegaBulkBusy) return;
+        const provider = S.importProvider;
+        const status = $("omegaBulkStatus");
+        if (!provider || !status) throw new Error("أعد فتح صفحة أوميغا");
+        S.omegaBulkBusy = true;
+        b.disabled = true;
+        try {
+          const outcome = await importAllProviderDrafts(provider, status);
+          status.textContent = "اكتمل الاستيراد: " + outcome.imported + " مسودة جديدة، " +
+            outcome.skipped + " موجودة سابقًا، " + outcome.needsReview +
+            " خدمة تحتاج مراجعة تصنيف. جميع المسودات مخفية.";
+          toast("اكتمل استيراد أوميغا كمسودات. راجع المنتجات قبل نشرها.");
+        } catch (err) {
+          if (status) status.textContent = "توقّف الاستيراد: " + errorMessage(err) +
+            ". الدفعات المكتملة محفوظة؛ أعد المحاولة لاستكمال المتبقي دون تكرارها.";
+          throw err;
+        } finally {
+          S.omegaBulkBusy = false;
+          if (b.isConnected) b.disabled = false;
+        }
       } else if (action === "confirm-provider-import") {
         const pending = S.pendingProviderImport;
         if (!pending || pending.providerId !== S.importProvider?.id || !$("importForm"))
@@ -1442,7 +1535,7 @@
         closeModal();
         toast("حُذفت صور المستند");
         await listPage("verification");
-      } else if (action === "close-modal") closeModal();
+      } else if (action === "close-modal") { if (!S.omegaBulkBusy) closeModal(); }
       else if (action === "reload") await route();
       else if (action === "next" || action === "prev") {
         S.offset = Math.max(0, S.offset + (action === "next" ? 50 : -50));
@@ -1499,7 +1592,6 @@
         document.querySelectorAll('#importForm [data-provider-service-row] input[type="checkbox"]').forEach((box) => { box.checked = false; });
         updateProviderImportPreview();
       } else if (action === "import-select-visible") {
-        if (S.importProvider?.adapter === "omega") return;
         const form = $("importForm");
         if (!form) return;
         const rows = [...form.querySelectorAll("[data-provider-service-row]")];
