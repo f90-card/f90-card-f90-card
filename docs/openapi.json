@@ -49,6 +49,12 @@
                     "$ref": "#/components/schemas/Services"
                   },
                   {
+                    "$ref": "#/components/schemas/Categories"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Service"
+                  },
+                  {
                     "$ref": "#/components/schemas/Balance"
                   },
                   {
@@ -290,6 +296,37 @@
         "required": [
           "action",
           "kind"
+        ],
+        "additionalProperties": false
+      },
+      "Categories": {
+        "type": "object",
+        "title": "أقسام خدمات التاجر",
+        "properties": {
+          "action": {
+            "const": "categories"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "Service": {
+        "type": "object",
+        "title": "تفاصيل خدمة واحدة",
+        "properties": {
+          "action": {
+            "const": "service"
+          },
+          "service": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "action",
+          "service"
         ],
         "additionalProperties": false
       }
