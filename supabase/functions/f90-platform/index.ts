@@ -249,6 +249,18 @@ function scoped(a: Actor, scope: string) {
   if (a.keyId && !a.scopes?.includes(scope))
     throw new AppError("F90_FORBIDDEN");
 }
+async function assertProviderAvailable(productId: string) {
+  const link = check(await db.from("f90_product_internal")
+    .select("provider_id")
+    .eq("product_id", productId)
+    .maybeSingle());
+  if (!link?.provider_id) return;
+  const p = check(await db.from("f90_providers")
+    .select("is_enabled")
+    .eq("id", link.provider_id)
+    .maybeSingle());
+  if (!p?.is_enabled) throw new AppError("F90_UNAVAILABLE", 409, "الخدمة متوقفة مؤقتًا من المورّد");
+}
 async function publicCatalog() {
   const rows = await Promise.all([
     db.from("site_settings").select("*").eq("id", 1).single(),
@@ -257,8 +269,18 @@ async function publicCatalog() {
     db.from("banners").select("*").eq("is_active", true).order("sort_order"),
     db.from("f90_rates").select("*").order("currency"),
     db.from("f90_vip_tiers").select("*").order("level"),
+    db.from("f90_product_internal").select("product_id,provider_id").not("provider_id", "is", null),
+    db.from("f90_providers").select("id,is_enabled"),
   ]);
   const categories = check(rows[1]);
+  const linked = check(rows[6]);
+  const inactiveProviderIds = new Set(
+    check(rows[7]).filter((p: any) => !p.is_enabled).map((p: any) => p.id),
+  );
+  const hiddenProductIds = new Set(
+    linked.filter((entry: any) => inactiveProviderIds.has(entry.provider_id))
+      .map((entry: any) => entry.product_id),
+  );
   const visible = (id: string, seen = new Set<string>()): boolean => {
     if (seen.has(id)) return false;
     seen.add(id);
@@ -278,7 +300,7 @@ async function publicCatalog() {
           : c,
       ),
     products: check(rows[2])
-      .filter((p: any) => !p.category_id || visible(p.category_id))
+      .filter((p: any) => !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         parentRefilling(p.category_id, categories)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
@@ -373,7 +395,7 @@ async function dns(host: string) {
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }
 async function providerAction(id: string, action: string, args: any = {}) {
-  const { p, secret } = await provider(id, action === "services" || action === "balance");
+  const { p, secret } = await provider(id, ["services", "balance", "status"].includes(action));
   return callProvider(p, secret, action, args, fetch, dns);
 }
 async function work() {
@@ -1124,6 +1146,25 @@ async function staff(a: Actor, b: any) {
     delete p.secret_id;
     return p;
   }
+  if (action === "provider.toggle") {
+    requireRole(a, "manager");
+    const id = uuid(b.id);
+    if (typeof b.is_enabled !== "boolean") throw new AppError("F90_FIELDS");
+    const changed = check(
+      await db.from("f90_providers")
+        .update({ is_enabled: b.is_enabled })
+        .eq("id", id)
+        .select("id,name,is_enabled")
+        .single(),
+    );
+    await db.from("f90_audit").insert({
+      actor_id: a.id,
+      action: "provider.toggle",
+      target_id: id,
+      details: { is_enabled: b.is_enabled },
+    });
+    return changed;
+  }
   if (action === "provider.services") {
     requireRole(a, "manager");
     const data = await providerAction(uuid(b.id), "services");
@@ -1412,6 +1453,7 @@ Deno.serve(async (req: Request) => {
       );
     const a = await actor(req, action === "quote");
     if (action === "quote") {
+      await assertProviderAvailable(uuid(b.product_id));
       if (a?.keyId) scoped(a, "orders");
       return out(
         await rpc("f90_quote", {
@@ -1490,6 +1532,7 @@ Deno.serve(async (req: Request) => {
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
       const product = uuid(b.product_id || b.service);
+      await assertProviderAvailable(product);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const reference = paymentReference(b.idempotency_key);
       const requestedQuantity = integer(b.quantity || 1);
