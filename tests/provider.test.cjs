@@ -127,3 +127,29 @@ test("omega reads products with api-token and never creates paid orders", async 
   await assert.rejects(P.callProvider(provider, "test-key", "add", {}, fetcher), /غير متاحة/);
   assert.equal(calls.length, 1);
 });
+
+test("provider request timeout follows validated operational settings", async () => {
+  const original = AbortSignal.timeout;
+  const observed = [];
+  AbortSignal.timeout = (ms) => {
+    observed.push(ms);
+    return new AbortController().signal;
+  };
+  try {
+    const fetcher = async () => new Response("[]", { status: 200 });
+    await P.callProvider(
+      { endpoint: "https://provider.example/api", adapter: "smm",
+        config: { request_timeout_ms: 7000 } },
+      "fixture", "services", {}, fetcher,
+    );
+    await P.callProvider(
+      { endpoint: "https://provider.example/api", adapter: "smm",
+        config: { request_timeout_ms: 100 } },
+      "fixture", "services", {}, fetcher,
+    );
+    assert.deepEqual(observed, [7000, 20000]);
+  } finally {
+    AbortSignal.timeout = original;
+  }
+});
+
