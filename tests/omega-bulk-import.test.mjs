@@ -12,6 +12,10 @@ const categories = [
   { id: "cards", name: "البطاقات الرقمية", slug: "digital-cards" },
   { id: "social", name: "خدمات السوشيال ميديا", slug: "social-media" },
   { id: "other", name: "خدمات الموقع", slug: "store-services" },
+  { id: "stream", name: "اشتراكات البث", slug: "streaming" },
+  { id: "ai", name: "خدمات الذكاء الاصطناعي", slug: "artificial-intelligence" },
+  { id: "mobile", name: "شحن الهاتف", slug: "mobile-credit" },
+  { id: "apps", name: "التطبيقات", slug: "applications" },
 ];
 function harness(services, send) {
   const S = { categories, importServices: services };
@@ -62,4 +66,25 @@ test("bulk import preserves supplier names, deduplicates IDs and flags uncertain
 test("bulk import cannot run for unrelated supplier", async () => {
   const h = harness([{ id: 1, name: "A", rate: 1 }], async () => []);
   await assert.rejects(h.importAllProviderDrafts({ adapter: "smm" }, {}), /مخصص لأوميغا/);
+});
+
+test("Omega classifier prioritizes gift-card products over generic game categories", () => {
+  const { providerServiceCategory: resolve } = harness([], async () => []);
+  assert.equal(resolve({ name: "Steam Wallet Gift Card 20 USD", category: "الألعاب" }).id, "cards");
+  assert.equal(resolve({ name: "Google Play بطاقة 10$", category: "الألعاب" }).id, "cards");
+  assert.equal(resolve({ name: "PUBG UC 60 شدة", category: "الالعاب" }).id, "games");
+});
+test("Omega classifier handles Arabic spelling and service-specific matches", () => {
+  const { providerServiceCategory: resolve } = harness([], async () => []);
+  assert.equal(resolve({ name: "اشتراك NETFLIX لمدة شهر", category: "متنوع" }).id, "stream");
+  assert.equal(resolve({ name: "شحن رصيد هاتف", category: "غير مصنف" }).id, "mobile");
+  assert.equal(resolve({ name: "متابعين Instagram", category: "متنوع" }).id, "social");
+  assert.equal(resolve({ name: "اشتراك ChatGPT", category: "متنوع" }).id, "ai");
+  assert.equal(resolve({ name: "خدمة عادية", category: "أَلْعَاب" }).id, "games");
+});
+test("Omega classifier holds unknown or conflicting services for human review", () => {
+  const { providerServiceCategory: resolve } = harness([], async () => []);
+  assert.equal(resolve({ name: "خدمة غير معروفة", category: "غير معروف" }).review, true);
+  assert.equal(resolve({ name: "متابعين PUBG UC", category: "غير معروف" }).review, true);
+  assert.equal(resolve({ name: "PUBG UC 60 شدة", category: "الألعاب" }).review, false);
 });
