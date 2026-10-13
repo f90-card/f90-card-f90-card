@@ -26,7 +26,7 @@ test("admin has a working cream and dark toggle", () => {
 test("store and admin honor the same theme preference", () => {
   assert.match(app, /localStorage\.setItem\("f90-theme", v\)/);
   for (const page of [site, admin])
-    assert.match(page, /localStorage\.getItem\("f90-theme"\) === "cream"/);
+    assert.match(page, /\["dark", "cream", "melon"\]\.includes\(localStorage\.getItem\("f90-theme"\)\)/);
 });
 test("theme switching never sends financial or account requests", () => {
   const block = adminApp.slice(adminApp.indexOf("  function applyAdminTheme(value) {"),
@@ -44,7 +44,21 @@ test("third melon skin is selectable on storefront and in admin default settings
 test("F90 bot cannot send purchases and supports user dismissal", () => {
   assert.match(site, /theme-effects\.js/);
   const bot = read("theme-effects.js");
-  assert.match(bot, /sessionStorage\.setItem\("f90-mascot-hidden"/);
+  assert.match(bot, /store\("f90-bot-hidden"/);
+  assert.match(site, /id="f90BotToggle"/);
+  assert.match(site, /id="f90EffectsLevel"/);
   assert.match(bot, /prefers-reduced-motion/);
   assert.doesNotMatch(bot, /\bfetch\(|A\.call\(|checkout|paymentReference/);
+});
+
+test("pinch zoom remains available and redundant back button is removed", () => {
+  assert.doesNotMatch(site, /id="pageBack"/);
+  assert.doesNotMatch(site, /user-scalable=no|maximum-scale=1/);
+});
+test("weather is theme-specific, adjustable and respects reduced motion", () => {
+  const bot = read("theme-effects.js");
+  assert.match(bot, /root\.dataset\.theme === "melon"/);
+  assert.match(bot, /f90-effects-level/);
+  assert.match(styles, /f90-weather-particle/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
 });
