@@ -22,6 +22,8 @@ export async function request(action, payload = {}) {
 }
 
 export const services = () => request("services");
+export const categories = () => request("categories");
+export const service = (id) => request("service", { service: id });
 export const balance = () => request("balance");
 export const quote = (productId, quantity) =>
   request("quote", { product_id: productId, quantity });
@@ -55,3 +57,4 @@ export function purchase({
 //   reference: savedReference, expectedTotal: price.total_usd });
 // await status(order.id);
 // عند فقدان الاستجابة، استخدم savedReference نفسه؛ لا تنشئ شراء جديدًا تلقائيًا.
+
