@@ -2279,3 +2279,58 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 
 .f90-api-jump button{display:inline-flex;align-items:center;min-height:38px;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer;font:inherit;font-size:13px;font-weight:700}
 .f90-api-jump button:hover,.f90-api-jump button:focus-visible{border-color:var(--accent)}
+
+
+/* F90 cream theme: full interface skin shared by storefront and admin.
+   Components, authentication, wallet, catalog and routing remain identical. */
+:root[data-theme="cream"] {
+  --bg: #ded9d1;
+  --surface: #f2ece3;
+  --surface2: #e7e0d6;
+  --line: #bdb2a4;
+  --text: #292a31;
+  --muted: #5c5960;
+  --accent: #a91d3d;
+  --accent2: #831b32;
+  --shadow: 0 18px 45px #453b2a1c;
+}
+:root[data-theme="cream"] body:before {
+  background: radial-gradient(ellipse at 90% 0%, #b38d6630, transparent 47%),
+              radial-gradient(ellipse at 0% 65%, #a91d3d0c, transparent 48%);
+}
+:root[data-theme="cream"] .site-header,
+:root[data-theme="cream"] .admin-top,
+:root[data-theme="cream"] .admin-sidebar {
+  background: #f2ece3f2;
+  backdrop-filter: blur(14px);
+}
+:root[data-theme="cream"] .home-hero,
+:root[data-theme="cream"] .category-art { background: #e6dfd5; }
+:root[data-theme="cream"] .admin-sidebar nav a.active {
+  background: linear-gradient(90deg, #a91d3d0b, #a91d3d18);
+}
+:root[data-theme="cream"] :is(input, textarea, select) {
+  color: var(--text);
+  accent-color: var(--accent);
+}
+:root[data-theme="cream"] :is(input, textarea, select)::placeholder {
+  color: #77716e;
+}
+:root[data-theme="cream"] :is(.panel, .catalog-row, .method-tile, .drawer, .modal, .product-info) {
+  box-shadow: 0 12px 30px #5044320c;
+}
+:root[data-theme="cream"] :is(.code-window, .code-head, .code-window pre) {
+  color: #dceaff;
+}
+:root[data-theme="cream"] .refill-badge {
+  background: #393039eb;
+  color: #fff;
+}
+:root[data-theme="cream"] #adminThemeToggle {
+  border-color: #a91d3d40;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="cream"] .brand.motion img {
+    animation: none;
+  }
+}
