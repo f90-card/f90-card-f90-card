@@ -97,7 +97,6 @@
       localStorage.setItem("f90-theme", v);
     } catch {}
     $("themeSelect").value = v;
-    $("themeButton").innerHTML = I(v === "dark" ? "sun" : "moon");
   }
   function brand() {
     const c = S.settings.config || {},
@@ -141,10 +140,6 @@
     $("headerWallet").innerHTML =
       I("wallet") +
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "الرصيد يحتاج تحديث" : e(C.money(me.wallet?.balance_usd, "USD"))) : "المحفظة"}</span>`;
-    $("headerUser").innerHTML = p?.avatar_url
-      ? image(p.avatar_url, p.display_name)
-      : I("user");
-    $("headerUser").href = me ? "#/profile" : "#/auth";
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     const links = [
@@ -1340,9 +1335,6 @@
   $("menuButton").addEventListener("click", () => toggleDrawer(true));
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
-  $("themeButton").addEventListener("click", () =>
-    theme(document.documentElement.dataset.theme === "dark" ? "cream" : document.documentElement.dataset.theme === "cream" ? "melon" : "dark"),
-  );
   $("themeSelect").addEventListener("change", (ev) => theme(ev.target.value));
   $("currencySelect").addEventListener("change", (ev) => {
     S.currency = ev.target.value;
