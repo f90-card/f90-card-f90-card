@@ -52,9 +52,14 @@ export function normalizeService(s) {
   // Omega's product API uses qty_values and product_type, and prices one
   // product unit. SMM panels conventionally quote per 1000 units.
   const omega = s.product_type != null || s.qty_values != null;
+  const productType = String(s.product_type ?? "").toLowerCase();
+  // A known empty stock must not be offered as a purchasable product.
+  // Unknown stock is deliberately not treated as zero.
+  if (omega && s.stock != null && Number(s.stock) === 0) return null;
   const rate = Number(s.rate ?? s.price);
   const min = Number(s.min ?? s.qty_values?.min ?? 1),
-    max = Number(s.max ?? s.qty_values?.max ?? (omega ? 1 : 1000000)),
+    max = Number(s.max ?? s.qty_values?.max ??
+      (omega && productType !== "amount" ? 1 : 1000000)),
     unit = Number(s.unit_quantity ?? (omega ? 1 : 1000));
   if (
     (s.service == null && s.id == null) ||
