@@ -784,6 +784,7 @@
         [
           ["dark", "أسود وأحمر"],
           ["cream", "حليبي هادئ"],
+          ["melon", "بطيخي سماوي متحرك"],
         ],
         c.default_theme || "dark",
       )}${select(
@@ -1991,19 +1992,19 @@
     document.body.classList.toggle("admin-menu-open"),
   );
   function applyAdminTheme(value) {
-    const selected = value === "cream" ? "cream" : "dark";
+    const selected = ["dark", "cream", "melon"].includes(value) ? value : "dark";
     document.documentElement.dataset.theme = selected;
     const toggle = $("adminThemeToggle");
     if (toggle) {
-      toggle.textContent = selected === "cream" ? "الثيم الأسود والأحمر" : "الثيم الحليبي";
-      toggle.setAttribute("aria-pressed", String(selected === "cream"));
+      toggle.textContent = selected === "dark" ? "الثيم الحليبي" : selected === "cream" ? "الثيم البطيخي المتحرك" : "الثيم الأسود والأحمر";
+      toggle.setAttribute("aria-pressed", String(selected !== "dark"));
     }
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = selected === "cream" ? "#ded9d1" : "#090b10";
+    if (meta) meta.content = selected === "cream" ? "#ded9d1" : selected === "melon" ? "#e1f4f1" : "#090b10";
     try { localStorage.setItem("f90-theme", selected); } catch {}
   }
   $("adminThemeToggle")?.addEventListener("click", () => {
-    applyAdminTheme(document.documentElement.dataset.theme === "cream" ? "dark" : "cream");
+    applyAdminTheme(document.documentElement.dataset.theme === "dark" ? "cream" : document.documentElement.dataset.theme === "cream" ? "melon" : "dark");
   });
   applyAdminTheme(document.documentElement.dataset.theme);
   $("adminLogout").addEventListener("click", async () => {
