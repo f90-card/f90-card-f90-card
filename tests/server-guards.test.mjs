@@ -43,7 +43,7 @@ test("checkout and deposit use idempotency keys and reject conflicting payloads"
 test("Omega imports are hidden manual drafts with validated category IDs", () => {
   const imports = slice('if (action === "provider.import")', 'if (action === "provider.sync_prices")');
   assert.match(imports, /is_active: false/);
-  assert.match(imports, /p\.adapter === "omega" \? "manual" : "automatic"/);
+  assert.match(imports, /!s\.allowed_quantities && p\.adapter !== "omega" \? "automatic" : "manual"/);
   assert.match(imports, /categoryIds\.has\(chosenCategoryId\)/);
   assert.match(imports, /category_id: chosenCategoryId/);
   assert.match(imports, /b\.service_ids\.length > 100/);
