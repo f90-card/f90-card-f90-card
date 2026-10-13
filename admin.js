@@ -35,6 +35,7 @@
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["users", "إدارة المستخدمين", "user", ["manager"]],
+    ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
@@ -361,6 +362,19 @@
       `<div class="table-wrap"><table><thead><tr>${columns.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>${pagination()}`,
     );
   }
+  async function traders() {
+    const seq = S.token;
+    const r = await A.call("staff.traders", { offset: S.offset });
+    if (seq !== S.token) return;
+    S.list = r.items;
+    S.count = r.count;
+    main.innerHTML = head("التجار ومفاتيح API",
+      "حسابات التجار الحقيقية ومفاتيحها ومحافظها. امنح صلاحية التاجر من صفحة المستخدمين بعد التوثيق.",
+      '<a class="button secondary small" href="#/users">إدارة المستخدمين</a><a class="button secondary small" href="./index.html#/developers">صفحة التاجر</a>') +
+      (r.items.length ? `<div class="table-wrap"><table><thead><tr><th>التاجر</th><th>البريد</th><th>التوثيق والحالة</th><th>المحفظة</th><th>مفاتيح نشطة</th><th>الإدارة</th></tr></thead><tbody>${r.items.map((u) =>
+        `<tr><td>${customer(u)}</td><td>${e(u.email)}</td><td>${u.is_verified ? "موثّق" : "غير موثّق"} · ${status(u.account_status)}</td><td>${e(C.money(u.balance_usd))}</td><td>${e(u.active_keys)}</td><td><button class="button secondary small" data-action="find-user" data-id="${e(u.id)}">إدارة الحساب والمفاتيح</button></td></tr>`).join("")}</tbody></table></div>${pagination()}`
+        : empty("لا توجد حسابات تاجر حاليًا"));
+  }
   function auditName(a) {
     return (
       {
@@ -369,6 +383,11 @@
         "user.permissions": "تعديل صلاحيات مستخدم",
         "catalog.create": "إنشاء عنصر",
         "catalog.update": "تعديل عنصر",
+        "provider.save": "حفظ إعدادات مورّد",
+        "provider.toggle": "تفعيل أو إيقاف مورّد",
+        "key.create": "إصدار مفتاح تاجر",
+        "key.update": "تعديل صلاحيات مفتاح تاجر",
+        "key.revoke": "إلغاء مفتاح تاجر",
       }[a] ||
       (a.startsWith("order.")
         ? "تغيير حالة الطلب: " + (C.statuses[a.split(".")[1]] || "مراجعة")
@@ -906,7 +925,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)}</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled && p.adapter !== "omega" ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -926,8 +945,10 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${check("is_enabled", "تفعيل المورّد", p?.is_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
+    const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
+    if (automatic && p?.adapter === "omega") automatic.disabled = true;
   }
   async function importProvider(p) {
     S.pendingProviderImport = null;
@@ -1329,6 +1350,7 @@
     const page =
       (location.hash || "#/dashboard").replace(/^#\/?/, "").split("/")[0] ||
       "dashboard";
+    if (S.active !== page) S.offset = 0;
     S.active = page;
     navigation();
     const allowed = sections.find(
@@ -1357,6 +1379,7 @@
       else if (page === "vip") vip();
       else if (page === "policies") policies();
       else if (page === "providers") await providers();
+      else if (page === "traders") await traders();
     } catch (err) {
       main.innerHTML =
         head("تعذّر فتح الأدوات") +
@@ -1466,7 +1489,8 @@
         currency: d.currency,
         token: d.token || undefined,
         margin_percent: Number(d.margin_percent),
-        is_enabled: form.elements.is_enabled.checked,
+        request_timeout_ms: Number(d.request_timeout_ms),
+        automatic_orders_enabled: form.elements.automatic_orders_enabled.checked,
       });
       closeModal();
       toast("تم حفظ المورّد");
@@ -1518,11 +1542,17 @@
       );
       return;
     }
-    if (form.id === "traderKeyForm") {
-      const key = await A.call("key.create", {
-        user_id: S.detail.id,
-        name: d.name,
-      });
+    if (form.id === "traderKeyForm" || form.id === "traderKeySettingsForm") {
+      const scopes = ["catalog", "balance", "orders"].filter((scope) => form.elements["scope_" + scope]?.checked);
+      if (!scopes.length) throw new Error("اختر صلاحية واحدة على الأقل");
+      const values = { name: d.name, scopes, requests_per_minute: Number(d.requests_per_minute), expires_at: d.expires_at || null };
+      if (form.id === "traderKeySettingsForm") {
+        await A.call("key.update", { id: S.editKey.id, ...values });
+        toast("حُفظت إعدادات المفتاح");
+        closeModal();
+        return;
+      }
+      const key = await A.call("key.create", { user_id: S.detail.id, ...values });
       modal(
         "احفظ مفتاح التاجر",
         `<p class="muted">يظهر مرة واحدة. سلّمه للتاجر عبر وسيلتك المعتادة، ولا تنشره.</p><div class="key-token">${e(key.token)}</div><button class="button secondary" style="margin-top:15px" data-action="copy-key" data-key="${e(key.token)}">نسخ المفتاح</button>`,
@@ -1690,7 +1720,7 @@
       else if (action === "reload") await route();
       else if (action === "next" || action === "prev") {
         S.offset = Math.max(0, S.offset + (action === "next" ? 50 : -50));
-        await listPage(S.active);
+        await (S.active === "traders" ? traders() : listPage(S.active));
       } else if (action === "detail-order")
         detailOrder(S.list.find((x) => x.id === b.dataset.id));
       else if (action === "detail-deposit")
@@ -1723,10 +1753,8 @@
         const keys = await A.call("staff.trader_keys", {
           user_id: S.detail.id,
         });
-        modal(
-          "مفاتيح التاجر",
-          `<div class="records">${keys.map((k) => `<article class="record"><div class="record-main"><h3>${e(k.name)}</h3><p dir="ltr">${e(k.token_prefix)}</p>${status(k.is_active ? "active" : "suspended")}</div>${k.is_active ? `<button class="button ghost small" data-action="revoke-trader-key" data-id="${k.id}">إلغاء</button>` : ""}</article>`).join("") || empty("لا توجد مفاتيح بعد")}</div>`,
-        );
+        S.traderKeys = keys;
+        modal("مفاتيح التاجر", `<div class="records">${keys.map((k) => `<article class="record"><div class="record-main"><h3>${e(k.name)}</h3><p dir="ltr">${e(k.token_prefix)}</p><p class="muted small">${e(k.scopes.join("، "))} · ${e(k.requests_per_minute)} طلب/دقيقة · انتهاء ${e(k.expires_at ? C.date(k.expires_at) : "بلا تاريخ")} · آخر استخدام ${e(k.last_used_at ? C.date(k.last_used_at) : "لم يستخدم")}</p>${status(k.is_active ? "active" : "suspended")}</div><div class="actions"><button class="button secondary small" data-action="trader-key-logs" data-id="${e(k.id)}">سجل الاستخدام</button>${k.is_active ? `<button class="button secondary small" data-action="edit-trader-key" data-id="${e(k.id)}">الإعدادات</button><button class="button ghost small" data-action="revoke-trader-key" data-id="${e(k.id)}">إلغاء</button>` : ""}</div></article>`).join("") || empty("لا توجد مفاتيح بعد")}</div>`);
       } else if (action === "revoke-trader-key") {
         await A.call("key.revoke", { id: b.dataset.id });
         toast("أُلغي المفتاح");
@@ -1734,8 +1762,16 @@
       } else if (action === "create-trader-key") {
         modal(
           "مفتاح حساب التاجر",
-          `<form id="traderKeyForm">${field("name", "اسم المفتاح", "text", "متجر العميل", "required")}<button class="button" type="submit">إنشاء</button></form>`,
+          `<form id="traderKeyForm">${field("name", "اسم المفتاح", "text", "متجر العميل", 'required maxlength="100"')}${check("scope_catalog", "قراءة الأقسام والخدمات", true)}${check("scope_balance", "قراءة الرصيد", true)}${check("scope_orders", "إنشاء ومتابعة الطلبات", true)}${field("requests_per_minute", "طلبات في الدقيقة (10–120)", "number", 60, 'min="10" max="120" required')}${field("expires_at", "انتهاء المفتاح (اختياري، خلال سنة)", "date")}<button class="button" type="submit">إنشاء</button></form>`,
         );
+      } else if (action === "edit-trader-key") {
+        const k = S.traderKeys?.find((item) => item.id === b.dataset.id);
+        if (!k) throw new Error("المفتاح غير موجود");
+        S.editKey = k;
+        modal("إعدادات مفتاح التاجر", `<form id="traderKeySettingsForm">${field("name", "اسم المفتاح", "text", k.name, 'required maxlength="100"')}${check("scope_catalog", "قراءة الأقسام والخدمات", k.scopes.includes("catalog"))}${check("scope_balance", "قراءة الرصيد", k.scopes.includes("balance"))}${check("scope_orders", "إنشاء ومتابعة الطلبات", k.scopes.includes("orders"))}${field("requests_per_minute", "طلبات في الدقيقة (10–120)", "number", k.requests_per_minute, 'min="10" max="120" required')}${field("expires_at", "انتهاء المفتاح (اختياري، خلال سنة)", "date", k.expires_at?.slice(0, 10) || "")}<button class="button" type="submit">حفظ الإعدادات</button></form>`);
+      } else if (action === "trader-key-logs") {
+        const logs = await A.call("key.logs", { id: b.dataset.id });
+        modal("استخدام المفتاح", `<div class="records">${logs.map((x) => `<article class="record"><strong>${e(x.action)}</strong><span>${e(x.http_status)} · ${e(C.date(x.created_at))}</span></article>`).join("") || empty("لا استخدام مسجّل بعد")}</div>`);
       } else if (action === "copy-key") {
         await navigator.clipboard.writeText(b.dataset.key);
         toast("تم النسخ");
@@ -2036,6 +2072,12 @@
     }
   });
   document.addEventListener("change", (ev) => {
+    if (ev.target.matches('#providerForm [name="adapter"]')) {
+      const automatic = ev.target.form.elements.automatic_orders_enabled;
+      automatic.disabled = ev.target.value === "omega";
+      if (automatic.disabled) automatic.checked = false;
+      return;
+    }
     if (ev.target.matches('#importForm input[type="checkbox"]')) { updateProviderImportPreview(); return; }
     if (ev.target.id === "listFilter") {
       S.filter = ev.target.value;
@@ -2249,4 +2291,5 @@
   }
   boot();
 })();
+
 
