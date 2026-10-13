@@ -61,3 +61,12 @@ test("public quote and checkout cannot apply legacy coupons", () => {
   assert.equal((source.match(/p_coupon: ""/g) || []).length >= 3, true);
   assert.doesNotMatch(source, /p_coupon: text\(b\.coupon/);
 });
+
+test("automatic supplier purchases are blocked before a wallet charge when dispatch is disabled", () => {
+  const guard = slice("async function assertProviderAvailable", "async function publicCatalog");
+  const checkout = slice('if (action === "checkout" || action === "add")', 'if (action === "status" || action === "order")');
+  assert.match(guard, /automatic_orders_enabled !== true/);
+  assert.match(guard, /F90_PROVIDER_NOT_READY/);
+  assert.ok(checkout.indexOf("assertProviderAvailable") < checkout.indexOf('rpc("f90_checkout"'));
+});
+
