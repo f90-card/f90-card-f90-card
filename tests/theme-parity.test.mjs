@@ -62,3 +62,19 @@ test("weather is theme-specific, adjustable and respects reduced motion", () => 
   assert.match(styles, /f90-weather-particle/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
 });
+
+test("cinematic weather can switch modes without network or financial actions", () => {
+  const bot = read("theme-effects.js");
+  assert.match(site, /id="f90WeatherMode"/);
+  for (const mode of ["snow", "rain", "wind", "hearts", "mix"]) {
+    assert.match(site, new RegExp('value="' + mode + '"'));
+    assert.match(bot, new RegExp('\\b' + mode + ':|\\b' + mode + ' ='));
+  }
+  assert.match(bot, /lastWeatherKey/);
+  assert.match(bot, /f90-weather-mode/);
+  assert.match(styles, /data-weather-mode="snow"/);
+  assert.match(styles, /data-weather-mode="rain"/);
+  assert.match(styles, /data-weather-mode="wind"/);
+  assert.match(styles, /data-weather-mode="hearts"/);
+  assert.doesNotMatch(bot, /fetch\(|A\.call\(|\.submit\(/);
+});
