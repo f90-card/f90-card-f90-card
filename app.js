@@ -14,6 +14,7 @@
     rates: [],
     vip: [],
     me: null,
+    walletStale: false,
     currency: "USD",
     route: 0,
     quote: null,
@@ -135,7 +136,7 @@
       c = S.settings.config || {};
     $("headerWallet").innerHTML =
       I("wallet") +
-      `<span>${me && !me.needs_mfa ? e(C.money(me.wallet?.balance_usd, "USD")) : "المحفظة"}</span>`;
+      `<span>${me && !me.needs_mfa ? (S.walletStale ? "الرصيد يحتاج تحديث" : e(C.money(me.wallet?.balance_usd, "USD"))) : "المحفظة"}</span>`;
     $("headerUser").innerHTML = p?.avatar_url
       ? image(p.avatar_url, p.display_name)
       : I("user");
@@ -213,16 +214,20 @@
     } = await A.client.auth.getSession();
     if (!session) {
       S.me = null;
+      S.walletStale = false;
       return false;
     }
     try {
       S.me = await A.call("me");
+      S.walletStale = false;
       return true;
     } catch (err) {
+      S.walletStale = true;
       // A transient network fault is not a sign-out event. Keep the last
       // known identity, but report that balances may be stale to callers.
       if (err.code === "F90_FORBIDDEN" || err.code === "F90_AUTH") {
         S.me = null;
+        S.walletStale = false;
         toast(message(err));
       }
       return false;
@@ -1321,7 +1326,7 @@
       setTimeout(() => {
         location.hash = "#/reset";
       }, 0);
-    if (event === "SIGNED_OUT") S.me = null;
+    if (event === "SIGNED_OUT") { S.me = null; S.walletStale = false; }
   });
   async function boot() {
     try {
