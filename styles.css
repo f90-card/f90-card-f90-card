@@ -2622,3 +2622,33 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
   right: auto;
   transform: none;
 }
+
+/* Compact purchase dialog; the full product route remains available by direct link. */
+.f90-quick-backdrop[hidden], .f90-quick-product[hidden] { display: none !important; }
+.f90-quick-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 89;
+  background: #05070cc2;
+  backdrop-filter: blur(4px);
+}
+.f90-quick-product {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: 90;
+  width: min(560px, calc(100vw - 24px));
+  max-height: min(88dvh, 760px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: clamp(14px, 3vw, 24px);
+}
+.f90-quick-product .product-page { display: block; }
+.f90-quick-product .product-art { display: none; }
+.f90-quick-product .product-info { min-width: 0; }
+.f90-quick-product .product-info h1 { font-size: clamp(19px, 4vw, 25px); }
+.f90-quick-product-toolbar { margin-bottom: 12px; }
+@media (max-width: 650px) {
+  .f90-quick-product { max-height: 90dvh; padding: 14px; }
+}
