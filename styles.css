@@ -2613,3 +2613,12 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 :root[data-theme="melon"] .f90-checkout-review .f90-review-brand{color:var(--accent2);}
 :root[data-theme="melon"] .f90-checkout-review .f90-review-remaining{background:#d5f3e7;}
 @media(max-width:440px){.f90-checkout-review dl>div{font-size:13px;}.f90-checkout-review .actions button{width:100%;}}
+
+/* Keep the brand at the right and wallet/menu together at the left in all themes. */
+:root[data-theme="melon"] #headerBrand {
+  position: relative;
+  inset-inline-start: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+}
