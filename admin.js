@@ -925,7 +925,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع. اترك المورّد موقوفًا حتى تتأكد من إعداداته.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled && p.adapter !== "omega" ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">الربط المتاح: SMM وJSON وأوميغا. أوميغا يدعم جلب الخدمات والرصيد فقط حاليًا، ولا تُفعّل الطلبات التلقائية قبل اكتمال ربطها. أي مورّد ببروتوكول مختلف يحتاج محوّلًا وفق وثائقه. لا تكرر إرسال طلب حالته «تحتاج مراجعة» قبل التأكد من نتيجة المورّد.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button><button class="button danger small" data-action="provider-archive" data-id="${p.id}">حذف المورّد</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">ياسين كارد: استخدم عنوان https://api.yassen-card.com والبروتوكول المخصص. الاستيراد يحفظ الخدمات كمسودات مخفية حتى مراجعتها. يمكن إضافة مورّد آخر وتعديل مفتاحه أو حذفه من التشغيل. سجلات الطلبات السابقة محفوظة.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -938,6 +938,7 @@
           ["smm", "بروتوكول الخدمات الموحد"],
           ["json", "طلبات JSON بمفتاح Bearer"],
           ["omega", "أوميغا ستور (قراءة الخدمات والرصيد)"],
+          ["yassen", "ياسين كارد (api-token)"],
         ],
         p?.adapter || "smm",
       )}${select(
@@ -959,6 +960,7 @@
     S.importServices = services;
     const visibleServices = services.slice(0, 1000);
     const omega = p.adapter === "omega";
+    const bulk = ["omega", "yassen"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
     const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
     const priceNotice = ratePerUSD
@@ -970,9 +972,9 @@
         "هذه الصفحة تستعلم عن القائمة فقط. لا يحدث خصم أو شراء أو نشر تلقائي.",
         `<a class="button secondary small" href="#/providers">رجوع إلى المورّدين</a>`,
       ) +
-      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة فقط؛ صفِّ القائمة من لوحة المورّد إذا احتجت غيرها." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
+      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة هنا؛ استخدم الاستيراد الشامل لبقية الخدمات." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
             `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}"></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90"></td><td>${`<label class="field"><span>${e(service.category || "اختر قسم الخدمة")}${omega && providerServiceCategory(service).review ? " · يحتاج مراجعة" : ""}</span><select name="category_${n}" aria-label="قسم ${e(service.name)}"><option value="">اختر القسم</option>${S.categories.map((c) => `<option value="${e(c.id)}" ${omega ? (!providerServiceCategory(service).review && providerServiceCategory(service).id === c.id ? "selected" : "") : (c.name === service.category ? "selected" : "")}>${e(c.name)}</option>`).join("")}</select></label>`}</td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td data-import-preview data-supplier-rate="${e(service.rate)}">${ratePerUSD ? e(C.money(Math.round((Number(service.rate) / ratePerUSD) * (1 + (Number(p.margin_percent) || 0) / 100) * 1e6) / 1e6)) : "سعر الصرف غير متاح"}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
-          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button>${omega ? '<button class="button secondary" type="button" data-action="omega-import-all">استيراد جميع خدمات أوميغا كمسودات</button>' : ""}</div></form></section>`;
+          ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button>${bulk ? '<button class="button secondary" type="button" data-action="omega-import-all">استيراد جميع خدمات المورّد كمسودات</button>' : ""}</div></form></section>`;
   }
   function providerServiceCategory(service) {
     // Assign a confident category only. All imported Omega products remain
@@ -1034,11 +1036,11 @@
     return fallbackResult;
   }
   async function importAllProviderDrafts(provider, status) {
-    if (!provider || provider.adapter !== "omega")
-      throw new Error("الاستيراد الشامل مخصص لأوميغا في الوقت الحالي");
+    if (!provider || !["omega", "yassen"].includes(provider.adapter))
+      throw new Error("الاستيراد الشامل متاح لياسين وأوميغا");
     const services = S.importServices;
     if (!Array.isArray(services) || !services.length)
-      throw new Error("تعذّر جلب قائمة الخدمات؛ أعد فتح استيراد أوميغا");
+      throw new Error("تعذّر جلب قائمة الخدمات؛ أعد فتح استيراد المورّد");
     const ids = new Set();
     const entries = [];
     let review = 0;
@@ -1661,18 +1663,27 @@
           "حذف صور التوثيق",
           `<p>ستُحذف الصور الخاصة، ويبقى سجل قرار المراجعة. استخدم ذلك بعد طلب العميل أو وفق سياسة الاحتفاظ.</p><button class="button danger" data-action="confirm-erase-identity">تأكيد حذف الصور</button>`,
         );
+      } else if (action === "provider-archive") {
+        const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
+        if (!provider) throw new Error("المورّد غير موجود");
+        modal("حذف المورّد من التشغيل", `<p>ستُخفى خدمات ${e(provider.name)} ويختفي من لوحة المورّدين. تبقى سجلات الطلبات والمنتجات المرتبطة محفوظة.</p><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد الحذف</button>`);
+      } else if (action === "provider-archive-confirm") {
+        await A.call("provider.archive", { id: b.dataset.id });
+        closeModal();
+        toast("حُذف المورّد من التشغيل");
+        return providers();
       } else if (action === "omega-import-all") {
         const provider = S.importProvider;
-        if (!provider || provider.adapter !== "omega") throw new Error("المورّد ليس أوميغا");
+        if (!provider || !["omega", "yassen"].includes(provider.adapter)) throw new Error("المورّد غير مدعوم");
         const count = S.importServices?.length || 0;
         if (!count) throw new Error("لا توجد خدمات للاستيراد");
-        modal("تأكيد استيراد جميع خدمات أوميغا",
+        modal("تأكيد استيراد جميع خدمات المورّد",
           `<div class="notice warning">سيتم محاولة حفظ ${e(count)} خدمة كمسودات مخفية مع هامش ${e(provider.margin_percent)}٪. الأقسام غير المعروفة تُحفظ في قسم خدمات الموقع لمراجعتها، ولن تنفذ أي طلبات مدفوعة.</div><div id="omegaBulkStatus" role="status">لم يبدأ الاستيراد بعد.</div><div class="actions"><button class="button secondary" data-action="close-modal">إلغاء</button><button class="button" data-action="omega-import-all-confirm">بدء استيراد كل الخدمات</button></div>`);
       } else if (action === "omega-import-all-confirm") {
         if (S.omegaBulkBusy) return;
         const provider = S.importProvider;
         const status = $("omegaBulkStatus");
-        if (!provider || !status) throw new Error("أعد فتح صفحة أوميغا");
+        if (!provider || !status) throw new Error("أعد فتح صفحة المورّد");
         S.omegaBulkBusy = true;
         b.disabled = true;
         try {
@@ -1680,7 +1691,7 @@
           status.textContent = "اكتمل الاستيراد: " + outcome.imported + " مسودة جديدة، " +
             outcome.skipped + " موجودة سابقًا، " + outcome.needsReview +
             " خدمة تحتاج مراجعة تصنيف. جميع المسودات مخفية.";
-          toast("اكتمل استيراد أوميغا كمسودات. راجع المنتجات قبل نشرها.");
+          toast("اكتمل استيراد الخدمات كمسودات. راجع المنتجات قبل نشرها.");
         } catch (err) {
           if (status) status.textContent = "توقّف الاستيراد: " + errorMessage(err) +
             ". الدفعات المكتملة محفوظة؛ أعد المحاولة لاستكمال المتبقي دون تكرارها.";
