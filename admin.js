@@ -21,6 +21,7 @@
     count: 0,
     filter: "",
     search: "",
+    ledgerFilter: { ledger_kind: "", customer_id: "", from: "", to: "" },
     month: new Date().toISOString().slice(0, 7),
     active: "dashboard",
     edit: null,
@@ -32,6 +33,7 @@
     ["orders", "إدارة الطلبات", "clock", ["manager", "admin", "support"]],
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
+    ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["users", "إدارة المستخدمين", "user", ["manager"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
@@ -51,6 +53,7 @@
     orders: "إدارة الطلبات",
     deposits: "طلبات الإيداع",
     verification: "توثيق الهوية",
+    ledger: "السجل المالي",
     users: "إدارة المستخدمين",
     audit: "سجل الإدارة",
   };
@@ -159,6 +162,15 @@
   function pagination() {
     return `<div class="pagination"><button class="button secondary small" data-action="prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, S.count))} من ${e(S.count)}</span><button class="button secondary small" data-action="next" ${S.offset + 50 >= S.count ? "disabled" : ""}>التالي</button></div>`;
   }
+  function ledgerQuery(offset = S.offset) {
+    const f = S.ledgerFilter;
+    const start = f.from ? new Date(f.from + "T00:00:00").toISOString() : undefined;
+    const endDate = f.to ? new Date(f.to + "T00:00:00") : null;
+    if (endDate) endDate.setDate(endDate.getDate() + 1);
+    const end = endDate?.toISOString();
+    return { kind: "ledger", offset, ledger_kind: f.ledger_kind || undefined,
+      customer_id: f.customer_id || undefined, from: start, to: end };
+  }
   async function dashboard(leader = false) {
     const seq = S.token;
     const report = await A.call("staff.report", { month: S.month });
@@ -224,7 +236,7 @@
   }
   async function listPage(kind) {
     const seq = S.token;
-    const r = await A.call("staff.list", {
+    const r = await A.call("staff.list", kind === "ledger" ? ledgerQuery() : {
       kind,
       offset: S.offset,
       status: S.filter || undefined,
@@ -257,13 +269,16 @@
         kind === "deposits"
           ? "قبول الإيداع يضيف الرصيد مرة واحدة بالدولار. الرفض لا يغيّر المحفظة."
           : kind === "verification"
-            ? "صور خاصة، وتوثيق اختياري يُراجع يدويًا."
+            ? "صور خاصة، والتوثيق شرط للإيداع والشراء ويُراجع يدويًا."
             : kind === "users"
               ? "ابحث بالبريد أو معرّف العميل، ثم اضبط حالة الحساب وصلاحياته."
-              : "سجل العمليات والمتابعات.",
-        `<button class="button secondary small" data-action="reload">تحديث</button>${kind !== "audit" ? `<button class="button secondary small" data-action="list-pdf">${I("download")}تنزيل الصفحة</button>` : ""}`,
+              : kind === "ledger"
+                ? "حركات الرصيد الفعلية بالدولار، للقراءة والتدقيق فقط."
+                : "سجل العمليات والمتابعات.",
+        `<button class="button secondary small" data-action="reload">تحديث</button>${kind !== "audit" ? `<button class="button secondary small" data-action="list-pdf">${I("download")}تنزيل الصفحة</button>` : ""}${kind === "ledger" ? `<button class="button secondary small" data-action="ledger-csv">${I("download")}تصدير CSV كامل</button>` : ""}`,
       ) +
-      `<div class="toolbar">${filters.length ? select("filter", "الحالة", [["", "كل الحالات"], ...filters.map((x) => [x, C.statuses[x]])], S.filter).replace("<select ", '<select id="listFilter" ') : ""}${kind === "users" ? `<form id="searchUsers" class="actions">${field("search", "بحث", "search", S.search, 'placeholder="البريد أو معرّف العميل"')}<button class="button secondary" type="submit">بحث</button></form>` : ""}</div>`;
+      `<div class="toolbar">${filters.length ? select("filter", "الحالة", [["", "كل الحالات"], ...filters.map((x) => [x, C.statuses[x]])], S.filter).replace("<select ", '<select id="listFilter" ') : ""}${kind === "users" ? `<form id="searchUsers" class="actions">${field("search", "بحث", "search", S.search, 'placeholder="البريد أو معرّف العميل"')}<button class="button secondary" type="submit">بحث</button></form>` : ""}</div>` +
+      (kind === "ledger" ? `<form id="ledgerFilterForm" class="toolbar ledger-filters">${select("ledger_kind", "نوع الحركة", [["", "كل الحركات"], ["deposit", "إيداع"], ["purchase", "شراء"], ["refund", "استرداد"], ["adjustment", "تسوية"]], S.ledgerFilter.ledger_kind)}${field("customer_id", "رقم العميل", "search", S.ledgerFilter.customer_id, 'placeholder="F90..."')}${field("from", "من تاريخ", "date", S.ledgerFilter.from)}${field("to", "إلى تاريخ", "date", S.ledgerFilter.to)}<button class="button secondary" type="submit">تطبيق</button><button class="button secondary" type="button" data-action="ledger-reset">مسح الفلاتر</button></form>` : "");
     if (!r.items.length) {
       main.insertAdjacentHTML("beforeend", empty("لا توجد سجلات مطابقة"));
       return;
@@ -322,6 +337,14 @@
             `<tr><td>${customer(u)}${u.is_verified ? '<span class="badge verified">موثّق</span>' : ""}</td><td>${e(u.email)}</td><td>${e(C.roles[u.role])}</td><td>${status(u.account_status)}</td><td>${e(C.money(u.balance_usd))}</td><td><button class="button secondary small" data-action="detail-user" data-id="${u.id}">إدارة الحساب</button></td></tr>`,
         )
         .join("");
+    } else if (kind === "ledger") {
+      columns = ["التاريخ", "العميل", "الحركة", "المبلغ", "الرصيد قبل / بعد", "المرجع", "البيان"];
+      rows = r.items.map((x) => {
+        const amount = Number(x.amount_usd || 0);
+        const before = Number(x.balance_after || 0) - amount;
+        const label = { deposit: "إيداع", purchase: "شراء", refund: "استرداد", adjustment: "تسوية" }[x.kind] || x.kind;
+        return `<tr><td>${e(C.date(x.created_at))}</td><td>${customer(x.customer)}</td><td>${e(label)}</td><td class="${amount >= 0 ? "ledger-plus" : "ledger-minus"}">${e(C.money(amount))}</td><td>${e(C.money(before))}<br><strong>${e(C.money(x.balance_after))}</strong></td><td><small>${e(x.reference_id || x.id)}</small></td><td>${e(x.description || "—")}</td></tr>`;
+      }).join("");
     } else {
       columns = ["التاريخ", "العملية", "العنصر", "المنفّذ"];
       rows = r.items
@@ -1318,7 +1341,7 @@
       if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (
-        ["orders", "deposits", "verification", "users", "audit"].includes(page)
+        ["orders", "deposits", "verification", "users", "ledger", "audit"].includes(page)
       )
         await listPage(page);
       else if (["categories", "products", "banners"].includes(page))
@@ -1339,6 +1362,12 @@
     }
   }
   async function submit(form, d, submitter) {
+    if (form.id === "ledgerFilterForm") {
+      if (d.from && d.to && d.from > d.to) throw new Error("تاريخ البداية بعد تاريخ النهاية");
+      S.ledgerFilter = { ledger_kind: d.ledger_kind, customer_id: d.customer_id.trim(), from: d.from, to: d.to };
+      S.offset = 0;
+      return listPage("ledger");
+    }
     if (form.id === "catalogForm") return saveCatalog(form, d);
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
@@ -1972,6 +2001,27 @@
         } finally {
           if (b.isConnected) b.disabled = false;
         }
+      } else if (action === "ledger-reset") {
+        S.ledgerFilter = { ledger_kind: "", customer_id: "", from: "", to: "" };
+        S.offset = 0;
+        await listPage("ledger");
+      } else if (action === "ledger-csv") {
+        const rows = [];
+        for (let offset = 0; offset < 100000; offset += 50) {
+          const batch = await A.call("staff.list", ledgerQuery(offset));
+          if (batch.count > 100000) throw new Error("التصدير يتجاوز حد 100,000 حركة؛ ضيّق الفترة الزمنية");
+          rows.push(...batch.items);
+          if (rows.length >= batch.count || batch.items.length < 50) break;
+        }
+        window.F90Reports.downloadHistoryCSV("staff-ledger", rows.map((x) => ({
+          customer_name: x.customer?.display_name || "",
+          customer_id: x.customer?.customer_id || "",
+          kind: x.kind, amount_usd: x.amount_usd,
+          balance_before: Number(x.balance_after || 0) - Number(x.amount_usd || 0),
+          balance_after: x.balance_after, reference_id: x.reference_id || "",
+          description: x.description, created_at: x.created_at, id: x.id,
+        })));
+        toast("تم تجهيز " + rows.length + " حركة للتصدير");
       } else if (action === "report")
         await window.F90Reports.admin(S.report, S.settings.store_name);
       else if (action === "print-leaderboard") window.print();
@@ -2197,3 +2247,4 @@
   }
   boot();
 })();
+
