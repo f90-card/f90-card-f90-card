@@ -71,6 +71,7 @@
     $("modalRoot").querySelector("input,button")?.focus();
   }
   function closeModal() {
+    pendingCheckout = null;
     $("modalRoot").innerHTML = "";
     document.body.style.overflow = "";
   }
@@ -840,7 +841,8 @@
           `<div class="notice error">${e(message(err))}</div><button class="button" data-action="refresh-route">حاول مجددًا</button>`;
     }
   }
-  async function submit(form) {
+  let pendingCheckout = null;
+  async function submit(form, confirmed = false) {
     const data = Object.fromEntries(new FormData(form));
     if (form.id === "authForm") {
       if (
@@ -926,6 +928,39 @@
       }
       if (Number(S.me.wallet.balance_usd) < Number(S.quote.total_usd))
         throw new Error("رصيد محفظتك غير كافٍ. قدّم إيداعًا وانتظر اعتماده");
+      // The quote is computed by the server. Review the exact amount before any
+      // checkout request; a second explicit click is required to spend wallet funds.
+      const total = Number(S.quote.total_usd);
+      if (!Number.isFinite(total) || total <= 0) throw new Error("تعذّر التحقق من سعر الطلب");
+      if (!confirmed) {
+        const item = S.products.find((item) => item.id === form.dataset.product);
+        if (!item) throw new Error("الخدمة غير متاحة");
+        const balance = Number(S.me.wallet.balance_usd);
+        const current = Object.fromEntries(new FormData(form));
+        const fingerprint = JSON.stringify(current);
+        pendingCheckout = {
+          form, fingerprint, quoteSeq: S.quoteSeq, total,
+          key: S.checkoutKey, productId: item.id
+        };
+        modal("مراجعة الطلب قبل الخصم",
+          `<div class="f90-checkout-review">
+            <div class="f90-review-brand"><img src="./assets/icons/icon-192.png" alt="شعار F90" width="46" height="46"><strong>F90 CARD</strong></div>
+            <h3>${e(item.name)}</h3>
+            <dl>
+              <div><dt>الكمية</dt><dd>${e(String(current.quantity || "1"))}</dd></div>
+              <div><dt>رصيدك الحالي</dt><dd>${e(C.money(balance, "USD", true))}</dd></div>
+              <div><dt>المبلغ المطلوب</dt><dd>${e(C.money(total, "USD", true))}</dd></div>
+              ${Number(S.quote.discount_usd) > 0 ? `<div><dt>خصم VIP</dt><dd>${e(C.money(S.quote.discount_usd, "USD", true))}</dd></div>` : ""}
+              <div class="f90-review-remaining"><dt>الرصيد المتوقع بعد الطلب</dt><dd>${e(C.money(balance - total, "USD", true))}</dd></div>
+            </dl>
+            <p class="muted small">المبلغ النهائي يتحقق منه الخادم مرة أخرى عند تنفيذ الطلب.</p>
+            <div class="actions">
+              <button type="button" class="button secondary" data-close-modal>إلغاء</button>
+              <button type="button" class="button" data-action="confirm-wallet-checkout">تأكيد الخصم والشراء</button>
+            </div>
+          </div>`);
+        return;
+      }
       const p = S.products.find((p) => p.id === form.dataset.product),
         fields = {};
       for (const [k, v] of Object.entries(data))
@@ -1184,6 +1219,25 @@
           throw new Error(
             "تعذّر دخول جوجل. يحتاج الربط إلى تفعيل مزوّد جوجل من الإدارة",
           );
+      } else if (action === "confirm-wallet-checkout") {
+        const pending = pendingCheckout;
+        pendingCheckout = null;
+        if (!pending || !pending.form.isConnected ||
+            pending.form.dataset.product !== pending.productId ||
+            pending.quoteSeq !== S.quoteSeq ||
+            pending.key !== S.checkoutKey ||
+            Number(S.quote?.total_usd) !== pending.total ||
+            JSON.stringify(Object.fromEntries(new FormData(pending.form))) !== pending.fingerprint) {
+          closeModal();
+          throw new Error("تغيّر الطلب أو السعر. راجع التفاصيل ثم أكّد من جديد.");
+        }
+        button.disabled = true;
+        try {
+          closeModal();
+          await submit(pending.form, true);
+        } finally {
+          button.disabled = false;
+        }
       } else if (action === "quick-product") {
         ev.preventDefault();
         if (!button.dataset.id) return;
