@@ -812,13 +812,37 @@ async function staff(a: Actor, b: any) {
     );
     let query = db
       .from(table)
-      .select("*", { count: "exact" })
+      .select(b.kind === "ledger" ? "id,user_id,amount_usd,balance_after,kind,reference_id,description,actor_id,created_at" : "*", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(
         integer(b.offset || 0, 0, 100000),
         integer(b.offset || 0, 0, 100000) + 49,
       );
-    if (b.status)
+    if (b.kind === "ledger") {
+      if (b.ledger_kind) {
+        const ledgerKind = text(b.ledger_kind, 30);
+        if (!["deposit", "purchase", "refund", "adjustment"].includes(ledgerKind))
+          throw new AppError("F90_FIELDS");
+        query = query.eq("kind", ledgerKind);
+      }
+      for (const key of ["from", "to"] as const) {
+        if (!b[key]) continue;
+        const value = text(b[key], 40);
+        if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) || !Number.isFinite(Date.parse(value)))
+          throw new AppError("F90_FIELDS");
+        query = key === "from" ? query.gte("created_at", value) : query.lt("created_at", value);
+      }
+      if (b.from && b.to && Date.parse(b.from) >= Date.parse(b.to))
+        throw new AppError("F90_FIELDS");
+      if (b.customer_id) {
+        const customerId = text(b.customer_id, 50);
+        const profile = check(await db.from("profiles").select("id").eq("customer_id", customerId).maybeSingle());
+        if (!profile) return { items: [], count: 0 };
+        query = query.eq("user_id", profile.id);
+      }
+      query = query.order("id", { ascending: false });
+    }
+    if (b.status && b.kind !== "ledger")
       query = query.eq(
         b.kind === "users" ? "account_status" : "status",
         text(b.status, 30),
@@ -1826,3 +1850,4 @@ Deno.serve(async (req: Request) => {
     return fail(e);
   }
 });
+
