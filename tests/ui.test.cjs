@@ -27,6 +27,11 @@ test("a funded manual service buys from wallet, without WhatsApp checkout", asyn
     new h.window.Event("submit", { bubbles: true, cancelable: true }),
   );
   await h.settle();
+  assert.equal(h.calls.filter((c) => c.action === "checkout").length, 0);
+  const confirm = h.document.querySelector('[data-action="confirm-wallet-checkout"]');
+  assert.ok(confirm, "a separate review must precede the wallet charge");
+  confirm.dispatchEvent(new h.window.Event("click", { bubbles: true }));
+  await h.settle();
   const call = h.calls.find((c) => c.action === "checkout");
   assert.ok(call);
   assert.equal(call.args.fields.account_id, "42");
@@ -49,6 +54,16 @@ test("an unfunded account cannot send a purchase to the server", async () => {
   await h.settle();
   assert.equal(h.calls.filter((c) => c.action === "checkout").length, 0);
   assert.match(h.document.getElementById("toast").textContent, /غير كافٍ/);
+  h.cleanup();
+});
+test("unverified account cannot reach checkout", async () => {
+  const h = await harness("index.html", { hash: "#/product/coins", verified: false });
+  h.document.getElementById("checkoutForm").dispatchEvent(
+    new h.window.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await h.settle();
+  assert.equal(h.calls.filter((c) => c.action === "checkout").length, 0);
+  assert.match(h.document.getElementById("modalRoot").textContent, /توثيق الحساب/);
   h.cleanup();
 });
 test("guest purchase requests sign in and never starts a WhatsApp order", async () => {
