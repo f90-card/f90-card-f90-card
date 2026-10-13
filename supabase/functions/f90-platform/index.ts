@@ -298,7 +298,8 @@ async function assertProviderAvailable(productId: string) {
     .select("is_enabled,adapter,config")
     .eq("id", link.provider_id)
     .maybeSingle());
-  if (!p?.is_enabled) throw new AppError("F90_UNAVAILABLE", 409, "الخدمة متوقفة مؤقتًا من المورّد");
+  if (!p?.is_enabled || p.config?.disconnected || p.config?.archived_at)
+    throw new AppError("F90_UNAVAILABLE", 409, "الخدمة قيد التعبئة لدى المورّد");
   if (product?.commerce?.fulfillment === "automatic" &&
       (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new AppError("F90_PROVIDER_NOT_READY");
@@ -313,6 +314,8 @@ async function publicCatalog() {
     db.from("f90_vip_tiers").select("*").order("level"),
     db.from("f90_product_internal").select("product_id,provider_id").not("provider_id", "is", null),
     db.from("f90_providers").select("id,is_enabled,adapter,config"),
+    db.from("f90_store_news").select("id,kind,title_ar,body_ar,product_id,created_at")
+      .order("created_at", { ascending: false }).limit(40),
   ]);
   const categories = check(rows[1]);
   const products = check(rows[2]);
@@ -322,13 +325,17 @@ async function publicCatalog() {
   const hiddenProductIds = new Set(
     linked.filter((entry: any) => {
       const provider: any = providerById.get(entry.provider_id);
-      const product: any = productById.get(entry.product_id);
-      return !provider?.is_enabled ||
-        (product?.commerce?.fulfillment === "automatic" &&
-          (provider.adapter === "omega" || provider.config?.automatic_orders_enabled !== true));
+      return !provider || !!provider.config?.archived_at || !!provider.config?.disconnected;
     })
       .map((entry: any) => entry.product_id),
   );
+  const pausedProductIds = new Set(linked.filter((entry: any) => {
+    const provider: any = providerById.get(entry.provider_id);
+    const product: any = productById.get(entry.product_id);
+    return provider && (!provider.is_enabled ||
+      (product?.commerce?.fulfillment === "automatic" &&
+        (provider.adapter === "omega" || provider.config?.automatic_orders_enabled !== true)));
+  }).map((entry: any) => entry.product_id));
   const visible = (id: string, seen = new Set<string>()): boolean => {
     if (seen.has(id)) return false;
     seen.add(id);
@@ -350,13 +357,14 @@ async function publicCatalog() {
     products: products
       .filter((p: any) => !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
-        parentRefilling(p.category_id, categories)
+        parentRefilling(p.category_id, categories) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
           : p,
       ),
     banners: check(rows[3]),
     rates: check(rows[4]),
     vip: check(rows[5]),
+    news: check(rows[8]),
     version: 3,
   };
 }
@@ -1237,11 +1245,13 @@ async function staff(a: Actor, b: any) {
     requireRole(a, "manager");
     endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
-      .select("id,endpoint,adapter,currency,is_enabled,config")
+      .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
       .eq("id", uuid(b.id)).single()) : null;
     if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (!old && !b.token) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
     const adapter = ["smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    if (new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
+      throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
     const endpoint = text(b.endpoint, 2000);
@@ -1285,6 +1295,10 @@ async function staff(a: Actor, b: any) {
         p_provider: p.id,
         p_secret: text(b.token, 10000),
       });
+    if (old && Number(old.margin_percent) !== Number(d.margin_percent))
+      await rpc("f90_provider_margin", {
+        p_actor: a.id, p_provider: p.id, p_margin: d.margin_percent,
+      });
     await auditSafe(a.id, "provider.save", p.id,
       { connection_changed: connectionChanged, disabled: !d.is_enabled,
         adapter, automatic_orders_enabled: autoOrders });
@@ -1318,12 +1332,42 @@ async function staff(a: Actor, b: any) {
     });
     return changed;
   }
+  if (action === "provider.visibility") {
+    requireRole(a, "manager");
+    const id = uuid(b.id);
+    if (typeof b.disconnected !== "boolean") throw new AppError("F90_FIELDS");
+    const current = check(await db.from("f90_providers")
+      .select("config").eq("id", id).single());
+    if (current.config?.archived_at) throw new AppError("F90_FIELDS");
+    if (!b.disconnected) {
+      const services = await providerAction(id, "services");
+      if (!Array.isArray(services)) throw new AppError("F90_UNAVAILABLE", 409, "تعذّر التحقق من اتصال المورّد");
+    }
+    const updated = check(await db.from("f90_providers")
+      .update({ config: { ...current.config, disconnected: b.disconnected } })
+      .eq("id", id).select("id,config").single());
+    await auditSafe(a.id, "provider.visibility", id, { disconnected: b.disconnected });
+    return updated;
+  }
   if (action === "provider.archive") {
     requireRole(a, "manager");
     const id = uuid(b.id);
     await rpc("f90_archive_provider", { p_actor: a.id, p_provider: id });
     await auditSafe(a.id, "provider.archive", id, {});
-    return { id, archived: true };
+    return { id, removed_from_catalog: true };
+  }
+  if (action === "catalog.bulk_products") {
+    requireRole(a, "manager", "designer");
+    if (!Array.isArray(b.ids) || b.ids.length < 1 || b.ids.length > 1000)
+      throw new AppError("F90_FIELDS", 400, "اختر من منتج إلى ألف منتج");
+    const ids = b.ids.map(uuid);
+    const mode = text(b.mode, 20);
+    if (!["show", "hide", "move", "image", "delete"].includes(mode))
+      throw new AppError("F90_FIELDS");
+    const value = mode === "move" ? uuid(b.value) :
+      mode === "image" ? text(b.value || "", 2000) : null;
+    return { changed: await rpc("f90_bulk_products",
+      { p_actor: a.id, p_ids: ids, p_mode: mode, p_value: value }) };
   }
   if (action === "provider.services") {
     requireRole(a, "manager");
