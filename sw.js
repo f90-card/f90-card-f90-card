@@ -1,4 +1,4 @@
-const CACHE = "f90-static-v3-5";
+const CACHE = "f90-static-v3-6";
 const STATIC = [
   "./offline.html",
   "./styles.css",
