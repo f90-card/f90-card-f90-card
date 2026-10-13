@@ -15,11 +15,11 @@
     <link rel="icon" id="siteFavicon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./f90-logo.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=20261013-12" />
+    <link rel="stylesheet" href="./styles.css?v=20261013-13" />
     <script>
       try {
         document.documentElement.dataset.theme =
-          ["dark", "cream", "melon"].includes(localStorage.getItem("f90-theme")) ? localStorage.getItem("f90-theme") : "dark";
+          ["dark", "cream"].includes(localStorage.getItem("f90-theme")) ? localStorage.getItem("f90-theme") : "dark";
       } catch {}
     </script>
     <script
@@ -30,8 +30,7 @@
     <script src="./store-core.js" defer></script>
     <script src="./api.js" defer></script>
     <script src="./reports.js?v=20261013-12" defer></script>
-    <script src="./app.js?v=20261013-13" defer></script>
-    <script src="./theme-effects.js" defer></script>
+    <script src="./app.js?v=20261013-14" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#mainContent">إلى المحتوى</a>
@@ -58,6 +57,7 @@
           ></button>
         </form>
         <div class="header-actions">
+          <a class="icon-button f90-header-bell" href="#/notifications" aria-label="الأخبار والإشعارات" title="الأخبار والإشعارات"><span aria-hidden="true">🔔</span></a>
           <a class="wallet-chip" href="#/wallet" id="headerWallet"></a>
           <button
             class="icon-button"
@@ -99,13 +99,9 @@
           >مظهر الموقع<select id="themeSelect">
             <option value="dark">أسود وأحمر</option>
             <option value="cream">حليبي دافئ</option>
-            <option value="melon">بطيخي سماوي متحرك</option>
           </select></label
         >
       </div>
-      <button class="button secondary" id="f90BotToggle" type="button" aria-pressed="true">إخفاء بوت F90</button>
-      <label class="f90-effects-setting">مؤثرات الثيم<select id="f90EffectsLevel"><option value="off">إيقاف</option><option value="soft">خفيفة</option><option value="full">كاملة</option></select></label>
-      <label class="f90-effects-setting">نوع المؤثر<select id="f90WeatherMode"><option value="mix">متنوعة</option><option value="snow">ثلوج</option><option value="rain">مطر</option><option value="wind">رياح</option><option value="hearts">قلوب</option></select></label>
       <button class="button secondary" id="installButton" hidden>
         تثبيت أف تسعين كارد
       </button>
