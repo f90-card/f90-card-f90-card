@@ -2696,3 +2696,27 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .f90-recipient-chooser{padding:12px;background:var(--surface2);border-radius:12px}
 .f90-recipient-chooser[hidden]{display:none!important}
 @media(max-width:780px){.f90-recipient-layout{grid-template-columns:1fr}.f90-recipient-item{align-items:start;flex-direction:column}}
+
+
+/* F90 welcome and lightweight store notices */
+.f90-welcome-hero{position:relative;isolation:isolate;background:radial-gradient(circle at 85% 15%,color-mix(in srgb,var(--accent) 19%,transparent),transparent 48%),var(--surface);box-shadow:0 20px 70px rgba(0,0,0,.12)}
+.f90-welcome-hero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(125deg,transparent 20%,color-mix(in srgb,var(--accent) 14%,transparent) 48%,transparent 73%);animation:f90-welcome-shine 14s ease-in-out infinite alternate;z-index:-1}
+.f90-welcome-hero .button,.f90-welcome-service{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.f90-welcome-hero .button:hover,.f90-welcome-service:hover{transform:translateY(-4px);box-shadow:0 12px 30px color-mix(in srgb,var(--accent) 18%,transparent)}
+.f90-welcome-showcase{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.f90-welcome-service{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0;border:1px solid var(--line)}
+.f90-welcome-service img{width:58px;height:58px;object-fit:contain;border-radius:12px;flex:none}
+.f90-welcome-service strong{min-width:0;line-height:1.5}
+.f90-welcome-method{animation:f90-float 5s ease-in-out infinite alternate}
+.f90-welcome-method:nth-child(2n){animation-delay:-2.5s}
+.f90-social-icon{width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-inline-end:8px}
+.f90-news-item{display:block;text-decoration:none;color:inherit;margin-bottom:12px}
+.f90-news-item:hover{border-color:var(--accent)}
+.f90-popup-copy{white-space:pre-wrap;line-height:1.9;font-size:1.06rem}
+.f90-header-bell{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:19px}
+.f90-wallet-stats{margin:18px 0 28px}
+@keyframes f90-float{to{transform:translateY(-6px)}}
+@keyframes f90-welcome-shine{to{opacity:.3;transform:translateX(-6%)}}
+@media(max-width:900px){.f90-welcome-showcase{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.f90-welcome-showcase{gap:9px}.f90-welcome-service{flex-direction:column;align-items:center;text-align:center;padding:12px}.f90-welcome-service img{width:70px;height:70px}}
+@media(prefers-reduced-motion:reduce){.f90-welcome-hero::before,.f90-welcome-method{animation:none}}
