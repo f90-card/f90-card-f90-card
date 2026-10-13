@@ -1141,8 +1141,6 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.import") {
     requireRole(a, "manager");
-    const importAdapter = check(await db.from("f90_providers").select("adapter").eq("id", uuid(b.id)).single());
-    if (importAdapter.adapter === "omega") throw new AppError("F90_FIELDS", 400, "استيراد أوميغا يحتاج تهيئة حقول المنتجات والأسعار");
     const id = uuid(b.id);
     const p = check(
       await db.from("f90_providers").select("*").eq("id", id).single(),
@@ -1167,10 +1165,15 @@ async function staff(a: Actor, b: any) {
     if (requested.some((id: string) => !id) || new Set(requested).size !== requested.length)
       throw new AppError("F90_FIELDS", 400, "توجد معرّفات خدمات فارغة أو مكررة");
     const categoryId = uuid(b.category_id);
-    const category = check(
-      await db.from("categories").select("id").eq("id", categoryId).single(),
+    const allCategories = check(
+      await db.from("categories").select("id,name"),
     );
-    if (!category) throw new AppError("F90_FIELDS", 400, "القسم غير موجود");
+    const categoryIds = new Set(allCategories.map((c: any) => c.id));
+    if (!categoryIds.has(categoryId)) throw new AppError("F90_FIELDS", 400, "القسم غير موجود");
+    // Individual service category IDs are verified server-side; the supplier
+    // cannot select categories or create public catalog entries itself.
+    const categoriesByService = b.category_ids && typeof b.category_ids === "object" &&
+      !Array.isArray(b.category_ids) ? b.category_ids : {};
     const margin = Number(b.margin_percent ?? p.margin_percent);
     if (!Number.isFinite(margin) || margin < 0 || margin > 10000)
       throw new AppError("F90_FIELDS", 400, "هامش الربح غير صالح");
@@ -1190,12 +1193,17 @@ async function staff(a: Actor, b: any) {
       if (![supplierPrice, unit, min, max, cost, price].every(Number.isFinite) ||
           supplierPrice <= 0 || unit <= 0 || min <= 0 || max < min || price <= 0)
         throw new AppError("F90_FIELDS", 400, "بيانات سعر أو كمية غير صالحة للخدمة " + id);
-      const name = text(b.names?.[id], 200);
-      if (!name) throw new AppError("F90_FIELDS", 400, "أدخل اسمًا للخدمة " + id);
-      return { service, name, cost, price };
+      const name = text(b.names?.[id] ?? service.name, 200);
+      if (!name) throw new AppError("F90_FIELDS", 400, "اسم الخدمة مفقود: " + id);
+      const chosenCategoryId = uuid(categoriesByService[id] || categoryId);
+      if (!categoryIds.has(chosenCategoryId))
+        throw new AppError("F90_FIELDS", 400, "القسم المحدد للخدمة غير موجود: " + id);
+      // Prices are marked up by 5% when Omega's configured margin is 5%;
+      // the sale stays hidden until staff reviews the details and supplier.
+      return { service, name, cost, price, chosenCategoryId };
     });
     const saved = [];
-    for (const { service: s, name, cost, price } of preview) {
+    for (const { service: s, name, cost, price, chosenCategoryId } of preview) {
       const existing = check(
         await db
           .from("f90_product_internal")
@@ -1212,25 +1220,30 @@ async function staff(a: Actor, b: any) {
         kind: "product",
         data: {
           name,
-          category_id: categoryId,
+          category_id: chosenCategoryId,
           is_active: false,
           image_url: b.image_url || "",
           commerce: {
             type: "quantity",
-            fulfillment: "automatic",
+            fulfillment: p.adapter === "omega" ? "manual" : "automatic",
             prices: { USD: price },
             unit_quantity: s.unit_quantity,
             quantity_min: s.min,
             quantity_max: s.max,
             quantity_step: 1,
-            fields: [
-              {
-                id: "account_id",
-                label_ar: "رابط أو معرّف الحساب",
-                type: "text",
-                required: true,
-              },
-            ],
+            fields: s.params?.length
+              ? s.params.map((label: string, i: number) => ({
+                  id: "param_" + (i + 1),
+                  label_ar: label,
+                  type: "text",
+                  required: true,
+                }))
+              : [{
+                  id: "account_id",
+                  label_ar: "رابط أو معرّف الحساب",
+                  type: "text",
+                  required: true,
+                }],
           },
           internal: {
             provider_id: id,
