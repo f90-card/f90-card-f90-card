@@ -2720,3 +2720,5 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 @media(max-width:900px){.f90-welcome-showcase{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.f90-welcome-showcase{gap:9px}.f90-welcome-service{flex-direction:column;align-items:center;text-align:center;padding:12px}.f90-welcome-service img{width:70px;height:70px}}
 @media(prefers-reduced-motion:reduce){.f90-welcome-hero::before,.f90-welcome-method{animation:none}}
+
+.f90-google-mark{font-family:Arial,sans-serif;font-size:22px;font-weight:800;line-height:1;background:conic-gradient(#4285f4 0 85deg,#34a853 85deg 165deg,#fbbc05 165deg 220deg,#ea4335 220deg 295deg,#4285f4 295deg);color:transparent;background-clip:text;-webkit-background-clip:text;margin-inline-end:9px}
