@@ -145,6 +145,7 @@
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     const links = [
       ["/", "الرئيسية", "grid"],
+      ["welcome", "التعرّف على F90", "doc"],
       ["profile", "حسابي", "user"],
       ["wallet", "محفظتي", "wallet"],
       ["deposit", "إضافة رصيد", "plus"],
@@ -275,6 +276,43 @@
     if (pack)
       return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick}><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
     return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
+  }
+  function welcome() {
+    const c = S.settings.config || {};
+    const w = c.welcome || {};
+    const roots = S.categories.filter((category) => !category.parent_id).slice(0, 6);
+    const methods = (c.payment_methods || []).filter((method) => method.enabled);
+    const art = C.safeUrl(w.image_url || c.hero_image || "./assets/sections/hero.png");
+    main.innerHTML = `<div class="f90-welcome">
+      <section class="f90-welcome-hero">
+        <div class="f90-welcome-copy">
+          <span class="eyebrow">F90 CARD · أف تسعين كارد</span>
+          <h1>${e(w.title_ar || "عالمك الرقمي يبدأ هنا")}</h1>
+          <p>${e(w.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.")}</p>
+          <div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/register">إنشاء حساب</a><a class="button ghost" href="#/auth">تسجيل الدخول</a></div>
+        </div>
+        ${art ? `<img src="${e(art)}" alt="${e(w.image_alt_ar || "استكشف متجر F90 Card")}" fetchpriority="high" decoding="async">` : ""}
+      </section>
+      <section class="f90-welcome-section"><div class="section-head"><h2>اكتشف الخدمات</h2><a href="#/">جميع الأقسام</a></div>
+        ${roots.length ? `<div class="image-grid">${roots.map(categoryTile).join("")}</div>` : '<p class="muted">تُجهّز الأقسام حاليًا.</p>'}
+      </section>
+      <section class="f90-welcome-features">
+        <a class="panel" href="#/wallet">${I("wallet")}<h3>محفظتك</h3><p>راجع رصيدك وطلبات الإيداع بعد تسجيل الدخول.</p></a>
+        <a class="panel" href="#/vip">${I("crown")}<h3>مستويات VIP</h3><p>تعرّف إلى مستويات التميّز والخصومات المعلنة.</p></a>
+        <a class="panel" href="#/developers">${I("link")}<h3>التجار والمطورون</h3><p>اطّلع على شروط الربط وبرنامج الوكلاء.</p></a>
+        <a class="panel" href="#/install">${I("plus")}<h3>ثبّت التطبيق</h3><p>أضف المتجر إلى شاشة هاتفك للوصول إليه بسرعة.</p></a>
+      </section>
+      <section class="f90-welcome-section"><div class="section-head"><h2>طرق الإيداع المتاحة</h2></div>
+        ${methods.length ? `<div class="f90-welcome-methods">${methods.map((m) => `<div class="f90-welcome-method">${image(m.image_url, m.name_ar)}<strong>${e(m.name_ar)}</strong></div>`).join("")}</div><p class="muted small">يُضاف الرصيد بعد مراجعة التحويل واعتماده. يلزم توثيق الحساب لتقديم طلب الإيداع.</p>` : '<p class="muted">لا توجد طرق إيداع مفعّلة الآن. تواصل مع الدعم للاستفسار.</p>'}
+      </section>
+      <section class="f90-welcome-section"><h2>أسئلة شائعة</h2><div class="f90-welcome-faq">
+        <details><summary>كيف أبدأ؟</summary><p>أنشئ حسابًا، وثّق هويتك إذا أردت الإيداع والشراء، ثم استعرض الخدمات المتاحة في المتجر.</p></details>
+        <details><summary>متى يصل الرصيد؟</summary><p>بعد تقديم طلب الإيداع وإيصال التحويل، تراجعه الإدارة. يمكنك متابعة الحالة من سجل الإيداعات.</p></details>
+        <details><summary>كيف أتابع الطلب؟</summary><p>ستجد الحالة والتفاصيل في صفحة طلباتي داخل حسابك.</p></details>
+      </div></section>
+      <section class="f90-welcome-bottom panel"><div><h2>جاهز لاستكشاف عالمك الرقمي؟</h2><p>الخدمات والتوفر والأسعار الفعلية تظهر داخل المتجر.</p></div><div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/support">تواصل مع الدعم</a></div></section>
+      <nav class="f90-welcome-policies" aria-label="السياسات"><a href="#/policy/about">من نحن</a><a href="#/policy/privacy">الخصوصية</a><a href="#/policy/terms">الشروط</a><a href="#/policy/purchase">الشراء والاسترداد</a></nav>
+    </div>`;
   }
   function home() {
     const c = S.settings.config,
@@ -720,7 +758,7 @@
     clearTimeout(quoteTimer);
     closeModal();
     toggleDrawer(false);
-    const raw = (location.hash || "#/").replace(/^#\/?/, "");
+    const raw = (location.hash || "#/welcome").replace(/^#\/?/, "");
     let [page, id] = raw.split("/");
     try {
       id = id ? decodeURIComponent(id) : "";
@@ -785,10 +823,12 @@
         }
         return;
       }
-      if (!page) home();
+      if (page === "welcome") welcome();
+      else if (!page) home();
       else if (page === "category") category(id);
       else if (page === "product") product(id);
       else if (page === "auth") auth();
+      else if (page === "register") auth("register");
       else if (page === "profile") profile();
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
