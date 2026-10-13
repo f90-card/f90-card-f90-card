@@ -972,6 +972,14 @@
     if (supplier) {
       const exact = byName(supplier);
       if (exact) return { id: exact.id, review: false };
+      const supplierAliases = [
+        { slug: "قسم-ألالعاب", pattern: /^(?:ال)?العاب|^(?:ال)?gaming|^games?$/u },
+        { slug: "digital-cards", pattern: /(?:بطاقات رقميه|بطاقات هدايا|gift cards|digital cards)/u },
+        { slug: "social-media", pattern: /(?:سوشيال ميديا|social media|social services)/u },
+        { slug: "streaming", pattern: /(?:ال)?بث|streaming services/u },
+      ];
+      const genericAlias = supplierAliases.find((entry) => entry.pattern.test(supplier) && bySlug(entry.slug));
+      if (genericAlias) return { id: bySlug(genericAlias.slug).id, review: false };
       const supplierMatches = rules.filter((rule) => rule.pattern.test(supplier) && bySlug(rule.slug));
       if (supplierMatches.length === 1)
         return { id: bySlug(supplierMatches[0].slug).id, review: false };
