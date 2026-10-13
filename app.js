@@ -224,6 +224,7 @@
     if (!session) {
       S.me = null;
       S.walletStale = false;
+      S.savedRecipients = [];
       return false;
     }
     try {
@@ -1344,6 +1345,7 @@
       } else if (action === "logout") {
         await A.client.auth.signOut();
         S.me = null;
+        S.savedRecipients = [];
         chrome();
         location.hash = "#/";
         route();
@@ -1536,7 +1538,7 @@
       setTimeout(() => {
         location.hash = "#/reset";
       }, 0);
-    if (event === "SIGNED_OUT") { S.me = null; S.walletStale = false; }
+    if (event === "SIGNED_OUT") { S.me = null; S.walletStale = false; S.savedRecipients = []; }
   });
   async function boot() {
     try {
