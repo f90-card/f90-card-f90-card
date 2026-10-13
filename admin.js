@@ -1990,6 +1990,22 @@
   $("adminMenu").addEventListener("click", () =>
     document.body.classList.toggle("admin-menu-open"),
   );
+  function applyAdminTheme(value) {
+    const selected = value === "cream" ? "cream" : "dark";
+    document.documentElement.dataset.theme = selected;
+    const toggle = $("adminThemeToggle");
+    if (toggle) {
+      toggle.textContent = selected === "cream" ? "الثيم الأسود والأحمر" : "الثيم الحليبي";
+      toggle.setAttribute("aria-pressed", String(selected === "cream"));
+    }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = selected === "cream" ? "#ded9d1" : "#090b10";
+    try { localStorage.setItem("f90-theme", selected); } catch {}
+  }
+  $("adminThemeToggle")?.addEventListener("click", () => {
+    applyAdminTheme(document.documentElement.dataset.theme === "cream" ? "dark" : "cream");
+  });
+  applyAdminTheme(document.documentElement.dataset.theme);
   $("adminLogout").addEventListener("click", async () => {
     await A.client.auth.signOut();
     location.href = "./index.html#/auth";
