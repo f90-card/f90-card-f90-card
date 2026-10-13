@@ -116,3 +116,14 @@ test("category tiles open the existing product form in place without another rou
   assert.match(app, /data-action="close-quick-product"/);
   assert.match(styles, /\.f90-quick-product/);
 });
+
+test("wallet checkout always reviews a server quote before spending", () => {
+  assert.match(app, /if \(!confirmed\) \{/);
+  assert.match(app, /data-action="confirm-wallet-checkout"/);
+  assert.match(app, /f90-checkout-review/);
+  assert.match(app, /pending\.quoteSeq !== S\.quoteSeq/);
+  assert.match(app, /pending\.key !== S\.checkoutKey/);
+  assert.match(app, /JSON\.stringify\(Object\.fromEntries\(new FormData\(pending\.form\)\)\) !== pending\.fingerprint/);
+  assert.match(app, /await submit\(pending\.form, true\)/);
+  assert.match(styles, /\.f90-checkout-review/);
+});
