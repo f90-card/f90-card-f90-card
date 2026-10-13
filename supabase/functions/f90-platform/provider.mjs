@@ -57,11 +57,15 @@ export function normalizeService(s) {
   // Unknown stock is deliberately not treated as zero.
   if (omega && s.stock != null && Number(s.stock) === 0) return null;
   const rate = Number(s.rate ?? s.price);
+  // Yassen prices amount products per one item. Quote very cheap products
+  // per 1,000/1,000,000 so the storefront's two-decimal price stays useful.
+  const scale = s._f90_yassen === true && rate < 0.00001 ? 1000000 :
+    s._f90_yassen === true && rate < 0.01 ? 1000 : 1;
   const allowed = Array.isArray(s.qty_values) ? s.qty_values.map(Number) : null;
   const min = Number(s.min ?? s.qty_values?.min ?? (allowed?.length ? Math.min(...allowed) : 1)),
     max = Number(s.max ?? s.qty_values?.max ??
       (allowed?.length ? Math.max(...allowed) : omega && productType !== "amount" ? 1 : 1000000)),
-    unit = Number(s.unit_quantity ?? (omega ? 1 : 1000));
+    unit = Number(s.unit_quantity ?? (omega ? scale : 1000));
   if (
     (s.service == null && s.id == null) ||
     !Number.isFinite(rate) ||
@@ -87,7 +91,7 @@ export function normalizeService(s) {
     id: String(s.service ?? s.id),
     name: name.slice(0, 200),
     category: String(s.category_name ?? s.category ?? "").slice(0, 200),
-    rate, min, max,
+    rate: rate * scale, min, max,
     type: String(s.product_type ?? s.type ?? "Default"),
     unit_quantity: unit,
     params,
@@ -205,7 +209,14 @@ export async function callProvider(
       return { ...data.data[0], status: data.data[0].status === "reject" ? "rejected" :
         data.data[0].status === "accept" ? "completed" : "processing" };
     }
-    return action === "services" ? (Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : Array.isArray(data?.data?.products) ? data.data.products : Array.isArray(data?.products) ? data.products : Array.isArray(data?.result) ? data.result : data) : data;
+    if (action === "services") {
+      const items = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data :
+        Array.isArray(data?.data?.products) ? data.data.products :
+        Array.isArray(data?.products) ? data.products : Array.isArray(data?.result) ? data.result : data;
+      return yassen && Array.isArray(items)
+        ? items.map((item) => ({ ...item, _f90_yassen: true })) : items;
+    }
+    return data;
   }
   let body;
   if (provider.adapter === "smm") {
