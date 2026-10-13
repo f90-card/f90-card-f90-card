@@ -144,20 +144,24 @@
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     const links = [
+      ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
       ["welcome", "التعرّف على F90", "doc"],
+      ["favorites", "المفضلة", "heart"],
+      ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
       ["wallet", "محفظتي", "wallet"],
       ["deposit", "إضافة رصيد", "plus"],
       ["orders", "تتبع طلباتي", "clock"],
       ["history", "سجل الحركات", "doc"],
-      ["favorites", "المفضلة", "heart"],
+      ["@membership", "المزايا والأمان"],
       ["vip", "مستويات التميّز", "crown"],
       ["security", "أمان الحساب", "shield"],
       ["verification", "توثيق الهوية", "check"],
+      ["notifications", "الإشعارات", "bell"],
+      ["@help", "المزيد"],
       ["install", "تثبيت التطبيق", "plus"],
       ["developers", "وكلاؤنا والمبرمجون", "link"],
-      ["notifications", "الإشعارات", "bell"],
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
@@ -165,7 +169,9 @@
       links
         .map(
           ([route, label, icon]) =>
-            `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}${label}</a>`,
+            route.startsWith("@")
+              ? `<div class="f90-drawer-group" role="heading">${e(label)}</div>`
+              : `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}${label}</a>`,
         )
         .join("") +
       (me && ["manager", "admin", "designer", "support"].includes(me.role)
