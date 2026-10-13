@@ -471,22 +471,50 @@
         "اسحب لترتيب العناصر، أو استخدم الأسهم. التكرار ينشئ نسخة مخفية حتى تنشرها.",
         `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>`,
       ) +
-      `<div class="toolbar">${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div><p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
+      `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع المورّدين"], ["__local__", "منتجات بدون مورّد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div>${kind === "products" ? '<div class="f90-bulk-bar"><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button></div>' : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
         rows
           .filter(
             (r) =>
               kind === "products"
-                ? (!S.categoryFilter || r.category_id === S.categoryFilter)
+                ? (!S.categoryFilter || r.category_id === S.categoryFilter) && (!S.providerFilter || (S.providerFilter === "__local__" ? !(S.internal || []).some((i) => i.product_id === r.id && i.provider_id) : (S.internal || []).some((i) => i.product_id === r.id && i.provider_id === S.providerFilter)))
                 : kind === "categories"
                   ? (S.sectionFilter === "all" || (!S.sectionFilter || S.sectionFilter === "root" ? !r.parent_id : r.parent_id === S.sectionFilter))
                   : true,
           )
           .map(
             (r) =>
-              `<article class="catalog-row" draggable="true" data-row-id="${r.id}"><button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
+              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${kind === "products" ? `<input type="checkbox" class="f90-bulk-check" aria-label="تحديد ${e(r.name)}" value="${e(r.id)}">` : ""}<button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
           )
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
+  }
+  let pendingBulk = null;
+  let bulkBusy = false;
+  function selectedBulkProducts() {
+    const ids = new Set([...document.querySelectorAll(".f90-bulk-check:checked")].map((el) => el.value));
+    return S.products.filter((p) => ids.has(p.id));
+  }
+  function updateBulkCount() {
+    const node = $("bulkSelectionCount");
+    if (node) node.textContent = selectedBulkProducts().length + " محدد";
+  }
+  async function runBulkProducts(pending, status) {
+    if (!pending || !["show", "hide", "move"].includes(pending.mode)) throw new Error("عملية جماعية غير معروفة");
+    let done = 0, failed = 0;
+    for (const id of pending.ids) {
+      const row = S.products.find((p) => p.id === id);
+      if (!row) { failed++; continue; }
+      const data = { ...row };
+      if (pending.mode === "show") data.is_active = true;
+      if (pending.mode === "hide") data.is_active = false;
+      if (pending.mode === "move") data.category_id = pending.categoryId;
+      try {
+        await A.call("catalog.save", { kind: "product", id, data });
+        done++;
+      } catch { failed++; }
+      if (status) status.textContent = "تم: " + done + " · تعذّر: " + failed + " · من: " + pending.ids.length;
+    }
+    return { done, failed };
   }
   function libraryButtons() {
     return `<div class="library-picker">${library.map(([k, n]) => `<button type="button" data-action="pick-image" data-url="./assets/sections/${k}.png" aria-label="${n}">${image("./assets/sections/" + k + ".png", n)}</button>`).join("")}</div>`;
@@ -1476,7 +1504,40 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
-      if (action === "erase-identity") {
+      if (action === "bulk-select-visible") {
+        document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = true; });
+        updateBulkCount();
+      } else if (action === "bulk-clear") {
+        document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = false; });
+        updateBulkCount();
+      } else if (action === "bulk-visibility" || action === "bulk-move") {
+        if (bulkBusy) return;
+        const chosen = selectedBulkProducts();
+        if (!chosen.length) throw new Error("حدد منتجًا واحدًا على الأقل");
+        const mode = action === "bulk-move" ? "move" : b.dataset.active === "true" ? "show" : "hide";
+        pendingBulk = { ids: chosen.map((p) => p.id), mode };
+        modal("تأكيد تعديل " + chosen.length + " منتج", `<p>ستُطبق العملية على ${chosen.length} منتج محدد فقط. سجلات الطلبات القديمة لن تُحذف.</p>${mode === "move" ? select("bulkTargetCategory", "القسم المستهدف", categoryOptions(false), S.categoryFilter || "").replace("<select ", '<select id="bulkTargetCategory" ') : ""}<button class="button" data-action="bulk-confirm">تأكيد التنفيذ</button><p class="muted small" id="bulkProgress"></p>`);
+      } else if (action === "bulk-confirm") {
+        if (!pendingBulk || bulkBusy) return;
+        const pending = pendingBulk;
+        if (pending.mode === "move") {
+          const target = $("bulkTargetCategory")?.value;
+          if (!S.categories.some((c) => c.id === target)) throw new Error("اختر قسمًا صحيحًا");
+          pending.categoryId = target;
+        }
+        bulkBusy = true;
+        b.disabled = true;
+        try {
+          const summary = await runBulkProducts(pending, $("bulkProgress"));
+          pendingBulk = null;
+          closeModal();
+          toast("تم تعديل " + summary.done + " منتج، وتعذّر " + summary.failed);
+          await catalogPage("products");
+        } finally {
+          bulkBusy = false;
+          if (b.isConnected) b.disabled = false;
+        }
+      } else if (action === "erase-identity") {
         modal(
           "حذف صور التوثيق",
           `<p>ستُحذف الصور الخاصة، ويبقى سجل قرار المراجعة. استخدم ذلك بعد طلب العميل أو وفق سياسة الاحتفاظ.</p><button class="button danger" data-action="confirm-erase-identity">تأكيد حذف الصور</button>`,
@@ -1875,6 +1936,11 @@
       dashboard(S.active === "leaderboard").catch((err) =>
         toast(errorMessage(err)),
       );
+    } else if (ev.target.matches(".f90-bulk-check")) {
+      updateBulkCount();
+    } else if (ev.target.id === "providerFilter") {
+      S.providerFilter = ev.target.value;
+      catalogPage("products").catch((err) => toast(errorMessage(err)));
     } else if (ev.target.id === "categoryFilter") {
       S.categoryFilter = ev.target.value;
       catalogPage("products");
