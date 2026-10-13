@@ -140,3 +140,13 @@ test("RTL header keeps profile in drawer and menu beside wallet", () => {
   assert.match(site, /id="themeSelect"/);
   assert.doesNotMatch(app, /\$\("headerUser"\)|\$\("themeButton"\)/);
 });
+
+
+test("quick product uses a closable centered dialog with the original purchase form", () => {
+  assert.match(app, /id="quickProductBackdrop"/);
+  assert.match(app, /id="quickProductPanel"[^>]*role="dialog"/);
+  assert.match(app, /function closeQuickProduct\(\)/);
+  assert.match(app, /if \(ev\.key === "Escape"\) \{[\s\S]*?closeQuickProduct\(\)/);
+  assert.match(styles, /\.f90-quick-product \{\s*position: fixed;/);
+  assert.match(styles, /\.f90-quick-product \.product-art \{ display: none; \}/);
+});
