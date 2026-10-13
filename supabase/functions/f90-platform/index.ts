@@ -716,18 +716,20 @@ async function staff(a: Actor, b: any) {
         db.from(t).select("*").order("sort_order"),
       ),
     );
+    const allProviders = check(await db.from("f90_providers")
+      .select("id,name,is_enabled,config"));
+    const archivedIds = new Set(allProviders.filter((p: any) => p.config?.archived_at)
+      .map((p: any) => p.id));
+    const internals = check(await db.from("f90_product_internal").select("*"));
+    const archivedProductIds = new Set(internals.filter((i: any) => archivedIds.has(i.provider_id))
+      .map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]),
+      products: check(rows[1]).filter((p: any) => !archivedProductIds.has(p.id)),
       banners: check(rows[2]),
-      internal:
-        a.role === "manager"
-          ? check(await db.from("f90_product_internal").select("*"))
-          : [],
-      providers:
-        a.role === "manager"
-          ? check(await db.from("f90_providers").select("id,name,is_enabled"))
-          : [],
+      internal: a.role === "manager" ? internals.filter((i: any) => !archivedIds.has(i.provider_id)) : [],
+      providers: a.role === "manager" ? allProviders.filter((p: any) => !p.config?.archived_at)
+        .map(({ id, name, is_enabled }: any) => ({ id, name, is_enabled })) : [],
     };
   }
   if (action === "catalog.save") return catalogSave(a, b);
