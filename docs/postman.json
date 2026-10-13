@@ -43,6 +43,47 @@
       "response": []
     },
     {
+      "name": "أقسام التاجر",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"categories\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "خدمات التاجر",
       "request": {
         "method": "POST",
@@ -63,6 +104,47 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"action\": \"services\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/functions/v1/f90-platform",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "f90-platform"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "تفاصيل خدمة",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{publishable_key}}"
+          },
+          {
+            "key": "x-f90-key",
+            "value": "{{f90_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"service\",\n  \"service\": \"PRODUCT_UUID\"\n}",
           "options": {
             "raw": {
               "language": "json"
