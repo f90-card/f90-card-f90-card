@@ -24,6 +24,7 @@
     offset: 0,
     carousel: 0,
     favorites: [],
+    savedRecipients: [],
     authMode: "login",
     currencyPreference: false,
   };
@@ -150,6 +151,7 @@
       ["favorites", "المفضلة", "heart"],
       ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
+      ["recipients", "دفتر العملاء", "doc"],
       ["wallet", "محفظتي", "wallet"],
       ["deposit", "إضافة رصيد", "plus"],
       ["orders", "تتبع طلباتي", "clock"],
@@ -476,7 +478,7 @@
           },
         ];
     const productHtml = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)}</h1><div class="badges"><span class="badge">${disabled ? "الخدمة متوقفة مؤقتًا" : I(c.fulfillment === "automatic" ? "link" : "user") + (c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")}</span>${!disabled && c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${disabled ? '<p class="product-description">هذه الخدمة متوقفة مؤقتًا إلى حين تهيئة تنفيذها.</p>' : p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="actions"><button class="button secondary small" data-action="share">${I("copy")}نسخ الرابط</button><button class="button secondary small" data-action="favorite" data-id="${p.id}">${I("heart")}${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "أضف للمفضلة"}</button></div><div class="price-board" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
- <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "تأكيد الشراء من المحفظة" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
+ <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "تأكيد الشراء من المحفظة" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
     if (inline) {
       const panel = $("quickProductPanel");
       if (!panel) return;
@@ -487,6 +489,7 @@
     } else {
       main.innerHTML = productHtml;
     }
+    if (S.me) loadCheckoutRecipients($("checkoutForm"));
     if (!disabled) quoteProduct(p);
     else
       $("quoteError").textContent = "الخدمة قيد التعبئة ولا يمكن شراؤها حاليًا";
@@ -529,7 +532,48 @@
   function profile() {
     const me = S.me,
       p = me.profile;
-    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور، أو قدّم توثيقًا اختياريًا لحسابك.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id">${e(p.customer_id)}</div><div class="f90-profile-links"><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats"><div><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+  }
+  async function recipients() {
+    const seq = S.route;
+    main.innerHTML = pageHead("دفتر العملاء", "احفظ معرّفات الألعاب وأرقام الهاتف التي تستخدمها للشحن. لا تحفظ كلمات مرور أو بيانات دفع هنا.") +
+      '<div id="recipientsContent" class="loading">جارٍ تحميل البيانات المحفوظة…</div>';
+    const result = await A.call("recipients.list");
+    if (seq !== S.route) return;
+    S.savedRecipients = result.items || [];
+    $("recipientsContent").outerHTML = `<div class="f90-recipient-layout">
+      <section class="panel"><h2 id="recipientFormTitle">إضافة جهة</h2>
+        <form id="recipientForm">
+          <input type="hidden" name="id" value="">
+          ${field("label", "اسم مختصر", "text", "", 'required maxlength="50" placeholder="مثال: حساب ببجي"')}
+          ${select("kind", "نوع المعرّف", [["account_id", "معرّف حساب أو لعبة"], ["phone", "رقم هاتف"]], "account_id")}
+          ${field("value", "المعرّف أو رقم الهاتف", "text", "", 'required minlength="2" maxlength="120" autocomplete="off" dir="ltr"')}
+          <p class="muted small">يمكنك اختيار البيانات المحفوظة عند شراء خدمة تطلب معرّف حساب أو رقم هاتف. لا يُنشئ حفظها أي طلب أو خصم.</p>
+          <div class="actions"><button class="button" type="submit">حفظ</button><button class="button secondary" type="button" data-action="recipient-reset">إلغاء التحرير</button></div>
+        </form>
+      </section>
+      <section class="panel"><h2>البيانات المحفوظة</h2>
+        ${S.savedRecipients.length ? `<div class="f90-recipient-list">${S.savedRecipients.map((item) => `<article class="f90-recipient-item"><div><strong>${e(item.label)}</strong><span class="muted small">${item.kind === "phone" ? "هاتف" : "معرّف حساب"}</span><code dir="ltr">${e(item.value)}</code></div><div class="actions"><button class="button secondary small" data-action="recipient-edit" data-id="${e(item.id)}">تعديل</button><button class="button ghost small" data-action="recipient-delete" data-id="${e(item.id)}">حذف</button></div></article>`).join("")}</div>` : '<p class="muted">لم تحفظ أي بيانات بعد.</p>'}
+      </section>
+    </div>`;
+  }
+  async function loadCheckoutRecipients(form) {
+    const select = form.querySelector("#savedRecipient");
+    if (!select) return;
+    try {
+      const result = await A.call("recipients.list");
+      if (!form.isConnected) return;
+      S.savedRecipients = result.items || [];
+      const kinds = [...form.elements].filter((el) => el.name?.startsWith("customer_"))
+        .map((el) => el.name.slice(9));
+      const rows = S.savedRecipients.filter((item) => kinds.includes(item.kind));
+      select.innerHTML = '<option value="">أدخل البيانات يدويًا</option>' +
+        rows.map((item) => `<option value="${e(item.id)}">${e(item.label)} · ${e(item.value)}</option>`).join("");
+      select.disabled = !rows.length;
+      if (!rows.length) select.closest(".f90-recipient-chooser").hidden = true;
+    } catch {
+      if (form.isConnected) select.closest(".f90-recipient-chooser").hidden = true;
+    }
   }
   function installPage() {
     main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "اختصار آمن لمتجرك على شاشة هاتفك، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="./assets/icons/icon-192.png" alt="شعار تطبيق F90 Card" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت الموقع كتطبيق للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>أندرويد</h3><p>افتح الموقع عبر Chrome، ثم من قائمة المتصفح اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</p></section><section><h3>آيفون وآيباد</h3><p>افتح الموقع في Safari، واضغط «مشاركة»، ثم «إضافة إلى الشاشة الرئيسية».</p></section></div><p class="muted small">إذا كان التطبيق مثبتًا بالفعل، يمكنك فتحه مباشرة من الشاشة الرئيسية.</p></section>`;
@@ -775,6 +819,7 @@
     if (!["orders", "deposits", "history"].includes(page)) S.offset = 0;
     const privatePages = [
       "profile",
+      "recipients",
       "wallet",
       "deposit",
       "orders",
@@ -836,6 +881,7 @@
       else if (page === "auth") auth();
       else if (page === "register") auth("register");
       else if (page === "profile") profile();
+      else if (page === "recipients") await recipients();
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
@@ -955,6 +1001,12 @@
       chrome();
       location.hash = "#/profile";
       await route();
+      return;
+    }
+    if (form.id === "recipientForm") {
+      await A.call("recipients.save", { id: data.id || undefined, kind: data.kind, label: data.label, value: data.value });
+      toast("تم حفظ البيانات في دفتر العملاء");
+      await recipients();
       return;
     }
     if (form.id === "checkoutForm") {
@@ -1190,6 +1242,7 @@
         "authForm",
         "checkoutForm",
         "profileForm",
+        "recipientForm",
         "depositForm",
         "verificationForm",
         "passwordForm",
@@ -1220,6 +1273,7 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.id === "savedRecipient") return;
     if (ev.target.closest("#checkoutForm")) {
       S.quote = null;
       const p = S.products.find(
@@ -1242,6 +1296,16 @@
         " · بعد الموافقة";
     }
   });
+  document.addEventListener("change", (ev) => {
+    if (ev.target.id !== "savedRecipient") return;
+    const item = S.savedRecipients.find((row) => row.id === ev.target.value);
+    const input = item && $("checkoutForm")?.elements["customer_" + item.kind];
+    if (input) {
+      input.value = item.value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.focus();
+    }
+  });
   document.addEventListener("click", async (ev) => {
     const button = ev.target.closest("[data-action],[data-close-modal]");
     if (ev.target.closest("#drawer a")) toggleDrawer(false);
@@ -1252,7 +1316,32 @@
     }
     const action = button.dataset.action;
     try {
-      if (action === "logout") {
+      if (action === "recipient-reset") {
+        const form = $("recipientForm");
+        form?.reset();
+        if (form) form.elements.id.value = "";
+        $("recipientFormTitle").textContent = "إضافة جهة";
+      } else if (action === "recipient-edit") {
+        const item = S.savedRecipients.find((row) => row.id === button.dataset.id);
+        const form = $("recipientForm");
+        if (!item || !form) return;
+        form.elements.id.value = item.id;
+        form.elements.label.value = item.label;
+        form.elements.kind.value = item.kind;
+        form.elements.value.value = item.value;
+        $("recipientFormTitle").textContent = "تعديل جهة";
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+        form.elements.label.focus();
+      } else if (action === "recipient-delete") {
+        const item = S.savedRecipients.find((row) => row.id === button.dataset.id);
+        if (!item) return;
+        modal("حذف البيانات المحفوظة", `<p>حذف ${e(item.label)} من دفتر العملاء؟ لن يؤثر ذلك على الطلبات السابقة.</p><div class="actions"><button class="button secondary" data-close-modal>إلغاء</button><button class="button" data-action="recipient-delete-confirm" data-id="${e(item.id)}">حذف</button></div>`);
+      } else if (action === "recipient-delete-confirm") {
+        await A.call("recipients.delete", { id: button.dataset.id });
+        closeModal();
+        toast("حُذفت البيانات المحفوظة");
+        await recipients();
+      } else if (action === "logout") {
         await A.client.auth.signOut();
         S.me = null;
         chrome();
