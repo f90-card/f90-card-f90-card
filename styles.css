@@ -2334,3 +2334,60 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
     animation: none;
   }
 }
+
+/* F90 third skin: watermelon, sky and mint. A single feature-complete UI. */
+:root[data-theme="melon"] {
+  color-scheme: light;
+  --bg: #e1f4f1;
+  --surface: #fffaf8;
+  --surface2: #e5f2fa;
+  --line: #b4d8dd;
+  --text: #173449;
+  --muted: #49697a;
+  --accent: #ed687d;
+  --accent2: #b94571;
+  --gold: #a76c28;
+  --green: #168876;
+  --shadow: 0 15px 40px #2a779d1f;
+  --f90-glow: #6bd2e3;
+}
+:root[data-theme="melon"] body:before {
+  background: radial-gradient(ellipse at 92% 8%, #ef84934d, transparent 42%),
+              radial-gradient(ellipse at 8% 68%, #6edacf59, transparent 47%),
+              linear-gradient(150deg,#e7f8f5,#e7ecff 52%,#f9e4e9);
+  animation: f90-melon-haze 18s ease-in-out infinite alternate;
+}
+:root[data-theme="melon"] :is(.site-header,.admin-top,.admin-sidebar,.drawer) {
+  background: #f6feffec;
+  backdrop-filter: blur(18px);
+}
+:root[data-theme="melon"] :is(.panel,.catalog-row,.image-tile,.product-card,.category-card,.method-tile,.modal) {
+  border-color: #79cddb8c;
+  box-shadow: 0 4px 22px #5eadd523, 0 0 0 1px #f3a1c337;
+  transition: box-shadow .28s ease, transform .28s ease, border-color .28s ease;
+}
+:root[data-theme="melon"] :is(.catalog-row,.image-tile,.product-card,.category-card):hover {
+  border-color: var(--f90-glow);
+  box-shadow: 0 9px 30px #58afc83a, 0 0 17px #ef93bd4a;
+  transform: translateY(-3px);
+}
+:root[data-theme="melon"] :is(.button,.icon-button):not(:disabled) {
+  transition: filter .24s ease, box-shadow .24s ease, transform .24s ease;
+}
+:root[data-theme="melon"] :is(.button,.icon-button):not(:disabled):hover {
+  filter: brightness(1.04);
+  box-shadow: 0 0 13px #66ccd56b;
+}
+:root[data-theme="melon"] .home-hero,
+:root[data-theme="melon"] .category-art { background: #d3e7f2; }
+:root[data-theme="melon"] .admin-sidebar nav a.active {
+  background: linear-gradient(110deg,#ed687d21,#77d7e241);
+}
+:root[data-theme="melon"] :is(input,textarea,select) { color: var(--text); accent-color: var(--accent); }
+:root[data-theme="melon"] :is(input,textarea,select)::placeholder {color:#637d89;}
+@keyframes f90-melon-haze {from{filter:hue-rotate(0)}to{filter:hue-rotate(9deg)}}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="melon"] body:before {animation:none;}
+  :root[data-theme="melon"] :is(.catalog-row,.image-tile,.product-card,.category-card):hover {transform:none;}
+  :root[data-theme="melon"] * {scroll-behavior:auto;}
+}
