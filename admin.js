@@ -929,28 +929,55 @@
           ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button>${omega ? '<button class="button secondary" type="button" data-action="omega-import-all">استيراد جميع خدمات أوميغا كمسودات</button>' : ""}</div></form></section>`;
   }
   function providerServiceCategory(service) {
-    const norm = (x) => String(x || "").toLocaleLowerCase("ar").trim();
+    // Assign a confident category only. All imported Omega products remain
+    // unpublished drafts regardless of this classification.
+    const norm = (value) => String(value || "")
+      .toLocaleLowerCase("ar")
+      .normalize("NFKC")
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+      .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+      .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const title = norm(service.name);
     const supplier = norm(service.category);
-    const matching = S.categories.find((c) => norm(c.name) === supplier);
-    if (matching) return { id: matching.id, review: false };
-    const combined = norm(service.category + " " + service.name);
-    const groups = [
-      [/ببجي|pubg|playerunknown/, "قسم-ألالعاب"],
-      [/ألعاب|العاب|game|gaming|free fire|فري فاير|roblox|روبلوكس|steam|ستيم/, "قسم-ألالعاب"],
-      [/بطاق|gift.?card|voucher|قسيم|itunes|آيتونز|جوجل بلاي|google play|amazon|أمازون/, "digital-cards"],
-      [/نتفلكس|netflix|شاهد|spotify|سبوتيفاي|stream|مشاهدة|disney|ديزني/, "streaming"],
-      [/ذكاء اصطناعي|chatgpt|openai|ai tools|artificial intelligence|midjourney/, "artificial-intelligence"],
-      [/فيسبوك|facebook|انستغرام|instagram|تيك.?توك|tiktok|يوتيوب|youtube|متابع|لايك|social media|سوشيال/, "social-media"],
-      [/جوال|اتصالات|رصيد هاتف|شحن هاتف|mobile credit|airtime/, "mobile-credit"],
-      [/تطبيق|application|app store|برنامج|لايف|live/, "applications"],
+    const categories = S.categories || [];
+    const bySlug = (slug) => categories.find((c) => c.slug === slug);
+    const byName = (label) => categories.find((c) => norm(c.name) === label || norm(c.slug) === label);
+    const fallback = bySlug("store-services") || categories[0];
+    const fallbackResult = { id: fallback?.id || "", review: true };
+
+    // Product-specific keywords outrank broad supplier labels such as
+    // "Games" or "Applications": Steam gift cards are not game top-ups.
+    const rules = [
+      { slug: "digital-cards", pattern: /(?:بطاق(?:ه|ات)?|كروت|قسيم(?:ه|ات)?|gift card|voucher|wallet code|redeem code|steam wallet|google play|جوجل بلاي|itunes|ايتونز|amazon gift|امازون|apple gift|ابل ستور|playstation card|psn card|xbox gift)/u },
+      { slug: "streaming", pattern: /(?:نتفلكس|netflix|شاهد|shahid|spotify|سبوتيفاي|disney|ديزني|prime video|اشتراك مشاهده)/u },
+      { slug: "artificial-intelligence", pattern: /(?:chatgpt|openai|شات جي بي تي|ذكاء اصطناعي|midjourney|claude ai|gemini ai|perplexity)/u },
+      { slug: "mobile-credit", pattern: /(?:رصيد هاتف|شحن هاتف|شحن جوال|اتصالات|airtime|mobile topup|mobile recharge)/u },
+      { slug: "social-media", pattern: /(?:متابع(?:ين)?|لايكات|اعجابات|مشاهدات|followers|likes|views|instagram|انستغرام|facebook|فيسبوك|tiktok|تيك توك|youtube|يوتيوب|telegram|تلجرام)/u },
+      { slug: "قسم-ألالعاب", pattern: /(?:pubg|ببجي|شدات|free fire|فري فاير|جواهر|roblox|روبلوكس|game topup|gaming credit|fortnite|فورتنايت|uc pubg)/u },
+      { slug: "applications", pattern: /(?:تطبيقات|برامج|application|app subscription|اشتراك تطبيق|live app|لايف)/u },
     ];
-    for (const [pattern, slug] of groups) {
-      if (!pattern.test(combined)) continue;
-      const category = S.categories.find((c) => c.slug === slug);
-      if (category) return { id: category.id, review: false };
+    // A title with competing signals is uncertain, e.g. an Instagram
+    // gift card or an AI subscription sold as a code.
+    const titleMatches = rules.filter((rule) => rule.pattern.test(title) && bySlug(rule.slug));
+    if (titleMatches.length === 1) return { id: bySlug(titleMatches[0].slug).id, review: false };
+    if (titleMatches.length > 1) {
+      // Explicit vouchers are stronger than the unrelated service brand.
+      const card = titleMatches.find((rule) => rule.slug === "digital-cards");
+      if (card && /(?:بطاق(?:ه|ات)?|كروت|قسيم(?:ه|ات)?|gift card|voucher|wallet code|redeem code|steam wallet|google play)/u.test(title))
+        return { id: bySlug("digital-cards").id, review: false };
+      return { ...fallbackResult, review: true };
     }
-    const fallback = S.categories.find((c) => c.slug === "store-services");
-    return { id: fallback?.id || S.categories[0]?.id || "", review: true };
+
+    // Use supplier's declared category before broad hints.
+    if (supplier) {
+      const exact = byName(supplier);
+      if (exact) return { id: exact.id, review: false };
+      const supplierMatches = rules.filter((rule) => rule.pattern.test(supplier) && bySlug(rule.slug));
+      if (supplierMatches.length === 1)
+        return { id: bySlug(supplierMatches[0].slug).id, review: false };
+    }
+    // No confident signal: hold as an unpublished draft for manual sorting.
+    return fallbackResult;
   }
   async function importAllProviderDrafts(provider, status) {
     if (!provider || provider.adapter !== "omega")
