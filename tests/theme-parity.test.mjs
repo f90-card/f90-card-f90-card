@@ -93,3 +93,15 @@ test("full snowfall only frosts decoration and respects reduced motion", () => {
   assert.match(styles, /\.f90-frosted/);
   assert.match(styles, /\.f90-mascot-still/);
 });
+
+test("decorative bot recedes during forms and dialogs", () => {
+  const bot = read("theme-effects.js");
+  assert.match(bot, /function|const syncObstruction/);
+  assert.match(bot, /f90-bot-paused/);
+  assert.match(bot, /focusedForm/);
+  assert.match(styles, /\.f90-mascot\.f90-bot-paused/);
+});
+test("back navigation removed from markup and route controller", () => {
+  assert.doesNotMatch(site, /id="pageBack"/);
+  assert.doesNotMatch(app, /\$\("pageBack"\)/);
+});
