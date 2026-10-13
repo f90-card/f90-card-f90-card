@@ -1480,6 +1480,43 @@ Deno.serve(async (req: Request) => {
       throw new AppError("F90_FORBIDDEN");
     if (action === "me") return out(await summary(a));
     protect(a);
+    if (action === "recipients.list") {
+      return out({ items: check(await db.from("f90_saved_recipients")
+        .select("id,kind,label,value,created_at")
+        .eq("user_id", a.id).order("created_at", { ascending: false }).limit(30)) });
+    }
+    if (action === "recipients.save") {
+      const kind = text(b.kind, 30);
+      const label = String(b.label ?? "").trim();
+      const value = String(b.value ?? "").trim();
+      if (!["account_id", "phone"].includes(kind) || !label || label.length > 50 ||
+          value.length < 2 || value.length > 120 || /[\r\n\t]/.test(value))
+        throw new AppError("F90_FIELDS");
+      if (kind === "phone" && !/^\+?[0-9 ()-]{6,25}$/.test(value))
+        throw new AppError("F90_FIELDS");
+      const data = { kind, label, value };
+      if (b.id) {
+        const updated = check(await db.from("f90_saved_recipients")
+          .update(data).eq("id", uuid(b.id)).eq("user_id", a.id)
+          .select("id,kind,label,value,created_at").maybeSingle());
+        if (!updated) throw new AppError("F90_NOT_FOUND");
+        return out(updated);
+      }
+      const { count, error } = await db.from("f90_saved_recipients")
+        .select("id", { count: "exact", head: true }).eq("user_id", a.id);
+      if (error) throw error;
+      if ((count || 0) >= 30) throw new AppError("F90_FIELDS", 400, "الحد الأعلى ٣٠ جهة محفوظة");
+      return out(check(await db.from("f90_saved_recipients")
+        .insert({ ...data, user_id: a.id })
+        .select("id,kind,label,value,created_at").single()));
+    }
+    if (action === "recipients.delete") {
+      const removed = check(await db.from("f90_saved_recipients")
+        .delete().eq("id", uuid(b.id)).eq("user_id", a.id)
+        .select("id").maybeSingle());
+      if (!removed) throw new AppError("F90_NOT_FOUND");
+      return out({ deleted: true });
+    }
     if (action === "services") {
       scoped(a, "catalog");
       const prices =
