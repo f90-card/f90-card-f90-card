@@ -5,6 +5,8 @@ on:
     paths:
       - "api.js"
       - "tests/server-guards.test.mjs"
+      - "tests/omega-import.test.mjs"
+      - "supabase/functions/f90-platform/provider.mjs"
       - "supabase/functions/f90-platform/index.ts"
       - "app.js"
       - "admin.js"
@@ -16,6 +18,8 @@ on:
     paths:
       - "api.js"
       - "tests/server-guards.test.mjs"
+      - "tests/omega-import.test.mjs"
+      - "supabase/functions/f90-platform/provider.mjs"
       - "supabase/functions/f90-platform/index.ts"
       - "app.js"
       - "tests/payment-safety.test.mjs"
