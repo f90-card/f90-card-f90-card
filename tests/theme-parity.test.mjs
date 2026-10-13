@@ -34,3 +34,17 @@ test("theme switching never sends financial or account requests", () => {
   assert.ok(block.length > 0);
   assert.doesNotMatch(block, /A\.call\(|fetch\(|signOut\(|\.update\(/);
 });
+
+test("third melon skin is selectable on storefront and in admin default settings", () => {
+  assert.match(site, /option value="melon"/);
+  assert.match(adminApp, /\["melon", "بطيخي سماوي متحرك"\]/);
+  assert.match(styles, /:root\[data-theme="melon"\]/);
+  assert.match(app, /\["dark", "cream", "melon"\]\.includes\(v\)/);
+});
+test("F90 bot cannot send purchases and supports user dismissal", () => {
+  assert.match(site, /theme-effects\.js/);
+  const bot = read("theme-effects.js");
+  assert.match(bot, /sessionStorage\.setItem\("f90-mascot-hidden"/);
+  assert.match(bot, /prefers-reduced-motion/);
+  assert.doesNotMatch(bot, /\bfetch\(|A\.call\(|checkout|paymentReference/);
+});
