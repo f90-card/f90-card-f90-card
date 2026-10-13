@@ -515,7 +515,7 @@
         "اسحب لترتيب العناصر، أو استخدم الأسهم. التكرار ينشئ نسخة مخفية حتى تنشرها.",
         `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>`,
       ) +
-      `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع المورّدين"], ["__local__", "منتجات بدون مورّد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div>${kind === "products" ? '<div class="f90-bulk-bar"><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button></div>' : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
+      `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع المورّدين"], ["__local__", "منتجات بدون مورّد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div>${kind === "products" ? '<div class="f90-bulk-bar"><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button><button type="button" class="button secondary small" data-action="bulk-image">صورة موحدة/إزالة الصور</button><button type="button" class="button danger small" data-action="bulk-delete">حذف المحدد</button></div>' : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
         rows
           .filter(
             (r) =>
@@ -543,22 +543,16 @@
     if (node) node.textContent = selectedBulkProducts().length + " محدد";
   }
   async function runBulkProducts(pending, status) {
-    if (!pending || !["show", "hide", "move"].includes(pending.mode)) throw new Error("عملية جماعية غير معروفة");
-    let done = 0, failed = 0;
-    for (const id of pending.ids) {
-      const row = S.products.find((p) => p.id === id);
-      if (!row) { failed++; continue; }
-      const data = { ...row };
-      if (pending.mode === "show") data.is_active = true;
-      if (pending.mode === "hide") data.is_active = false;
-      if (pending.mode === "move") data.category_id = pending.categoryId;
-      try {
-        await A.call("catalog.save", { kind: "product", id, data });
-        done++;
-      } catch { failed++; }
-      if (status) status.textContent = "تم: " + done + " · تعذّر: " + failed + " · من: " + pending.ids.length;
+    if (!pending || !["show", "hide", "move", "image", "delete"].includes(pending.mode)) throw new Error("عملية جماعية غير معروفة");
+    let value = pending.mode === "move" ? pending.categoryId : null;
+    if (pending.mode === "image") {
+      const file = $("bulkImageFile")?.files?.[0];
+      value = file ? (await A.upload(file, "f90-images", "products")).url :
+        $("bulkImageURL")?.value?.trim() || "";
     }
-    return { done, failed };
+    const result = await A.call("catalog.bulk_products", { ids: pending.ids, mode: pending.mode, value });
+    if (status) status.textContent = "اكتمل تعديل " + result.changed + " منتج";
+    return { done: result.changed, failed: 0 };
   }
   function libraryButtons() {
     return `<div class="library-picker">${library.map(([k, n]) => `<button type="button" data-action="pick-image" data-url="./assets/sections/${k}.png" aria-label="${n}">${image("./assets/sections/" + k + ".png", n)}</button>`).join("")}</div>`;
@@ -848,7 +842,7 @@
     main.innerHTML =
       head(
         "هويتك، على طريقتك",
-        "الشعار، موضعه وحركته، التطبيق، الثيمين، وواجهة المتجر.",
+        "الشعار، التطبيق، المظهر الليلي والنهاري، وواجهة المتجر.",
       ) +
       `<form id="settingsForm"><div class="editor"><section class="panel">${field("store_name", "اسم الموقع", "text", d.store_name, 'required maxlength="100"')}${field("contact_email", "بريد التواصل", "email", d.contact_email || "")}${field("whatsapp", "رقم واتساب للدعم <small>اختياري</small>", "tel", c.whatsapp || "", 'dir="ltr"')}${field("primary_color", "لون الهوية", "color", d.primary_color || "#fa2444")}${select(
         "default_theme",
@@ -856,14 +850,13 @@
         [
           ["dark", "أسود وأحمر"],
           ["cream", "حليبي هادئ"],
-          ["melon", "بطيخي سماوي متحرك"],
         ],
         c.default_theme || "dark",
       )}${select(
         "currency",
         "عملة العرض الافتراضية",
-        S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
-        d.currency || "USD",
+        [["USD", "دولار أمريكي"]],
+        "USD",
       )}${select(
         "logo_fit",
         "طريقة عرض الشعار",
@@ -872,10 +865,10 @@
           ["contain", "الصورة كاملة"],
         ],
         c.logo_fit || "cover",
-      )}<div class="field-row">${field("logo_x", "تحريك الشعار يمين / يسار", "number", c.logo_x || 0, 'min="-100" max="100"')}${field("logo_y", "تحريك الشعار أعلى / أسفل", "number", c.logo_y || 0, 'min="-100" max="100"')}</div>${check("logo_motion", "إضافة حركة لطيفة للشعار", c.logo_motion)}<p class="muted small">يمكن رفع شعار متحرك. تعتمد الحركة على صورة متحركة أو خيار الحركة أعلاه.</p>${field("app_icon_url", "صورة أيقونة التطبيق <small>يفضل صورة مربعة ثابتة</small>", "text", c.app_icon_url || "")}${field("app_icon_file", "رفع أيقونة التطبيق", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<div class="form-section"><h3>واجهة المتجر</h3>${check("show_banners", "إظهار صور الإعلانات", c.show_banners !== false)}${check("show_intro", "إظهار البانر الرئيسي عند عدم وجود إعلانات", c.show_intro !== false)}${field("hero_image", "صورة البانر الرئيسي", "text", c.hero_image || "./assets/sections/hero.png")}${field("hero_file", "رفع بانر رئيسي", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}${field("banner_seconds", "مدة تبديل الإعلان بالثواني", "number", c.banner_seconds || 6, 'min="3" max="120"')}${field("announcement", "الإعلان النصي", "textarea", d.announcement || "")}${field("footer_ar", "نبذة أسفل الموقع", "textarea", c.footer_ar || "")}</div><div class="form-section"><h3>صفحة الترحيب</h3>${field("welcome_title", "عنوان صفحة الترحيب", "text", c.welcome?.title_ar || "عالمك الرقمي يبدأ هنا", 'maxlength="100"')}${field("welcome_subtitle", "نبذة صفحة الترحيب", "textarea", c.welcome?.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.", 'maxlength="350" rows="3"')}${field("welcome_image", "صورة صفحة الترحيب", "text", c.welcome?.image_url || "")}<p class="muted small">تظهر الصفحة للزائر عند فتح رابط الموقع من دون مسار، ويمكن الوصول إليها من القائمة. الأقسام وطرق الإيداع تُقرأ من البيانات المفعّلة.</p></div><div class="form-section"><h3>الصيانة</h3>${check("maintenance_enabled", "تفعيل الصيانة للزوار والعملاء", c.maintenance?.enabled)}${field("maintenance_text", "رسالة الصيانة", "textarea", c.maintenance?.text_ar || "نجهّز لك تجربة أفضل. نعود قريبًا.")}${field("maintenance_until", "موعد انتهاء الصيانة (اختياري، بتوقيت جهازك)", "datetime-local", c.maintenance?.until ? (() => { const d = new Date(c.maintenance.until); return Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : ""; })() : "")}</div><div class="form-section"><h3>روابط التواصل</h3><div id="socialRows" class="dynamic-rows">${(c.social_links || []).map((s, n) => socialRow(s, n)).join("")}</div><button type="button" class="button secondary small" data-action="add-social">إضافة رابط</button></div><button class="button" style="margin-top:25px" type="submit">حفظ إعدادات الموقع</button></section>${imageEditor(d.logo_url || "")}</div></form>`;
+      )}<div class="field-row">${field("logo_x", "تحريك الشعار يمين / يسار", "number", c.logo_x || 0, 'min="-100" max="100"')}${field("logo_y", "تحريك الشعار أعلى / أسفل", "number", c.logo_y || 0, 'min="-100" max="100"')}</div>${check("logo_motion", "إضافة حركة لطيفة للشعار", c.logo_motion)}<p class="muted small">يمكن رفع شعار متحرك. تعتمد الحركة على صورة متحركة أو خيار الحركة أعلاه.</p>${field("app_icon_url", "صورة أيقونة التطبيق <small>يفضل صورة مربعة ثابتة</small>", "text", c.app_icon_url || "")}${field("app_icon_file", "رفع أيقونة التطبيق", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<div class="form-section"><h3>واجهة المتجر</h3>${check("show_banners", "إظهار صور الإعلانات", c.show_banners !== false)}${check("show_intro", "إظهار البانر الرئيسي عند عدم وجود إعلانات", c.show_intro !== false)}${field("hero_image", "صورة البانر الرئيسي", "text", c.hero_image || "./assets/sections/hero.png")}${field("hero_file", "رفع بانر رئيسي", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}${field("banner_seconds", "مدة تبديل الإعلان بالثواني", "number", c.banner_seconds || 6, 'min="3" max="120"')}${field("announcement", "الإعلان النصي", "textarea", d.announcement || "")}${check("popup_enabled", "إظهار تنبيه في وسط الشاشة للزوار والعملاء", c.popup_announcement?.enabled)}${field("popup_text", "نص التنبيه", "textarea", c.popup_announcement?.text_ar || "", 'maxlength="1000"')}${field("footer_ar", "نبذة أسفل الموقع", "textarea", c.footer_ar || "")}</div><div class="form-section"><h3>صفحة الترحيب</h3>${field("welcome_title", "عنوان صفحة الترحيب", "text", c.welcome?.title_ar || "عالمك الرقمي يبدأ هنا", 'maxlength="100"')}${field("welcome_subtitle", "نبذة صفحة الترحيب", "textarea", c.welcome?.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.", 'maxlength="350" rows="3"')}${field("welcome_image", "صورة صفحة الترحيب", "text", c.welcome?.image_url || "")}<p class="muted small">تظهر الصفحة للزائر عند فتح رابط الموقع من دون مسار، ويمكن الوصول إليها من القائمة. الأقسام وطرق الإيداع تُقرأ من البيانات المفعّلة.</p></div><div class="form-section"><h3>الصيانة</h3>${check("maintenance_enabled", "تفعيل الصيانة للزوار والعملاء", c.maintenance?.enabled)}${field("maintenance_text", "رسالة الصيانة", "textarea", c.maintenance?.text_ar || "نجهّز لك تجربة أفضل. نعود قريبًا.")}${field("maintenance_until", "موعد انتهاء الصيانة (اختياري، بتوقيت جهازك)", "datetime-local", c.maintenance?.until ? (() => { const d = new Date(c.maintenance.until); return Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : ""; })() : "")}</div><div class="form-section"><h3>روابط التواصل</h3><div id="socialRows" class="dynamic-rows">${(c.social_links || []).map((s, n) => socialRow(s, n)).join("")}</div><button type="button" class="button secondary small" data-action="add-social">إضافة رابط</button></div><button class="button" style="margin-top:25px" type="submit">حفظ إعدادات الموقع</button></section>${imageEditor(d.logo_url || "")}</div></form>`;
   }
   function socialRow(s, n) {
-    return `<div class="dynamic-row" data-social-row>${field("social_name_" + n, "اسم المنصة", "text", s.name_ar || "")}${field("social_url_" + n, "الرابط", "url", s.url || "")}${check("social_enabled_" + n, "إظهار الرابط", s.enabled !== false)}<button type="button" class="button ghost small" data-action="remove-row">إزالة</button></div>`;
+    return `<div class="dynamic-row" data-social-row>${field("social_name_" + n, "اسم المنصة", "text", s.name_ar || "")}${field("social_url_" + n, "الرابط", "url", s.url || "")}${field("social_icon_" + n, "رابط أيقونة المنصة", "url", s.icon_url || "")}${field("social_icon_file_" + n, "رفع أيقونة", "file", "", 'accept="image/png,image/jpeg,image/webp"')}${check("social_enabled_" + n, "إظهار الرابط", s.enabled !== false)}<button type="button" class="button ghost small" data-action="remove-row">إزالة</button></div>`;
   }
   function rates() {
     main.innerHTML =
@@ -925,7 +918,7 @@
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         `<button class="button" data-action="provider-new">إضافة مورّد</button>`,
       ) +
-      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.is_enabled ? "مفعّل" : "موقوف"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button><button class="button danger small" data-action="provider-archive" data-id="${p.id}">حذف المورّد</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">ياسين كارد: استخدم عنوان https://api.yassen-card.com والبروتوكول المخصص. الاستيراد يحفظ الخدمات كمسودات مخفية حتى مراجعتها. يمكن إضافة مورّد آخر وتعديل مفتاحه أو حذفه من التشغيل. سجلات الطلبات السابقة محفوظة.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.config?.disconnected ? "الاتصال مفصول والخدمات مخفية" : p.is_enabled ? "مفعّل" : "قيد التعبئة"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.endpoint)}</small></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button ghost small" data-action="provider-visibility" data-id="${p.id}">${p.config?.disconnected ? "إعادة الاتصال والإظهار" : "قطع الاتصال وإخفاء الخدمات"}</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button><button class="button danger small" data-action="provider-archive" data-id="${p.id}">حذف المورّد</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note">ياسين كارد: استخدم عنوان https://api.yassen-card.com والبروتوكول المخصص. الاستيراد يحفظ الخدمات كمسودات مخفية حتى مراجعتها. يمكن إضافة مورّد آخر وتعديل مفتاحه أو حذفه من التشغيل. سجلات الطلبات السابقة محفوظة.</div><button class="button secondary" style="margin-top:20px" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button>`;
   }
   function editProvider(p = null) {
     S.edit = p;
@@ -1275,14 +1268,18 @@
     const hero = d.hero_file?.size
       ? (await A.upload(d.hero_file, "f90-images", "banners")).url
       : d.hero_image;
-    const social = [...form.querySelectorAll("[data-social-row]")].map(
-      (row) => ({
-        id: C.key(),
-        name_ar: row.querySelector("[name^=social_name]").value,
-        url: row.querySelector("[name^=social_url]").value,
-        enabled: row.querySelector("input[type=checkbox]").checked,
-      }),
-    );
+    const social = await Promise.all([...form.querySelectorAll("[data-social-row]")].map(
+      async (row) => {
+        const file = row.querySelector("[name^=social_icon_file]")?.files?.[0];
+        return {
+          id: C.key(),
+          name_ar: row.querySelector("[name^=social_name]").value,
+          url: row.querySelector("[name^=social_url]").value,
+          icon_url: file ? (await A.upload(file, "f90-images", "branding")).url : row.querySelector("[name^=social_icon_]").value,
+          enabled: row.querySelector("input[type=checkbox]").checked,
+        };
+      },
+    ));
     await A.call("settings.save", {
       data: {
         store_name: d.store_name,
@@ -1290,7 +1287,7 @@
         logo_url: await selectedImage(form),
         primary_color: d.primary_color,
         announcement: d.announcement,
-        currency: d.currency,
+        currency: "USD",
         config: {
           ...c,
           whatsapp: d.whatsapp,
@@ -1305,6 +1302,13 @@
           show_intro: form.elements.show_intro.checked,
           banner_seconds: Number(d.banner_seconds),
           footer_ar: d.footer_ar,
+          popup_announcement: {
+            enabled: form.elements.popup_enabled.checked,
+            text_ar: String(d.popup_text || "").trim().slice(0, 1000),
+            revision: c.popup_announcement?.text_ar === String(d.popup_text || "").trim() &&
+              c.popup_announcement?.enabled === form.elements.popup_enabled.checked ?
+              c.popup_announcement?.revision : new Date().toISOString(),
+          },
           welcome: {
             title_ar: String(d.welcome_title || "").trim().slice(0, 100),
             subtitle_ar: String(d.welcome_subtitle || "").trim().slice(0, 350),
@@ -1613,7 +1617,7 @@
         const enable = b.dataset.enabled === "true";
         S.pendingProviderToggle = { id: provider.id, enable };
         modal(enable ? "إعادة تفعيل المورّد" : "إيقاف خدمات المورّد",
-          `<p>${enable ? "ستعود خدمات المورّد المنشورة سابقًا للظهور، وتبقى المنتجات المخفية يدويًا مخفية." : "ستُخفى جميع خدمات هذا المورّد من كتالوج العملاء، ويُمنع شراء خدماته الجديدة. تبقى الطلبات السابقة وسجلاتها محفوظة."}</p><strong>${e(provider.name)}</strong><div class="actions" style="margin-top:16px"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button" data-action="provider-toggle-confirm">تأكيد</button></div>`);
+          `<p>${enable ? "ستعود الخدمات المنشورة للبيع وفق حالتها السابقة." : "ستبقى الخدمات المنشورة ظاهرة مع علامة «قيد التعبئة» ولن يقبل المتجر شراءها حتى إعادة التفعيل."}</p><strong>${e(provider.name)}</strong><div class="actions" style="margin-top:16px"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button" data-action="provider-toggle-confirm">تأكيد</button></div>`);
       } else if (action === "provider-toggle-confirm") {
         const pending = S.pendingProviderToggle;
         if (!pending || b.disabled) return;
@@ -1631,13 +1635,15 @@
       } else if (action === "bulk-clear") {
         document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = false; });
         updateBulkCount();
-      } else if (action === "bulk-visibility" || action === "bulk-move") {
+      } else if (["bulk-visibility", "bulk-move", "bulk-image", "bulk-delete"].includes(action)) {
         if (bulkBusy) return;
         const chosen = selectedBulkProducts();
         if (!chosen.length) throw new Error("حدد منتجًا واحدًا على الأقل");
-        const mode = action === "bulk-move" ? "move" : b.dataset.active === "true" ? "show" : "hide";
+        const mode = action === "bulk-move" ? "move" :
+          action === "bulk-image" ? "image" : action === "bulk-delete" ? "delete" :
+          b.dataset.active === "true" ? "show" : "hide";
         pendingBulk = { ids: chosen.map((p) => p.id), mode };
-        modal("تأكيد تعديل " + chosen.length + " منتج", `<p>ستُطبق العملية على ${chosen.length} منتج محدد فقط. سجلات الطلبات القديمة لن تُحذف.</p>${mode === "move" ? select("bulkTargetCategory", "القسم المستهدف", categoryOptions(false), S.categoryFilter || "").replace("<select ", '<select id="bulkTargetCategory" ') : ""}<button class="button" data-action="bulk-confirm">تأكيد التنفيذ</button><p class="muted small" id="bulkProgress"></p>`);
+        modal("تأكيد تعديل " + chosen.length + " منتج", `<p>ستُطبق العملية على ${chosen.length} منتج محدد فقط. تبقى سجلات الطلبات القديمة محفوظة.</p>${mode === "move" ? select("bulkTargetCategory", "القسم المستهدف", categoryOptions(false), S.categoryFilter || "").replace("<select ", '<select id="bulkTargetCategory" ') : ""}${mode === "image" ? '<label>رابط الصورة الموحدة (اتركه فارغًا لإزالة الصور)<input id="bulkImageURL" type="url" placeholder="https://..." dir="ltr"></label><label>أو ارفع صورة موحدة<input id="bulkImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>' : ""}${mode === "delete" ? '<p class="notice warning">حذف المنتجات نهائي، ولن تُعاد إلا باستيرادها من المورد.</p>' : ""}<button class="button ${mode === "delete" ? "danger" : ""}" data-action="bulk-confirm">تأكيد التنفيذ</button><p class="muted small" id="bulkProgress"></p>`);
       } else if (action === "bulk-confirm") {
         if (!pendingBulk || bulkBusy) return;
         const pending = pendingBulk;
@@ -1663,10 +1669,21 @@
           "حذف صور التوثيق",
           `<p>ستُحذف الصور الخاصة، ويبقى سجل قرار المراجعة. استخدم ذلك بعد طلب العميل أو وفق سياسة الاحتفاظ.</p><button class="button danger" data-action="confirm-erase-identity">تأكيد حذف الصور</button>`,
         );
+      } else if (action === "provider-visibility") {
+        const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
+        if (!provider) throw new Error("المورّد غير موجود");
+        const disconnected = !provider.config?.disconnected;
+        modal(disconnected ? "إخفاء الخدمات وقطع الاتصال" : "إعادة الاتصال",
+          `<p>${disconnected ? "ستختفي منتجات هذا المورد من المتجر. سيبقى مفتاحه وإعداداته محفوظة لإعادتها لاحقًا." : "سيتحقق الموقع من قائمة خدمات المورد قبل إعادة إظهار المنتجات المنشورة."}</p><button class="button" data-action="provider-visibility-confirm" data-id="${e(provider.id)}" data-disconnected="${disconnected}">تأكيد</button>`);
+      } else if (action === "provider-visibility-confirm") {
+        await A.call("provider.visibility", { id: b.dataset.id, disconnected: b.dataset.disconnected === "true" });
+        closeModal();
+        toast("تم تحديث ظهور خدمات المورد");
+        return providers();
       } else if (action === "provider-archive") {
         const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
         if (!provider) throw new Error("المورّد غير موجود");
-        modal("حذف المورّد من التشغيل", `<p>ستُخفى خدمات ${e(provider.name)} ويختفي من لوحة المورّدين. تبقى سجلات الطلبات والمنتجات المرتبطة محفوظة.</p><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد الحذف</button>`);
+        modal("حذف المورّد ومنتجاته", `<p>ستُحذف جميع خدمات ${e(provider.name)} من المتجر ويُلغى مفتاحه. تبقى بيانات الطلبات السابقة محفوظة.</p><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد الحذف</button>`);
       } else if (action === "provider-archive-confirm") {
         await A.call("provider.archive", { id: b.dataset.id });
         closeModal();
@@ -2221,19 +2238,19 @@
     document.body.classList.toggle("admin-menu-open"),
   );
   function applyAdminTheme(value) {
-    const selected = ["dark", "cream", "melon"].includes(value) ? value : "dark";
+    const selected = ["dark", "cream"].includes(value) ? value : "dark";
     document.documentElement.dataset.theme = selected;
     const toggle = $("adminThemeToggle");
     if (toggle) {
-      toggle.textContent = selected === "dark" ? "الثيم الحليبي" : selected === "cream" ? "الثيم البطيخي المتحرك" : "الثيم الأسود والأحمر";
+      toggle.textContent = selected === "dark" ? "المظهر النهاري" : "المظهر الليلي";
       toggle.setAttribute("aria-pressed", String(selected !== "dark"));
     }
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = selected === "cream" ? "#ded9d1" : selected === "melon" ? "#e1f4f1" : "#090b10";
+    if (meta) meta.content = selected === "cream" ? "#ded9d1" : "#090b10";
     try { localStorage.setItem("f90-theme", selected); } catch {}
   }
   $("adminThemeToggle")?.addEventListener("click", () => {
-    applyAdminTheme(document.documentElement.dataset.theme === "dark" ? "cream" : document.documentElement.dataset.theme === "cream" ? "melon" : "dark");
+    applyAdminTheme(document.documentElement.dataset.theme === "dark" ? "cream" : "dark");
   });
   applyAdminTheme(document.documentElement.dataset.theme);
   $("adminLogout").addEventListener("click", async () => {
