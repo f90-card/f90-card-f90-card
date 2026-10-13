@@ -637,7 +637,7 @@
         orders
           ? "من الدفع حتى التنفيذ. كل خطوة واضحة."
           : "سجلك محفوظ داخل حسابك",
-        `<button class="button secondary small" data-action="report" data-kind="${kind}">${I("download")}تنزيل تقرير</button>`,
+        `<button class="button secondary small" data-action="report" data-kind="${kind}">${I("download")}PDF</button><button class="button secondary small" data-action="report-csv" data-kind="${kind}">${I("download")}CSV كامل</button>`,
       ) + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
     const r = await A.call("history", {
       kind: orders ? "orders" : deposits ? "deposits" : "ledger",
@@ -1449,6 +1449,20 @@
         await refreshMe();
         developers();
         toast("أُلغي المفتاح");
+      } else if (action === "report-csv") {
+        const kind = S.reportKind === "orders" ? "orders" : S.reportKind === "deposits" ? "deposits" : "ledger";
+        let offset = 0, count = Infinity;
+        const items = [];
+        while (offset < count) {
+          const page = await A.call("history", { kind, offset });
+          items.push(...(page.items || []));
+          count = Number(page.count || 0);
+          if (!page.items?.length) break;
+          offset += page.items.length;
+          if (offset > 100000 && offset < count) throw new Error("السجل كبير جدًا للتصدير مرة واحدة. تواصل مع الإدارة.");
+        }
+        window.F90Reports.downloadHistoryCSV(kind, items);
+        toast("تم تجهيز ملف CSV");
       } else if (action === "report") {
         await window.F90Reports.history(
           S.reportKind,
