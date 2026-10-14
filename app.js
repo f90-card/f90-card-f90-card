@@ -304,6 +304,29 @@
     const back = C.safeUrl(S.settings.config?.card_back_image || "./assets/sections/services.png");
     return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-back">${image(back, "F90 CARD")}</span><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
   }
+  const f90SeenTiles = new Set();
+  const f90FlipObserver = typeof IntersectionObserver === "function" ? new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const el = entry.target;
+      f90FlipObserver.unobserve(el);
+      const id = el.dataset.f90FlipId;
+      if (id && !f90SeenTiles.has(id)) {
+        f90SeenTiles.add(id);
+        el.classList.add("f90-flip-play");
+      }
+    }
+  }, { threshold: 0.15 }) : null;
+  const f90CardObserver = new MutationObserver(() => {
+    document.querySelectorAll(".f90-flip-tile:not([data-f90-observed])").forEach((el) => {
+      el.dataset.f90Observed = "1";
+      const name = el.getAttribute("href") || el.getAttribute("aria-label") || "";
+      el.dataset.f90FlipId = name;
+      if (f90FlipObserver) f90FlipObserver.observe(el);
+      else if (!f90SeenTiles.has(name)) { f90SeenTiles.add(name); el.classList.add("f90-flip-play"); }
+    });
+  });
+  f90CardObserver.observe(main, { childList: true, subtree: true });
   function categoryTile(c) {
     const disabled = C.categoryUnavailable(c, S.categories, S.products);
     return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("category", c.slug || c.id)}"`} aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
