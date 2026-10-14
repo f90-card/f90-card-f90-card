@@ -108,3 +108,24 @@
 .f90-purchase-compact #checkoutForm input,.f90-purchase-compact #checkoutForm select{min-height:39px;padding:8px 11px;font-size:13px}
 .f90-purchase-compact #checkoutForm .field>span{font-size:11px}
 @media(max-width:450px){.f90-purchase-compact{grid-template-columns:58px minmax(0,1fr);gap:6px;padding:9px}.f90-purchase-compact .product-art{width:58px;height:58px}.f90-purchase-compact #checkoutForm{padding:7px}.f90-purchase-compact .f90-checkout-summary span{font-size:9px}.f90-purchase-compact .f90-checkout-summary strong{font-size:11px}}
+
+/* Tight checkout title, live favorite heart, and readable wallet figures */
+.f90-purchase-compact .f90-compact-actions{inset-inline-start:auto!important;left:9px!important;right:auto!important;top:9px!important}
+.f90-purchase-compact .product-info h1{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;padding-left:29px;font-size:clamp(14px,3.4vw,18px)}
+.f90-purchase-compact .f90-fulfillment-badge{font-size:10px;line-height:1.4;font-weight:800;color:#9be9f0;border:1px solid rgba(95,196,219,.4);border-radius:8px;background:rgba(34,166,190,.1);padding:3px 7px;white-space:nowrap}
+.f90-purchase-compact .f90-favorite-icon{transition:background .18s,border-color .18s,box-shadow .18s,transform .18s;color:#b7a5b0}
+.f90-purchase-compact .f90-favorite-icon svg{fill:transparent;stroke:currentColor;transition:fill .18s,color .18s}
+.f90-purchase-compact .f90-favorite-icon.is-saved{color:#ff477e;background:rgba(234,32,89,.2);border-color:#ff477e;box-shadow:0 0 13px rgba(245,44,100,.48);transform:scale(1.07)}
+.f90-purchase-compact .f90-favorite-icon.is-saved svg{fill:#ff477e}
+.f90-purchase-compact #checkoutForm>.f90-checkout-summary{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:6px}
+.f90-purchase-compact #checkoutForm>.f90-checkout-summary>div:not(.f90-checkout-mode){min-width:0;text-align:center;align-items:center;justify-content:center;padding:4px 2px;gap:4px}
+.f90-purchase-compact .f90-checkout-summary span{white-space:normal;text-wrap:balance;text-align:center;font-size:clamp(9px,2.4vw,11px)}
+.f90-purchase-compact .f90-checkout-summary strong{text-align:center!important;direction:ltr;font-variant-numeric:tabular-nums;font-size:clamp(11px,2.8vw,16px);line-height:1.5;overflow-wrap:anywhere}
+.f90-purchase-compact #f90CheckoutTopTotal{color:#ffd08a}
+.f90-purchase-compact #f90CheckoutTopBalance{color:#e2f7fd}
+.f90-purchase-compact #f90CheckoutTopRemaining:not(.f90-insufficient){color:#8ef1cd}
+:root[data-theme="cream"] .f90-purchase-compact .f90-fulfillment-badge{color:#157282;background:#e0f4f8}
+:root[data-theme="cream"] .f90-purchase-compact #f90CheckoutTopBalance{color:#365c73}
+:root[data-theme="cream"] .f90-purchase-compact #f90CheckoutTopRemaining:not(.f90-insufficient){color:#17784f}
+@media(max-width:370px){.f90-purchase-compact #checkoutForm>.f90-checkout-summary{gap:3px;padding:6px}.f90-purchase-compact .f90-checkout-summary span{font-size:9px}.f90-purchase-compact .f90-checkout-summary strong{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.f90-purchase-compact .f90-favorite-icon,.f90-purchase-compact .f90-favorite-icon svg{transition:none}}
