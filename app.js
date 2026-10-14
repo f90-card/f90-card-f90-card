@@ -562,7 +562,7 @@
       $("walletHint").innerHTML = insufficient
         ? `<span class="notice error">رصيدك لا يكفي. <a href="#/deposit">أضف رصيدًا</a> وانتظر اعتماد الإيداع.</span>`
         : S.me
-          ? `سيُخصم ${e(C.money(quote.total_usd, "USD", true))} من محفظتك عند التأكيد.`
+          ? `<div class="f90-wallet-preview"><span>الرصيد الحالي: <b>${e(C.money(S.me.wallet.balance_usd,"USD",true))}</b></span><span>الرصيد المتوقع بعد الشراء: <b>${e(C.money(Number(S.me.wallet.balance_usd)-Number(quote.total_usd),"USD",true))}</b></span></div>`
           : "سجّل الدخول للشراء من محفظتك.";
     } catch (err) {
       if (!f.isConnected || seq !== S.quoteSeq) return;
