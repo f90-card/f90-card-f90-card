@@ -980,10 +980,10 @@
         "adapter",
         "بروتوكول الاتصال",
         [
-          ["smm", "بروتوكول الخدمات الموحد"],
-          ["json", "طلبات JSON بمفتاح Bearer"],
-          ["omega", "أوميغا ستور (قراءة الخدمات والرصيد)"],
-          ["yassen", "ياسين كارد (api-token)"],
+          ["smm", "SMM Panel API v2 (key + action)"],
+          ["json", "REST JSON API (Bearer Token)"],
+          ["omega", "Omega Store API (قراءة فقط)"],
+          ["yassen", "Yassen Card API (api-token)"],
         ],
         p?.adapter || "smm",
       )}${select(
@@ -991,7 +991,7 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>كيف أعرف نوع API؟</strong> افتح وثائق المورّد وابحث عن طريقة المصادقة ونقاط النهاية: <code>key + action=services</code> غالبًا SMM Panel؛ ترويسة <code>Authorization: Bearer</code> مع JSON قد تناسب REST JSON؛ ترويسة <code>api-token</code> لا تعني التوافق تلقائيًا إلا مع محوّل موثّق. <strong>REST وGraphQL وSOAP</strong> أنماط واجهات، أما <strong>Bearer وAPI Key وOAuth 2.0</strong> فهي طرق مصادقة، ولا تعمل باختيار الاسم وحده. لا تستخدم خيارًا غير مطابق؛ اطلب محوّلًا مخصصًا. <strong>ربط F90 بنفسه:</strong> يحتاج محوّل Merchant API خاصًا؛ لا تختبر الشراء الآلي الذاتي. <a href="docs/PROVIDER_PROTOCOL_GUIDE.md" target="_blank" rel="noopener">دليل التوافق والاختبار</a>.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
