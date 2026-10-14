@@ -622,3 +622,38 @@
 .f90-admin-bell span:not([hidden]) { position: absolute; inset-inline-end: -6px; top: -5px; min-width: 20px; height: 20px; border-radius: 999px; background: #db334a; color: white; font: 700 11px/20px system-ui; text-align: center; box-shadow: 0 0 10px #db334a88; }
 .f90-alert-card { color: inherit; text-decoration: none; }
 .f90-order-requests .record { align-items: flex-start; }
+
+
+/* F90 responsive administration shell, October 2026 */
+.admin-top{display:flex;flex-wrap:wrap;gap:clamp(8px,1.6vw,18px);padding:12px clamp(12px,2.5vw,28px);min-height:76px}
+.admin-top .brand{flex:0 0 auto;max-width:clamp(90px,17vw,154px)}
+.admin-top-title{flex:1 1 155px;min-width:0;margin-left:0;overflow-wrap:anywhere}
+.admin-top-title strong{font-size:clamp(13px,1.3vw,18px);line-height:1.35}
+.admin-top-title span{line-height:1.4}
+.admin-top .button{white-space:normal;text-align:center;min-width:0}
+.admin-main,.admin-main .panel,.admin-main .editor,.admin-main .table-wrap{min-width:0;max-width:100%}
+.admin-main input,.admin-main select,.admin-main textarea{max-width:100%;min-width:0}
+.admin-main .actions,.admin-main .toolbar{flex-wrap:wrap;min-width:0}
+.admin-main .table-wrap{overflow-x:auto;overscroll-behavior-inline:contain}
+.admin-main .page-head h1{font-size:clamp(23px,3.2vw,32px);overflow-wrap:anywhere}
+@media(max-width:700px){
+.admin-top{gap:8px 10px;padding:10px 12px;align-items:center}
+.admin-top .brand{width:95px;height:48px;order:1}
+#adminMenu{order:0;flex:none}
+.admin-top-title{flex:1 1 100px;order:2;max-width:100%}
+.admin-top-title strong{font-size:14px}
+.admin-top-title .muted{font-size:11px}
+#adminBell{order:3;margin:0}
+#adminThemeToggle{order:4;flex:1 1 125px;font-size:12px;padding:7px}
+.admin-top>a.button{order:5;flex:1 1 125px;font-size:12px;padding:7px}
+.admin-main{padding:16px 12px 90px}
+.admin-main .panel,.admin-main .editor{overflow-wrap:anywhere}
+.admin-layout{min-height:calc(100dvh - 85px)}
+}
+@media(max-width:390px){
+.admin-top .brand{width:80px;height:44px}
+.admin-top-title{flex-basis:85px}
+.admin-top-title strong{font-size:12px}
+.admin-top .icon-button{width:40px;min-width:40px}
+.admin-main{padding-inline:9px}
+}
