@@ -64,9 +64,16 @@
       }finally{clearTimeout(timeout);if(token===prayerRequest&&prayerForm.isConnected)button.disabled=false;}
     }
     prayerForm.addEventListener("submit",ev=>{ev.preventDefault();loadPrayer();});
-    const schedulePrayer=()=>{coords=null;clearTimeout(prayerTimer);prayerTimer=setTimeout(loadPrayer,600);};
+    const schedulePrayer=()=>{coords=null;prayerRequest++;clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
     countryInput.addEventListener("change",schedulePrayer);
+    countryInput.addEventListener("input",schedulePrayer);
+    cityInput.addEventListener("input",schedulePrayer);
     cityInput.addEventListener("change",schedulePrayer);
+    // Refresh automatically while the Quran page remains open, including after midnight.
+    const refreshClock=setInterval(()=>{
+      if(!prayerForm.isConnected){clearInterval(refreshClock);return;}
+      if(!prayerForm.querySelector('button[type="submit"]').disabled)loadPrayer();
+    },30*60*1000);
     locationButton.addEventListener("click",()=>{
       if(!navigator.geolocation){main.querySelector("#f90PrayerStatus").textContent="تحديد الموقع غير مدعوم في المتصفح.";return;}
       locationButton.disabled=true;
