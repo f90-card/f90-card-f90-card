@@ -43,6 +43,9 @@
     ["products", "المنتجات", "grid", ["manager", "designer"]],
     ["banners", "الإعلانات", "bell", ["manager", "designer"]],
     ["providers", "المورّدون والربط", "link", ["manager"]],
+    ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
+    ["infrastructure", "الخوادم والمراقبة", "chart", ["manager"]],
+    ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
@@ -1429,6 +1432,55 @@
       reorderBusy = false;
     }
   }
+
+  async function infrastructurePage() {
+    const started = performance.now();
+    const [health, suppliers] = await Promise.allSettled([
+      A.call("health"), A.call("staff.providers")
+    ]);
+    const latency = Math.max(0,Math.round(performance.now()-started));
+    const pingOk = health.status==="fulfilled";
+    const list = suppliers.status==="fulfilled" && Array.isArray(suppliers.value) ? suppliers.value : [];
+    const running = list.filter(p=>p.is_enabled);
+    const stale = running.filter(p=> !p.config?.sync_last_success ||
+      Date.now()-Date.parse(p.config.sync_last_success)>15*60*1000);
+    const errored = running.filter(p=>p.config?.sync_state==="error" || p.config?.sync_error);
+    main.innerHTML=head("الخوادم والمراقبة","قراءات فعلية عند فتح الصفحة؛ لا تظهر أسرار API أو كلمات المرور.",
+      '<button class="button secondary small" data-action="monitor-refresh">تحديث الفحص</button>')
+      + `<div class="metric-grid">${[
+         ["API",""+(pingOk?"متاح":"تعذّر الاتصال"),"اختبار اتصال مباشر"],
+         ["Response","${e(latency)} ms","مدة الفحص من جهاز الإدارة"],
+         ["Providers","${e(running.length)}","مورّدون مفعّلون"],
+         ["Sync Alerts","${e(stale.length+errored.length)}","مزامنة متأخرة أو فيها خطأ"]
+        ].map(([n,v,d])=>`<div class="panel f90-monitor-stat"><small>${n}</small><strong>${v}</strong><span>${d}</span></div>`).join("")}</div>
+        <section class="panel"><h2>نتائج اتصال الموردين</h2><p class="muted">عرض حي للحالة المحفوظة؛ هذا الفحص لا ينفذ طلبات شراء.</p>
+        ${suppliers.status==="rejected" ? '<p class="notice error">تعذّر قراءة الموردين؛ تحقق من الصلاحيات والاتصال.</p>' : ""}
+        <div class="f90-monitor-list">${list.map(p=>`<article><strong>${e(p.name)}</strong><span>${p.is_enabled?"مفعّل":"موقوف"} · ${e(p.adapter)} · ${e(p.currency)}</span><span>آخر مزامنة ناجحة: ${e(p.config?.sync_last_success ? C.date(p.config.sync_last_success) : "غير مسجّلة")}</span>${p.config?.sync_error ? `<small class="f90-monitor-fault">${e(String(p.config.sync_error).slice(0,240))}</small>` : ""}</article>`).join("")||'<p class="muted">لا توجد مصادر خدمة.</p>'}</div>
+        <div class="actions"><a class="button secondary" href="#/providers">إدارة الموردين</a><a class="button secondary" href="#/traders">التجار ومفاتيح API</a><a class="button secondary" href="#/audit">سجل العمليات</a></div>
+        </section>
+        <section class="panel"><h2>ما الذي نقيسه هنا؟</h2><p>يقيس Response مدة استجابة API من متصفح الإدارة، وليس إجمالي زمن الشراء أو الخادم الداخلي. تعني كلمة «متاح» نجاح فحص health فقط. تحتاج أخطاء التوصيل والتخزين إلى سجلات الخادم للتشخيص الكامل.</p><p class="muted">لا تكشف هذه الصفحة التوكنات أو رموز المزودين. لم يُفعّل Webhook أو IP Allowlist للتجار.</p></section>`;
+  }
+  function integrationCenter() {
+    main.innerHTML=head("مركز الربط والبروتوكولات","استيراد من الموردين وتصدير خدمات F90 إلى التجار هما عمليتان منفصلتان.")+
+      `<div class="f90-admin-center-grid">
+       <section class="panel"><h2>01 · استيراد خدمات المورد</h2><p>تدعم البنية موصلات موردين معروفة مثل Yassen وOmega وSMM. يجب مراجعة الصيغ والأسعار والعملات قبل تشغيل الخدمات. التعرف التلقائي على جميع بروتوكولات العالم غير مضمون.</p><a class="button" href="#/providers">إدارة الموردين وفحص الاتصال</a></section>
+       <section class="panel"><h2>02 · تصدير F90 للتجار</h2><p>التاجر الموثّق ينشئ توكن بصلاحيات ورصيد خاصين ويتابع استخدام المفتاح. لا يظهر السر بعد إصدار المفتاح للمرة الأولى.</p><a class="button" href="#/traders">إدارة التجار والتوكنات</a></section>
+       <section class="panel"><h2>03 · Send to developer</h2><p>دليل كامل بالإنجليزية وشرح بالعربي وملفات OpenAPI وPostman. لا ترسل مفتاح التوكن إلى المبرمج داخل المحادثات العامة.</p><a class="button secondary" href="./docs/F90_MERCHANT_API_EN.md" download>Download Merchant API</a><a class="button secondary" href="./docs/F90_PROVIDER_PROTOCOL_EN.md" download>Download Provider Protocol</a></section>
+       <section class="panel"><h2>04 · IP / Webhook status</h2><p>تقييد IP للطلبات الواردة وإرسال Webhook للتجار غير مفعّلين بعد. تُعرض هذه الحالة بوضوح حتى لا يعتمد أحد على حماية غير موجودة.</p><a class="button secondary" href="./index.html#/api-guide">صفحة دليل الربط العامة</a></section>
+       </div>`;
+  }
+  function designCenter(){
+    main.innerHTML=head("التحكم المرئي","مركز وصول سريع لجميع عناصر التصميم القابلة للتعديل حالياً.")+
+    `<div class="f90-admin-center-grid">${[
+      ["صورة الشعار والهوية","رفع الشعار وأيقونة التطبيق، ألوان المظهر، توهج الإطارات والبنر","settings"],
+      ["صور وأسماء الأقسام","تحريك الصور ورفعها وتغيير أسماء وأوصاف الأقسام","categories"],
+      ["صور وأسعار الخدمات","الصور والوصف والتصنيفات والترتيب، دون حذف طلبات العملاء","products"],
+      ["طرق الإيداع","الصور والنصوص والتعليمات والترتيب الفوري","payments"],
+      ["الإعلانات والترويج","صور الإعلانات والشريط والإشعارات","banners"],
+      ["الصفحات القانونية والنصوص","صفحات التعريف والسياسات القابلة للتعديل","policies"]
+    ].map(([title,desc,target])=>`<a class="panel f90-design-link" href="#/${target}"><h2>${title}</h2><p>${desc}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>
+    <p class="notice">تعديل أي نص أو تصميم تعسفي خارج الحقول المحددة يتطلب إضافة محرر مُراجع بدلاً من السماح بحقن HTML عشوائي داخل موقع الدفع.</p>`;
+  }
   async function route() {
     S.token++;
     closeModal();
@@ -1470,6 +1522,9 @@
       else if (page === "vip") vip();
       else if (page === "policies") policies();
       else if (page === "providers") await providers();
+      else if (page === "infrastructure") await infrastructurePage();
+      else if (page === "integration") integrationCenter();
+      else if (page === "design-center") designCenter();
       else if (page === "traders") await traders();
     } catch (err) {
       main.innerHTML =
@@ -2042,6 +2097,8 @@
           [ids[index], ids[to]] = [ids[to], ids[index]];
           await reorder(S.kind, ids);
         }
+      } else if (action === "monitor-refresh") {
+        await infrastructurePage();
       } else if (action === "dynamic-new") editDynamic(S.dynamicKind);
       else if (action === "dynamic-edit")
         editDynamic(
