@@ -1,0 +1,14 @@
+/* VIP experience refresh, with the existing official store logo untouched */
+.main-content[data-page="vip"] .vip-hero{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 36%,var(--line));border-radius:24px;background:radial-gradient(ellipse at 85% 15%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 62%),linear-gradient(125deg,#12111b,#251423 70%,#140e19);box-shadow:0 18px 40px rgba(0,0,0,.2)}
+.main-content[data-page="vip"] .vip-hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.035) 49%,transparent 58%);transform:translateX(-120%);animation:f90-vip-glint 8s ease-in-out infinite}
+@keyframes f90-vip-glint{0%,65%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.main-content[data-page="vip"] .vip-emblem{border-radius:22px;filter:drop-shadow(0 0 20px rgba(255,66,108,.24))}
+.main-content[data-page="vip"] .vip-grid{gap:13px}
+.main-content[data-page="vip"] .vip-card{border-radius:19px;transition:transform .2s,border-color .2s}
+.main-content[data-page="vip"] .vip-card:hover{transform:translateY(-3px)}
+.main-content[data-page="vip"] .vip-card.current{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 42%,transparent),0 12px 32px color-mix(in srgb,var(--accent) 12%,transparent)}
+.f90-profile-vip-button{background:linear-gradient(110deg,#922044,#d83259)!important;color:#fff!important;border-color:#e55b7b!important;box-shadow:0 5px 18px rgba(198,40,82,.23)}
+:root[data-theme="cream"] .main-content[data-page="vip"] .vip-hero{background:radial-gradient(ellipse at 80% 15%,rgba(207,90,124,.16),transparent 65%),linear-gradient(125deg,#fff7f4,#f2dfe5);color:#3d1d2a;box-shadow:0 12px 30px rgba(96,44,59,.11)}
+:root[data-theme="cream"] .main-content[data-page="vip"] .vip-hero h2,:root[data-theme="cream"] .main-content[data-page="vip"] .vip-hero p{color:#3d1d2a}
+@media(max-width:600px){.main-content[data-page="vip"] .vip-hero{border-radius:18px}.main-content[data-page="vip"] .vip-grid{gap:9px}}
+@media(prefers-reduced-motion:reduce){.main-content[data-page="vip"] .vip-hero:before{animation:none}.main-content[data-page="vip"] .vip-card{transition:none}}
