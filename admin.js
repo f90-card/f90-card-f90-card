@@ -1381,16 +1381,30 @@
     slots.forEach((index, n) => { allIds[index] = ordered[n]; });
     return allIds;
   }
+  let reorderBusy = false;
   async function reorder(kind, ids) {
-    await A.call("catalog.reorder", { kind, ids });
-    await catalogPage(
-      kind === "category"
-        ? "categories"
-        : kind === "product"
-          ? "products"
-          : "banners",
-    );
-    toast("تم حفظ الترتيب");
+    if (reorderBusy) return;
+    reorderBusy = true;
+    const list = main.querySelector(".catalog-list");
+    const original = list ? [...list.querySelectorAll(".catalog-row[data-row-id]")] : [];
+    const byId = new Map(original.map(row => [row.dataset.rowId, row]));
+    if (list) {
+      ids.forEach(id => { if (byId.has(id)) list.appendChild(byId.get(id)); });
+      list.setAttribute("aria-busy", "true");
+    }
+    try {
+      await A.call("catalog.reorder", { kind, ids });
+      const key = kind === "category" ? "categories" : kind === "product" ? "products" : "banners";
+      const positions = new Map(ids.map((id, i) => [id, i]));
+      S[key].sort((a, b) => (positions.get(a.id) ?? 999999) - (positions.get(b.id) ?? 999999));
+      toast("تم حفظ الترتيب");
+    } catch (err) {
+      if (list) original.forEach(row => list.appendChild(row));
+      throw err;
+    } finally {
+      list?.removeAttribute("aria-busy");
+      reorderBusy = false;
+    }
   }
   async function route() {
     S.token++;
