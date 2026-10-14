@@ -34,3 +34,7 @@ html{overflow-x:clip}body{overflow-x:clip}button,input,select,textarea{font:inhe
 @media(max-width:600px){.container{max-width:100%;padding-inline:12px}.admin-top{padding:9px 12px;gap:8px}.admin-top-title{flex:1 1 95px;max-width:none}.admin-top-title strong{font-size:clamp(12px,3.5vw,17px)}.admin-main{padding:15px 10px 100px}.admin-main :where(.toolbar,.actions){gap:8px}.admin-main .table-wrap{margin-inline:0}.admin-main :where(.panel,.editor){padding-inline:clamp(10px,3vw,20px)}.admin-main :where(input,select,textarea){font-size:16px}.f90-experience-end{align-items:flex-start}.f90-experience-legal{gap:12px 18px}}
 @media(max-width:380px){.admin-top-title .muted{display:none}.admin-top .brand{max-width:75px}.admin-main{padding-inline:8px}.f90-experience-actions{flex-direction:column}.f90-experience-actions .button{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important}}
+
+/* Admin header height is measured in JS because it wraps on narrow devices */
+@media(max-width:1000px){.admin-sidebar{top:var(--f90-admin-header-height,85px);height:calc(100dvh - var(--f90-admin-header-height,85px));max-height:calc(100dvh - var(--f90-admin-header-height,85px));overflow-y:auto;overscroll-behavior:contain}.admin-layout{min-height:calc(100dvh - var(--f90-admin-header-height,85px))}}
+@media(min-width:1001px){.admin-sidebar{top:var(--f90-admin-header-height,85px);height:calc(100dvh - var(--f90-admin-header-height,85px))}}
