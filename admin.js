@@ -1435,10 +1435,18 @@
 
   async function infrastructurePage() {
     const started = performance.now();
-    const [health, suppliers] = await Promise.allSettled([
-      A.call("health"), A.call("staff.providers")
+    const healthCheck = A.call("health").then(
+      value => ({ok:true,value,latency:performance.now()-started}),
+      error => ({ok:false,error,latency:performance.now()-started})
+    );
+    const [healthResult, suppliers] = await Promise.all([
+      healthCheck, A.call("staff.providers").then(
+        value=>({status:"fulfilled",value}),
+        reason=>({status:"rejected",reason})
+      )
     ]);
-    const latency = Math.max(0,Math.round(performance.now()-started));
+    const health = healthResult.ok ? {status:"fulfilled",value:healthResult.value} : {status:"rejected",reason:healthResult.error};
+    const latency = Math.max(0,Math.round(healthResult.latency));
     const pingOk = health.status==="fulfilled";
     const list = suppliers.status==="fulfilled" && Array.isArray(suppliers.value) ? suppliers.value : [];
     const running = list.filter(p=>p.is_enabled);
