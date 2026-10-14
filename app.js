@@ -126,6 +126,35 @@
         ? image(S.settings.logo_url, S.settings.store_name)
         : `<span class="brand-name">${e(S.settings.store_name || "أف تسعين كارد")}</span>`;
     }
+    // Decorative copies of the configured official logo only; never a substitute brand.
+    let logoSky = document.getElementById("f90LogoSky");
+    if (!logoSky) {
+      logoSky = document.createElement("div");
+      logoSky.id = "f90LogoSky";
+      logoSky.setAttribute("aria-hidden", "true");
+      document.body.prepend(logoSky);
+    }
+    const officialLogo = C.safeUrl(S.settings.logo_url);
+    if (officialLogo && logoSky.dataset.logo !== officialLogo) {
+      logoSky.dataset.logo = officialLogo;
+      logoSky.replaceChildren();
+      for (let n = 0; n < 13; n++) {
+        const ghost = document.createElement("img");
+        ghost.src = officialLogo;
+        ghost.alt = "";
+        ghost.decoding = "async";
+        ghost.loading = "lazy";
+        ghost.style.setProperty("--x", ((n * 37 + 13) % 92 + 4) + "%");
+        ghost.style.setProperty("--y", ((n * 41 + 19) % 90 + 5) + "%");
+        ghost.style.setProperty("--s", (42 + n % 4 * 19) + "px");
+        ghost.style.setProperty("--delay", (-n * 5.6) + "s");
+        ghost.style.setProperty("--drift", ((n % 2 ? -1 : 1) * (14 + n % 5 * 9)) + "px");
+        logoSky.append(ghost);
+      }
+    } else if (!officialLogo) {
+      logoSky.replaceChildren();
+      delete logoSky.dataset.logo;
+    }
     $("siteFavicon").href =
       C.safeUrl(c.app_icon_url || S.settings.logo_url) || "./icon.svg";
     $("siteFavicon").removeAttribute("type");
@@ -190,7 +219,7 @@
     updateStoreBell();
     $("headerWallet").innerHTML =
       I("wallet") +
-      `<span>${me && !me.needs_mfa ? (S.walletStale ? "الرصيد يحتاج تحديث" : e(C.money(me.wallet?.balance_usd, "USD"))) : "المحفظة"}</span>`;
+      `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : "$" + e(new Intl.NumberFormat("en-US", {minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(me.wallet?.balance_usd || 0)))) : "المحفظة"}</span>`;
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
