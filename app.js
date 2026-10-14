@@ -345,39 +345,30 @@
     return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function welcome() {
-    const c = S.settings.config || {};
-    const w = c.welcome || {};
-    const methods = (c.payment_methods || []).filter((method) => method.enabled);
-    const art = C.safeUrl(w.image_url || c.hero_image || "./assets/sections/hero.png");
-    main.innerHTML = `<div class="f90-welcome">
-      <section class="f90-welcome-hero">
-        <div class="f90-welcome-copy">
-          <span class="eyebrow">F90 CARD · أف تسعين كارد</span>
-          <h1>${e(w.title_ar || "عالمك الرقمي يبدأ هنا")}</h1>
-          <p>${e(w.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.")}</p>
-          <div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/install">تنزيل التطبيق</a><a class="button ghost" href="#/register">إنشاء حساب</a><a class="button ghost" href="#/auth">تسجيل الدخول</a></div>
-        </div>
-        ${art ? `<img src="${e(art)}" alt="${e(w.image_alt_ar || "استكشف متجر F90 Card")}" fetchpriority="high" decoding="async">` : ""}
+    const c=S.settings.config||{},w=c.welcome||{};
+    const methods=(c.payment_methods||[]).filter(m=>m.enabled);
+    const available=S.products.filter(p=>p.is_active&&!C.unavailable(p));
+    const heroArt=C.safeUrl(w.image_url||c.hero_image||"./assets/sections/hero.png");
+    const cards=[["grid","استكشف الأقسام","اختر من الألعاب والتطبيقات والخدمات المتاحة","#/"],["wallet","محفظة واضحة","اعرف رصيدك وتابع الإيداعات والحركات","#/wallet"],["clock","طلباتك خطوة بخطوة","راجع الحالة والتفاصيل من حسابك","#/orders"],["shield","شراء بمعلومات واضحة","تحقق من الخدمة والسعر قبل التأكيد","#/policy/purchase"]];
+    main.innerHTML=`<div class="f90-experience" dir="rtl">
+      <section class="f90-experience-hero" aria-labelledby="f90-experience-title">
+        <div class="f90-experience-orbit orbit-one" aria-hidden="true"></div><div class="f90-experience-orbit orbit-two" aria-hidden="true"></div>
+        <div class="f90-experience-copy"><span class="f90-experience-chip"><span class="f90-live-dot"></span> F90 CARD · أف تسعين كارد</span>
+        <p class="f90-experience-pretitle">وجهتك إلى عالم الخدمات الرقمية</p>
+        <h1 id="f90-experience-title">عالمك الرقمي <span>بهوية مختلفة.</span></h1>
+        <p class="f90-experience-description">${e(w.subtitle_ar||"الألعاب، شحن التطبيقات والخدمات الرقمية في تجربة عربية واحدة. تصفّح، اختر، وتابع كل طلب بوضوح.")}</p>
+        <div class="f90-experience-actions"><a class="button" href="#/">اكتشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/install">ثبّت التطبيق ${I("plus")}</a></div>
+        <div class="f90-experience-signals"><span>${I("shield")} حساب موثّق للشراء</span><span>${I("clock")} متابعة الطلبات</span><span>${I("wallet")} محفظة بالدولار</span></div></div>
+        <div class="f90-experience-visual"><div class="f90-experience-halo" aria-hidden="true"></div><div class="f90-experience-emblem"><img src="./f90-logo.png" alt="الشعار الرسمي لمتجر أف تسعين كارد" fetchpriority="high" decoding="async"><strong>F90 CARD</strong><span>PLAY · CONNECT · EXPLORE</span></div><div class="f90-experience-float float-a">${I("grid")} ألعاب وتطبيقات</div><div class="f90-experience-float float-b">${I("wallet")} خدمات رقمية</div></div>
+        <a class="f90-experience-scroll" href="#f90-experience-discover">اكتشف المزيد ↓</a>
       </section>
-      <section class="f90-welcome-section"><div class="section-head"><h2>لمحة عن الخدمات</h2><a href="#/">استعرض المتجر</a></div>
-        <div class="f90-welcome-showcase">${S.products.filter((p) => p.is_active && !C.unavailable(p)).slice(0, 8).map((p) => `<a class="f90-welcome-service panel" href="${href("product", p.slug || p.id)}">${image(p.image_url, p.name)}<strong>${e(p.name)}</strong></a>`).join("") || '<p class="muted">الخدمات الجديدة ستظهر هنا فور نشرها.</p>'}</div>
-      </section>
-      <section class="f90-welcome-features">
-        <a class="panel" href="#/wallet">${I("wallet")}<h3>محفظتك</h3><p>راجع رصيدك وطلبات الإيداع بعد تسجيل الدخول.</p></a>
-        <a class="panel" href="#/vip">${I("crown")}<h3>مستويات VIP</h3><p>تعرّف إلى مستويات التميّز والخصومات المعلنة.</p></a>
-        ${S.me?.role === "trader" ? `<a class="panel" href="#/developers">${I("link")}<h3>صفحة التاجر</h3><p>راجع مفاتيح الربط وخدمات متجرك.</p></a>` : ""}
-        <a class="panel" href="#/install">${I("plus")}<h3>ثبّت التطبيق</h3><p>أضف المتجر إلى شاشة هاتفك للوصول إليه بسرعة.</p></a>
-      </section>
-      <section class="f90-welcome-section"><div class="section-head"><h2>طرق الإيداع المتاحة</h2></div>
-        ${methods.length ? `<div class="f90-welcome-methods">${methods.map((m) => `<div class="f90-welcome-method">${image(m.image_url, m.name_ar)}<strong>${e(m.name_ar)}</strong></div>`).join("")}</div><p class="muted small">يُضاف الرصيد بعد مراجعة التحويل واعتماده. يلزم توثيق الحساب لتقديم طلب الإيداع.</p>` : '<p class="muted">لا توجد طرق إيداع مفعّلة الآن. تواصل مع الدعم للاستفسار.</p>'}
-      </section>
-      <section class="f90-welcome-section"><h2>أسئلة شائعة</h2><div class="f90-welcome-faq">
-        <details><summary>كيف أبدأ؟</summary><p>أنشئ حسابًا، وثّق هويتك إذا أردت الإيداع والشراء، ثم استعرض الخدمات المتاحة في المتجر.</p></details>
-        <details><summary>متى يصل الرصيد؟</summary><p>بعد تقديم طلب الإيداع وإيصال التحويل، تراجعه الإدارة. يمكنك متابعة الحالة من سجل الإيداعات.</p></details>
-        <details><summary>كيف أتابع الطلب؟</summary><p>ستجد الحالة والتفاصيل في صفحة طلباتي داخل حسابك.</p></details>
-      </div></section>
-      <section class="f90-welcome-bottom panel"><div><h2>جاهز لاستكشاف عالمك الرقمي؟</h2><p>الخدمات والتوفر والأسعار الفعلية تظهر داخل المتجر.</p></div><div class="actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/support">تواصل مع الدعم</a></div></section>
-      <nav class="f90-welcome-policies" aria-label="السياسات"><a href="#/policy/about">من نحن</a><a href="#/policy/privacy">الخصوصية</a><a href="#/policy/terms">الشروط</a><a href="#/policy/purchase">الشراء والاسترداد</a></nav>
+      <section class="f90-experience-section" id="f90-experience-discover"><div class="f90-experience-section-heading"><span class="f90-experience-overline">تجربة صُمّمت لك</span><h2>كل ما تحتاجه. <em>في مكان واحد.</em></h2><p>اختصارات واضحة لخدمات فعلية داخل حسابك، بدون خطوات غير ضرورية.</p></div><div class="f90-experience-grid">${cards.map(([ic,t,d,link],i)=>`<a class="f90-experience-card" href="${link}"><span class="f90-experience-card-icon">${I(ic)}</span><span class="f90-experience-card-index">0${i+1}</span><h3>${t}</h3><p>${d}</p><span class="f90-experience-card-arrow">${I("arrow-left")}</span></a>`).join("")}</div></section>
+      <section class="f90-experience-section"><div class="f90-experience-section-heading"><span class="f90-experience-overline">مختارات من المتجر</span><h2>اكتشف <em>الخدمات المتاحة.</em></h2><p>الخدمات المعروضة مأخوذة من كتالوج المتجر الفعلي.</p></div><div class="f90-experience-products">${available.slice(0,8).map(p=>`<a class="f90-experience-product" href="${href("product",p.slug||p.id)}">${image(p.image_url,p.name)}<strong>${e(p.name)}</strong></a>`).join("")||'<p class="muted">ستظهر الخدمات عند توفرها.</p>'}</div><div class="f90-experience-centered"><a class="button secondary" href="#/">عرض جميع الأقسام ${I("arrow-left")}</a></div></section>
+      <section class="f90-experience-journey"><div class="f90-experience-section-heading"><span class="f90-experience-overline">من البداية إلى المتابعة</span><h2>ثلاث خطوات <em>واضحة.</em></h2></div><div class="f90-experience-steps"><article><b>01</b><h3>أنشئ حسابك</h3><p>سجّل حسابًا ووثّقه قبل الإيداع والشراء.</p></article><article><b>02</b><h3>اختر خدمتك</h3><p>راجع بيانات الطلب والتكلفة قبل التأكيد.</p></article><article><b>03</b><h3>تابع التنفيذ</h3><p>راقب حالة طلبك وحركات رصيدك داخل حسابك.</p></article></div></section>
+      <section class="f90-experience-section"><div class="f90-experience-section-heading"><span class="f90-experience-overline">الدفع والمحفظة</span><h2>خيارات الإيداع <em>المفعّلة.</em></h2><p>طرق الدفع أدناه مأخوذة من إعدادات المتجر الحالية.</p></div>${methods.length?`<div class="f90-experience-methods">${methods.map(m=>`<div class="f90-experience-method">${image(m.image_url,m.name_ar)}<strong>${e(m.name_ar)}</strong></div>`).join("")}</div>`:'<p class="muted">لا توجد طرق إيداع مفعّلة حاليًا.</p>'}<p class="muted small">إضافة الرصيد تتم بعد مراجعة التحويل واعتماده من الإدارة.</p></section>
+      <section class="f90-experience-section f90-experience-questions"><div class="f90-experience-section-heading"><span class="f90-experience-overline">إجابات سريعة</span><h2>أسئلة <em>شائعة.</em></h2></div><div class="f90-experience-faq"><details><summary>كيف أبدأ باستخدام المتجر؟</summary><p>أنشئ حسابًا ثم وثّقه إذا أردت الإيداع والشراء، واختر الخدمة المناسبة من الأقسام.</p></details><details><summary>كيف أتابع طلباتي؟</summary><p>افتح صفحة طلباتي من القائمة أو من حسابك للاطلاع على حالة التنفيذ.</p></details><details><summary>متى يظهر الرصيد بعد الإيداع؟</summary><p>يظهر الرصيد بعد اعتماد طلب الإيداع من الإدارة. تابع حالته من سجل الإيداعات.</p></details><details><summary>ماذا لو كانت الخدمة قيد التعبئة؟</summary><p>الخدمة غير متاحة للطلب مؤقتًا، ويمكنك الرجوع لاحقًا لمعرفة حالة توفرها.</p></details></div></section>
+      <section class="f90-experience-end"><img src="./f90-logo.png" alt="" loading="lazy"><div><span class="f90-experience-overline">F90 CARD</span><h2>جاهز تبدأ رحلتك؟</h2><p>اكتشف الأقسام، أو تعرف أكثر على المتجر وخدماته.</p></div><div class="f90-experience-actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/policy/about">عن F90 CARD</a></div></section>
+      <nav class="f90-experience-legal" aria-label="معلومات المتجر"><a href="#/policy/privacy">الخصوصية</a><a href="#/policy/terms">الشروط</a><a href="#/policy/purchase">الشراء والاسترداد</a><a href="#/support">الدعم الفني</a></nav>
     </div>`;
   }
   function home() {
