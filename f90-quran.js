@@ -32,7 +32,7 @@
     const saved=(()=>{try{return JSON.parse(localStorage.getItem("f90-prayer-place")||"null");}catch{return null;}})();
     if(saved&&typeof saved.country==="string"&&typeof saved.city==="string"){countryInput.value=saved.country;cityInput.value=saved.city;}
     let prayerRequest=0,prayerTimer=null,coords=null,activeController=null;
-    let lastPrayerDate="";
+    let lastPrayerDate="",lastPrayerLoadedAt=0;
     async function loadPrayer(){
       const token=++prayerRequest;
       if(activeController)activeController.abort();
@@ -59,6 +59,7 @@
         if(!times||keys.some(([key])=>!/^\d{2}:\d{2}/.test(times[key]||"")))throw Error("مواقيت غير متاحة");
         if(token!==prayerRequest||!prayerForm.isConnected)return;
         lastPrayerDate=payload.data.date?.gregorian?.date||"";
+        lastPrayerLoadedAt=Date.now();
         target.innerHTML=keys.map(([key,label])=>'<div class="f90-prayer-time"><span>'+esc(label)+'</span><strong dir="ltr">'+esc(times[key].slice(0,5))+'</strong></div>').join("");
         const zone=payload.data.meta?.timezone||"توقيت المدينة";
         status.textContent=(coords?"حسب موقعك الحالي":city+"، "+country)+" · "+(payload.data.date?.readable||"اليوم")+" · "+zone;
@@ -79,6 +80,11 @@
       if(document.visibilityState==="hidden")return;
       if(!prayerForm.querySelector('button[type="submit"]').disabled)loadPrayer();
     },30*60*1000);
+    const onPrayerVisible=()=>{
+      if(!prayerForm.isConnected){document.removeEventListener("visibilitychange",onPrayerVisible);return;}
+      if(document.visibilityState==="visible" && Date.now()-lastPrayerLoadedAt>30*60*1000)loadPrayer();
+    };
+    document.addEventListener("visibilitychange",onPrayerVisible);
     locationButton.addEventListener("click",()=>{
       if(!navigator.geolocation){main.querySelector("#f90PrayerStatus").textContent="تحديد الموقع غير مدعوم في المتصفح.";return;}
       locationButton.disabled=true;
