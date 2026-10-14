@@ -713,7 +713,14 @@
             ["refilling", "قيد التعبئة — صورة بالأبيض والأسود"],
           ],
           c.availability || "available",
-        );
+        ) +
+        (c.supplier_refilling === true
+          ? '<div class="admin-note" role="status"><strong>إيقاف تلقائي من المورد:</strong> المورد أبلغ أن الخدمة غير متاحة. ستعيد المزامنة الحالة السابقة حين يؤكد المورد توفرها. لا تفتحها للبيع قبل ذلك.</div>'
+          : c.availability === "refilling"
+            ? '<div class="admin-note" role="status"><strong>إيقاف مستقل عن المورد:</strong> هذه الحالة ليست معلّمة كتوقف تلقائي من API. إذا أظهرت بيانات المورد توفر الخدمة، راجع سبب الإيقاف ثم عدّل الحالة يدوياً من هذا الحقل.</div>'
+            : internal.provider_id
+              ? '<div class="admin-note">الخدمة مرتبطة بمورّد، لكن لا يوجد إيقاف تلقائي مسجّل حالياً.</div>'
+              : '');
       if (manager())
         body += `<div class="form-section"><h3>التسعير والتنفيذ</h3>${select(
           "price_type",
