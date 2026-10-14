@@ -763,7 +763,7 @@
               .filter((r) => r.is_enabled && r.per_usd)
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
-          )}</div><div class="notice" id="depositEstimate">أدخل المبلغ لعرض القيمة قبل الرسوم. عمولة 2٪ المطلوبة لم تُفعّل بعد على الخادم.</div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
+          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع 2٪.</span><small>حساب توضيحي فقط؛ الخصم غير مفعّل حاليًا في الخادم.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
   }
   function orderRecord(o) {
@@ -1565,16 +1565,20 @@
       const rate = S.rates.find((row) => row.currency === f.elements.currency.value && row.is_enabled);
       const perUsd = Number(rate?.per_usd);
       if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
-        estimate.textContent = "أدخل مبلغًا صالحًا لعرض قيمته قبل الرسوم.";
+        estimate.innerHTML = '<strong>صافي مبلغ الإيداع</strong><span>أدخل مبلغًا صالحًا لعرض التفاصيل.</span><small>العمولة لم تُفعّل بعد في الخادم.</small>';
         return;
       }
       if (!Number.isFinite(perUsd) || perUsd <= 0) {
-        estimate.textContent = "سعر الصرف لهذه العملة غير متاح حاليًا؛ لا يمكن حساب المبلغ.";
+        estimate.innerHTML = '<strong>صافي مبلغ الإيداع</strong><span>سعر الصرف غير متاح لهذه العملة.</span>';
         return;
       }
       const gross = amount / perUsd;
-      estimate.textContent = "القيمة قبل الرسوم: " + C.money(gross,"USD",true) +
-        " · العمولة المطلوبة 2٪ غير مفعّلة حاليًا في الخادم، لذلك لا يُعرض صافي مؤكد.";
+      const fee = Math.round(gross * 0.02 * 1000000) / 1000000;
+      const net = gross - fee;
+      estimate.innerHTML = '<strong>صافي مبلغ الإيداع المتوقع بعد عمولة 2٪</strong>' +
+        '<div class="f90-deposit-net-amount">' + e(C.money(net,"USD",true)) + '</div>' +
+        '<div class="f90-deposit-net-detail"><span>قبل العمولة: ' + e(C.money(gross,"USD",true)) + '</span><span>عمولة الإيداع 2٪: −' + e(C.money(fee,"USD",true)) + '</span></div>' +
+        '<small>هذا حساب توضيحي فقط. عمولة الإيداع 2٪ غير مفعّلة بعد في الخادم، فلا يُعد هذا المبلغ رصيدًا مضمونًا.</small>';
     }
   });
   document.addEventListener("change", (ev) => {
