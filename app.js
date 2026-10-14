@@ -999,19 +999,7 @@
     )}${field("front", "وجه الهوية أو صفحة الجواز", "file", "", 'required accept="image/png,image/jpeg,image/webp"')}${field("back", "ظهر الهوية <small>مطلوب للهوية</small>", "file", "", 'accept="image/png,image/jpeg,image/webp"')}${field("selfie", "سيلفي وأنت تحمل المستند", "file", "", 'required accept="image/png,image/jpeg,image/webp"')}<label class="check-field"><input required type="checkbox">أوافق على تقديم الصور طوعًا لمراجعة التوثيق.</label><button class="button full" type="submit">إرسال للمراجعة</button></form></section><section class="panel"><h2>حالة التوثيق</h2><div class="notice">${S.me.profile.is_verified ? "حسابك موثّق" : "حسابك غير موثّق بعد"}</div><div id="verificationHistory" class="loading">جارٍ تحميل الطلبات…</div><p class="muted small">يمكنك طلب حذف مستنداتك من الإدارة بعد انتهاء المراجعة. لا تتغير بيانات التوثيق من تعديل الملف الشخصي.</p></section></div>`;
     const r = await A.call("history", { kind: "verification" });
     if (seq === S.route)
-      $("verificationHistory").outerHTML = r.items.length
-        ? r.items
-            .map(
-              (v) =>
-                `<div class="notice">${status(v.status)}<p class="small">${e(C.date(v.created_at))}</p>${v.review_note ? `<p>${e(v.review_note)}</p>` : ""}</div>`,
-            )
-            .join("")
-        : empty("لم تقدّم طلب توثيق بعد", "shield");
-  }
-  function supportLink(label = "تواصل عبر واتساب") {
-    const n = String(S.settings.config.whatsapp || "").replace(/\D/g, "");
-    return n
-      ? `<a class="button secondary small" href="https://wa.me/${n}?text=${encodeURIComponent(label)}" target="_blank" rel="noopener noreferrer">${I("support")}${e(label)}</a>`
+      $("verificationHistory")…160 tokens truncated…ent(label)}" target="_blank" rel="noopener noreferrer">${I("support")}${e(label)}</a>`
       : "";
   }
   function support() {
@@ -1419,6 +1407,14 @@
       for (const [k, v] of Object.entries(data))
         if (k.startsWith("customer_")) fields[k.slice(9)] = String(v);
       const reference = S.checkoutKey;
+      if (!confirmed) {
+        pendingCheckout = {
+          form, productId: p.id, quoteSeq: S.quoteSeq, key: reference, total,
+          fingerprint: JSON.stringify(data),
+        };
+        modal("مراجعة طلب الشراء", `<p>الخدمة: <strong>${e(p.name)}</strong></p><p>الكمية: <strong>${e(data.quantity)}</strong></p><p>المبلغ من محفظتك: <strong>${e(C.money(total, "USD", true))}</strong></p><p class="muted">تأكد من بيانات الحساب قبل تأكيد الخصم.</p><button type="button" class="button full" data-action="confirm-wallet-checkout">تأكيد الشراء من المحفظة</button>`);
+        return;
+      }
       let o;
       try {
         o = await A.call("checkout", {

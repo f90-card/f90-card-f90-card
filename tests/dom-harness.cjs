@@ -197,6 +197,22 @@ async function harness(file = "index.html", options = {}) {
     },
   };
   const storage = new Map();
+  const timers = new Set();
+  const nativeTimeout = globalThis.setTimeout;
+  const nativeInterval = globalThis.setInterval;
+  const nativeClearTimeout = globalThis.clearTimeout;
+  const nativeClearInterval = globalThis.clearInterval;
+  const schedule = (callback, delay, ...args) => {
+    const id = nativeTimeout(() => { timers.delete(id); callback(...args); }, delay);
+    timers.add(id);
+    return id;
+  };
+  const repeat = (callback, delay, ...args) => {
+    const id = nativeInterval(callback, delay, ...args);
+    timers.add(id);
+    return id;
+  };
+  const stopTimer = (id) => { nativeClearTimeout(id); nativeClearInterval(id); timers.delete(id); };
   Object.defineProperty(window, "navigator", {
     value: {
       clipboard: { writeText: async () => {} },
@@ -222,11 +238,12 @@ async function harness(file = "index.html", options = {}) {
     URLSearchParams,
     TextEncoder,
     structuredClone,
+    scrollTo: () => {},
     console,
-    setTimeout,
-    clearTimeout,
-    setInterval,
-    clearInterval,
+    setTimeout: schedule,
+    clearTimeout: stopTimer,
+    setInterval: repeat,
+    clearInterval: stopTimer,
     matchMedia: () => ({ matches: true }),
     FormData: class {
       constructor(form) {
@@ -299,10 +316,7 @@ async function harness(file = "index.html", options = {}) {
     catalog,
     me,
     cleanup() {
-      for (let n = 1; n < 100; n++) {
-        clearTimeout(n);
-        clearInterval(n);
-      }
+      for (const id of timers) stopTimer(id);
     },
   };
 }

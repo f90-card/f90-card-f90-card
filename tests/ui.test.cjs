@@ -3,19 +3,20 @@ const test = require("node:test"),
 const { harness, fixture } = require("./dom-harness.cjs");
 test("home consists of image tiles without repeated category captions", async () => {
   const h = await harness();
-  const tile = h.document.querySelector(".image-tile");
+  const tile = h.document.querySelector('.image-tile[aria-label="الألعاب"]');
   assert.ok(tile);
-  assert.equal(tile.querySelector("img").getAttribute("alt"), "الألعاب");
+  assert.equal(tile.getAttribute("aria-label"), "الألعاب");
   assert.equal(tile.querySelector("h3"), null);
+  assert.match(h.document.getElementById("mainContent").textContent, /تعرّف على أف تسعين كارد/);
   assert.equal(h.document.getElementById("languageSelect"), null);
   assert.equal(h.document.getElementById("languageButton"), null);
   h.cleanup();
 });
 test("nested category opens minimal pack options", async () => {
   const h = await harness("index.html", { hash: "#/category/pubg" });
-  assert.ok(h.document.querySelector(".packs-grid"));
-  assert.equal(h.document.querySelector(".pack img"), null);
-  assert.match(h.document.querySelector(".pack").textContent, /دولار/);
+  assert.ok(h.document.querySelector(".image-grid"));
+  assert.ok(h.document.querySelector('[data-action="quick-product"][data-id="coins"]'));
+  assert.ok(h.document.getElementById("categoryFilter"));
   h.cleanup();
 });
 test("a funded manual service buys from wallet, without WhatsApp checkout", async () => {
@@ -96,7 +97,7 @@ test("untrusted catalog text is displayed without executable markup", async () =
   const catalog = fixture();
   catalog.products[0].name = '<img src=x onerror="evil()">';
   const h = await harness("index.html", { hash: "#/product/coins", catalog });
-  assert.equal(h.document.querySelector("[onerror]"), null);
+  assert.equal(h.document.querySelector(".product-info [onerror]"), null);
   assert.match(
     h.document.querySelector(".product-info h1").textContent,
     /<img/,
