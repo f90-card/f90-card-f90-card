@@ -31,9 +31,11 @@
     const locationButton=main.querySelector("#f90PrayerLocation");
     const saved=(()=>{try{return JSON.parse(localStorage.getItem("f90-prayer-place")||"null");}catch{return null;}})();
     if(saved&&typeof saved.country==="string"&&typeof saved.city==="string"){countryInput.value=saved.country;cityInput.value=saved.city;}
-    let prayerRequest=0,prayerTimer=null,coords=null;
+    let prayerRequest=0,prayerTimer=null,coords=null,activeController=null;
+    let lastPrayerDate="";
     async function loadPrayer(){
       const token=++prayerRequest;
+      if(activeController)activeController.abort();
       const country=countryInput.value.trim(),city=cityInput.value.trim();
       const status=main.querySelector("#f90PrayerStatus");
       const target=main.querySelector("#f90PrayerTimes");
@@ -42,6 +44,7 @@
       button.disabled=true;
       status.textContent="جارٍ تحديث مواقيت الصلاة…";
       const controller=new AbortController();
+      activeController=controller;
       const timeout=setTimeout(()=>controller.abort(),12000);
       try{
         const params=new URLSearchParams();
@@ -55,23 +58,25 @@
         const keys=[["Fajr","الفجر"],["Sunrise","الشروق"],["Dhuhr","الظهر"],["Asr","العصر"],["Maghrib","المغرب"],["Isha","العشاء"]];
         if(!times||keys.some(([key])=>!/^\d{2}:\d{2}/.test(times[key]||"")))throw Error("مواقيت غير متاحة");
         if(token!==prayerRequest||!prayerForm.isConnected)return;
+        lastPrayerDate=payload.data.date?.gregorian?.date||"";
         target.innerHTML=keys.map(([key,label])=>'<div class="f90-prayer-time"><span>'+esc(label)+'</span><strong dir="ltr">'+esc(times[key].slice(0,5))+'</strong></div>').join("");
         const zone=payload.data.meta?.timezone||"توقيت المدينة";
         status.textContent=(coords?"حسب موقعك الحالي":city+"، "+country)+" · "+(payload.data.date?.readable||"اليوم")+" · "+zone;
         if(!coords){try{localStorage.setItem("f90-prayer-place",JSON.stringify({country,city}));}catch{}}
       }catch{
-        if(token===prayerRequest&&prayerForm.isConnected){status.textContent="تعذر الحصول على المواقيت. تأكد من اسم المدينة والدولة أو جرّب موقعك الحالي.";target.replaceChildren();}
-      }finally{clearTimeout(timeout);if(token===prayerRequest&&prayerForm.isConnected)button.disabled=false;}
+        if(token===prayerRequest&&prayerForm.isConnected){status.textContent="تعذر تحديث المواقيت. إذا ظهرت أوقات سابقة فهي غير مؤكدة لليوم الحالي؛ راجع تقويم مسجدك المحلي.";if(!lastPrayerDate)target.replaceChildren();}
+      }finally{clearTimeout(timeout);if(activeController===controller)activeController=null;if(token===prayerRequest&&prayerForm.isConnected)button.disabled=false;}
     }
     prayerForm.addEventListener("submit",ev=>{ev.preventDefault();loadPrayer();});
-    const schedulePrayer=()=>{coords=null;prayerRequest++;clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
+    const schedulePrayer=()=>{coords=null;prayerRequest++;if(activeController)activeController.abort();clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
     countryInput.addEventListener("change",schedulePrayer);
     countryInput.addEventListener("input",schedulePrayer);
     cityInput.addEventListener("input",schedulePrayer);
     cityInput.addEventListener("change",schedulePrayer);
     // Refresh automatically while the Quran page remains open, including after midnight.
     const refreshClock=setInterval(()=>{
-      if(!prayerForm.isConnected){clearInterval(refreshClock);return;}
+      if(!prayerForm.isConnected){clearInterval(refreshClock);if(activeController)activeController.abort();return;}
+      if(document.visibilityState==="hidden")return;
       if(!prayerForm.querySelector('button[type="submit"]').disabled)loadPrayer();
     },30*60*1000);
     locationButton.addEventListener("click",()=>{
