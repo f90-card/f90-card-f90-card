@@ -53,7 +53,7 @@
         const payload=await response.json();
         const times=payload?.data?.timings;
         const keys=[["Fajr","الفجر"],["Sunrise","الشروق"],["Dhuhr","الظهر"],["Asr","العصر"],["Maghrib","المغرب"],["Isha","العشاء"]];
-        if(!times||keys.some(([key])=>!/^\\d{2}:\\d{2}/.test(times[key]||"")))throw Error("مواقيت غير متاحة");
+        if(!times||keys.some(([key])=>!/^\d{2}:\d{2}/.test(times[key]||"")))throw Error("مواقيت غير متاحة");
         if(token!==prayerRequest||!prayerForm.isConnected)return;
         target.innerHTML=keys.map(([key,label])=>'<div class="f90-prayer-time"><span>'+esc(label)+'</span><strong dir="ltr">'+esc(times[key].slice(0,5))+'</strong></div>').join("");
         const zone=payload.data.meta?.timezone||"توقيت المدينة";
