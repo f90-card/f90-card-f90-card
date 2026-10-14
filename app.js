@@ -104,7 +104,8 @@
     try {
       localStorage.setItem("f90-theme", v);
     } catch {}
-    $("themeSelect").value = v;
+    const toggle=$("themeToggle");
+    if(toggle){toggle.setAttribute("aria-pressed",String(v==="cream"));toggle.querySelector(".f90-theme-toggle-icon").textContent=v==="cream"?"☀":"☾";toggle.querySelector(".f90-theme-toggle-label").textContent=v==="cream"?"تفعيل الثيم الداكن":"تفعيل الثيم الفاتح";}
   }
   function brand() {
     const c = S.settings.config || {};
@@ -157,6 +158,7 @@
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "الرصيد يحتاج تحديث" : e(C.money(me.wallet?.balance_usd, "USD"))) : "المحفظة"}</span>`;
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
+    $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>مستوى VIP ${e(me?.vip_level || 1)} · عرض المزايا</span><span aria-hidden="true">‹</span></a>`);
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
@@ -404,14 +406,6 @@
          .map(categoryTile)
          .join("")}</div>`
      : empty("تُجهّز أقسام المتجر حاليًا")
- }
- ${
-   S.products.some((p) => p.is_featured)
-     ? `<div class="section-head"><h2>خدمات تستحق التجربة</h2></div><div class="image-grid">${S.products
-         .filter((p) => p.is_featured)
-         .map((p) => productTile(p))
-         .join("")}</div>`
-     : ""
  }
  <div class="value-strip">${[
    ["wallet", "شراء من محفظتك", "سعر واضح قبل التأكيد"],
@@ -1759,7 +1753,7 @@
     $("menuButton").addEventListener("click", () => toggleDrawer(true));
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
-  $("themeSelect").addEventListener("change", (ev) => theme(ev.target.value));
+  $("themeToggle").addEventListener("click", () => theme(document.documentElement.dataset.theme === "cream" ? "dark" : "cream"));
   $("currencySelect").addEventListener("change", (ev) => {
     S.currency = ev.target.value;
     try {
