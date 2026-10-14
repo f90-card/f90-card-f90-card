@@ -195,6 +195,10 @@
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
     $("drawerProfile").insertAdjacentHTML("beforeend", `<div class="f90-drawer-social"><div class="f90-drawer-social-title">تابع منصاتنا الرسمية</div><div class="f90-social-card-grid">${f90SocialCards() || '<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>'}</div></div>`);
+    const drawerBalance = me && !me.needs_mfa && !S.walletStale
+      ? e(C.money(me.wallet?.balance_usd, "USD", true))
+      : me ? "الرصيد يحتاج تحديث" : "سجّل الدخول لعرض الرصيد";
+    $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
@@ -551,6 +555,17 @@
         S.currency,
         true,
       );
+      const summaryTotal = $("f90CheckoutTopTotal");
+      const summaryBalance = $("f90CheckoutTopBalance");
+      const summaryRemaining = $("f90CheckoutTopRemaining");
+      if (summaryTotal) summaryTotal.textContent = C.money(quote.total_usd, "USD", true);
+      if (summaryBalance) summaryBalance.textContent = S.me ? C.money(S.me.wallet?.balance_usd, "USD", true) : "سجّل الدخول";
+      if (summaryRemaining) {
+        summaryRemaining.textContent = S.me
+          ? C.money(Number(S.me.wallet?.balance_usd || 0) - Number(quote.total_usd), "USD", true)
+          : "بعد تسجيل الدخول";
+        summaryRemaining.classList.toggle("f90-insufficient", !!S.me && Number(S.me.wallet?.balance_usd || 0) < Number(quote.total_usd));
+      }
       $("discountHint").textContent =
         Number(quote.discount_usd) > 0
           ? "الخصم المطبق: " + C.money(quote.discount_usd, "USD", true)
@@ -569,6 +584,8 @@
       S.quote = null;
       $("priceBoard")?.removeAttribute("aria-busy");
       $("checkoutTotal").textContent="السعر غير متاح";
+      if ($("f90CheckoutTopTotal")) $("f90CheckoutTopTotal").textContent = "السعر غير متاح";
+      if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "بانتظار التسعير";
       $("quoteError").textContent = message(err);
       $("buyButton").disabled = true;
     }
@@ -598,7 +615,7 @@
           },
         ];
     const productHtml = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)}</h1><div class="badges"><span class="badge">${disabled ? "الخدمة متوقفة مؤقتًا" : I(c.fulfillment === "automatic" ? "link" : "user") + (c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")}</span>${!disabled && c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${disabled ? '<p class="product-description">هذه الخدمة متوقفة مؤقتًا إلى حين تهيئة تنفيذها.</p>' : p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="actions"><button class="button secondary small" data-action="share">${I("copy")}نسخ الرابط</button><button class="button secondary small" data-action="favorite" data-id="${p.id}">${I("heart")}${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "أضف للمفضلة"}</button></div><div class="price-board" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
- <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
+ <form id="checkoutForm" data-product="${p.id}"><div class="f90-checkout-summary"><div><span>الإجمالي بالدولار</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div><div><span>رصيد محفظتك</span><strong id="f90CheckoutTopBalance">${S.me ? e(C.money(S.me.wallet?.balance_usd,"USD",true)) : "سجّل الدخول"}</strong></div><div><span>الرصيد بعد الشراء</span><strong id="f90CheckoutTopRemaining">بانتظار التسعير</strong></div><div class="f90-checkout-mode">${I(c.fulfillment === "automatic" ? "link" : "clock")}<span>${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ بحسب معالجة الطلب"}${c.delivery_time ? " · " + e(c.delivery_time) : ""}</span></div></div><div class="f90-checkout-safety-note">تأكد من رقم الحساب والكمية قبل إتمام الشراء. لا تشارك كلمة مرورك أو رمز التحقق.</div>${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
     if (inline) {
       const panel = $("quickProductPanel");
       if (!panel) return;
