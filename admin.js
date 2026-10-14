@@ -2256,7 +2256,7 @@
   let touchSorting = null;
   document.addEventListener("pointerdown", (ev) => {
     const handle = ev.target.closest(".catalog-drag-handle");
-    const row = handle?.closest(".catalog-row[data-row-id]");
+    const row = handle?.closest(".catalog-row[data-row-id],.catalog-row[data-dynamic-index]");
     if (!row || (ev.pointerType === "mouse" && ev.button !== 0)) return;
     if (touchSorting) return;
     const list = row.closest(".catalog-list");
@@ -2266,8 +2266,9 @@
       pointerId: ev.pointerId,
       handle,
       list,
-      source: row.dataset.rowId,
-      target: row.dataset.rowId,
+      source: row.dataset.rowId ?? row.dataset.dynamicIndex,
+      target: row.dataset.rowId ?? row.dataset.dynamicIndex,
+      dynamic: row.hasAttribute("data-dynamic-index"),
       x: ev.clientX,
       y: ev.clientY,
       active: false,
@@ -2279,12 +2280,12 @@
     if (!drag || ev.pointerId !== drag.pointerId) return;
     if (!drag.active && Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 9) return;
     drag.active = true;
-    const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".catalog-row[data-row-id]");
+    const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(drag.dynamic ? ".catalog-row[data-dynamic-index]" : ".catalog-row[data-row-id]");
     drag.list.querySelectorAll(".drag-over, .touch-dragging").forEach((row) => row.classList.remove("drag-over", "touch-dragging"));
-    const source = [...drag.list.querySelectorAll(".catalog-row[data-row-id]")].find((row) => row.dataset.rowId === drag.source);
+    const source = [...drag.list.querySelectorAll(drag.dynamic ? ".catalog-row[data-dynamic-index]" : ".catalog-row[data-row-id]")].find((row) => (row.dataset.rowId ?? row.dataset.dynamicIndex) === drag.source);
     source?.classList.add("touch-dragging");
     if (target && drag.list.contains(target)) {
-      drag.target = target.dataset.rowId;
+      drag.target = target.dataset.rowId ?? target.dataset.dynamicIndex;
       target.classList.add("drag-over");
     }
     ev.preventDefault();
@@ -2296,6 +2297,23 @@
     drag.list.querySelectorAll(".drag-over, .touch-dragging").forEach((row) => row.classList.remove("drag-over", "touch-dragging"));
     if (drag.handle.hasPointerCapture?.(ev.pointerId)) drag.handle.releasePointerCapture(ev.pointerId);
     if (cancel || !drag.active || drag.source === drag.target || !drag.list.isConnected) return;
+    if (drag.dynamic) {
+      const from = Number(drag.source), to = Number(drag.target);
+      const rows = [...S.dynamicItems];
+      if (!Number.isInteger(from) || !Number.isInteger(to) || !rows[from] || !rows[to]) return;
+      rows.splice(to,0,rows.splice(from,1)[0]);
+      try {
+        drag.list.setAttribute("aria-busy","true");
+        await configSave({ [configKey(S.dynamicKind)]:rows });
+        publicListPage(S.dynamicKind);
+        toast("تم حفظ الترتيب مباشرة");
+      } catch (err) {
+        toast(errorMessage(err));
+      } finally {
+        drag.list.removeAttribute("aria-busy");
+      }
+      return;
+    }
     const kind = S.kind;
     const items = S[kind === "category" ? "categories" : kind === "product" ? "products" : "banners"];
     const visible = [...drag.list.querySelectorAll(".catalog-row[data-row-id]")].map((row) => row.dataset.rowId);
