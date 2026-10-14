@@ -1,80 +1,27 @@
-(function () {
-  "use strict";
-  // Original, continuously repeating instrumental patterns: no third-party music streams or tracks.
-  const root = document.getElementById("f90MusicPlayer");
-  if (!root) return;
-  const stations = [
-    { id:"tarab", label:"طربي", bpm:85, wave:"triangle", notes:[57,60,64,65,64,60,57,55,57,60,64,67,65,64,60,57], chords:[[45,52,57],[41,48,53]], accent:0.26 },
-    { id:"romantic", label:"رومانسي", bpm:70, wave:"sine", notes:[60,64,67,72,69,67,64,60,62,65,69,72,69,65,62,60], chords:[[48,55,60],[45,52,57]], accent:0.20 },
-    { id:"epic", label:"حماسي", bpm:120, wave:"sawtooth", notes:[48,55,60,62,63,60,55,48,50,57,62,65,63,62,57,50], chords:[[36,43,48],[38,45,50]], accent:0.20 },
-    { id:"calm", label:"هادئ", bpm:64, wave:"sine", notes:[60,67,64,67,62,69,65,69,57,64,60,64,55,62,59,62], chords:[[48,55,60],[45,52,57]], accent:0.19 },
-    { id:"active", label:"نشيط", bpm:132, wave:"triangle", notes:[60,64,67,72,67,64,62,67,60,65,69,72,69,65,62,60], chords:[[48,55,60],[53,60,65]], accent:0.24 }
-  ];
-  let context=null, master=null, timer=null, playing=false, station=0, step=0, nextTime=0, volume=0.19;
-  try {
-    const saved=JSON.parse(localStorage.getItem("f90-music-preferences")||"null");
-    if(saved && Number.isInteger(saved.station) && saved.station>=0 && saved.station<stations.length) station=saved.station;
-    if(saved && Number.isFinite(saved.volume)) volume=Math.max(0,Math.min(1,saved.volume));
-  } catch {}
-  function savePrefs(){try{localStorage.setItem("f90-music-preferences",JSON.stringify({station,volume}));}catch{}}
-
-  root.innerHTML = '<div class="f90-music-brand"><span class="f90-music-pulse" aria-hidden="true">♫</span><div><strong>ميوزك أف تسعين</strong><small id="f90MusicStatus">أنغام أصلية · اختر النمط واضغط تشغيل</small></div></div><div class="f90-music-ctrl"><label class="sr-only" for="f90MusicGenre">نوع الموسيقى</label><select id="f90MusicGenre"></select><button id="f90MusicPlay" type="button" aria-label="تشغيل الموسيقى" aria-pressed="false">▶</button><label class="sr-only" for="f90MusicVolume">مستوى الصوت</label><input id="f90MusicVolume" type="range" min="0" max="100" value="19" aria-label="مستوى الصوت"></div>';
-  const genre=root.querySelector("#f90MusicGenre"), play=root.querySelector("#f90MusicPlay"), vol=root.querySelector("#f90MusicVolume"), status=root.querySelector("#f90MusicStatus");
-  stations.forEach((s,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=s.label;genre.append(o);});
-  genre.value=String(station);vol.value=String(Math.round(volume*100));
-  function noteFrequency(n) { return 440*Math.pow(2,(n-69)/12); }
-  function tone(pitch,when,duration,wave,gainValue) {
-    if(!context || !master || when<context.currentTime-.08) return;
-    const osc=context.createOscillator(),envelope=context.createGain();
-    osc.type=wave;osc.frequency.setValueAtTime(noteFrequency(pitch),when);
-    envelope.gain.setValueAtTime(.0001,when);
-    envelope.gain.exponentialRampToValueAtTime(Math.max(.001,gainValue),when+.025);
-    envelope.gain.exponentialRampToValueAtTime(.0001,when+duration);
-    osc.connect(envelope);envelope.connect(master);
-    osc.start(when);osc.stop(when+duration+.02);
-    osc.onended=()=>{osc.disconnect();envelope.disconnect();};
-  }
-  function schedule() {
-    if(!playing||!context)return;
-    const p=stations[station],seconds=60/p.bpm/2;
-    if(nextTime<context.currentTime-.2)nextTime=context.currentTime+.05;
-    while(nextTime<context.currentTime+.15){
-      const n=p.notes[step%p.notes.length];
-      tone(n,nextTime,Math.min(seconds*.82,.4),p.wave,p.accent);
-      if(step%4===0)tone(p.chords[Math.floor(step/8)%2][0],nextTime,seconds*3.8,"sine",.11);
-      if(step%8===0)p.chords[Math.floor(step/8)%2].slice(1).forEach(x=>tone(x,nextTime,seconds*7.5,"sine",.032));
-      step++;nextTime+=seconds;
-    }
-  }
-  async function begin() {
-    const Audio=window.AudioContext||window.webkitAudioContext;
-    if(!Audio){status.textContent="متصفحك لا يدعم المشغّل";return;}
-    if(!context){
-      context=new Audio();master=context.createGain();master.gain.value=volume;master.connect(context.destination);
-    }
-    try { await context.resume(); } catch {status.textContent="اضغط تشغيل للسماح بالصوت";return;}
-    playing=true;step=0;nextTime=context.currentTime+.05;
-    clearInterval(timer);timer=setInterval(schedule,75);schedule();
-    play.textContent="Ⅱ";play.setAttribute("aria-pressed","true");play.setAttribute("aria-label","إيقاف الموسيقى");
-    root.classList.add("is-playing");
-    status.textContent=stations[station].label+" · عزف آلي متكرر";
-  }
-  function stop(){
-    playing=false;clearInterval(timer);timer=null;
-    if(context&&context.state==="running")context.suspend().catch(()=>{});
-    play.textContent="▶";play.setAttribute("aria-pressed","false");play.setAttribute("aria-label","تشغيل الموسيقى");
-    root.classList.remove("is-playing");status.textContent="متوقف مؤقتاً";
-  }
-  play.addEventListener("click",()=>playing?stop():void begin());
-  genre.addEventListener("change",()=>{station=Number(genre.value);step=0;savePrefs();if(playing){stop();void begin();}else status.textContent=stations[station].label+" · جاهز للتشغيل";});
-  vol.addEventListener("input",()=>{volume=Number(vol.value)/100;savePrefs();if(master)master.gain.setTargetAtTime(volume,context.currentTime,.04);});
-  function visible(){
-    const page=(location.hash||"#/welcome").split("/")[1]||"welcome";
-    const show=page==="welcome"||page==="";
-    root.hidden=!show;
-    if(!show && playing)stop();
-  }
-  window.addEventListener("hashchange",visible);
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && playing && context?.state==="running") { nextTime=context.currentTime+.05; schedule(); } });
-  visible();
+(()=>{
+"use strict";
+const root=document.getElementById("f90MusicPlayer");if(!root)return;
+const origin="https://embed.datamind.fm";
+const defaultStation={id:"datamind-live",name:"مباشر · هادئ وسينمائي",url:"https://embed.datamind.fm/?layout=mini&theme=dark&accent=coral",type:"embed",credit:"DataMind FM",home_url:"https://datamind.fm/"};
+let stations=[defaultStation],index=0,playing=false,audio=null,frame=null,ready=false,volume=.4,preferred=defaultStation.id;
+try{const p=JSON.parse(localStorage.getItem("f90-music-preferences")||"{}");if(typeof p.id==="string")preferred=p.id;if(Number.isFinite(p.volume))volume=Math.max(0,Math.min(1,p.volume));}catch{}
+root.innerHTML='<div class="f90-music-brand"><span class="f90-music-pulse" aria-hidden="true">♫</span><div><strong>ميوزك أف تسعين</strong><small id="f90MusicStatus" role="status">بث موسيقي حقيقي · مباشر 24/7</small></div></div><div class="f90-music-ctrl"><label class="sr-only" for="f90MusicGenre">اختر المحطة</label><select id="f90MusicGenre" aria-label="اختيار محطة الموسيقى"></select><button id="f90MusicPlay" type="button" aria-label="تشغيل البث" aria-pressed="false">▶</button><label class="sr-only" for="f90MusicVolume">الصوت</label><input id="f90MusicVolume" type="range" min="0" max="100" value="40" aria-label="مستوى الصوت"></div><div id="f90MusicStream" class="f90-music-stream"></div><a id="f90MusicCredit" href="https://datamind.fm/" target="_blank" rel="noopener noreferrer">المصدر: DataMind FM</a>';
+const genre=root.querySelector("#f90MusicGenre"),button=root.querySelector("#f90MusicPlay"),vol=root.querySelector("#f90MusicVolume"),status=root.querySelector("#f90MusicStatus"),host=root.querySelector("#f90MusicStream"),credit=root.querySelector("#f90MusicCredit");
+vol.value=String(Math.round(volume*100));
+const valid=u=>{try{const p=new URL(u);return p.protocol==="https:"&&!p.username&&!p.password&&!p.hash&&!p.port&&u.length<1000}catch{return false}};
+function save(){try{localStorage.setItem("f90-music-preferences",JSON.stringify({id:stations[index]?.id||defaultStation.id,volume}));}catch{}}
+function command(c,value){if(frame?.contentWindow)frame.contentWindow.postMessage({type:"dmfm:command",command:c,value},origin)}
+function state(on){playing=on;root.classList.toggle("is-playing",on);button.textContent=on?"Ⅱ":"▶";button.setAttribute("aria-pressed",String(on));button.setAttribute("aria-label",on?"إيقاف البث":"تشغيل البث");}
+function stop(){if(audio){audio.pause();audio.removeAttribute("src");audio.load();audio=null;}if(frame){command("stop");frame.remove();frame=null;}ready=false;state(false);}
+function select(){stop();host.replaceChildren();const st=stations[index];credit.textContent="المصدر: "+(st.credit||st.name);credit.href=valid(st.home_url)?st.home_url:st.url;status.textContent=st.name+" · اضغط تشغيل";save();}
+function render(){genre.replaceChildren();stations.forEach((s,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=s.name;genre.append(o)});index=Math.max(0,stations.findIndex(x=>x.id===preferred));genre.value=String(index);select();}
+function configure(config){const extras=Array.isArray(config?.music_stations)?config.music_stations:[];stations=[defaultStation];for(const x of extras.slice(0,12)){if(!x||x.enabled===false||typeof x.name!=="string"||!x.name.trim()||!valid(x.url)||!["radio","mp3","aac"].includes(x.type))continue;if(stations.some(s=>s.url===x.url))continue;stations.push({id:String(x.id||x.url),name:x.name.trim().slice(0,55),url:x.url,type:"radio",credit:String(x.credit||x.name).slice(0,70),home_url:x.home_url})}stop();render();}
+async function start(){const st=stations[index];if(st.type==="embed"){if(!frame){frame=document.createElement("iframe");frame.src=st.url;frame.title="DataMind FM live radio";frame.allow="autoplay";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";host.replaceChildren(frame);frame.addEventListener("load",()=>{ready=true;command("setVolume",volume);if(playing)command("play")});}state(true);if(ready)command("play");status.textContent="على الهواء · "+st.name;return;}
+audio=new Audio();audio.src=st.url;audio.preload="none";audio.volume=volume;audio.addEventListener("error",()=>{status.textContent="المحطة غير متاحة الآن، جرّب محطة أخرى";state(false)});audio.addEventListener("playing",()=>{state(true);status.textContent="على الهواء · "+st.name});try{await audio.play();state(true)}catch{status.textContent="تعذّر تشغيل المحطة، راجع الرابط أو حاول مجدداً";state(false)}}
+button.addEventListener("click",()=>{if(playing){stop();status.textContent="متوقف"}else void start()});
+genre.addEventListener("change",()=>{index=Number(genre.value);select()});
+vol.addEventListener("input",()=>{volume=Number(vol.value)/100;if(audio)audio.volume=volume;if(frame)command("setVolume",volume);save()});
+window.addEventListener("message",e=>{if(e.origin!==origin||e.source!==frame?.contentWindow)return;if(e.data?.type==="dmfm:ready"){ready=true;command("setVolume",volume);if(playing)command("play")}if(e.data?.type==="dmfm:state"){if(e.data.state?.playing===true)state(true);if(e.data.state?.playing===false&&playing)state(false);if(e.data.nowPlaying?.title)status.textContent=String(e.data.nowPlaying.title).slice(0,90)}});
+window.addEventListener("hashchange",()=>{const route=(location.hash||"#/welcome").split("/")[1]||"welcome";const show=route===""||route==="welcome";root.hidden=!show;if(!show)stop()});
+window.F90Music={configure};render();const route=(location.hash||"#/welcome").split("/")[1]||"welcome";root.hidden=!(route===""||route==="welcome");
 })();
