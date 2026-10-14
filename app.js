@@ -828,6 +828,17 @@
         resellers: "سياسة التجار والموزعين",
       },
       page = S.settings.config.pages?.[id];
+    if (id === "about") {
+      const description = page?.ar || "أف تسعين كارد متجر للخدمات الرقمية، نوفر تجربة عربية منظمة لشحن الألعاب والتطبيقات وشراء الخدمات الرقمية مع متابعة الطلبات من حساب واحد.";
+      const highlights = [
+        ["01", "اختيار واضح", "تصفح الأقسام والخدمات وقارن تفاصيل الطلب قبل تأكيده."],
+        ["02", "محفظتك أمامك", "اعرف قيمة طلبك والرصيد المتبقي قبل إتمام العملية."],
+        ["03", "متابعة من الحساب", "راجع حالة طلباتك وسجل حركات المحفظة ضمن صفحات مخصصة."],
+        ["04", "تواصل مباشر", "اطلب المساعدة من فريق المتجر عبر صفحة الدعم."]
+      ];
+      main.innerHTML = `<section class="f90-about-hero" aria-labelledby="f90-about-title"><div class="f90-about-eyebrow">F90 CARD · عالم الخدمات الرقمية</div><div class="f90-about-split"><div class="f90-about-copy"><span class="f90-about-kicker">وجهتك الرقمية بطابع مختلف</span><h1 id="f90-about-title">أف تسعين كارد <span>أقرب لعالمك.</span></h1><p>${e(description)}</p><div class="f90-about-cta"><a class="button" href="#/">استكشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/support">تواصل معنا ${I("support")}</a></div></div><div class="f90-about-art" aria-label="هوية أف تسعين كارد"><img src="./f90-logo.png" alt="شعار أف تسعين كارد الأصلي" loading="eager"><div class="f90-about-art-caption">F90 CARD <span>خدمات رقمية · تجربة عربية</span></div></div></div><div class="f90-about-glow f90-about-glow-a" aria-hidden="true"></div><div class="f90-about-glow f90-about-glow-b" aria-hidden="true"></div></section><section class="f90-about-body"><div class="f90-about-heading"><span class="eyebrow">بُنيت التجربة لتكون أسهل</span><h2>كل خطوة في مكانها.</h2><p class="muted">تصميم واضح، تفاصيل مقروءة، ووصول سريع للخدمات والحساب.</p></div><div class="f90-about-features">${highlights.map(([n,t,d]) => `<article class="f90-about-feature"><span class="f90-about-number">${n}</span><h3>${t}</h3><p>${d}</p></article>`).join("")}</div><div class="f90-about-final"><div><span class="eyebrow">رحلتك تبدأ هنا</span><h2>اختر الخدمة. والباقي واضح.</h2><p>تصفح خدماتنا وتعرف على التفاصيل والسعر قبل الشراء.</p></div><div class="f90-about-cta"><a class="button" href="#/">تصفح الأقسام ${I("arrow-left")}</a><a class="button secondary" href="#/policy/terms">الشروط والأحكام</a></div></div></section>`;
+      return;
+    }
     main.innerHTML = `<div class="policy-layout"><nav class="policy-nav">${Object.entries(
       titles,
     )
