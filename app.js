@@ -1917,8 +1917,12 @@
           // Keep refreshed availability in memory; do not interrupt an open purchase.
           const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("modalRoot")?.children.length;
           if (!buying && Array.isArray(latest.products) && Array.isArray(latest.categories)) {
-            const previous = JSON.stringify(S.products.map(p => [p.id,p.is_active,p.stock,p.price,p.commerce?.availability]));
-            const incoming = JSON.stringify(latest.products.map(p => [p.id,p.is_active,p.stock,p.price,p.commerce?.availability]));
+            const snapshot = (products, categories) => JSON.stringify({
+              products: products.map(p => [p.id,p.is_active,p.stock,p.price,p.currency,p.image_url,p.category_id,p.commerce?.availability]),
+              categories: categories.map(c => [c.id,c.is_active,c.parent_id,c.sort_order,c.presentation?.availability])
+            });
+            const previous = snapshot(S.products, S.categories);
+            const incoming = snapshot(latest.products, latest.categories);
             S.products = latest.products;
             S.categories = latest.categories;
             // Only repaint browse pages when the supplier-facing catalog actually changed.
@@ -1927,7 +1931,9 @@
             if (previous !== incoming && ["", "category", "favorites", "search"].includes(page)
                 && !document.getElementById("modalRoot")?.children.length
                 && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+              const oldScroll = window.scrollY;
               await route();
+              window.scrollTo({ top: oldScroll, behavior: "instant" });
             }
           }
           updateStoreBell();
