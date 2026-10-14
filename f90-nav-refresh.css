@@ -162,3 +162,35 @@
 .f90-mobile-dock .f90-home-dock-logo{display:block;width:27px;height:27px;object-fit:contain;flex:none;filter:drop-shadow(0 0 6px rgba(255,64,105,.32))}
 .f90-mobile-dock a.active .f90-home-dock-logo{filter:drop-shadow(0 0 9px rgba(255,64,105,.63))}
 @media(max-width:380px){.f90-mobile-dock .f90-home-dock-logo{width:23px;height:23px}}
+
+/* F90 final collision-safe header: logo is precisely centered with reserved side space. */
+.site-header .header-inner{box-sizing:border-box!important;position:relative!important;overflow:visible!important}
+.site-header #headerBrand,.site-header .header-inner>#headerBrand{
+  left:50%!important;right:auto!important;inset-inline-start:auto!important;
+  transform:translateX(-50%)!important;position:absolute!important;
+  width:min(190px,calc(100% - 220px))!important;max-width:190px!important;
+  min-width:0!important;display:flex!important;align-items:center;justify-content:center;
+  padding:0!important;overflow:visible!important
+}
+.site-header #headerBrand img{left:0!important;right:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:contain!important}
+.site-header #headerWallet,.site-header #storeBell,.site-header #menuButton{z-index:5!important;position:relative!important}
+.site-header #headerWallet{direction:ltr;justify-content:center!important}
+@media(min-width:760px){
+ .site-header #headerBrand,.site-header .header-inner>#headerBrand{width:min(190px,calc(100% - 245px))!important}
+}
+@media(max-width:520px){
+ .site-header .header-inner{grid-template-columns:36px minmax(0,1fr) 71px 30px!important;column-gap:3px!important}
+ .site-header #headerBrand,.site-header .header-inner>#headerBrand{width:min(148px,calc(100% - 202px))!important;min-height:55px!important}
+ .site-header #headerWallet{width:71px!important;max-width:71px!important}
+ .site-header #storeBell{width:29px!important;min-width:29px!important}
+}
+@media(max-width:370px){
+ .site-header .header-inner{grid-template-columns:34px minmax(0,1fr) 64px 27px!important;column-gap:2px!important}
+ .site-header #headerBrand,.site-header .header-inner>#headerBrand{width:min(125px,calc(100% - 188px))!important}
+ .site-header #headerWallet{width:64px!important;max-width:64px!important}
+ .site-header #storeBell{width:27px!important;min-width:27px!important}
+}
+/* Keep the site's own uploaded logo crisp as the bottom home button. */
+.f90-mobile-dock a[data-dock-page=""]{position:relative;display:flex;align-items:center;justify-content:center}
+.f90-mobile-dock a[data-dock-page=""] .f90-home-dock-logo{width:clamp(26px,6.5vw,34px);height:clamp(26px,6.5vw,34px);max-width:100%;object-fit:contain;image-rendering:auto}
+.f90-mobile-dock a[data-dock-page=""]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
