@@ -2329,9 +2329,31 @@
     }
   });
   $("adminMenu").innerHTML = I("menu");
+  $("adminMenu").setAttribute("aria-expanded", "false");
+  $("adminMenu").setAttribute("aria-controls", "adminSidebar");
+  const adminHeader = document.querySelector(".admin-top");
+  if (adminHeader) {
+    const syncHeaderHeight = () => document.documentElement.style.setProperty("--f90-admin-header-height", Math.ceil(adminHeader.getBoundingClientRect().height) + "px");
+    syncHeaderHeight();
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(syncHeaderHeight).observe(adminHeader);
+    else window.addEventListener("resize", syncHeaderHeight, { passive: true });
+  }
+  const setAdminMenu = (open) => {
+    document.body.classList.toggle("admin-menu-open", open);
+    $("adminMenu").setAttribute("aria-expanded", String(open));
+  };
   $("adminMenu").addEventListener("click", () =>
-    document.body.classList.toggle("admin-menu-open"),
+    setAdminMenu(!document.body.classList.contains("admin-menu-open")),
   );
+  $("adminNav").addEventListener("click", (event) => {
+    if (event.target.closest("a")) setAdminMenu(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.body.classList.contains("admin-menu-open")) {
+      setAdminMenu(false);
+      $("adminMenu").focus();
+    }
+  });
   function applyAdminTheme(value) {
     const selected = ["dark", "cream"].includes(value) ? value : "dark";
     document.documentElement.dataset.theme = selected;
