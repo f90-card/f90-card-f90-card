@@ -68,8 +68,8 @@
         if(token===prayerRequest&&prayerForm.isConnected){status.textContent="تعذر تحديث المواقيت. إذا ظهرت أوقات سابقة فهي غير مؤكدة لليوم الحالي؛ راجع تقويم مسجدك المحلي.";if(!lastPrayerDate)target.replaceChildren();}
       }finally{clearTimeout(timeout);if(activeController===controller)activeController=null;if(token===prayerRequest&&prayerForm.isConnected)button.disabled=false;}
     }
-    prayerForm.addEventListener("submit",ev=>{ev.preventDefault();loadPrayer();});
-    const schedulePrayer=()=>{coords=null;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();prayerRequest++;if(activeController)activeController.abort();clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
+    prayerForm.addEventListener("submit",ev=>{ev.preventDefault();clearTimeout(prayerTimer);coords=null;loadPrayer();});
+    const schedulePrayer=()=>{coords=null;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();prayerRequest++;if(activeController)activeController.abort();clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{prayerTimer=null;if(prayerForm.isConnected)loadPrayer();},900);};
     countryInput.addEventListener("change",schedulePrayer);
     countryInput.addEventListener("input",schedulePrayer);
     cityInput.addEventListener("input",schedulePrayer);
@@ -77,16 +77,17 @@
     // Refresh automatically while the Quran page remains open, including after midnight.
     const refreshClock=setInterval(()=>{
       if(!prayerForm.isConnected){clearInterval(refreshClock);if(activeController)activeController.abort();return;}
-      if(document.visibilityState==="hidden")return;
+      if(document.visibilityState==="hidden"||prayerTimer!==null)return;
       if(!prayerForm.querySelector('button[type="submit"]').disabled)loadPrayer();
     },30*60*1000);
     const onPrayerVisible=()=>{
       if(!prayerForm.isConnected){document.removeEventListener("visibilitychange",onPrayerVisible);return;}
-      if(document.visibilityState==="visible" && Date.now()-lastPrayerLoadedAt>30*60*1000)loadPrayer();
+      if(document.visibilityState==="visible" && prayerTimer===null && !activeController && Date.now()-lastPrayerLoadedAt>30*60*1000)loadPrayer();
     };
     document.addEventListener("visibilitychange",onPrayerVisible);
     locationButton.addEventListener("click",()=>{
       if(!navigator.geolocation){main.querySelector("#f90PrayerStatus").textContent="تحديد الموقع غير مدعوم في المتصفح.";return;}
+      clearTimeout(prayerTimer);prayerTimer=null;
       locationButton.disabled=true;
       navigator.geolocation.getCurrentPosition(pos=>{coords={latitude:pos.coords.latitude,longitude:pos.coords.longitude};locationButton.disabled=false;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();loadPrayer();},()=>{locationButton.disabled=false;main.querySelector("#f90PrayerStatus").textContent="تعذر تحديد الموقع؛ يمكنك إدخال الدولة والمدينة يدوياً.";},{timeout:10000,maximumAge:300000});
     });
