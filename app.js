@@ -399,7 +399,7 @@
         const link=section.querySelector(".f90-hero-link");
         const overlay=section.querySelector(".hero-overlay");
         const nextArt=C.safeUrl(current.image_url||c.hero_image||"./assets/sections/hero.png");
-        pic.src=e(nextArt);
+        pic.src=nextArt;
         pic.alt=current.title||"إعلان أف تسعين كارد";
         link.href=C.safeUrl(current.link_url||"#/")||"#/";
         overlay.hidden=!current.presentation?.overlay_enabled;
@@ -1185,9 +1185,10 @@
         };
         modal("مراجعة الطلب قبل الخصم",
           `<div class="f90-checkout-review">
-            <div class="f90-review-brand"><img src="./assets/icons/icon-192.png" alt="شعار F90" width="46" height="46"><strong>تأكيد الدفع من محفظتك</strong></div>
+            <div class="f90-review-brand"><img src="./f90-logo.png" alt="شعار F90 CARD" width="70" height="70"><strong>تأكيد الدفع من محفظتك</strong></div>
             <div class="f90-review-service">${image(item.image_url, item.name)}<div><h3>${e(item.name)}</h3><span>${e(item.commerce?.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")} · ${e(item.commerce?.delivery_time || "تابع الحالة في طلباتك")}</span></div></div>
             <div class="f90-review-total"><span>المبلغ النهائي</span><strong>${e(C.money(total, "USD", true))}</strong></div>
+            <div class="f90-review-fields"><h4>راجع بيانات الشحن قبل تأكيد الدفع</h4>${Object.entries(current).filter(([k])=>k.startsWith("customer_")).map(([k,v])=>`<div><span>${e(item.commerce?.fields?.find(f=>"customer_"+f.id===k)?.label_ar||"بيانات الحساب")}</span><strong dir="auto">${e(String(v||"—"))}</strong></div>`).join("")}</div>
             <dl>
               <div><dt>الكمية</dt><dd>${e(String(current.quantity || "1"))}</dd></div>
               <div><dt>رصيدك الحالي</dt><dd>${e(C.money(balance, "USD", true))}</dd></div>
