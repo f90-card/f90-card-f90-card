@@ -29,7 +29,8 @@
     authMode: "login",
     currencyPreference: false,
   };
-  let toastTimer,
+  let authUiRefreshTimer,
+    toastTimer,
     bannerTimer,
     quoteTimer,
     maintenanceTimer,
@@ -1826,7 +1827,21 @@
       setTimeout(() => {
         location.hash = "#/reset";
       }, 0);
+    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      // Supabase can restore credentials after the initial page render.
+      // Defer work outside the auth callback to avoid auth-lock deadlocks.
+      clearTimeout(authUiRefreshTimer);
+      authUiRefreshTimer = setTimeout(async () => {
+        if (!S.settings?.config || !S.settings?.store_name) return;
+        try {
+          const ok = await refreshMe();
+          if (ok) { chrome(); if (location.hash === "#/auth") location.hash = "#/profile"; }
+          else if (S.me) chrome();
+        } catch { /* Keep the existing UI on transient errors. */ }
+      }, 250);
+    }
     if (event === "SIGNED_OUT") {
+      clearTimeout(authUiRefreshTimer);
       S.me = null;
       S.walletStale = false;
       S.savedRecipients = [];
@@ -1844,9 +1859,16 @@
       const accountRequest = refreshMe().catch((error) => error);
       Object.assign(S, await catalogRequest);
       if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
-      chrome();
+      // Render authenticated navigation only after restoring the account.
+      // Previously chrome() ran while S.me was still null, leaving the drawer
+      // and wallet in guest mode even when a valid session existed.
       const accountResult = await accountRequest;
-      if (accountResult instanceof Error) throw accountResult;
+      if (accountResult instanceof Error) {
+        S.walletStale = true;
+        // Public catalog remains usable during temporary account/API outages.
+        console.warn("F90 account refresh pending");
+      }
+      chrome();
       let initialTheme = S.settings.config.default_theme || "dark";
       try {
         initialTheme = localStorage.getItem("f90-theme") || initialTheme;
