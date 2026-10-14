@@ -148,6 +148,44 @@ export async function callProvider(
     if (!addresses.length || addresses.some((x) => !publicAddress(x)))
       throw new ProviderError("عنوان الشبكة الخاص بالمورّد غير مسموح");
   }
+  // F90 merchant integration: read-only until loop-safe fulfillment is designed.
+  // Never submit paid orders back into the same platform.
+  if (provider.adapter === "f90") {
+    if (!["services", "balance"].includes(action))
+      throw new ProviderError("ربط F90 للتجربة والقراءة فقط؛ الطلبات الآلية معطلة");
+    if (!/^[a-z0-9-]+\.supabase\.co$/i.test(u.hostname) ||
+        u.pathname !== "/functions/v1/f90-platform")
+      throw new ProviderError("أدخل عنوان F90 Merchant API الرسمي");
+    let response;
+    try {
+      response = await fetcher(u, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json", "x-f90-key": key },
+        body: JSON.stringify({ action }),
+        redirect: "manual",
+        signal: AbortSignal.timeout(timeout),
+      });
+    } catch {
+      throw new ProviderError("تعذر الوصول إلى واجهة F90 للتجار");
+    }
+    if (!response.ok) throw new ProviderError("فشل اتصال F90؛ راجع التوكن وصلاحياته");
+    const raw = await response.text();
+    if (raw.length > 2000000) throw new ProviderError("استجابة F90 كبيرة جدًا");
+    let result;
+    try { result = JSON.parse(raw); }
+    catch { throw new ProviderError("استجابة F90 غير صالحة"); }
+    if (result?.error || result?.data == null)
+      throw new ProviderError("استجابة F90 تتضمن خطأ أو بيانات ناقصة");
+    if (action === "services") {
+      if (!Array.isArray(result.data)) throw new ProviderError("قائمة F90 غير صالحة");
+      return result.data.map(s => ({
+        ...s, id: s.service, rate: s.rate,
+        unit_quantity: s.unit_quantity || 1,
+        available: s.availability !== "refilling",
+      }));
+    }
+    return result.data;
+  }
   const headers = { Accept: "application/json" };
   if (provider.adapter === "omega" || provider.adapter === "yassen") {
     const yassen = provider.adapter === "yassen";
