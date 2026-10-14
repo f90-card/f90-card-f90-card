@@ -713,7 +713,7 @@
           ? "من الدفع حتى التنفيذ. كل خطوة واضحة."
           : "سجلك محفوظ داخل حسابك",
         `<button class="button secondary small" data-action="report" data-kind="${kind}">${I("download")}PDF</button><button class="button secondary small" data-action="report-csv" data-kind="${kind}">${I("download")}CSV كامل</button>`,
-      ) + (orders ? '<label class="field f90-record-search"><span>ابحث عن خدمة في هذه الصفحة</span><input id="orderHistorySearch" type="search" placeholder="اسم الخدمة أو رقم الطلب" autocomplete="off"></label>' : "") + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
+      ) + (orders ? '<div class="f90-record-search-wrap"><label class="field f90-record-search"><span>ابحث في الطلبات الظاهرة</span><input id="orderHistorySearch" type="search" placeholder="اسم الخدمة أو رقم الطلب" autocomplete="off" aria-describedby="f90OrderSearchCount"></label><span id="f90OrderSearchCount" class="muted small" role="status">البحث في الطلبات المعروضة حاليًا</span></div>' : "") + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
     const r = await A.call("history", {
       kind: orders ? "orders" : deposits ? "deposits" : "ledger",
       offset: S.offset,
@@ -723,7 +723,7 @@
     S.reportKind = kind;
     const items = r.items;
     $("records").outerHTML = items.length
-      ? `<div class="records" id="historyRecords">${items.map((x) => (orders ? orderRecord(x) : deposits ? depositRecord(x) : `<article class="record"><span class="avatar">${I(Number(x.amount_usd) > 0 ? "plus" : "wallet")}</span><div class="record-main"><h3>${e(x.description)}</h3><p>${e(C.date(x.created_at))} · الرصيد بعد الحركة ${e(C.money(x.balance_after, "USD", true))}</p></div><strong class="record-price ${Number(x.amount_usd) > 0 ? "ledger-plus" : "ledger-minus"}">${Number(x.amount_usd) > 0 ? "+" : ""}${e(C.money(x.amount_usd, "USD", true))}</strong></article>`)).join("")}</div><div class="pagination"><button class="button secondary small" data-action="page-prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, r.count))} من ${e(r.count)}</span><button class="button secondary small" data-action="page-next" ${S.offset + 50 >= r.count ? "disabled" : ""}>التالي</button></div>`
+      ? `<div class="records" id="historyRecords">${items.map((x) => (orders ? orderRecord(x) : deposits ? depositRecord(x) : `<article class="record"><span class="avatar">${I(Number(x.amount_usd) > 0 ? "plus" : "wallet")}</span><div class="record-main"><h3>${e(x.description)}</h3><p>${e(C.date(x.created_at))} · الرصيد بعد الحركة ${e(C.money(x.balance_after, "USD", true))}</p></div><strong class="record-price ${Number(x.amount_usd) > 0 ? "ledger-plus" : "ledger-minus"}">${Number(x.amount_usd) > 0 ? "+" : ""}${e(C.money(x.amount_usd, "USD", true))}</strong></article>`)).join("")}</div>${orders ? '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد طلبات مطابقة في هذه الصفحة. جرّب عبارة أخرى أو انتقل للصفحة التالية.</p>' : ""}<div class="pagination"><button class="button secondary small" data-action="page-prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, r.count))} من ${e(r.count)}</span><button class="button secondary small" data-action="page-next" ${S.offset + 50 >= r.count ? "disabled" : ""}>التالي</button></div>`
       : empty(
           orders
             ? "ليس لديك طلبات بعد"
@@ -1431,9 +1431,16 @@
   document.addEventListener("input", (ev) => {
     if (ev.target?.id === "orderHistorySearch") {
       const term = ev.target.value.trim().toLocaleLowerCase("ar");
+      let visible = 0;
       document.querySelectorAll("#historyRecords .record").forEach((row) => {
-        row.hidden = !!term && !row.textContent.toLocaleLowerCase("ar").includes(term);
+        const match = !term || row.textContent.toLocaleLowerCase("ar").includes(term);
+        row.hidden = !match;
+        if (match) visible++;
       });
+      const counter = $("f90OrderSearchCount");
+      if (counter) counter.textContent = term ? `النتائج المطابقة في هذه الصفحة: ${visible}` : "البحث في الطلبات المعروضة حاليًا";
+      const emptyState = $("f90OrderSearchEmpty");
+      if (emptyState) emptyState.hidden = !term || visible > 0;
       return;
     }
     if (ev.target.id === "savedRecipient") return;
