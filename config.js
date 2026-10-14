@@ -31,5 +31,15 @@
   window.f90Supabase = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        storageKey: "f90-card-auth",
+        flowType: "pkce",
+      },
+    },
   );
 })();
