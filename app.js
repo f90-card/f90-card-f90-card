@@ -1016,9 +1016,9 @@
             ? `<div class="image-grid">${ps.map((p) => productTile(p)).join("")}</div>`
             : empty("لم تضف خدمة للمفضلة بعد", "heart"));
       } else if (page === "notifications") {
-        const fresh = await A.call("catalog");
+        // News is already supplied by the catalog loaded at startup.
+        // Avoid a second network request and a blank waiting screen on each visit.
         if (seq !== S.route) return;
-        S.news = fresh.news || [];
         if (S.news[0]?.created_at) {
           try { localStorage.setItem("f90-news-seen", S.news[0].created_at); } catch {}
         }
