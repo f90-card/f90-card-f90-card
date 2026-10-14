@@ -23,6 +23,7 @@
     selectedMethod: null,
     offset: 0,
     carousel: 0,
+    carouselPaused: false,
     favorites: [],
     savedRecipients: [],
     authMode: "login",
@@ -358,7 +359,7 @@
           : null;
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
-    main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero" aria-label="إعلان المتجر"><a href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async"></a>${hero?.presentation?.overlay_enabled ? `<div class="hero-overlay"><h2>${e(hero.title)}</h2><p>${e(hero.subtitle)}</p></div>` : ""}${slides.length > 1 ? `<div class="carousel-control"><button data-action="prev-banner" aria-label="الإعلان السابق">‹</button><button data-action="pause-banner" aria-label="إيقاف الحركة">Ⅱ</button><button data-action="next-banner" aria-label="الإعلان التالي">›</button></div>` : ""}</section>`}
+    main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-hidden="true">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span><button class="f90-hero-pause" data-action="pause-banner" aria-label="${S.carouselPaused?"تشغيل":"إيقاف"} تبديل الإعلانات" aria-pressed="${S.carouselPaused}">${S.carouselPaused?"▶":"Ⅱ"}</button></div>` : ""}</section>`}
  <form class="f90-home-search" id="homeSearchForm" role="search"><label class="sr-only" for="homeSearch">ابحث في الأقسام والخدمات</label><input id="homeSearch" type="search" placeholder="دوّر على لعبة، بطاقة أو خدمة..." autocomplete="off"><button class="button secondary" type="submit">${I("search")}بحث</button></form>
  <div class="section-head" id="categories"><h2>اختر عالمك</h2><span>كل ما تحتاجه، أقرب إليك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -388,19 +389,32 @@
    )
    .join("")}</div>`;
     clearInterval(bannerTimer);
-    if (
-      slides.length > 1 &&
-      !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    )
-      bannerTimer = setInterval(
-        () => {
-          // The carousel must not replace a search field while someone is typing.
-          if ($("homeSearch")?.value || document.activeElement?.id === "homeSearch") return;
-          S.carousel++;
-          if (location.hash === "#/" || !location.hash) home();
-        },
-        Math.max(3, Number(c.banner_seconds) || 6) * 1000,
-      );
+    if (slides.length > 1) {
+      const advance=(direction=1)=>{
+        const section=main.querySelector(".f90-swipe-hero");
+        if(!section)return;
+        S.carousel=(S.carousel+direction+slides.length)%slides.length;
+        const current=slides[S.carousel];
+        const pic=section.querySelector(".f90-hero-link img");
+        const link=section.querySelector(".f90-hero-link");
+        const overlay=section.querySelector(".hero-overlay");
+        const nextArt=C.safeUrl(current.image_url||c.hero_image||"./assets/sections/hero.png");
+        pic.src=e(nextArt);
+        pic.alt=current.title||"إعلان أف تسعين كارد";
+        link.href=C.safeUrl(current.link_url||"#/")||"#/";
+        overlay.hidden=!current.presentation?.overlay_enabled;
+        overlay.querySelector("h2").textContent=current.title||"";
+        overlay.querySelector("p").textContent=current.subtitle||"";
+        section.querySelectorAll(".f90-hero-dots i").forEach((dot,i)=>dot.classList.toggle("active",i===S.carousel));
+      };
+      const heroEl=main.querySelector(".f90-swipe-hero");
+      let startX=null;
+      heroEl.addEventListener("pointerdown",ev=>{if(ev.pointerType!=="mouse"||ev.button===0)startX=ev.clientX;},{passive:true});
+      heroEl.addEventListener("pointerup",ev=>{if(startX===null)return;const dx=ev.clientX-startX;startX=null;if(Math.abs(dx)>45){advance(dx>0?-1:1);heroEl.dataset.swiped="1";setTimeout(()=>delete heroEl.dataset.swiped,400);}}, {passive:true});
+      heroEl.querySelector(".f90-hero-link")?.addEventListener("click",ev=>{if(heroEl.dataset.swiped==="1")ev.preventDefault()});
+      heroEl.f90Advance=advance;
+      bannerTimer=setInterval(()=>{if(!S.carouselPaused&&(location.hash==="#/"||!location.hash))advance();},Math.max(3,Number(c.banner_seconds)||6)*1000);
+    }
   }
   function category(slug) {
     const c = S.categories.find((x) => x.slug === slug || x.id === slug);
@@ -1563,13 +1577,11 @@
         button.setAttribute("aria-pressed",String(paused));
         button.setAttribute("aria-label",paused?"تشغيل حركة الشريط":"إيقاف حركة الشريط");
       }
-      else if (action === "next-banner" || action === "prev-banner") {
-        S.carousel += action === "next-banner" ? 1 : S.banners.length - 1;
-        home();
-      } else if (action === "pause-banner") {
-        clearInterval(bannerTimer);
-        button.textContent = "▶";
-        button.dataset.action = "next-banner";
+      else if (action === "pause-banner") {
+        S.carouselPaused=!S.carouselPaused;
+        button.textContent=S.carouselPaused?"▶":"Ⅱ";
+        button.setAttribute("aria-pressed",String(S.carouselPaused));
+        button.setAttribute("aria-label",S.carouselPaused?"تشغيل تبديل الإعلانات":"إيقاف تبديل الإعلانات");
       } else if (action === "refresh-route") {
         await refreshMe();
         chrome();
