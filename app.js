@@ -1914,6 +1914,10 @@
           const latest = await A.call("catalog");
           if (!Array.isArray(latest?.news)) return;
           S.news = latest.news;
+          // Keep refreshed availability in memory; do not interrupt an open purchase.
+          const buying = !!document.querySelector(".checkout-form, #checkoutForm, [data-checkout-form]");
+          if (!buying && Array.isArray(latest.products)) S.products = latest.products;
+          if (!buying && Array.isArray(latest.categories)) S.categories = latest.categories;
           updateStoreBell();
         } catch {
           // Keep previous news and continue normal browsing if offline.
