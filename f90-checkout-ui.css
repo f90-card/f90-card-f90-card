@@ -48,3 +48,10 @@
 :root[data-theme="cream"] .f90-checkout-review .f90-review-total{color:#fff}
 @media(max-width:600px){.f90-mobile-dock{padding-bottom:max(4px,env(safe-area-inset-bottom))}.f90-mobile-dock a{font-size:11px}.f90-mobile-dock a svg{width:23px;height:23px}.f90-hero-controls{bottom:8px;left:9px}.f90-search-page-form>div{flex-wrap:wrap}.f90-search-page-form input{flex:1 1 170px}.f90-search-page-form button{flex:0 0 auto}.f90-checkout-review .f90-review-brand img{width:58px;height:58px}#modalRoot .modal:has(.f90-checkout-review){width:calc(100vw - 16px);max-height:calc(100dvh - 32px);padding:clamp(13px,3vw,24px)}}
 @media(prefers-reduced-motion:reduce){.promotion .promotion-track{animation:none!important;will-change:auto}.f90-hero-dots i{transition:none}}
+
+/* Clear search result feedback and server-quote loading status */
+.f90-search-result-count{display:inline-flex;align-items:center;gap:9px;margin:0 0 16px;padding:9px 15px;border-radius:100px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));font-weight:800;font-size:13px;color:var(--text)}
+#priceBoard[aria-busy="true"]{opacity:.48;filter:saturate(.5);pointer-events:none;transition:opacity .15s}
+#checkoutTotal{font-variant-numeric:tabular-nums}
+#checkoutForm .inline-error:not(:empty){display:block;margin-block:10px;line-height:1.7}
+@media(max-width:600px){.f90-search-result-count{margin-bottom:12px;font-size:12px}}
