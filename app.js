@@ -474,6 +474,7 @@
       });
       if (!f.isConnected || seq !== S.quoteSeq) return;
       S.quote = quote;
+      $("priceBoard").removeAttribute("aria-busy");
       $("priceBoard").innerHTML = priceBoard(quote.total_usd);
       $("checkoutTotal").textContent = C.money(
         C.convert(quote.total_usd, S.currency, S.rates),
@@ -1034,16 +1035,14 @@
       } else if (page === "search") {
         const searchInput = $("globalSearch");
         const q = String(id || searchInput?.value || "").trim().toLocaleLowerCase("ar");
+        const normalize = (value) => String(value || "").toLocaleLowerCase("ar").normalize("NFKC").replace(/[\u064b-\u065f\u0670]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه");
+        const term = normalize(q);
+        const matchedCategories = term ? S.categories.filter(c=>normalize(c.name+" "+(c.description||"")).includes(term)) : S.categories.filter(c=>!c.parent_id).slice(0,12);
+        const matchedProducts = term ? S.products.filter(p=>normalize(p.name+" "+(p.description||"")+" "+(p.commerce?.search_aliases||[]).join(" ")).includes(term)) : S.products.filter(p=>p.is_featured).slice(0,18);
         main.innerHTML =
           pageHead("البحث في المتجر", q ? "نتائج البحث عن: " + e(q) : "ابحث عن الألعاب والتطبيقات والخدمات") +
           `<form id="f90SearchPageForm" class="f90-search-page-form" role="search"><label for="f90SearchPageInput">ابحث في جميع أقسام المتجر</label><div><input id="f90SearchPageInput" type="search" value="${e(q)}" placeholder="اسم لعبة أو تطبيق أو خدمة..." autocomplete="off" required><button class="button" type="submit">${I("search")} بحث</button></div></form>` +
-          `<div class="image-grid">${S.categories
-            .filter((c) => c.name.toLocaleLowerCase("ar").includes(q))
-            .map(categoryTile)
-            .join("")}${S.products
-            .filter((p) => (p.name + " " + (p.commerce?.search_aliases || []).join(" ")).toLocaleLowerCase("ar").includes(q))
-            .map((p) => productTile(p))
-            .join("")}</div>`;
+          `<p class="f90-search-result-count" role="status">${term ? "نتائج البحث: " : "الأقسام والخدمات المقترحة: "}${matchedCategories.length+matchedProducts.length}</p><div class="image-grid">${matchedCategories.map(categoryTile).join("")}${matchedProducts.map(p=>productTile(p)).join("")}</div>`;
         if (!main.querySelector(".image-tile"))
           main.insertAdjacentHTML("beforeend", empty("لم توجد نتائج مطابقة"));
       } else main.innerHTML = empty("هذه الصفحة غير موجودة");
@@ -1426,7 +1425,7 @@
       if (err.code === "F90_MFA") mfaChallenge();
     } finally {
       delete form.dataset.busy;
-      if (button?.isConnected) button.disabled = false;
+      if (button?.isConnected) button.disabled = form.id === "checkoutForm" ? !S.quote : false;
     }
   });
   document.addEventListener("input", (ev) => {
@@ -1447,6 +1446,11 @@
     if (ev.target.id === "savedRecipient") return;
     if (ev.target.closest("#checkoutForm")) {
       S.quote = null;
+      S.quoteSeq++;
+      const total=$("checkoutTotal");
+      if(total)total.textContent="جارٍ تحديث السعر…";
+      const board=$("priceBoard");
+      if(board)board.setAttribute("aria-busy","true");
       const p = S.products.find(
         (x) => x.id === ev.target.closest("form").dataset.product,
       );
