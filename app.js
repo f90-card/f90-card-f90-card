@@ -41,10 +41,14 @@
     S.favorites = JSON.parse(localStorage.getItem("f90-favorites") || "[]");
   } catch {}
   const href = (kind, id) => `#/${kind}/${encodeURIComponent(id)}`;
-  const image = (src, alt = "", cls = "") =>
-    C.safeUrl(src)
-      ? `<img src="${e(C.safeUrl(src))}" alt="${e(alt)}" class="${cls}" loading="lazy" decoding="async" onerror="this.onerror=null;this.hidden=true;this.insertAdjacentHTML('afterend','<span class=&quot;image-placeholder&quot;>صورة غير متاحة</span>')">`
+  const image = (src, alt = "", cls = "") => {
+    const valid = C.safeUrl(src);
+    const fallback = C.safeUrl(S.settings?.config?.card_fallback_image || S.settings?.config?.card_back_image || "./assets/sections/services.png");
+    const use = valid && !String(valid).includes("/app-placeholders/") ? valid : fallback;
+    return use
+      ? `<img src="${e(use)}" alt="${e(alt)}" class="${e(cls)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${e(fallback)}';">`
       : `<div class="image-placeholder">${I("grid")}<span>${e(alt)}</span></div>`;
+  };
   const field = (name, label, type = "text", value = "", attrs = "") =>
     `<label class="field"><span>${label}</span>${type === "textarea" ? `<textarea name="${name}" ${attrs}>${e(value)}</textarea>` : `<input name="${name}" type="${type}" value="${e(value)}" ${attrs}>`}</label>`;
   const select = (name, label, options, value) =>
@@ -335,7 +339,7 @@
     const disabled = C.unavailable(p) || C.categoryUnavailable(S.categories.find((c) => c.id === p.category_id) || {}, S.categories, S.products);
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
-      return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
+      return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
     return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function welcome() {
