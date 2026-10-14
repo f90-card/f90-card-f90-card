@@ -120,5 +120,6 @@
       target.innerHTML='<p class="f90-quran-error">تعذر تحميل الآيات حاليًا. يمكنك قراءة السورة عبر الرابط أدناه.</p>';
     }
   }
+  window.addEventListener("hashchange",()=>{if(!location.hash.startsWith("#/quran"))stopAudio();});
   window.F90Quran={render};
 })();
