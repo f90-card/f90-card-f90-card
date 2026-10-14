@@ -497,6 +497,8 @@
     } catch (err) {
       if (!f.isConnected || seq !== S.quoteSeq) return;
       S.quote = null;
+      $("priceBoard")?.removeAttribute("aria-busy");
+      $("checkoutTotal").textContent="السعر غير متاح";
       $("quoteError").textContent = message(err);
       $("buyButton").disabled = true;
     }
