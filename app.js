@@ -160,6 +160,7 @@
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
       ["welcome", "التعرّف على F90", "doc"],
+      ["quran", "القرآن الكريم", "book"],
       ["favorites", "المفضلة", "heart"],
       ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
@@ -1026,6 +1027,7 @@
           toast("أهلًا " + (S.me?.profile?.display_name || "بك") + " في أف تسعين كارد");
         }
       }
+      else if (page === "quran") window.F90Quran?.render(main);
       else if (page === "category") category(id);
       else if (page === "product") product(id);
       else if (page === "auth") auth();
