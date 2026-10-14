@@ -629,6 +629,13 @@
       $("buyButton").disabled = true;
     }
   }
+  function recipientFieldKind(field) {
+    const id = String(field?.id || "").toLowerCase();
+    if (/email|e_mail|mail/.test(id) || field?.type === "email") return "email";
+    if (/phone|mobile|whatsapp|telephone|tel/.test(id)) return "phone";
+    if (/account|player|user|character|uid|(^id$)|_id$/.test(id)) return "account_id";
+    return null;
+  }
   function product(slug, inline = false) {
     const p = S.products.find((p) => p.slug === slug || p.id === slug);
     if (!p) {
@@ -654,7 +661,7 @@
           },
         ];
     const productHtml = `<div class="breadcrumb f90-purchase-hidden"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page f90-purchase-compact"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow f90-purchase-hidden">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)} <span class="f90-fulfillment-badge">${c.fulfillment === "automatic" ? "آلي" : "يدوي"}</span></h1><div class="badges f90-purchase-hidden"><span class="badge">${disabled ? "الخدمة متوقفة مؤقتًا" : I(c.fulfillment === "automatic" ? "link" : "user") + (c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")}</span>${!disabled && c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${disabled ? '<p class="product-description">هذه الخدمة متوقفة مؤقتًا إلى حين تهيئة تنفيذها.</p>' : p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="f90-compact-actions"><button type="button" class="f90-favorite-icon ${S.favorites.includes(p.id) ? "is-saved" : ""}" aria-pressed="${S.favorites.includes(p.id)}" data-action="favorite" data-id="${p.id}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button></div><div class="price-board f90-purchase-hidden" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
- <form id="checkoutForm" data-product="${p.id}"><div class="f90-checkout-summary"><div><span>قيمة المنتج</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div><div><span>رصيد محفظتك</span><strong id="f90CheckoutTopBalance">${S.me ? e(C.money(S.me.wallet?.balance_usd,"USD",true)) : "سجّل الدخول"}</strong></div><div><span>الرصيد بعد الشراء</span><strong id="f90CheckoutTopRemaining">بانتظار التسعير</strong></div><div class="f90-checkout-mode f90-purchase-hidden">${I(c.fulfillment === "automatic" ? "link" : "clock")}<span>${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ بحسب معالجة الطلب"}${c.delivery_time ? " · " + e(c.delivery_time) : ""}</span></div></div><div class="f90-checkout-safety-note f90-purchase-hidden">تأكد من رقم الحساب والكمية قبل إتمام الشراء. لا تشارك كلمة مرورك أو رمز التحقق.</div>${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone", "email"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small f90-purchase-hidden"></p><div class="checkout-total f90-purchase-hidden"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small f90-purchase-hidden"></p></form></section></div>`;
+ <form id="checkoutForm" data-product="${p.id}"><div class="f90-checkout-summary"><div><span>قيمة المنتج</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div><div><span>رصيد محفظتك</span><strong id="f90CheckoutTopBalance">${S.me ? e(C.money(S.me.wallet?.balance_usd,"USD",true)) : "سجّل الدخول"}</strong></div><div><span>الرصيد بعد الشراء</span><strong id="f90CheckoutTopRemaining">بانتظار التسعير</strong></div><div class="f90-checkout-mode f90-purchase-hidden">${I(c.fulfillment === "automatic" ? "link" : "clock")}<span>${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ بحسب معالجة الطلب"}${c.delivery_time ? " · " + e(c.delivery_time) : ""}</span></div></div><div class="f90-checkout-safety-note f90-purchase-hidden">تأكد من رقم الحساب والكمية قبل إتمام الشراء. لا تشارك كلمة مرورك أو رمز التحقق.</div>${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small f90-purchase-hidden"></p><div class="checkout-total f90-purchase-hidden"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small f90-purchase-hidden"></p></form></section></div>`;
     if (inline) {
       const panel = $("quickProductPanel");
       if (!panel) return;
@@ -784,7 +791,7 @@
   }
   async function recipients() {
     const seq = S.route;
-    main.innerHTML = pageHead("دفتر العملاء", "احفظ معرّفات الألعاب وأرقام الهاتف التي تستخدمها للشحن. لا تحفظ كلمات مرور أو بيانات دفع هنا.") +
+    main.innerHTML = pageHead("دفتر العملاء", "احفظ معرّفات حساباتك وأرقام الهاتف والبريد الإلكتروني لاستخدامها عند الشراء من أي جهاز. لا تحفظ كلمات مرور أو بيانات دفع.") +
       '<div id="recipientsContent" class="loading">جارٍ تحميل البيانات المحفوظة…</div>';
     let cloudError = null;
     let items = [];
@@ -800,7 +807,7 @@
           ${field("label", "اسم مختصر", "text", "", 'required maxlength="50" placeholder="مثال: حساب ببجي"')}
           ${select("kind", "نوع المعرّف", [["account_id", "معرّف حساب أو لعبة"], ["phone", "رقم هاتف"], ["email", "بريد إلكتروني"]], "account_id")}
           ${field("value", "المعرّف أو رقم الهاتف", "text", "", 'required minlength="2" maxlength="120" autocomplete="off" dir="ltr"')}
-          <p class="muted small">تُحفظ البيانات على هذا الجهاز لهذا الحساب فقط، وتظهر عند الشراء من المتصفح نفسه. حذف بيانات المتصفح يمحوها. لا تحفظ كلمات مرور أو بيانات دفع.</p>
+          <p class="muted small">تُحفظ البيانات في حسابك لتظهر عند تسجيل الدخول من أجهزتك، مع محاولة نقل البيانات المحفوظة سابقًا على هذا الجهاز. لا تحفظ كلمات مرور أو بيانات دفع.</p>
           <div class="actions"><button class="button" type="submit">حفظ</button><button class="button secondary" type="button" data-action="recipient-reset">إلغاء التحرير</button></div>
         </form>
       </section>
@@ -816,8 +823,10 @@
       const result = { items: await cloudRecipients() };
       if (!form.isConnected) return;
       S.savedRecipients = result.items || [];
-      const kinds = [...form.elements].filter((el) => el.name?.startsWith("customer_"))
-        .map((el) => el.name.slice(9));
+      const product = S.products.find(p => p.id === form.dataset.product);
+      const fieldKinds = (product?.commerce?.fields?.length ? product.commerce.fields : [{id:"account_id"}])
+        .map(field => recipientFieldKind(field)).filter(Boolean);
+      const kinds = [...new Set(fieldKinds)];
       const rows = S.savedRecipients.filter((item) => kinds.includes(item.kind));
       select.innerHTML = '<option value="">أدخل البيانات يدويًا</option>' +
         rows.map((item) => `<option value="${e(item.id)}">${e(item.label)} · ${e(item.value)}</option>`).join("");
@@ -1685,7 +1694,11 @@
   document.addEventListener("change", (ev) => {
     if (ev.target.id !== "savedRecipient") return;
     const item = S.savedRecipients.find((row) => row.id === ev.target.value);
-    const input = item && $("checkoutForm")?.elements["customer_" + item.kind];
+    const form = $("checkoutForm");
+    const product = S.products.find(p => p.id === form?.dataset.product);
+    const fields = product?.commerce?.fields?.length ? product.commerce.fields : [{id:"account_id"}];
+    const field = item && fields.find(f => recipientFieldKind(f) === item.kind);
+    const input = field && form?.elements["customer_" + field.id];
     if (input) {
       input.value = item.value;
       input.dispatchEvent(new Event("input", { bubbles: true }));
