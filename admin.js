@@ -1202,6 +1202,11 @@
       ).url;
     if (kind === "product") {
       data.category_id = d.category_id || null;
+      // Supplier pauses are authoritative until a successful supplier sync.
+      // Do not silently advertise a supplier-paused item as purchasable.
+      const supplierPaused = old.commerce?.supplier_refilling === true;
+      if (supplierPaused && d.availability === "available")
+        throw new Error("هذه الخدمة متوقفة من المورد. انتظر تأكيد توفرها من المزامنة قبل إتاحتها للبيع.");
       data.commerce = {
         ...old.commerce,
         availability: d.availability,
