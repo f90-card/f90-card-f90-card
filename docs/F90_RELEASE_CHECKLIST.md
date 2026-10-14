@@ -8,8 +8,6 @@ This is an operational checklist for the store owner and developer. Passing a Ja
 - [ ] Open the category menu and theme switch on dark/cream themes. No layout shifts, hidden buttons or mismatched glow.
 - [ ] Open `#/welcome`: official configured F90 logo, responsive main heading, no unnecessary product captions, reduced-motion behavior and no missing images.
 - [ ] Open `#/quran`: Quran radio only here, source selector, audible play, station offline error, and stop/switch behavior.
-- [ ] On `#/welcome`, confirm **real live** F90 Music (DataMind FM), play/pause, volume, stream attribution, and phone behavior. The provider explicitly allows embedding. Music does not autoplay with sound.
-- [ ] Admin `#/music`: test each **separately authorized** HTTPS station, its mood label and source credit. Empty slots do not show fake streams.
 - [ ] Disable mobile network and resume: do not let frozen prices be mistaken for authoritative checkout quotes.
 
 ## 2. Buying & wallet (only with a dedicated authorised test account)
@@ -35,7 +33,7 @@ This is an operational checklist for the store owner and developer. Passing a Ja
 
 ## 5. Administration & performance
 - [ ] Test `admin.html#/design-center` copy/hero/image/glow changes on a throwaway configuration and then restore, without altering balances.
-- [ ] Test `admin.html#/integration`, `#/infrastructure`, `#/music` and existing trade/provider settings on mobile/desktop.
+- [ ] Test `admin.html#/integration`, `#/infrastructure` and existing trade/provider settings on mobile/desktop.
 - [ ] Confirm admin orders/deposits and audit lists are restricted to authorised manager/admin accounts.
 - [ ] Run database security and performance advisers; check server response latency and stale provider sync.
 - [ ] Supabase Auth warning: **Leaked password protection must be enabled in Auth settings** by an authorised owner; currently warned by the adviser.
@@ -43,8 +41,9 @@ This is an operational checklist for the store owner and developer. Passing a Ja
 
 ## 6. New-deposit email notices
 - [x] Two private recipient-specific notification queue entries are enqueued on each new pending deposit.
-- [ ] **No delivery yet.** Connect a verified-domain transactional mail provider (e.g. Resend) and private credentials.
-- [ ] Deploy authenticated sender worker, retries and delivery monitoring.
+- [x] JWT-protected Edge Function `f90-deposit-mail` and service-role-only job locking/completion RPCs deployed.
+- [ ] **No delivery yet.** Connect an authorized transactional mail sender (e.g. Resend) with verified sending identity and private credentials.
+- [ ] Add `RESEND_API_KEY`, `F90_EMAIL_FROM`, `F90_EMAIL_DISPATCH_SECRET` as function secrets; enable a trusted automated scheduler and verify real sender acknowledgements.
 - [ ] Confirm receipt at both destination inboxes from a controlled test deposit, without copying receipts or customer private details into mail.
 
 ## 7. Hosting/domain
@@ -54,7 +53,7 @@ This is an operational checklist for the store owner and developer. Passing a Ja
 
 ## Verification performed by assistant
 - JS syntax and asset version checks on repository files.
-- Private deposit-email queue schema and trigger created successfully, no emails yet sent.
+- Private deposit-email queue schema, trigger, and authentication-protected sender worker deployed. No inbox delivery test has passed.
 - Supabase relationship indexes created in an earlier batch; no unindexed-FK warning remains.
 - Public key and source files scanned for obvious embedded secrets (not a full professional pentest).
 - No payment execution / balance mutation performed for automated testing.
