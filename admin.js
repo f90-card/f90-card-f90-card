@@ -550,6 +550,9 @@
   }
   async function catalogPage(kind) {
     await catalogs();
+    if (kind === "products" && S.providerFilter && !(S.providers || []).some((p) => p.id === S.providerFilter)) {
+      S.providerFilter = S.providers?.[0]?.id || "";
+    }
     if (kind === "categories" && !S.sectionFilter) S.sectionFilter = "all";
     const rows = S[kind];
     const productGroups = kind === "products"
