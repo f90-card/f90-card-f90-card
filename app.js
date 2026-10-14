@@ -1024,14 +1024,14 @@
         }
         updateStoreBell();
         const news = (S.news || []).map((n) =>
-          `<a class="panel f90-news-item" href="${n.product_id ? href("product", n.product_id) : "#/"}"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.body_ar)}</p><small>${e(C.date(n.created_at))}</small></a>`).join("");
+          `<a class="panel f90-news-item" href="${n.product_id ? href("product", n.product_id) : "#/"}"><span class="f90-news-icon" aria-hidden="true">${I("bell")}</span><div class="f90-news-content"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.body_ar)}</p><small>${e(C.date(n.created_at))}</small></div><span class="f90-news-arrow" aria-hidden="true">${I("arrow-left")}</span></a>`).join("");
         main.innerHTML =
           pageHead("كل جديد، هنا") +
           (S.settings.config.notifications || [])
             .filter((n) => n.enabled && C.visibleSchedule(n))
             .map(
               (n) =>
-                `<section class="panel" style="margin-bottom:15px"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.text_ar || n.body_ar)}</p></section>`,
+                `<section class="panel f90-news-item"><span class="f90-news-icon" aria-hidden="true">${I("bell")}</span><div class="f90-news-content"><h3>${e(n.title_ar)}</h3><p class="muted">${e(n.text_ar || n.body_ar)}</p></div></section>`,
             )
             .join("") + news;
         if (!main.querySelector(".panel"))
