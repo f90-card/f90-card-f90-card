@@ -4,6 +4,7 @@
 - Pending deposit trigger installed: `f90_new_deposit_email_queue`.
 - Private queue: `f90_private.deposit_email_queue` (RLS enabled, not readable from frontend).
 - Delivery Edge Function deployed: `f90-deposit-mail`, JWT verification **enabled**.
+- Protected minute scheduler installed: `cron.job` named `f90-pending-deposit-mail`. It does nothing until required Vault dispatch credentials exist; it does not send email before Resend sender secrets are configured.
 - Server-only queue claim and result RPCs: `public.f90_mail_claim_batch` and `public.f90_mail_complete`; execute permissions for `service_role` only.
 - Each new pending deposit produces one job per configured administrator address, de-duplicated by `(deposit_id,recipient)`.
 - Email message is intentionally generic, only mentioning a pending deposit and linking to the protected admin dashboard. It never sends receipt images, customer contact details, passwords or keys.
@@ -25,7 +26,7 @@ Authorization: Bearer <SECURE_SUPABASE_SERVER_JWT>
 x-f90-dispatch-secret: <PRIVATE_F90_EMAIL_DISPATCH_SECRET>
 Content-Type: application/json
 ```
-Store the scheduler's credentials in protected Supabase Vault/secret manager, not publicly accessible database rows. An administrator should test the handler with a valid secret; the function returns 503 if the sender provider isn't configured, and must not be treated as working while 503 is returned.
+The existing minute scheduler reads `f90_mail_bearer_jwt` and `f90_mail_dispatch_secret` from **Supabase Vault** using a protected Postgres function. These secrets are not set yet. `f90_mail_dispatch_secret` must match Edge Function secret `F90_EMAIL_DISPATCH_SECRET`; `f90_mail_bearer_jwt` must be a valid privileged invocation JWT accepted by Supabase. Do not paste service-role credentials into GitHub or public settings. The function returns 503 if the sender provider is not configured and must not be considered working while 503 is returned.
 
 ## How it works
 1. New pending deposit is saved in `public.f90_deposits` (normal verified F90 workflow).
@@ -37,7 +38,7 @@ Store the scheduler's credentials in protected Supabase Vault/secret manager, no
 
 ## Acceptance criteria
 - [ ] Provider key configured and sender verified
-- [ ] Scheduler securely invokes Edge Function after deposit with no publicly exposed key
+- [ ] Vault bearer and dispatch secrets are configured, so the installed minute scheduler invokes the Edge Function securely (within approximately a minute, subject to delivery and scheduler delays)
 - [ ] Worker shows `accepted > 0` on a controlled test notification
 - [ ] Both recipient inboxes receive the mail and correct admin link
 - [ ] Repeated trigger or retried job doesn't create duplicate messages
