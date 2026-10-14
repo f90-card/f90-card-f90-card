@@ -246,6 +246,33 @@
     badge.textContent = unread > 9 ? "9+" : String(unread);
     $("storeBell")?.setAttribute("aria-label", unread ? `الأخبار والإشعارات · ${unread} جديدة` : "الأخبار والإشعارات");
   }
+  function closeBellPanel() {
+    const panel=$("f90BellPanel");
+    if(panel)panel.hidden=true;
+    $("storeBell")?.setAttribute("aria-expanded","false");
+  }
+  function toggleBellPanel() {
+    let panel=$("f90BellPanel");
+    if(!panel){
+      panel=document.createElement("section");
+      panel.id="f90BellPanel";
+      panel.className="f90-bell-panel";
+      panel.setAttribute("role","dialog");
+      panel.setAttribute("aria-label","مركز الإشعارات");
+      panel.hidden=true;
+      $("storeBell").insertAdjacentElement("afterend",panel);
+    }
+    if(!panel.hidden){closeBellPanel();return;}
+    const announcements=(S.settings.config.notifications||[]).filter(n=>n.enabled&&C.visibleSchedule(n));
+    const items=[...(S.news||[]).map(n=>({title:n.title_ar,body:n.body_ar,date:n.created_at,url:n.product_id?href("product",n.product_id):"#/notifications"})),...announcements.map(n=>({title:n.title_ar,body:n.text_ar||n.body_ar,date:n.created_at,url:"#/notifications"}))].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).slice(0,12);
+    panel.innerHTML=`<div class="f90-bell-panel-head"><div><strong>${I("bell")} إشعارات F90 CARD</strong><small>آخر الأخبار والتحديثات</small></div><button type="button" class="icon-button" data-action="close-bell-panel" aria-label="إغلاق الإشعارات">${I("close")}</button></div><div class="f90-bell-panel-list">${items.length?items.map(n=>`<a class="f90-bell-panel-item" href="${e(n.url)}"><span class="f90-bell-panel-item-icon">${I("bell")}</span><span><strong>${e(n.title||"إشعار")}</strong><small>${e(n.body||"")}</small><time>${n.date?e(C.date(n.date)):""}</time></span></a>`).join(""):'<p class="f90-bell-panel-empty">لا توجد إشعارات جديدة حاليًا.</p>'}</div><a class="f90-bell-panel-all" href="#/notifications">عرض جميع الإشعارات ${I("arrow-left")}</a>`;
+    panel.hidden=false;
+    $("storeBell").setAttribute("aria-expanded","true");
+    const newest=(S.news||[]).map(n=>n.created_at).filter(Boolean).sort().pop();
+    if(newest){try{localStorage.setItem("f90-news-seen",newest);}catch{}}
+    updateStoreBell();
+    panel.querySelector("button")?.focus();
+  }
   async function refreshMe() {
     const {
       data: { session },
@@ -906,6 +933,7 @@
   }
   async function route() {
     const seq = ++S.route;
+    closeBellPanel();
     const ticker=$("promotionBar");
     if(ticker && ticker.parentElement===main)main.parentElement.insertBefore(ticker,main);
     clearInterval(bannerTimer);
@@ -1694,7 +1722,14 @@
   $("menuButton").innerHTML = I("menu");
   $("drawerClose").innerHTML = I("close");
   $("searchButton").innerHTML = I("search");
-  $("menuButton").addEventListener("click", () => toggleDrawer(true));
+  $("storeBell")?.setAttribute("aria-expanded","false");
+  $("storeBell")?.setAttribute("aria-haspopup","dialog");
+  $("storeBell")?.addEventListener("click",ev=>{ev.preventDefault();toggleBellPanel();});
+  document.addEventListener("click",ev=>{
+    if(ev.target.closest('[data-action="close-bell-panel"]')){ev.preventDefault();closeBellPanel();return;}
+    if(!$("f90BellPanel")?.hidden&&!ev.target.closest("#f90BellPanel")&&!ev.target.closest("#storeBell"))closeBellPanel();
+  });
+    $("menuButton").addEventListener("click", () => toggleDrawer(true));
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
   $("themeSelect").addEventListener("change", (ev) => theme(ev.target.value));
@@ -1711,6 +1746,7 @@
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
       closeModal();
+      closeBellPanel();
       closeQuickProduct();
       if (!$("drawer").hidden) toggleDrawer(false);
     }
