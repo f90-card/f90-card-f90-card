@@ -218,3 +218,16 @@
 @keyframes f90-card-edge-breathe{from{filter:drop-shadow(0 0 2px rgba(255,52,101,.10))}to{filter:drop-shadow(0 0 9px rgba(255,52,101,.32))}}
 :root[data-theme="cream"] .image-grid .image-tile{box-shadow:0 0 0 1px rgba(174,42,90,.16),0 0 11px rgba(199,52,101,.15)!important}
 @media(prefers-reduced-motion:reduce){.image-grid .image-tile{animation:none!important}}
+
+/* Compact header frame: keep the official logo big, narrow the background band itself. */
+.site-header{padding-block:0!important}
+.site-header .header-inner{min-height:69px!important;grid-template-rows:48px 19px!important;padding-block:0!important;gap:0 5px!important}
+.site-header #headerBrand,.site-header .header-inner>#headerBrand{top:0!important;height:48px!important}
+.site-header #searchForm{height:19px!important;margin:0 auto!important;max-height:19px}
+.site-header #searchForm input{height:19px!important;min-height:19px!important;font-size:11px!important;padding-block:0!important}
+.site-header #searchForm button{height:19px!important;min-height:19px!important;padding:1px!important}
+.site-header .header-inner>.f90-header-theme{position:absolute!important;inset-inline-start:4px;top:2px;z-index:7;width:29px!important;height:29px!important;min-height:29px!important;padding:3px!important;border-radius:50%;display:grid;place-items:center}
+.site-header .f90-header-theme .f90-theme-toggle-label,.site-header .f90-header-theme .f90-theme-toggle-track{display:none!important}
+.site-header .f90-header-theme .f90-theme-toggle-icon{font-size:19px;width:auto;line-height:1}
+.site-header #storeBell{margin-inline-start:32px}
+@media(max-width:520px){.site-header .header-inner{min-height:66px!important;grid-template-rows:47px 18px!important}.site-header #headerBrand,.site-header .header-inner>#headerBrand{height:47px!important}.site-header #searchForm,.site-header #searchForm input{height:18px!important;min-height:18px!important}.site-header .header-inner>.f90-header-theme{top:1px;width:27px!important;height:27px!important;min-height:27px!important}.site-header #storeBell{margin-inline-start:27px}}
