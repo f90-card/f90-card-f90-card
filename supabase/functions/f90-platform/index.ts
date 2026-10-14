@@ -339,6 +339,20 @@ async function publicCatalog() {
   const categories = check(rows[1]);
   const products = check(rows[2]);
   const linked = check(rows[6]);
+  const yassenId = "dd7aed3f-ab2d-4ff2-b4d6-d46493ea174d";
+  const yassenProductIds = new Set(linked.filter((entry: any) => entry.provider_id === yassenId)
+    .map((entry: any) => entry.product_id));
+  const allowedCategoryIds = new Set<string>();
+  for (const product of products) {
+    if (!yassenProductIds.has(product.id)) continue;
+    let categoryId = product.category_id;
+    const seen = new Set<string>();
+    while (categoryId && !seen.has(categoryId)) {
+      allowedCategoryIds.add(categoryId);
+      seen.add(categoryId);
+      categoryId = categories.find((entry: any) => entry.id === categoryId)?.parent_id;
+    }
+  }
   const providerById = new Map(check(rows[7]).map((p: any) => [p.id, p]));
   const productById = new Map(products.map((p: any) => [p.id, p]));
   const hiddenProductIds = new Set(
@@ -364,7 +378,7 @@ async function publicCatalog() {
   return {
     settings: check(rows[0]),
     categories: categories
-      .filter((c: any) => visible(c.id))
+      .filter((c: any) => allowedCategoryIds.has(c.id) && visible(c.id))
       .map((c: any) =>
         parentRefilling(c.id, categories)
           ? {
@@ -374,7 +388,7 @@ async function publicCatalog() {
           : c,
       ),
     products: products
-      .filter((p: any) => !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
+      .filter((p: any) => yassenProductIds.has(p.id) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         parentRefilling(p.category_id, categories) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
@@ -383,7 +397,7 @@ async function publicCatalog() {
     banners: check(rows[3]),
     rates: check(rows[4]),
     vip: check(rows[5]),
-    news: check(rows[8]),
+    news: check(rows[8]).filter((n: any) => !n.product_id || yassenProductIds.has(n.product_id)),
     version: 3,
   };
 }
@@ -836,17 +850,16 @@ async function staff(a: Actor, b: any) {
     );
     const allProviders = check(await db.from("f90_providers")
       .select("id,name,is_enabled,config"));
-    const archivedIds = new Set(allProviders.filter((p: any) => p.config?.archived_at)
-      .map((p: any) => p.id));
     const internals = check(await db.from("f90_product_internal").select("*"));
-    const archivedProductIds = new Set(internals.filter((i: any) => archivedIds.has(i.provider_id))
+    const yassenId = "dd7aed3f-ab2d-4ff2-b4d6-d46493ea174d";
+    const yassenProductIds = new Set(internals.filter((i: any) => i.provider_id === yassenId)
       .map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]).filter((p: any) => !archivedProductIds.has(p.id)),
+      products: check(rows[1]).filter((p: any) => yassenProductIds.has(p.id)),
       banners: check(rows[2]),
-      internal: a.role === "manager" ? internals.filter((i: any) => !archivedIds.has(i.provider_id)) : [],
-      providers: a.role === "manager" ? allProviders.filter((p: any) => !p.config?.archived_at)
+      internal: a.role === "manager" ? internals.filter((i: any) => i.provider_id === yassenId) : [],
+      providers: a.role === "manager" ? allProviders.filter((p: any) => p.id === yassenId && !p.config?.archived_at)
         .map(({ id, name, is_enabled }: any) => ({ id, name, is_enabled })) : [],
     };
   }

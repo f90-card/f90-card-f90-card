@@ -201,7 +201,7 @@
       [/discord|ديسكورد/, "discord"]
     ];
     const match = platforms.find(([re]) => re.test(label) || re.test(url));
-    return match ? "https://cdn.jsdelivr.net/npm/simple-icons@v15/icons/" + match[1] + ".svg" : "";
+    return match ? "https://cdn.simpleicons.org/" + match[1] : "";
   }
   function f90SocialCards() {
     return f90SocialLinks().map(x => {
@@ -262,12 +262,20 @@
               : `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}${label}</a>`,
         )
         .join("") +
-      (me && ["manager", "admin", "designer", "support"].includes(me.role)
-        ? `<a href="./admin.html">${I("chart")}لوحة الإدارة</a>`
-        : "") +
       (me
         ? `<button data-action="logout">${I("logout")}تسجيل الخروج</button>`
         : "");
+    const staff = me && ["manager", "admin", "designer", "support"].includes(me.role);
+    let adminShortcut = document.getElementById("f90AdminShortcut");
+    if (staff && !adminShortcut) {
+      adminShortcut = document.createElement("a");
+      adminShortcut.id = "f90AdminShortcut";
+      adminShortcut.className = "icon-button f90-admin-shortcut";
+      adminShortcut.href = "./admin.html";
+      adminShortcut.title = adminShortcut.ariaLabel = "لوحة الإدارة";
+      adminShortcut.innerHTML = I("chart");
+      $("headerWallet").before(adminShortcut);
+    } else if (!staff) adminShortcut?.remove();
     const enabled = S.rates.filter((r) => r.is_enabled && r.per_usd);
     if (!enabled.some((r) => r.currency === S.currency)) S.currency = "USD";
     $("currencySelect").innerHTML = enabled
@@ -401,9 +409,9 @@
     el.innerHTML=`<div class="f90-ticker-window"><div class="promotion-track" style="--promo-duration:${Math.max(18,Number(rows[0].animation_seconds)||28)}s"><div class="f90-ticker-copy">${content}</div><div class="f90-ticker-copy" aria-hidden="true">${content}</div></div></div>`;
   }
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
-  const f90RefillArt = () => image(f90Fallback(), "قيد التعبئة", "f90-refill-image");
+  const f90RefillArt = (src, name) => image(C.safeUrl(src) || f90Fallback(), name || "قيد التعبئة", "f90-refill-image");
   function f90TileArt(src, name, disabled) {
-    const front = disabled ? f90RefillArt() : image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(), name);
+    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(), name);
     const back = C.safeUrl(S.settings.config?.card_back_image || "./assets/sections/services.png");
     return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-back">${image(back, "F90 CARD")}</span><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
   }
@@ -536,7 +544,7 @@
       main.innerHTML = empty("القسم غير موجود");
       return;
     }
-    if (C.categoryUnavailable(c, S.categories, S.products)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt()}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
+    if (C.categoryUnavailable(c, S.categories, S.products)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     if (
       c.presentation?.routing === "direct" &&
       c.presentation.direct_product_id
@@ -647,7 +655,7 @@
       cat = S.categories.find((x) => x.id === p.category_id),
       quantity = c.type === "quantity",
       disabled = C.unavailable(p) || (cat && C.categoryUnavailable(cat, S.categories, S.products));
-    if (disabled) { if (!inline) main.innerHTML = pageHead(p.name) + `<div class="f90-closed-service">${f90RefillArt()}<h2>قيد التعبئة</h2><p>الخدمة غير متاحة مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
+    if (disabled) { if (!inline) main.innerHTML = pageHead(p.name) + `<div class="f90-closed-service">${f90RefillArt(p.image_url,p.name)}<h2>قيد التعبئة</h2><p>الخدمة غير متاحة مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     S.quote = null;
     S.quoteSeq = 0;
     S.checkoutKey = C.key();
@@ -716,7 +724,7 @@
   function profile() {
     const me = S.me,
       p = me.profile;
-    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id"><span>معرّف العميل</span><b dir="ltr">${e(p.customer_id)}</b></div><div class="f90-profile-links"><a class="button f90-profile-vip-button" href="#/vip">${I("crown")}عرض مستوى VIP ومزاياي</a><a class="button secondary small" href="#/orders">سجل طلباتي</a><a class="button secondary small" href="#/history">سجل الحركات</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats f90-profile-stats"><div><span class="f90-profile-stat-icon">${I("wallet")}</span><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><span class="f90-profile-stat-icon">${I("grid")}</span><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><span class="f90-profile-stat-icon">${I("crown")}</span><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id"><span>معرّف العميل</span><b dir="ltr">${e(p.customer_id)}</b></div><div class="f90-profile-links"><a class="button f90-profile-vip-button" href="#/vip">${I("crown")}عرض مستوى VIP ومزاياي</a><a class="button secondary small" href="#/">الرئيسية</a><a class="button secondary small" href="#/wallet">المحفظة</a><a class="button secondary small" href="#/orders">سجل طلباتي</a><a class="button secondary small" href="#/history">سجل الحركات</a><a class="button secondary small" href="#/search">البحث عن خدمة</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats f90-profile-stats"><div><span class="f90-profile-stat-icon">${I("wallet")}</span><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><span class="f90-profile-stat-icon">${I("grid")}</span><strong>${e(C.money(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><span class="f90-profile-stat-icon">${I("crown")}</span><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
   }
   function recipientStorageKey() {
     return S.me?.profile?.id || S.me?.profile?.customer_id
@@ -772,23 +780,39 @@
     return rows;
   }
   async function cloudSaveRecipient(item) {
-    const userId = await recipientUser();
+    let userId;
+    try { userId = await recipientUser(); }
+    catch {
+      saveLocalRecipients([...S.savedRecipients.filter(row => row.id !== item.id), item]);
+      return "local";
+    }
     const validId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id || "");
     const payload = {id: validId ? item.id : crypto.randomUUID(),user_id:userId,kind:item.kind,label:item.label,value:item.value};
     const { data, error } = await A.client.from("f90_saved_recipients").upsert(payload,{onConflict:"id"}).select("id,kind,label,value").single();
-    if (error) throw new Error("تعذر حفظ البيانات في الحساب: " + error.message);
     const next = S.savedRecipients.filter(row => row.id !== item.id);
+    if (error) {
+      next.push({...item,id:payload.id});
+      saveLocalRecipients(next);
+      return "local";
+    }
     next.push(data);
     S.savedRecipients = next;
     try { saveLocalRecipients(next); } catch {}
+    return "account";
   }
   async function cloudDeleteRecipient(id) {
-    const userId = await recipientUser();
+    let userId;
+    try { userId = await recipientUser(); }
+    catch {
+      saveLocalRecipients(S.savedRecipients.filter(row => row.id !== id));
+      return "local";
+    }
     const {error} = await A.client.from("f90_saved_recipients").delete().eq("id",id).eq("user_id",userId);
-    if (error) throw new Error("تعذّر حذف بيانات العميل: " + error.message);
     const next = S.savedRecipients.filter(row => row.id !== id);
     S.savedRecipients = next;
+    if (error) { saveLocalRecipients(next); return "local"; }
     try { saveLocalRecipients(next); } catch {}
+    return "account";
   }
   async function recipients() {
     const seq = S.route;
@@ -821,7 +845,9 @@
     const select = form.querySelector("#savedRecipient");
     if (!select) return;
     try {
-      const result = { items: await cloudRecipients() };
+      let items;
+      try { items = await cloudRecipients(); } catch { items = localRecipients(); }
+      const result = { items };
       if (!form.isConnected) return;
       S.savedRecipients = result.items || [];
       const product = S.products.find(p => p.id === form.dataset.product);
@@ -1355,7 +1381,8 @@
       return;
     }
     if (form.id === "recipientForm") {
-      const rows = await cloudRecipients();
+      let rows;
+      try { rows = await cloudRecipients(); } catch { rows = localRecipients(); }
       const kind = ["phone", "account_id", "email"].includes(data.kind) ? data.kind : "account_id";
       const label = String(data.label || "").trim().slice(0, 50);
       const value = String(data.value || "").trim().slice(0, 120);
@@ -1368,8 +1395,8 @@
         throw new Error("هذا المعرّف محفوظ بالفعل. يمكنك تعديل الجهة الموجودة بدل إضافتها مرتين.");
       const item = { id, kind, label, value };
       if (index < 0) rows.push(item); else rows[index] = item;
-      await cloudSaveRecipient(item);
-      toast("تم حفظ البيانات في حسابك");
+      const storage = await cloudSaveRecipient(item);
+      toast(storage === "local" ? "حُفظت البيانات على هذا الجهاز" : "تم حفظ البيانات في حسابك");
       await recipients();
       return;
     }

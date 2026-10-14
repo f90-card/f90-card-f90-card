@@ -488,8 +488,8 @@ p {
   box-shadow: 0 14px 32px #d91b3318;
 }
 .image-tile.refilling img {
-  filter: grayscale(1);
-  opacity: 0.55;
+  filter: none;
+  opacity: 1;
 }
 .refill-badge {
   position: absolute;
@@ -2838,7 +2838,10 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 }
 :root.f90-edge-on .image-tile {box-shadow:0 0 6px color-mix(in srgb,var(--f90-edge-color) 20%,transparent);}
 .f90-flip-tile.refilling {cursor:not-allowed;opacity:.78;}
-.f90-flip-tile.refilling .f90-flip-front img {filter:grayscale(1) brightness(.65);}
+.f90-flip-tile.refilling .f90-flip-front img {filter:none;opacity:1;}
+.f90-flip-tile.refilling {opacity:1;}
+.f90-admin-shortcut {display:inline-grid;place-items:center;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 18%,transparent)}
+.f90-admin-shortcut svg {width:20px;height:20px}
 .f90-closed-service {max-width:450px;margin:35px auto;padding:24px;text-align:center;border-radius:22px;background:#141217;}
 .f90-closed-service img {display:block;width:100%;max-width:310px;aspect-ratio:1;object-fit:cover;margin:0 auto 20px;border-radius:16px;filter:grayscale(1);}
 @media (prefers-reduced-motion:reduce) {
