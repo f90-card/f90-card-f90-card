@@ -1,0 +1,25 @@
+/* F90 compact perpetual ticker and external carousel indicators */
+.promotion{width:min(100% - 24px,1150px);min-height:0!important;height:auto!important;margin:10px auto 14px;padding:0!important;border:1px solid color-mix(in srgb,var(--accent) 48%,var(--line))!important;border-radius:14px!important;overflow:hidden;background:linear-gradient(105deg,#17111e,#301522 52%,#17111e)!important;box-shadow:0 5px 17px #0002,0 0 0 1px #ff476314}
+.promotion[hidden]{display:none!important}
+.promotion .f90-ticker-window{overflow:hidden;width:100%;height:34px;display:flex;align-items:center}
+.promotion .promotion-track{display:flex;flex:0 0 auto;gap:0!important;width:max-content;align-items:center;white-space:nowrap;animation:f90-ticker-rtl var(--promo-duration,28s) linear infinite!important;animation-play-state:running!important;will-change:transform}
+.promotion .f90-ticker-copy{display:flex;align-items:center;flex:0 0 auto;gap:30px;padding-inline:15px;min-width:max-content}
+.promotion .f90-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;line-height:1.2;color:#fff;white-space:nowrap}
+.promotion .f90-ticker-item img{max-height:23px!important;max-width:32px!important;width:auto;height:auto;object-fit:contain}
+.promotion .f90-promo-pause{display:none!important}
+@keyframes f90-ticker-rtl{from{transform:translateX(0)}to{transform:translateX(50%)}}
+.f90-swipe-hero{margin-bottom:0!important;overflow:visible!important}
+.f90-swipe-hero .f90-hero-link{overflow:hidden;border-radius:inherit}
+.f90-swipe-hero .f90-hero-controls{position:absolute!important;top:calc(100% + 7px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%);background:transparent!important;padding:0!important;z-index:4}
+.f90-swipe-hero .f90-hero-dots{background:transparent!important;padding:3px 8px!important;gap:7px}
+.f90-swipe-hero .f90-hero-dots i{background:color-mix(in srgb,var(--muted) 58%,transparent);width:7px;height:7px}
+.f90-swipe-hero .f90-hero-dots i.active{width:21px;background:var(--accent)}
+.f90-swipe-hero .f90-hero-pause{display:none!important}
+.f90-swipe-hero:has(.f90-hero-controls)+.promotion{margin-top:23px}
+.f90-swipe-hero:has(.f90-hero-controls)+.section-head{margin-top:27px}
+.f90-mobile-dock{padding-top:6px!important}
+.f90-mobile-dock a{padding-block:4px!important;min-height:48px;align-content:center}
+.f90-mobile-dock a svg{width:22px;height:22px;stroke-width:1.8}
+:root[data-theme="cream"] .promotion{background:linear-gradient(105deg,#4b1e30,#69253d,#4b1e30)!important}
+@media(max-width:600px){.promotion{width:calc(100% - 20px);border-radius:11px!important;margin-bottom:11px}.promotion .f90-ticker-window{height:30px}.promotion .f90-ticker-item{font-size:11px}.promotion .f90-ticker-item img{max-height:20px!important}.f90-swipe-hero:has(.f90-hero-controls)+.promotion{margin-top:21px}.f90-mobile-dock a{font-size:10px!important}}
+@media(prefers-reduced-motion:reduce){.promotion .promotion-track{animation:f90-ticker-rtl var(--promo-duration,28s) linear infinite!important}}
