@@ -732,7 +732,7 @@
               .filter((r) => r.is_enabled && r.per_usd)
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
-          )}</div><div class="notice" id="depositEstimate">أدخل المبلغ لعرض الرصيد المتوقع بالدولار.</div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
+          )}</div><div class="notice" id="depositEstimate">أدخل المبلغ لعرض القيمة قبل أي رسوم. تُحدد الرسوم النهائية عند اعتماد الإيداع.</div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
   }
   function orderRecord(o) {
@@ -1530,13 +1530,13 @@
       const f = $("depositForm"),
         r = S.rates.find((r) => r.currency === f.elements.currency.value);
       $("depositEstimate").textContent =
-        "الرصيد المتوقع: " +
+        "القيمة قبل أي رسوم: " +
         C.money(
           Number(f.elements.amount.value || 0) / Number(r?.per_usd || 1),
           "USD",
           true,
         ) +
-        " · بعد الموافقة";
+        " · لا تشمل رسومًا غير مفعّلة في نظام الإيداع";
     }
   });
   document.addEventListener("change", (ev) => {
