@@ -12,3 +12,9 @@
 :root[data-theme="cream"] .main-content[data-page="deposit"] .method-tile{background:linear-gradient(145deg,#fffaf7,#f5e8e7)}
 @media(max-width:580px){.main-content[data-page="deposit"] .deposit-steps{gap:5px}.main-content[data-page="deposit"] .deposit-steps>span{padding:8px 5px;flex-direction:column;text-align:center;font-size:11px}.main-content[data-page="deposit"] .method-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.main-content[data-page="deposit"] .method-tile{min-height:150px}}
 @media(prefers-reduced-motion:reduce){.main-content[data-page="deposit"] .method-tile{transition:none}}
+
+/* Deposit history amount labels and transparent fee breakdown */
+.f90-deposit-record-amount{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:115px;text-align:end}
+.f90-deposit-record-amount small{font-size:11px;color:var(--muted);font-weight:600}
+.f90-deposit-fee-line{display:inline-block;margin:8px 0 5px;padding:7px 10px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));font-size:12px;line-height:1.7;color:var(--text)}
+@media(max-width:440px){.f90-deposit-record-amount{min-width:92px}.f90-deposit-record-amount .record-price{font-size:13px}.f90-deposit-fee-line{font-size:11px}}
