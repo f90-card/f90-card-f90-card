@@ -4,9 +4,10 @@
   const endpoint =
     window.F90_CONFIG.SUPABASE_URL + "/functions/v1/f90-platform";
   async function call(action, data = {}) {
-    const {
-      data: { session },
-    } = await client.auth.getSession();
+    // Public catalog never needs a session. Avoid blocking first paint on auth storage.
+    const { data: { session } } = action === "catalog" || action === "health"
+      ? { data: { session: null } }
+      : await client.auth.getSession();
     const headers = {
       "Content-Type": "application/json",
       apikey: window.F90_CONFIG.SUPABASE_KEY,

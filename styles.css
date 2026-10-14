@@ -2724,13 +2724,13 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .f90-google-mark{font-family:Arial,sans-serif;font-size:22px;font-weight:800;line-height:1;background:conic-gradient(#4285f4 0 85deg,#34a853 85deg 165deg,#fbbc05 165deg 220deg,#ea4335 220deg 295deg,#4285f4 295deg);color:transparent;background-clip:text;-webkit-background-clip:text;margin-inline-end:9px}
 
 /* Compact interior pages; keep the full footer on the store and welcome page. */
-.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer {
+.main-content:not([data-page="home"]):not([data-page="welcome"]) ~ .site-footer {
   padding: 16px 0;
 }
-.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer .footer-grid {
+.main-content:not([data-page="home"]):not([data-page="welcome"]) ~ .site-footer .footer-grid {
   display: none;
 }
-.main-content:not([data-page="home"]):not([data-page="welcome"]) + .site-footer .footer-bottom {
+.main-content:not([data-page="home"]):not([data-page="welcome"]) ~ .site-footer .footer-bottom {
   margin-top: 0;
   border-top: 0;
   padding-top: 0;
@@ -2751,3 +2751,57 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .f90-order-requests { margin-top: 20px; }
 .f90-order-requests .record { align-items: flex-start; }
 .f90-header-bell .f90-bell-count:not([hidden]) { position: absolute; top: -5px; inset-inline-end: -6px; min-width: 18px; height: 18px; border-radius: 999px; background: #e32f4d; color: #fff; font: 700 10px/18px system-ui; text-align: center; box-shadow: 0 0 9px #e32f4d88; }
+
+/* Storefront motion and mobile navigation, styled around F90's red identity. */
+:root[data-theme="dark"] body:before {
+  background: radial-gradient(ellipse at 78% 9%, #073b4b58, transparent 45%),
+    radial-gradient(ellipse at 8% 58%, #6b254a33, transparent 46%),
+    linear-gradient(90deg, #121d2a 1px, transparent 1px),
+    linear-gradient(#121d2a 1px, transparent 1px);
+  background-size: auto, auto, 54px 54px, 54px 54px;
+  opacity: .8;
+}
+.site-header {background: color-mix(in srgb, var(--bg) 90%, transparent);backdrop-filter: blur(18px)}
+.f90-home-search {display:flex;gap:10px;margin:24px 0 28px;padding:8px;border:1px solid color-mix(in srgb,var(--accent) 33%,var(--line));border-radius:18px;background:var(--surface);box-shadow:0 10px 35px #0002,0 0 18px color-mix(in srgb,var(--accent) 9%,transparent)}
+.f90-home-search input {min-width:0;flex:1;padding:10px 15px;background:transparent;border:0;outline:0;color:var(--text)}
+.f90-home-search input::placeholder {color:var(--muted)}
+.f90-home-search .button {min-width:92px}
+.f90-category-search {max-width:580px}
+.image-grid .image-tile[hidden],.packs-grid .pack[hidden]{display:none!important}
+:root[data-theme="dark"] :is(.panel,.product-info,.method-tile,.f90-quick-product) {background-image:linear-gradient(135deg,#073a4b20 0%,transparent 45%,#72376316 100%)}
+.image-tile,.method-tile,.f90-welcome-service {transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.image-tile:hover,.method-tile:hover,.f90-welcome-service:hover {transform:translateY(-4px);box-shadow:0 12px 34px color-mix(in srgb,var(--accent) 22%,transparent)}
+:root[data-theme="dark"] .button:not(.secondary):not(.ghost):not(.danger) {box-shadow:0 5px 19px #fa244438, inset 0 1px #fff4}
+.button:not(:disabled):active,.icon-button:not(:disabled):active {transform:scale(.97)}
+:root[data-theme="dark"] :is(.button.secondary,.method-tile,.f90-home-search):hover {border-color:#29c8df99;box-shadow:0 0 0 1px #29c8df55,0 0 18px #29c8df30}
+.method-tile {aspect-ratio:auto;min-height:180px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background-color:var(--surface);text-align:center;color:var(--text)}
+.method-tile img {height:95px;width:100%;object-fit:contain;border-radius:12px}
+.method-tile strong {line-height:1.3}.method-tile small {color:var(--muted)}
+.f90-review-service {display:flex;align-items:center;gap:14px;margin:10px 0 20px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface2)}
+.f90-review-service img {width:68px;height:68px;object-fit:cover;border-radius:12px}
+.f90-review-service h3 {margin:0 0 3px}.f90-review-service span {color:var(--muted);font-size:13px}
+.f90-review-total {display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border:1px solid #29c8df91;border-radius:16px;background:linear-gradient(115deg,#29c8df20,#b56dff15);box-shadow:0 0 24px #29c8df19}
+.f90-review-total strong {font-size:clamp(19px,5vw,25px);color:#58d5e5}
+:root[data-theme="cream"] .f90-review-total strong {color:#095d6c}
+.f90-review-warning {padding:13px 15px;margin:18px 0 0;border-radius:12px;background:color-mix(in srgb,var(--accent) 11%,var(--surface2));color:var(--text);font-size:13px;line-height:1.7}
+.f90-mobile-dock {display:none}
+@media(max-width:700px) {
+ .main-content {padding-bottom:115px}
+ .f90-mobile-dock {position:fixed;z-index:29;inset-inline:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;gap:2px;padding:10px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:color-mix(in srgb,var(--surface) 93%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(18px);box-shadow:0 -12px 35px #0006}
+ .f90-mobile-dock a {display:grid;justify-items:center;gap:3px;min-width:0;padding:5px 0;border-radius:16px;color:var(--muted);font-size:11px;font-weight:800;line-height:1.1;transition:color .2s,transform .2s,background .2s}
+ .f90-mobile-dock a svg {width:21px;height:21px}
+ .f90-mobile-dock a.active {color:#31d0e2;background:#2cc5df22}
+ .f90-mobile-dock a[data-dock-page=""] {color:var(--text);transform:translateY(-12px)}
+ .f90-mobile-dock a[data-dock-page=""] svg {box-sizing:content-box;width:27px;height:27px;padding:12px;border-radius:19px;background:linear-gradient(145deg,#28c8e0,#ae7af0);color:#07131c;box-shadow:0 0 0 4px #32c9df24,0 0 24px #31bfe099}
+ .f90-mobile-dock a[data-dock-page=""].active {background:transparent;color:#31d0e2}
+ .f90-home-search {margin:18px 0 25px}
+ .f90-home-search .button {min-width:75px;padding:8px}
+ .f90-review-service img {width:56px;height:56px}
+ .method-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .site-footer {padding-bottom:96px}
+}
+@media(prefers-reduced-motion:reduce) {
+ .image-tile,.method-tile,.f90-welcome-service,.f90-mobile-dock a {transition:none!important}
+ .image-tile:hover,.method-tile:hover,.f90-welcome-service:hover {transform:none}
+}
+@media print {.f90-mobile-dock{display:none!important}}

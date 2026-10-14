@@ -164,7 +164,7 @@
       ["notifications", "الإشعارات", "bell"],
       ["@help", "المزيد"],
       ["install", "تثبيت التطبيق", "plus"],
-      ["developers", "وكلاؤنا والمبرمجون", "link"],
+      ...(me?.role === "trader" ? [["developers", "صفحة التاجر", "link"]] : []),
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
@@ -192,8 +192,15 @@
       )
       .join("");
     $("categoryNav").innerHTML = "";
+    $("mobileDock").innerHTML = [
+      ["profile", "حسابي", "user"],
+      ["wallet", "المحفظة", "wallet"],
+      ["", "الرئيسية", "grid"],
+      ["orders", "طلباتي", "clock"],
+      ["search", "بحث", "search"],
+    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
-      `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a><a href="#/developers">وكلاؤنا والمبرمجون</a></nav></div><div><h3>المعلومات</h3><nav>${Object.entries(
+      `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav>${Object.entries(
         {
           about: "من نحن",
           privacy: "الخصوصية",
@@ -294,8 +301,8 @@
     const disabled = C.unavailable(p);
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
-      return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick}><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
-    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
+      return `<a class="pack ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(C.money(C.previewPrice(p, p.commerce?.quantity_min || 1), "USD", true))}</span></a>`;
+    return `<a class="image-tile ${disabled ? "refilling" : ""}" href="${href("product", p.slug || p.id)}"${quick} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}" aria-label="${e(p.name)}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function welcome() {
     const c = S.settings.config || {};
@@ -318,7 +325,7 @@
       <section class="f90-welcome-features">
         <a class="panel" href="#/wallet">${I("wallet")}<h3>محفظتك</h3><p>راجع رصيدك وطلبات الإيداع بعد تسجيل الدخول.</p></a>
         <a class="panel" href="#/vip">${I("crown")}<h3>مستويات VIP</h3><p>تعرّف إلى مستويات التميّز والخصومات المعلنة.</p></a>
-        <a class="panel" href="#/developers">${I("link")}<h3>التجار والمطورون</h3><p>اطّلع على شروط الربط وبرنامج الوكلاء.</p></a>
+        ${S.me?.role === "trader" ? `<a class="panel" href="#/developers">${I("link")}<h3>صفحة التاجر</h3><p>راجع مفاتيح الربط وخدمات متجرك.</p></a>` : ""}
         <a class="panel" href="#/install">${I("plus")}<h3>ثبّت التطبيق</h3><p>أضف المتجر إلى شاشة هاتفك للوصول إليه بسرعة.</p></a>
       </section>
       <section class="f90-welcome-section"><div class="section-head"><h2>طرق الإيداع المتاحة</h2></div>
@@ -343,6 +350,7 @@
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero" aria-label="إعلان المتجر"><a href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async"></a>${hero?.presentation?.overlay_enabled ? `<div class="hero-overlay"><h2>${e(hero.title)}</h2><p>${e(hero.subtitle)}</p></div>` : ""}${slides.length > 1 ? `<div class="carousel-control"><button data-action="prev-banner" aria-label="الإعلان السابق">‹</button><button data-action="pause-banner" aria-label="إيقاف الحركة">Ⅱ</button><button data-action="next-banner" aria-label="الإعلان التالي">›</button></div>` : ""}</section>`}
+ <form class="f90-home-search" id="homeSearchForm" role="search"><label class="sr-only" for="homeSearch">ابحث في الأقسام والخدمات</label><input id="homeSearch" type="search" placeholder="دوّر على لعبة، بطاقة أو خدمة..." autocomplete="off"><button class="button secondary" type="submit">${I("search")}بحث</button></form>
  <div class="section-head" id="categories"><h2>اختر عالمك</h2><span>كل ما تحتاجه، أقرب إليك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -636,7 +644,7 @@
     main.innerHTML = `${pageHead("أضف رصيدًا لعالمك", "اختر طريقة الإيداع، وأرسل إيصالك للمراجعة", `<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>`)}<div class="deposit-steps"><span><b>١</b>اختر الطريقة</span><span><b>٢</b>حوّل وارفع الإيصال</span><span><b>٣</b>اعتماد الإدارة</span></div>${
       !m
         ? methods.length
-          ? `<div class="method-grid">${methods.map((x) => `<a class="method-tile" href="${href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url, x.name_ar)}</a>`).join("")}</div>`
+          ? `<div class="method-grid">${methods.map((x) => `<a class="method-tile" href="${href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url, x.name_ar)}<strong>${e(x.name_ar)}</strong><small>اختر طريقة الإيداع</small></a>`).join("")}</div>`
           : empty(
               "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
               "wallet",
@@ -855,6 +863,13 @@
       id = "";
     }
     main.dataset.page = page || "home";
+    $("mobileDock")?.querySelectorAll("[data-dock-page]").forEach((link) => {
+      link.classList.toggle("active", link.dataset.dockPage === (page || ""));
+    });
+    if (page === "developers" && S.me?.role !== "trader") {
+      location.hash = "#/";
+      return;
+    }
     if (!["orders", "deposits", "history"].includes(page)) S.offset = 0;
     const privatePages = [
       "profile",
@@ -1126,8 +1141,9 @@
         };
         modal("مراجعة الطلب قبل الخصم",
           `<div class="f90-checkout-review">
-            <div class="f90-review-brand"><img src="./assets/icons/icon-192.png" alt="شعار F90" width="46" height="46"><strong>F90 CARD</strong></div>
-            <h3>${e(item.name)}</h3>
+            <div class="f90-review-brand"><img src="./assets/icons/icon-192.png" alt="شعار F90" width="46" height="46"><strong>تأكيد الدفع من محفظتك</strong></div>
+            <div class="f90-review-service">${image(item.image_url, item.name)}<div><h3>${e(item.name)}</h3><span>${e(item.commerce?.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")} · ${e(item.commerce?.delivery_time || "تابع الحالة في طلباتك")}</span></div></div>
+            <div class="f90-review-total"><span>المبلغ النهائي</span><strong>${e(C.money(total, "USD", true))}</strong></div>
             <dl>
               <div><dt>الكمية</dt><dd>${e(String(current.quantity || "1"))}</dd></div>
               <div><dt>رصيدك الحالي</dt><dd>${e(C.money(balance, "USD", true))}</dd></div>
@@ -1135,7 +1151,7 @@
               ${Number(S.quote.discount_usd) > 0 ? `<div><dt>خصم VIP</dt><dd>${e(C.money(S.quote.discount_usd, "USD", true))}</dd></div>` : ""}
               <div class="f90-review-remaining"><dt>الرصيد المتوقع بعد الطلب</dt><dd>${e(C.money(balance - total, "USD", true))}</dd></div>
             </dl>
-            <p class="muted small">المبلغ النهائي يتحقق منه الخادم مرة أخرى عند تنفيذ الطلب.</p>
+            <p class="f90-review-warning">تأكد من معرّف الحساب والكمية قبل الدفع. يتحقق الخادم من السعر النهائي مرة أخرى قبل الخصم.</p>
             <div class="actions">
               <button type="button" class="button secondary" data-close-modal>إلغاء</button>
               <button type="button" class="button" data-action="confirm-wallet-checkout">تأكيد الخصم والشراء</button>
@@ -1318,10 +1334,11 @@
   }
   document.addEventListener("submit", async (ev) => {
     const form = ev.target;
-    if (form.id === "searchForm") {
+    if (form.id === "searchForm" || form.id === "homeSearchForm") {
       ev.preventDefault();
       S.offset = 0;
-      location.hash = href("search", $("globalSearch").value.trim());
+      const q = form.id === "homeSearchForm" ? $("homeSearch").value : $("globalSearch").value;
+      location.hash = href("search", q.trim());
       return;
     }
     if (
@@ -1641,7 +1658,7 @@
     if (ev.target?.id !== "categoryFilter") return;
     const term = ev.target.value.trim().toLocaleLowerCase("ar");
     main.querySelectorAll(".image-grid .image-tile, .packs-grid .pack").forEach((tile) => {
-      tile.hidden = !!term && !(tile.textContent || tile.getAttribute("aria-label") || "").toLocaleLowerCase("ar").includes(term);
+      tile.hidden = !!term && !(tile.dataset.search || tile.textContent || tile.getAttribute("aria-label") || "").toLocaleLowerCase("ar").includes(term);
     });
   });
   window.addEventListener("hashchange", () => {
@@ -1663,9 +1680,12 @@
   });
   async function boot() {
     try {
-      Object.assign(S, await A.call("catalog"));
+      const catalogRequest = A.call("catalog");
+      const accountRequest = refreshMe().catch((error) => error);
+      Object.assign(S, await catalogRequest);
       if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
-      await refreshMe();
+      const accountResult = await accountRequest;
+      if (accountResult instanceof Error) throw accountResult;
       chrome();
       let initialTheme = S.settings.config.default_theme || "dark";
       try {
