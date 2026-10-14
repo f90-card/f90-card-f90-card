@@ -650,7 +650,7 @@
     const result = { items: localRecipients() };
     if (seq !== S.route) return;
     S.savedRecipients = result.items || [];
-    $("recipientsContent").outerHTML = `<div class="f90-recipient-toolbar"><div><strong>جهاتك المحفوظة</strong><span class="muted small"> ${e(S.savedRecipients.length)} من 100 جهة</span></div><label class="f90-recipient-search"><span>بحث في دفتر العملاء</span><input id="recipientSearch" type="search" placeholder="ابحث بالاسم أو المعرّف" autocomplete="off"></label></div><div class="f90-recipient-layout">
+    $("recipientsContent").outerHTML = `<div class="f90-recipient-toolbar"><div><strong>جهاتك المحفوظة</strong><span class="muted small"> ${e(S.savedRecipients.length)} من 100 جهة</span></div><label class="f90-recipient-search"><span>بحث في دفتر العملاء</span><input id="recipientSearch" type="search" placeholder="ابحث بالاسم أو المعرّف" autocomplete="off"></label></div><p id="recipientSearchEmpty" class="muted small" hidden role="status">لا توجد جهة مطابقة. جرّب اسمًا أو معرّفًا آخر.</p><div class="f90-recipient-layout">
       <section class="panel"><h2 id="recipientFormTitle">إضافة جهة</h2>
         <form id="recipientForm">
           <input type="hidden" name="id" value="">
@@ -1184,6 +1184,8 @@
       const id = data.id || C.key();
       const index = rows.findIndex((item) => item.id === id);
       if (index < 0 && rows.length >= 100) throw new Error("دفتر العملاء ممتلئ");
+      if (rows.some((row) => row.id !== id && row.kind === kind && row.value.trim() === value))
+        throw new Error("هذا المعرّف محفوظ بالفعل. يمكنك تعديل الجهة الموجودة بدل إضافتها مرتين.");
       const item = { id, kind, label, value };
       if (index < 0) rows.push(item); else rows[index] = item;
       saveLocalRecipients(rows);
@@ -1491,9 +1493,13 @@
   document.addEventListener("input", (ev) => {
     if (ev.target?.id === "recipientSearch") {
       const term=ev.target.value.trim().toLocaleLowerCase("ar");
+      let visible=0;
       document.querySelectorAll(".f90-recipient-item").forEach(item=>{
         item.hidden=!!term&&!item.dataset.recipientSearch.includes(term);
+        if(!item.hidden)visible++;
       });
+      const empty=$("recipientSearchEmpty");
+      if(empty)empty.hidden=!term||visible>0;
       return;
     }
     if (ev.target?.id === "orderHistorySearch") {
