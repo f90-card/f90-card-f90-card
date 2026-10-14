@@ -231,3 +231,8 @@
 .site-header .f90-header-theme .f90-theme-toggle-icon{font-size:19px;width:auto;line-height:1}
 .site-header #storeBell{margin-inline-start:32px}
 @media(max-width:520px){.site-header .header-inner{min-height:66px!important;grid-template-rows:47px 18px!important}.site-header #headerBrand,.site-header .header-inner>#headerBrand{height:47px!important}.site-header #searchForm,.site-header #searchForm input{height:18px!important;min-height:18px!important}.site-header .header-inner>.f90-header-theme{top:1px;width:27px!important;height:27px!important;min-height:27px!important}.site-header #storeBell{margin-inline-start:27px}}
+
+/* Place theme beside the right-side menu; keep bell and wallet clear on the left. */
+.site-header .header-inner>.f90-header-theme{left:auto!important;right:44px!important;inset-inline-start:auto!important;inset-inline-end:44px!important}
+.site-header #storeBell{margin-inline-start:0!important}
+@media(max-width:520px){.site-header .header-inner>.f90-header-theme{right:39px!important;inset-inline-end:39px!important}}
