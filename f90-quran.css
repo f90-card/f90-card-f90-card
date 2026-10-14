@@ -66,3 +66,15 @@
 .f90-prayer-time strong{font-size:20px;font-variant-numeric:tabular-nums}
 .f90-prayer-note,#f90PrayerStatus{color:var(--muted);font-size:13px;line-height:1.7}
 @media(max-width:550px){.f90-prayer-section{padding:13px}.f90-prayer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Prayer-first Quran experience: calm emerald and gold */
+.f90-quran>.f90-prayer-section{margin:0 0 22px;padding:clamp(17px,3vw,30px);border:1px solid #b39b61;border-radius:24px;background:linear-gradient(145deg,color-mix(in srgb,#163e34 12%,var(--surface)),var(--surface));box-shadow:0 10px 35px #00000012}
+.f90-quran>.f90-prayer-section .f90-quran-heading h2{color:var(--text);font-size:clamp(23px,3vw,34px)}
+.f90-quran>.f90-prayer-section .f90-quran-heading h2:before{content:"☪";color:#ae914e;margin-inline-end:10px}
+.f90-prayer-form input{flex:1;min-width:140px;max-width:250px;min-height:46px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);padding:10px 13px;font:inherit}
+.f90-prayer-form button{min-height:46px;background:#26564a;color:white}
+#f90PrayerLocation{background:transparent;border:1px solid #a58a52;color:var(--text)}
+.f90-prayer-time{background:color-mix(in srgb,#225c49 8%,var(--surface));border-color:color-mix(in srgb,#b69c62 40%,var(--line));min-height:96px;justify-content:center}
+.f90-prayer-time span{font-size:13px;color:var(--muted);font-weight:800}
+.f90-prayer-time strong{font-size:clamp(20px,3vw,28px);color:var(--text)}
+@media(max-width:600px){.f90-prayer-form{display:grid;grid-template-columns:1fr 1fr}.f90-prayer-form label{grid-column:1/-1}.f90-prayer-form input{grid-column:1/-1;max-width:none;width:100%}.f90-prayer-form button{font-size:12px;padding:9px}.f90-prayer-time{min-height:83px}}
