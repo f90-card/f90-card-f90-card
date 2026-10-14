@@ -1,0 +1,50 @@
+/* F90 2026 mobile navigation, persistent ticker, touch carousel and checkout */
+.f90-mobile-dock{background:color-mix(in srgb,var(--surface) 93%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));box-shadow:0 -12px 42px #0004}
+.f90-mobile-dock a{position:relative;min-width:0;transition:color .18s,transform .18s}
+.f90-mobile-dock a.active{color:var(--accent);font-weight:900}
+.f90-mobile-dock a.active:before{content:"";position:absolute;top:0;right:25%;left:25%;height:3px;border-radius:0 0 8px 8px;background:var(--accent);box-shadow:0 0 16px var(--accent)}
+.f90-mobile-dock a.active svg{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 55%,transparent))}
+.f90-mobile-dock a:active{transform:scale(.94)}
+.promotion{position:relative;overflow:hidden;min-height:47px;border-block:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));background:linear-gradient(110deg,#100f1a,#2b1425 55%,#120e19);color:#fff;box-shadow:0 8px 20px #0002}
+.promotion .promotion-track{padding-inline-end:60px;will-change:transform;animation-iteration-count:infinite!important;animation-play-state:running}
+.promotion.f90-promo-paused .promotion-track{animation-play-state:paused!important}
+.promotion .f90-promo-pause{position:absolute;z-index:2;left:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:34px;height:34px;min-width:34px;border:1px solid #ff869858;background:#221827e8;color:#fff;border-radius:11px;font-size:16px}
+.promotion .promotion-track img{max-height:32px;max-width:48px;object-fit:contain}
+.home-hero.f90-swipe-hero{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:clamp(16px,3vw,26px);box-shadow:0 16px 50px #0003;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.f90-swipe-hero .f90-hero-link{display:block}
+.f90-swipe-hero .f90-hero-link img{width:100%;display:block;object-fit:cover}
+.f90-swipe-hero .hero-overlay[hidden]{display:none!important}
+.f90-hero-controls{position:absolute;bottom:12px;left:14px;display:flex;align-items:center;gap:12px;z-index:3}
+.f90-hero-dots{display:flex;gap:6px;padding:8px 11px;border-radius:30px;background:#090d16a9;backdrop-filter:blur(7px)}
+.f90-hero-dots i{display:block;width:6px;height:6px;border-radius:50%;background:#ffffff7d;transition:width .2s,background .2s}
+.f90-hero-dots i.active{width:22px;border-radius:8px;background:#ff5272;box-shadow:0 0 9px #ff5272}
+.f90-hero-pause{display:grid;place-items:center;width:33px;height:33px;border-radius:50%;border:1px solid #ffffff4d;background:#090d16bf;color:#fff;cursor:pointer}
+.f90-home-search,.f90-search-page-form{padding:12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);box-shadow:0 10px 32px #00000012}
+.f90-search-page-form{max-width:750px;margin:12px auto 24px}
+.f90-search-page-form label{display:block;font-weight:850;margin:0 0 9px}
+.f90-search-page-form>div{display:flex;gap:9px}
+.f90-search-page-form input{flex:1;min-width:0;min-height:47px;border-radius:12px;padding-inline:15px}
+.f90-search-page-form button{flex:0 0 auto}
+.f90-checkout-review{min-width:0}
+.f90-checkout-review .f90-review-brand{display:flex;align-items:center;gap:14px}
+.f90-checkout-review .f90-review-brand img{width:70px;height:70px;object-fit:contain}
+.f90-checkout-review .f90-review-service{border-radius:19px;border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));padding:13px;background:var(--surface2)}
+.f90-checkout-review .f90-review-total{border:1px solid #00c8e56b;background:linear-gradient(115deg,#102331,#21192d);border-radius:18px;padding:18px;color:#fff;box-shadow:inset 0 0 24px #08c4e012}
+.f90-checkout-review .f90-review-total strong{color:#ffe38d;font-size:clamp(23px,5vw,34px);font-variant-numeric:tabular-nums}
+.f90-review-fields{padding:15px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+.f90-review-fields h4{margin:0 0 12px;font-size:15px}
+.f90-review-fields>div{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.f90-review-fields>div:last-child{border:0}
+.f90-review-fields>div span{color:var(--muted)}
+.f90-review-fields>div strong{overflow-wrap:anywhere;max-width:100%;user-select:text}
+.f90-checkout-review dl{border-radius:16px;overflow:hidden}
+.f90-checkout-review dl>div{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--line)}
+.f90-checkout-review dl dt{color:var(--muted)}.f90-checkout-review dl dd{margin:0;font-weight:900;font-variant-numeric:tabular-nums}
+.f90-checkout-review .f90-review-remaining{color:#ed6586}
+.f90-checkout-review .f90-review-warning{border:1px solid #d96a7780;background:color-mix(in srgb,var(--accent) 9%,var(--surface));padding:15px;border-radius:15px;line-height:1.8}
+.f90-checkout-review .actions{display:flex;gap:10px;flex-wrap:wrap}
+.f90-checkout-review .actions button{flex:1 1 170px;min-height:49px}
+#modalRoot .modal:has(.f90-checkout-review){width:min(95vw,590px);max-height:min(92dvh,850px);overflow-y:auto;overscroll-behavior:contain;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:23px;box-shadow:0 24px 95px #0009}
+:root[data-theme="cream"] .f90-checkout-review .f90-review-total{color:#fff}
+@media(max-width:600px){.f90-mobile-dock{padding-bottom:max(4px,env(safe-area-inset-bottom))}.f90-mobile-dock a{font-size:11px}.f90-mobile-dock a svg{width:23px;height:23px}.f90-hero-controls{bottom:8px;left:9px}.f90-search-page-form>div{flex-wrap:wrap}.f90-search-page-form input{flex:1 1 170px}.f90-search-page-form button{flex:0 0 auto}.f90-checkout-review .f90-review-brand img{width:58px;height:58px}#modalRoot .modal:has(.f90-checkout-review){width:calc(100vw - 16px);max-height:calc(100dvh - 32px);padding:clamp(13px,3vw,24px)}}
+@media(prefers-reduced-motion:reduce){.promotion .promotion-track{animation:none!important;will-change:auto}.f90-hero-dots i{transition:none}}
