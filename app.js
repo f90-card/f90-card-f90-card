@@ -385,6 +385,8 @@
     )
       bannerTimer = setInterval(
         () => {
+          // The carousel must not replace a search field while someone is typing.
+          if ($("homeSearch")?.value || document.activeElement?.id === "homeSearch") return;
           S.carousel++;
           if (location.hash === "#/" || !location.hash) home();
         },
@@ -415,6 +417,7 @@
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
     main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length ? `<div class="image-grid">${children.map(categoryTile).join("")}</div>` : ""}${products.length ? `${children.length ? '<div class="section-head"><h2>خدمات القسم</h2></div>' : ""}<div class="${c.presentation?.layout === "packs" ? "packs-grid" : "image-grid"}">${products.map((p) => productTile(p, c.presentation?.layout === "packs", true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
+    if ($("categoryFilter")) $("categoryFilter").closest("label")?.insertAdjacentHTML("afterend", '<p id="categoryNoResults" class="muted" hidden>لا توجد نتائج مطابقة داخل هذا القسم.</p>');
   }
   function closeQuickProduct() {
     const panel = $("quickProductPanel");
@@ -1657,9 +1660,12 @@
   main.addEventListener("input", (ev) => {
     if (ev.target?.id !== "categoryFilter") return;
     const term = ev.target.value.trim().toLocaleLowerCase("ar");
+    let visible = 0;
     main.querySelectorAll(".image-grid .image-tile, .packs-grid .pack").forEach((tile) => {
       tile.hidden = !!term && !(tile.dataset.search || tile.textContent || tile.getAttribute("aria-label") || "").toLocaleLowerCase("ar").includes(term);
+      if (!tile.hidden) visible++;
     });
+    $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
   });
   window.addEventListener("hashchange", () => {
     S.offset = 0;
