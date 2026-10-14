@@ -1597,7 +1597,10 @@
     }
     const action = button.dataset.action;
     try {
-      if (action === "popup-read") {
+      if (action === "channel-dismiss") {
+        try { localStorage.setItem(button.dataset.key, "1"); } catch {}
+        closeModal();
+      } else if (action === "popup-read") {
         try { localStorage.setItem(button.dataset.key, "1"); } catch {}
         closeModal();
       } else if (action === "recipient-reset") {
@@ -1909,6 +1912,15 @@
       theme(initialTheme);
       promotions();
       await route();
+      const channel = String(S.settings.config?.whatsapp_channel_url || "").trim();
+      const channelValid = /^https:\/\/whatsapp\.com\/channel\/[a-zA-Z0-9]+\/?(?:\?.*)?$/.test(channel);
+      const channelKey = "f90-channel-invite:" + channel;
+      let channelSeen = false;
+      try { channelSeen = localStorage.getItem(channelKey) === "1"; } catch {}
+      if (channelValid && S.settings.config?.whatsapp_channel_popup !== false && !channelSeen) {
+        modal("تابع قناة F90 CARD على واتساب",
+          `<div class="f90-channel-invite"><span class="f90-channel-mark" aria-hidden="true">◉</span><p>انضم إلى قناتنا الرسمية لمتابعة الإعلانات والعروض والتحديثات المهمة.</p><p class="muted small">ننصح بالانضمام حتى تصلك المستجدات. يمكنك استخدام المتجر دون الاشتراك.</p><a class="button full" href="${e(channel)}" target="_blank" rel="noopener noreferrer">الانتقال إلى قناة واتساب</a><button class="button ghost full" data-action="channel-dismiss" data-key="${e(channelKey)}">متابعة التصفح</button></div>`);
+      } else {
       const popup = S.settings.config?.popup_announcement;
       if (popup?.enabled && popup.text_ar) {
         const key = "f90-popup-read:" + (popup.revision || popup.text_ar);
@@ -1918,6 +1930,7 @@
           modal("تنبيه من أف تسعين كارد",
             `<p class="f90-popup-copy">${e(popup.text_ar)}</p><button class="button" data-action="popup-read" data-key="${e(key)}">قرأت التنبيه</button>`);
         }
+      }
       }
       if ("serviceWorker" in navigator)
         navigator.serviceWorker.register("./sw.js").catch(() => {});
