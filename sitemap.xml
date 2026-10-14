@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://f90-card.github.io/f90-card-f90-card/</loc>
-  </url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/games.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/apps.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/cards.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/streaming.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/mobile.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/ai.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/social.html</loc></url>
+  <url><loc>https://f90-card.github.io/f90-card-f90-card/discover/services.html</loc></url>
 </urlset>
