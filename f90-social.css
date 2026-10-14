@@ -1,0 +1,22 @@
+/* F90 official social platforms, editable in store settings */
+.f90-home-social{margin:26px 0 30px}
+.f90-social-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:11px}
+.f90-social-card{min-width:0;display:flex;align-items:center;gap:10px;padding:13px 12px;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);text-decoration:none;font-weight:700;font-size:13px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.f90-social-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 12%,transparent)}
+.f90-social-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.f90-social-card-icon,.f90-social-card .f90-social-icon{width:37px;height:37px;object-fit:contain;border-radius:10px;flex-shrink:0}
+.f90-social-fallback{display:grid;place-items:center;width:37px;height:37px;border-radius:11px;background:color-mix(in srgb,var(--accent) 15%,var(--surface));color:var(--accent);font-size:23px;flex-shrink:0}
+.f90-social-card>span:nth-last-child(2){overflow-wrap:anywhere;flex:1}
+.f90-social-arrow{color:var(--accent);font-size:16px}
+.f90-drawer-social{padding:14px 12px;margin:8px 0;border-block:1px solid color-mix(in srgb,var(--accent) 15%,var(--line))}
+.f90-drawer-social-title{font-size:12px;font-weight:800;color:var(--muted);margin:0 0 10px}
+.f90-drawer-social .f90-social-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.f90-drawer-social .f90-social-card{padding:9px 7px;font-size:11px;gap:6px}
+.f90-drawer-social .f90-social-card-icon,.f90-drawer-social .f90-social-fallback{width:28px;height:28px}
+.f90-drawer-social .f90-social-arrow{display:none}
+.f90-channel-invite{text-align:center;display:grid;gap:14px;max-width:440px;margin:auto}
+.f90-channel-invite p{margin:0;line-height:1.8}
+.f90-channel-mark{display:grid;place-items:center;width:66px;height:66px;margin:auto;border-radius:20px;background:linear-gradient(140deg,#157c4a,#25d366);color:#fff;font-size:36px;box-shadow:0 9px 24px #25d36635}
+:root[data-theme="cream"] .f90-social-card{background:rgba(255,250,247,.88);border-color:rgba(157,52,80,.18)}
+@media(max-width:450px){.f90-home-social .f90-social-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.f90-social-card{padding:10px 8px;gap:7px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.f90-social-card{transition:none}}
