@@ -292,9 +292,16 @@
       S.walletStale = true;
       // A transient network fault is not a sign-out event. Keep the last
       // known identity, but report that balances may be stale to callers.
-      if (err.code === "F90_FORBIDDEN" || err.code === "F90_AUTH") {
+      if (err.code === "F90_AUTH" || err.status === 401) {
         S.me = null;
         S.walletStale = false;
+        S.savedRecipients = [];
+        try { await A.client.auth.signOut({ scope: "local" }); } catch {}
+        if (location.hash !== "#/auth") location.hash = "#/auth";
+        toast("انتهت جلسة الدخول. يرجى تسجيل الدخول مجددًا.");
+      } else if (err.code === "F90_FORBIDDEN" || err.status === 403) {
+        // An authorization restriction is not proof of an expired session.
+        // Keep credentials, show the error and do not force sign-out.
         toast(message(err));
       }
       return false;
@@ -973,6 +980,10 @@
       "reset",
     ];
     if (privatePages.includes(page) && !S.me) {
+      if (location.hash !== "#/auth") {
+        location.hash = "#/auth";
+        return;
+      }
       loginRequired();
       return;
     }
@@ -1573,7 +1584,7 @@
         S.me = null;
         S.savedRecipients = [];
         chrome();
-        location.hash = "#/";
+        location.hash = "#/auth";
         route();
       } else if (action === "share" || action === "copy-text") {
         await navigator.clipboard.writeText(
@@ -1802,7 +1813,17 @@
       setTimeout(() => {
         location.hash = "#/reset";
       }, 0);
-    if (event === "SIGNED_OUT") { S.me = null; S.walletStale = false; S.savedRecipients = []; }
+    if (event === "SIGNED_OUT") {
+      S.me = null;
+      S.walletStale = false;
+      S.savedRecipients = [];
+      if (location.hash !== "#/auth" && location.hash !== "#/register") {
+        location.hash = "#/auth";
+      } else if (S.settings?.config) {
+        chrome();
+        route();
+      }
+    }
   });
   async function boot() {
     try {
