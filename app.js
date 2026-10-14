@@ -1898,6 +1898,7 @@
         console.warn("F90 account refresh pending");
       }
       chrome();
+      window.F90Support?.configure(S.settings.config);
       let initialTheme = S.settings.config.default_theme || "dark";
       try {
         initialTheme = localStorage.getItem("f90-theme") || initialTheme;
