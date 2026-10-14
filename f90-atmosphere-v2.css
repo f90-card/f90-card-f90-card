@@ -66,9 +66,8 @@ body::before{background:radial-gradient(ellipse 45% 34% at 12% 18%,var(--f90-sce
 body::after{background-image:linear-gradient(125deg,transparent 48%,var(--f90-scene-grid) 49.5%,transparent 51%),radial-gradient(circle at 22% 35%,var(--f90-scene-border) 0 1px,transparent 2px)!important;background-size:190px 190px,240px 240px!important;opacity:.24;animation:f90-scene-lines 50s linear infinite!important}
 @keyframes f90-scene-layer{from{transform:translate3d(-2%,2%,0) scale(1)}to{transform:translate3d(3%,-3%,0) scale(1.06)}}
 @keyframes f90-scene-lines{from{transform:translate3d(0,0,0)}to{transform:translate3d(60px,-48px,0)}}
-body>*{position:relative;z-index:1}
-body>.modal-backdrop,body>.drawer-backdrop{z-index:1000}
-body>.drawer,body>.modal{z-index:1001}
+#mainContent,.site-footer{z-index:1}
+.site-header,.drawer,.drawer-backdrop,.f90-mobile-dock,.promotion{z-index:2}
 #mainContent{position:relative;isolation:isolate}
 #mainContent::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:30px;inset-inline-end:0;width:min(44vw,430px);height:min(44vw,430px);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 11%,transparent),transparent 72%);opacity:.75}
 :root[data-theme="cream"] body::before{opacity:.35}
