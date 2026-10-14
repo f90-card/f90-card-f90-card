@@ -1492,16 +1492,44 @@
        </div>`;
   }
   function designCenter(){
-    main.innerHTML=head("التحكم المرئي","مركز وصول سريع لجميع عناصر التصميم القابلة للتعديل حالياً.")+
-    `<div class="f90-admin-center-grid">${[
-      ["صورة الشعار والهوية","رفع الشعار وأيقونة التطبيق، ألوان المظهر، توهج الإطارات والبنر","settings"],
-      ["صور وأسماء الأقسام","تحريك الصور ورفعها وتغيير أسماء وأوصاف الأقسام","categories"],
-      ["صور وأسعار الخدمات","الصور والوصف والتصنيفات والترتيب، دون حذف طلبات العملاء","products"],
-      ["طرق الإيداع","الصور والنصوص والتعليمات والترتيب الفوري","payments"],
-      ["الإعلانات والترويج","صور الإعلانات والشريط والإشعارات","banners"],
-      ["الصفحات القانونية والنصوص","صفحات التعريف والسياسات القابلة للتعديل","policies"]
-    ].map(([title,desc,target])=>`<a class="panel f90-design-link" href="#/${target}"><h2>${title}</h2><p>${desc}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>
-    <p class="notice">تعديل أي نص أو تصميم تعسفي خارج الحقول المحددة يتطلب إضافة محرر مُراجع بدلاً من السماح بحقن HTML عشوائي داخل موقع الدفع.</p>`;
+    const c=S.settings?.config||{},w=c.welcome||{};
+    main.innerHTML=head("مركز التحكم المرئي","عدّل العناوين والصور والتصميم دون تعديل ملفات البرمجة.",
+      `<a class="button secondary small" href="./index.html#/welcome" target="_blank" rel="noopener noreferrer">معاينة صفحة التعريف ↗</a>`) +
+      `<section class="panel f90-visual-editor"><h2>صفحة التعريف والموقع</h2><p class="muted">إعداداتك الحالية ستبقى محفوظة؛ عدّل فقط الحقول التي تريدها.</p><form id="designCenterForm" class="f90-visual-editor-form"><div class="f90-visual-fields">`+
+      field("welcome_title","عنوان صفحة التعريف","text",w.title_ar||"عالمك الرقمي يبدأ هنا",`required maxlength="100"`)+
+      field("welcome_subtitle","وصف صفحة التعريف","textarea",w.subtitle_ar||"الألعاب وشحن التطبيقات والخدمات الرقمية في مكان واحد.",`maxlength="350" rows="3"`)+
+      field("welcome_image","رابط صورة التعريف","url",w.image_url||"",`placeholder="https://..." dir="ltr"`)+
+      field("welcome_image_file","رفع صورة تعريف جديدة","file","",`accept="image/png,image/jpeg,image/webp"`)+
+      field("hero_image","رابط بانر الصفحة الرئيسية","url",c.hero_image||"",`placeholder="https://..." dir="ltr"`)+
+      field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
+      field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1500" rows="2"`)+
+      field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
+      field("edge_glow_color","لون التوهج","color",c.edge_glow_color||"#ff2444")+
+      check("edge_glow_enabled","تفعيل توهج الكروت والأزرار",c.edge_glow_enabled!==false)+
+      `<button class="button" type="submit">حفظ التعديلات مباشرة</button></div><aside class="f90-visual-preview"><span>معاينة تقريبية · Preview</span><div class="f90-visual-preview-hero">`+
+      image(w.image_url||c.hero_image||S.settings.logo_url,"صورة التعريف","f90-visual-preview-image")+
+      `<strong id="f90VisualPreviewTitle">${e(w.title_ar||"عالمك الرقمي يبدأ هنا")}</strong><p id="f90VisualPreviewDescription">${e(w.subtitle_ar||"خدمات F90 CARD الرقمية")}</p><small>F90 CARD · أف تسعين كارد</small></div><p class="muted small">النصوص فقط تتغير فوراً في المعاينة؛ اختر حفظ للتحديث النهائي.</p></aside></form></section>`+
+      `<div class="f90-admin-center-grid">${[
+        ["الشعار والثيم","اللوغو الرسمي، أيقونة التثبيت، ألوان الموقع","settings"],
+        ["صور الأقسام","إنشاء وتعديل صور وأسماء وترتيب الأقسام","categories"],
+        ["صور وأسعار المنتجات","تعديل المنتجات وترتيبها وصورها","products"],
+        ["طرق الإيداع","أسماء وبيانات الدفع، الصور والترتيب","payments"],
+        ["الإعلانات","رفع البانرات والإعلانات المصورة","banners"],
+        ["صفحات السياسات","تعديل المعلومات والشروط والخصوصية","policies"]
+      ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
+  }
+  async function saveVisualDesign(form,d){
+    const prior=S.settings,c=prior.config||{},rawTitle=String(d.welcome_title||"").trim().slice(0,100);
+    if(!rawTitle)throw new Error("يجب كتابة عنوان صفحة التعريف");
+    const welcomeFile=form.elements.welcome_image_file.files?.[0],heroFile=form.elements.hero_file.files?.[0];
+    const welcomeUrl=welcomeFile?.size?(await A.upload(welcomeFile,"f90-images","branding")).url:String(d.welcome_image||"").trim();
+    const heroUrl=heroFile?.size?(await A.upload(heroFile,"f90-images","banners")).url:String(d.hero_image||"").trim();
+    const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1500),config:{...c,
+      welcome:{...c.welcome,title_ar:rawTitle,subtitle_ar:String(d.welcome_subtitle||"").trim().slice(0,350),image_url:welcomeUrl},
+      hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
+      edge_glow_color:d.edge_glow_color,edge_glow_enabled:form.elements.edge_glow_enabled.checked}};
+    await A.call("settings.save",{data:updated});
+    await refreshSettings(); brand(); designCenter(); toast("تم حفظ التصميم والنصوص بنجاح");
   }
   async function route() {
     S.token++;
@@ -1572,6 +1600,7 @@
     if (form.id === "catalogForm") return saveCatalog(form, d);
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
+    if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "searchUsers") {
       S.search = d.search;
       S.offset = 0;
@@ -2323,6 +2352,12 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.form?.id === "designCenterForm") {
+      const form=ev.target.form,title=$("f90VisualPreviewTitle"),desc=$("f90VisualPreviewDescription");
+      if(title)title.textContent=form.elements.welcome_title.value||"F90 CARD";
+      if(desc)desc.textContent=form.elements.welcome_subtitle.value||"";
+      return;
+    }
     if (ev.target.id === "productNameSearch") { S.productSearch = ev.target.value; document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const p = S.products.find(x => x.id === row.dataset.rowId); row.style.display = String(p?.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase()) ? "" : "none"; }); } if (ev.target.id === "providerServiceSearch" || ev.target.matches('#importForm [name="margin_percent"]')) updateProviderImportPreview();
     if (ev.target.id === "imageURL")
       $("imagePreview").innerHTML = image(
