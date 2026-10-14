@@ -2847,3 +2847,58 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .f90-flip-tile .f90-flip-inner {will-change:auto;}
 
 @media (prefers-reduced-motion:reduce) { :root.f90-edge-on :is(.image-tile,.product-art,.button,.icon-button,.pack,button)::before {animation:none!important;} }
+
+
+/* F90 signature UI: red-chrome glass treatment across all existing pages */
+:root{--f90-glass:color-mix(in srgb,var(--surface) 91%,transparent);--f90-strong-border:color-mix(in srgb,var(--accent) 28%,var(--line));--f90-page-glow:color-mix(in srgb,var(--accent) 7%,transparent)}
+body{background-image:radial-gradient(ellipse at 75% 7%,var(--f90-page-glow),transparent 39%),linear-gradient(155deg,var(--bg),color-mix(in srgb,var(--bg) 95%,var(--accent)));background-attachment:fixed}
+.site-header{background:var(--f90-glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 9px 32px #0002}
+:where(.panel,.card,.profile-cover,.policy-content,.modal-content,.method-tile,.pack,.catalog-row){border-color:var(--f90-strong-border);box-shadow:0 8px 28px #00000012}
+:where(.button,.icon-button,.wallet-chip,.image-tile,.pack){transition:background-color .2s,border-color .2s,color .2s,transform .2s,box-shadow .2s}
+:where(button,a,input,select,textarea):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+:where(input,select,textarea){color:var(--text);accent-color:var(--accent)}
+:where(input,select,textarea)::placeholder{color:var(--muted);opacity:1}
+:where(.panel,.card,.policy-content,.modal-content,.notice){overflow-wrap:anywhere}
+:where(.actions,.field-row,.page-head,.section-head,.header-inner){min-width:0}
+:where(.actions,.page-head,.section-head){flex-wrap:wrap}
+:where(.button,.icon-button){min-height:42px}
+:root[data-theme="cream"]{
+ --bg:#f5f2ed;--surface:#fffdf9;--surface2:#eee9e2;--line:#c8beb4;
+ --text:#23232b;--muted:#514d55;--accent:#a81436;--accent2:#84102b;
+ --gold:#795017;--green:#146e54;--shadow:0 12px 34px #30201915;
+ --f90-glass:#fffdfaef;--f90-strong-border:#dbb8bd;
+}
+:root[data-theme="cream"] :where(.site-header,.drawer,.site-footer,.admin-top,.admin-sidebar,.modal-content){color:var(--text);background-color:var(--surface)}
+:root[data-theme="cream"] :where(.button.secondary,.button.ghost,.icon-button,.wallet-chip,.panel,.card,.policy-content,.pack,.catalog-row,.image-tile,.field input,.field select,.field textarea){color:var(--text)}
+:root[data-theme="cream"] :where(.button:not(.secondary):not(.ghost)){color:#fff}
+:root[data-theme="cream"] :where(.muted,.small.muted,.page-head p,.section-head span){color:var(--muted)}
+:root[data-theme="cream"] :where(.notice.error){color:#8f1930;background:#ffe7e8}
+:root[data-theme="cream"] :where(.notice.success){color:#145c44;background:#e0f5e8}
+:root[data-theme="cream"] .f90-closed-service{background:var(--surface);color:var(--text)}
+:root[data-theme="cream"] .f90-mobile-dock{background:#fffaf4f0;border-color:#d7c9ba}
+:root[data-theme="cream"] .f90-mobile-dock a{color:#46434c}
+:root[data-theme="cream"] .f90-mobile-dock a.active{color:#a81436}
+@media(max-width:700px){
+ .header-inner{gap:clamp(6px,1.8vw,12px);min-height:72px}
+ .header-inner .brand{flex-shrink:1;min-width:65px;max-width:115px}
+ .header-actions{min-width:0;gap:6px}
+ .header-actions .wallet-chip{max-width:clamp(92px,30vw,160px);min-width:0}
+ .header-search{min-width:0}
+ .main-content{padding-top:18px}
+ .f90-mobile-dock{border-top:1px solid var(--f90-strong-border)}
+ .f90-home-search{display:flex;gap:8px;max-width:100%}
+ .f90-home-search input{flex:1;min-width:0}
+ .f90-home-search .button{flex:0 0 auto}
+ .policy-layout{min-width:0}
+ .policy-nav{max-width:100%;overflow-x:auto}
+}
+@media(max-width:390px){
+ .header-inner{gap:5px}
+ .header-inner .brand{max-width:82px;min-width:60px}
+ .header-actions{gap:4px}
+ .header-actions .icon-button{min-width:37px;max-width:42px}
+ .header-actions .wallet-chip{font-size:11px;max-width:100px}
+ .f90-mobile-dock{gap:0;padding-inline:3px}
+ .f90-mobile-dock a{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
