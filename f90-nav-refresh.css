@@ -74,3 +74,37 @@
 @media(max-width:520px){.site-header .header-inner{grid-template-columns:42px minmax(0,1fr) minmax(78px,max-content) 42px;gap:3px 4px}.site-header #headerBrand{width:clamp(88px,27vw,124px);height:56px}.site-header #headerWallet{max-width:110px;padding:6px;font-size:10px}.site-header #headerWallet svg{height:16px;width:16px}.site-header #storeBell{width:39px;height:39px}}
 @media(max-width:365px){.site-header #headerBrand{width:85px}.site-header #headerWallet{max-width:89px}.site-header .header-inner{grid-template-columns:39px minmax(0,1fr) minmax(76px,max-content) 39px}}
 @media(prefers-reduced-motion:reduce){.site-header .f90-header-bell.f90-bell-new,.site-header .f90-header-bell.f90-bell-new .f90-bell-svg{animation:none}}
+
+/* F90 logo-first header: protected center zone, compact wallet and alerts */
+.site-header .header-inner{grid-template-columns:40px minmax(0,1fr) minmax(0,84px) 34px;column-gap:4px;min-height:124px}
+.site-header #headerBrand{width:clamp(125px,27vw,190px);height:72px;overflow:visible;isolation:isolate;pointer-events:auto}
+.site-header #headerBrand img,.site-header #headerBrand.brand-contain img{position:absolute;width:100%;height:100%;top:0;left:0;right:0;object-fit:contain;max-width:none;filter:drop-shadow(0 0 8px rgba(245,49,85,.27))}
+.site-header #storeBell{width:32px;height:32px;padding:6px;min-width:32px;border-radius:50%}
+.site-header #storeBell .f90-bell-svg{width:17px;height:17px}
+.site-header #headerWallet{width:84px;max-width:84px;min-width:0;height:32px;gap:3px;padding:3px 5px;font-size:10px;border-radius:11px;justify-content:center}
+.site-header #headerWallet svg{width:13px;height:13px;flex:none}
+.site-header #headerWallet span{max-width:65px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site-header #menuButton{width:39px;height:39px}
+.site-header #searchForm{margin-top:12px}
+@media(min-width:650px){.site-header .header-inner{grid-template-columns:46px minmax(0,1fr) 108px 38px;min-height:142px}.site-header #headerBrand{width:185px;height:86px}.site-header #headerWallet{width:108px;max-width:108px;height:37px;font-size:11px}.site-header #storeBell{width:37px;height:37px}.site-header #storeBell .f90-bell-svg{width:20px;height:20px}}
+@media(min-width:1000px){.site-header #headerBrand{width:205px;height:94px}}
+@media(max-width:390px){.site-header .header-inner{grid-template-columns:36px minmax(0,1fr) 74px 29px;column-gap:3px}.site-header #headerBrand{width:clamp(108px,29vw,124px);height:68px}.site-header #headerWallet{width:74px;max-width:74px;font-size:9px;padding:2px}.site-header #headerWallet span{max-width:55px}.site-header #storeBell{width:29px;height:29px;min-width:29px;padding:5px}.site-header #menuButton{width:36px;height:36px}}
+
+/* Signature F90 category & product tiles. Preserve original pictures and availability. */
+.image-grid .image-tile{position:relative;isolation:isolate;padding:6px 6px 11px;gap:8px;border:1px solid color-mix(in srgb,var(--accent) 38%,#252b38);border-radius:19px;background:radial-gradient(circle at 85% 3%,rgba(249,49,88,.15),transparent 50%),linear-gradient(150deg,color-mix(in srgb,var(--surface2) 94%,#1a1020),var(--surface));box-shadow:inset 0 1px 0 #ffffff10,0 8px 24px #0002;overflow:hidden;transition:transform .22s,border-color .22s,box-shadow .22s}
+.image-grid .image-tile::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,transparent 15%,rgba(255,91,121,.07) 48%,transparent 75%);opacity:.6}
+.image-grid .image-tile:nth-child(3n+2){border-color:rgba(72,172,216,.40);background:radial-gradient(circle at 15% 5%,rgba(43,172,217,.14),transparent 50%),linear-gradient(150deg,var(--surface2),var(--surface))}
+.image-grid .image-tile:nth-child(3n){border-color:rgba(246,163,99,.38);background:radial-gradient(circle at 85% 5%,rgba(249,169,83,.13),transparent 50%),linear-gradient(150deg,var(--surface2),var(--surface))}
+.image-grid .image-tile>img,.image-grid .image-tile>.image-placeholder{aspect-ratio:1/1;width:100%;height:auto;object-fit:contain;border-radius:13px;background:color-mix(in srgb,var(--surface2) 80%,#000);box-shadow:inset 0 0 0 1px #ffffff12;min-width:0}
+.image-grid .image-tile .tile-caption{position:relative;z-index:1;color:var(--text);font-weight:850;line-height:1.45;min-height:2.8em;display:grid;place-items:center;text-align:center;font-size:clamp(10px,1.5vw,14px);padding:0 2px}
+.image-grid .image-tile:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 0 16px color-mix(in srgb,var(--accent) 25%,transparent),0 14px 30px #0003}
+.image-grid .image-tile.refilling{opacity:1;border-style:dashed}
+.image-grid .image-tile.refilling img{filter:grayscale(1);opacity:.58}
+.image-grid .image-tile.refilling .refill-badge{z-index:2;inset:auto 7px 46px;pointer-events:none}
+.image-grid .image-tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pack{border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));background:linear-gradient(135deg,var(--surface2),var(--surface));border-radius:16px;box-shadow:0 5px 18px #0002;transition:transform .2s,box-shadow .2s}
+.pack:hover{transform:translateY(-3px);box-shadow:0 0 19px color-mix(in srgb,var(--accent) 22%,transparent)}
+:root[data-theme="cream"] .image-grid .image-tile{background:linear-gradient(145deg,#fff8fa,#f7edf3);box-shadow:0 8px 19px #6d364a16}
+:root[data-theme="cream"] .image-grid .image-tile:nth-child(3n+2){background:linear-gradient(145deg,#f2faff,#fff7fb)}
+@media(max-width:520px){.image-grid .image-tile{padding:4px 4px 8px;border-radius:13px;gap:5px}.image-grid .image-tile>img,.image-grid .image-tile>.image-placeholder{border-radius:10px}.image-grid .image-tile .tile-caption{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.image-grid .image-tile,.pack{transition:none}}
