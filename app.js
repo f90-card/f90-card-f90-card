@@ -763,7 +763,7 @@
               .filter((r) => r.is_enabled && r.per_usd)
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
-          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع 2٪.</span><small>حساب توضيحي فقط؛ الخصم غير مفعّل حاليًا في الخادم.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
+          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع 2٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
   }
   function orderRecord(o) {
@@ -1565,7 +1565,7 @@
       const rate = S.rates.find((row) => row.currency === f.elements.currency.value && row.is_enabled);
       const perUsd = Number(rate?.per_usd);
       if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
-        estimate.innerHTML = '<strong>صافي مبلغ الإيداع</strong><span>أدخل مبلغًا صالحًا لعرض التفاصيل.</span><small>العمولة لم تُفعّل بعد في الخادم.</small>';
+        estimate.innerHTML = '<strong>صافي مبلغ الإيداع</strong><span>أدخل مبلغًا صالحًا لعرض التفاصيل.</span><small>تُخصم عمولة الإيداع عند اعتماد الطلب.</small>';
         return;
       }
       if (!Number.isFinite(perUsd) || perUsd <= 0) {
@@ -1578,7 +1578,7 @@
       estimate.innerHTML = '<strong>صافي مبلغ الإيداع المتوقع بعد عمولة 2٪</strong>' +
         '<div class="f90-deposit-net-amount">' + e(C.money(net,"USD",true)) + '</div>' +
         '<div class="f90-deposit-net-detail"><span>قبل العمولة: ' + e(C.money(gross,"USD",true)) + '</span><span>عمولة الإيداع 2٪: −' + e(C.money(fee,"USD",true)) + '</span></div>' +
-        '<small>هذا حساب توضيحي فقط. عمولة الإيداع 2٪ غير مفعّلة بعد في الخادم، فلا يُعد هذا المبلغ رصيدًا مضمونًا.</small>';
+        '<small>يُحسم الصافي النهائي وفق سعر الصرف المحفوظ عند تقديم الطلب، ويُضاف إلى المحفظة بعد موافقة الإدارة.</small>';
     }
   });
   document.addEventListener("change", (ev) => {
