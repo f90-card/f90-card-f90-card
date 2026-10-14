@@ -1171,8 +1171,8 @@
       }
       await refreshMe();
       chrome();
-      location.hash = "#/profile";
-      await route();
+      if (location.hash === "#/profile") await route();
+      else location.hash = "#/profile";
       return;
     }
     if (form.id === "recipientForm") {
@@ -1597,8 +1597,8 @@
         S.me = null;
         S.savedRecipients = [];
         chrome();
-        location.hash = "#/auth";
-        route();
+        if (location.hash === "#/auth") route();
+        else location.hash = "#/auth";
       } else if (action === "share" || action === "copy-text") {
         await navigator.clipboard.writeText(
           action === "share" ? location.href : button.dataset.text,
