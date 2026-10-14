@@ -11,9 +11,17 @@
     { id:"active", label:"نشيط", bpm:132, wave:"triangle", notes:[60,64,67,72,67,64,62,67,60,65,69,72,69,65,62,60], chords:[[48,55,60],[53,60,65]], accent:0.24 }
   ];
   let context=null, master=null, timer=null, playing=false, station=0, step=0, nextTime=0, volume=0.19;
+  try {
+    const saved=JSON.parse(localStorage.getItem("f90-music-preferences")||"null");
+    if(saved && Number.isInteger(saved.station) && saved.station>=0 && saved.station<stations.length) station=saved.station;
+    if(saved && Number.isFinite(saved.volume)) volume=Math.max(0,Math.min(1,saved.volume));
+  } catch {}
+  function savePrefs(){try{localStorage.setItem("f90-music-preferences",JSON.stringify({station,volume}));}catch{}}
+
   root.innerHTML = '<div class="f90-music-brand"><span class="f90-music-pulse" aria-hidden="true">♫</span><div><strong>ميوزك أف تسعين</strong><small id="f90MusicStatus">أنغام أصلية · اختر النمط واضغط تشغيل</small></div></div><div class="f90-music-ctrl"><label class="sr-only" for="f90MusicGenre">نوع الموسيقى</label><select id="f90MusicGenre"></select><button id="f90MusicPlay" type="button" aria-label="تشغيل الموسيقى" aria-pressed="false">▶</button><label class="sr-only" for="f90MusicVolume">مستوى الصوت</label><input id="f90MusicVolume" type="range" min="0" max="100" value="19" aria-label="مستوى الصوت"></div>';
   const genre=root.querySelector("#f90MusicGenre"), play=root.querySelector("#f90MusicPlay"), vol=root.querySelector("#f90MusicVolume"), status=root.querySelector("#f90MusicStatus");
   stations.forEach((s,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=s.label;genre.append(o);});
+  genre.value=String(station);vol.value=String(Math.round(volume*100));
   function noteFrequency(n) { return 440*Math.pow(2,(n-69)/12); }
   function tone(pitch,when,duration,wave,gainValue) {
     if(!context || !master || when<context.currentTime-.08) return;
@@ -57,8 +65,8 @@
     root.classList.remove("is-playing");status.textContent="متوقف مؤقتاً";
   }
   play.addEventListener("click",()=>playing?stop():void begin());
-  genre.addEventListener("change",()=>{station=Number(genre.value);step=0;if(playing){stop();void begin();}else status.textContent=stations[station].label+" · جاهز للتشغيل";});
-  vol.addEventListener("input",()=>{volume=Number(vol.value)/100;if(master)master.gain.setTargetAtTime(volume,context.currentTime,.04);});
+  genre.addEventListener("change",()=>{station=Number(genre.value);step=0;savePrefs();if(playing){stop();void begin();}else status.textContent=stations[station].label+" · جاهز للتشغيل";});
+  vol.addEventListener("input",()=>{volume=Number(vol.value)/100;savePrefs();if(master)master.gain.setTargetAtTime(volume,context.currentTime,.04);});
   function visible(){
     const page=(location.hash||"#/welcome").split("/")[1]||"welcome";
     const show=page==="welcome"||page==="";
