@@ -771,7 +771,7 @@
         "كل التعديلات قابلة للمراجعة قبل الحفظ.",
         `<button class="button secondary small" data-action="back-catalog">رجوع</button>`,
       ) +
-      `<form id="catalogForm"><div class="editor"><section class="panel">${body}<div class="form-section"><div class="actions"><button class="button" type="submit">${I("check")}حفظ التعديلات</button><button class="button secondary" data-action="back-catalog" type="button">إلغاء</button></div></div></section>${imageEditor(d.image_url || "")}</div></form>`;
+      `<form id="catalogForm"><div class="editor"><section class="panel">${body}<div class="form-section"><div class="actions"><button class="button" type="submit">${I("check")}حفظ التعديلات</button>${kind === "product" && item && internal.provider_id === "c0e80eb6-7079-4071-8310-4c013614ffd5" && !d.is_active ? `<button class="button secondary" data-action="smm-approve" data-id="${e(d.id)}" type="button">اعتماد بيانات المسودة بعد مراجعتها</button>` : ""}<button class="button secondary" data-action="back-catalog" type="button">إلغاء</button></div>${kind === "product" && internal.provider_id === "c0e80eb6-7079-4071-8310-4c013614ffd5" ? '<p class="muted small">احفظ الاسم والوصف والسعر والصورة أولًا، ثم اعتمد المسودة قبل تحديد «نشر العنصر».</p>' : ""}</div></section>${imageEditor(d.image_url || "")}</div></form>`;
   }
   const localDate = (v) => {
     if (!v) return "";
@@ -963,6 +963,11 @@
   }
   async function providers() {
     S.providerRows = await A.call("staff.providers");
+    const hasSmm = S.providerRows.some((p) => p.id === "c0e80eb6-7079-4071-8310-4c013614ffd5");
+    let smmStatus = null;
+    if (hasSmm) {
+      try { smmStatus = await A.call("provider.smm_status"); } catch (err) { console.warn("SMM status unavailable", err); }
+    }
     main.innerHTML =
       head(
         "مصادر خدماتك",
@@ -2200,6 +2205,22 @@
       else if (action === "provider-import") {
         b.disabled = true;
         await importProvider(S.providerRows.find((x) => x.id === b.dataset.id));
+      } else if (action === "smm-refresh") {
+        await providers();
+      } else if (action === "smm-fetch-all") {
+        if (b.disabled) return;
+        b.disabled = true;
+        const status = $("smmFetchStatus");
+        if (status) status.textContent = "يجري فحص خدمات المورّد وحفظ الجديدة في قائمة المعالجة…";
+        try {
+          const result = await A.call("provider.smm_fetch");
+          if (status) status.textContent = result.busy ?
+            "هناك فحص جارٍ على الخادم؛ ستواصل المهمة التلقائية." :
+            `عُثر على ${result.found} خدمة؛ أُضيفت ${result.new} إلى المعالجة. يتم إنشاء المسودات وتنظيمها على دفعات تلقائيًا.`;
+        } finally { b.disabled = false; }
+      } else if (action === "smm-approve") {
+        await A.call("provider.smm_approve", { product_id: b.dataset.id });
+        toast("اعتمدت بيانات المسودة الحالية. يمكنك نشرها بعد التحقق النهائي.");
       } else if (action === "provider-sync") {
         const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
         if (!provider) throw new Error("لم يُعثر على المورّد");

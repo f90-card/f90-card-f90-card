@@ -307,15 +307,31 @@ async function assertProviderAvailable(productId: string) {
       (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new AppError("F90_PROVIDER_NOT_READY");
 }
+async function allCatalogRows(table: "products" | "f90_product_internal") {
+  const rows: any[] = [];
+  const pageSize = 900;
+  for (let offset = 0; offset < 20000; offset += pageSize) {
+    const result = table === "products"
+      ? await db.from("products").select("*").eq("is_active", true)
+        .order("sort_order").order("id").range(offset, offset + pageSize - 1)
+      : await db.from("f90_product_internal").select("product_id,provider_id")
+        .not("provider_id", "is", null).order("product_id")
+        .range(offset, offset + pageSize - 1);
+    const page = check(result);
+    rows.push(...page);
+    if (page.length < pageSize) return { data: rows, error: null };
+  }
+  throw new AppError("F90_LIMIT", 503, "الكتالوج كبير جدًا؛ راجع الخدمات المنشورة");
+}
 async function publicCatalog() {
   const rows = await Promise.all([
     db.from("site_settings").select("*").eq("id", 1).single(),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
-    db.from("products").select("*").eq("is_active", true).order("sort_order"),
+    allCatalogRows("products"),
     db.from("banners").select("*").eq("is_active", true).order("sort_order"),
     db.from("f90_rates").select("*").order("currency"),
     db.from("f90_vip_tiers").select("*").order("level"),
-    db.from("f90_product_internal").select("product_id,provider_id").not("provider_id", "is", null),
+    allCatalogRows("f90_product_internal"),
     db.from("f90_providers").select("id,is_enabled,adapter,config"),
     db.from("f90_store_news").select("id,kind,title_ar,body_ar,product_id,created_at")
       .order("created_at", { ascending: false }).limit(40),
@@ -458,6 +474,28 @@ async function dns(host: string) {
 async function providerAction(id: string, action: string, args: any = {}) {
   const { p, secret } = await provider(id, ["services", "balance", "status"].includes(action));
   return callProvider(p, secret, action, args, fetch, dns);
+}
+// The database cron and the manager's button use the same restartable catalog
+// fetch. Staging only inserts unseen supplier IDs; the SQL worker creates drafts.
+async function smmCatalogFetch() {
+  const claimed = await rpc("f90_smm_claim_fetch");
+  if (!claimed) return { busy: true };
+  let count = 0, added = 0;
+  try {
+    const items = await providerAction("c0e80eb6-7079-4071-8310-4c013614ffd5", "services");
+    if (!Array.isArray(items)) throw new Error("قائمة SMMCPAN غير صالحة");
+    count = items.length;
+    for (let offset = 0; offset < items.length; offset += 100) {
+      const staged = await rpc("f90_smm_stage", { p_items: items.slice(offset, offset + 100) });
+      added += Number(staged.new || 0);
+    }
+    await rpc("f90_smm_finish_fetch", { p_count: count, p_error: null });
+    return { found: count, new: added, queued: true };
+  } catch (e) {
+    await rpc("f90_smm_finish_fetch", { p_count: count,
+      p_error: "تعذّر جلب أو حفظ قائمة الخدمات؛ ستعيد المهمة المحاولة" });
+    throw e;
+  }
 }
 async function work() {
   const orders = await rpc("f90_claim_work");
@@ -1454,6 +1492,21 @@ async function staff(a: Actor, b: any) {
       );
     return data.map(normalizeService).filter(Boolean);
   }
+  if (action === "provider.smm_status") {
+    requireRole(a, "manager");
+    return rpc("f90_smm_status");
+  }
+  if (action === "provider.smm_approve") {
+    requireRole(a, "manager");
+    const productId = uuid(b.product_id);
+    const result = await rpc("f90_smm_approve", { p_product: productId, p_actor: a.id });
+    await auditSafe(a.id, "smm.approve", productId, {});
+    return result;
+  }
+  if (action === "provider.smm_fetch") {
+    requireRole(a, "manager");
+    return smmCatalogFetch();
+  }
   if (action === "provider.balance") {
     requireRole(a, "manager");
     return providerAction(uuid(b.id), "balance");
@@ -1539,6 +1592,12 @@ async function staff(a: Actor, b: any) {
         kind: "product",
         data: {
           name,
+          ...(p.adapter === "smm" ? {
+            description: "التفاصيل الأصلية للخدمة: " +
+              String(s.raw?.name ?? s.name).slice(0, 9500) +
+              (s.raw?.description ? "\n\nوصف الخدمة: " +
+                String(s.raw.description).replace(/https?:\/\/[^\s<>]+/gi, "").slice(0, 9000) : ""),
+          } : {}),
           category_id: chosenCategoryId,
           is_active: false,
           image_url: b.image_url || "",
@@ -1720,14 +1779,14 @@ Deno.serve(async (req: Request) => {
       throw new AppError("F90_FIELDS");
     }
     const action = text(b.action, 80);
-    if (action === "worker") {
+    if (action === "worker" || action === "smm.catalog") {
       const token = req.headers.get("x-f90-worker");
       if (
         !token ||
         !(await rpc("f90_worker_authorized", { p_hash: await hash(token) }))
       )
         throw new AppError("F90_AUTH");
-      return out(await work());
+      return out(action === "worker" ? await work() : await smmCatalogFetch());
     }
     if (action === "catalog" || action === "health")
       return out(

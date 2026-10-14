@@ -251,7 +251,7 @@ export async function callProvider(
   if (!response.ok)
     throw new ProviderError("رفض اتصال المورّد", action === "add");
   const raw = await response.text();
-  if (raw.length > 2000000)
+  if (raw.length > (provider.adapter === "smm" && action === "services" ? 15000000 : 2000000))
     throw new ProviderError("استجابة المورّد أكبر من الحد", action === "add");
   let data;
   try {

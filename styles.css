@@ -2662,6 +2662,10 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .f90-welcome-copy p{color:var(--muted);font-size:clamp(16px,2vw,21px);line-height:1.8;max-width:580px}
 .f90-welcome-copy .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .f90-welcome-hero>img{width:100%;height:auto;max-height:430px;aspect-ratio:4/3;object-fit:contain;border-radius:18px}
+.f90-home-intro{margin:clamp(18px,3vw,34px) 0 24px;min-height:250px;background:radial-gradient(circle at 80% 15%,rgba(220,28,44,.18),transparent 55%),var(--surface)}
+.f90-home-intro>img{max-height:260px;aspect-ratio:1/1;object-fit:contain}
+.f90-home-intro h2{font-size:clamp(1.6rem,3vw,2.6rem);margin:.4em 0}
+.f90-home-intro .eyebrow{color:var(--accent);letter-spacing:.12em}
 .f90-welcome-section h2,.f90-welcome-bottom h2{margin-top:0}
 .f90-welcome-features{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .f90-welcome-features>a{text-decoration:none;color:inherit;transition:transform .18s}
