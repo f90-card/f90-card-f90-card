@@ -1502,7 +1502,7 @@
       field("welcome_image_file","رفع صورة تعريف جديدة","file","",`accept="image/png,image/jpeg,image/webp"`)+
       field("hero_image","رابط بانر الصفحة الرئيسية","url",c.hero_image||"",`placeholder="https://..." dir="ltr"`)+
       field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
-      field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1500" rows="2"`)+
+      field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1000" rows="2"`)+
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
       field("edge_glow_color","لون التوهج","color",c.edge_glow_color||"#ff2444")+
       check("edge_glow_enabled","تفعيل توهج الكروت والأزرار",c.edge_glow_enabled!==false)+
@@ -1524,7 +1524,7 @@
     const welcomeFile=form.elements.welcome_image_file.files?.[0],heroFile=form.elements.hero_file.files?.[0];
     const welcomeUrl=welcomeFile?.size?(await A.upload(welcomeFile,"f90-images","branding")).url:String(d.welcome_image||"").trim();
     const heroUrl=heroFile?.size?(await A.upload(heroFile,"f90-images","banners")).url:String(d.hero_image||"").trim();
-    const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1500),config:{...c,
+    const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1000),config:{...c,
       welcome:{...c.welcome,title_ar:rawTitle,subtitle_ar:String(d.welcome_subtitle||"").trim().slice(0,350),image_url:welcomeUrl},
       hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
       edge_glow_color:d.edge_glow_color,edge_glow_enabled:form.elements.edge_glow_enabled.checked}};
