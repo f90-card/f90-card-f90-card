@@ -30,3 +30,8 @@
 #f90MusicPlayer .f90-music-brand{min-width:145px}
 @media(max-width:680px){#f90MusicPlayer{width:min(360px,calc(100vw - 16px));left:8px;bottom:calc(70px + env(safe-area-inset-bottom))}#f90MusicPlayer .f90-music-ctrl select{max-width:115px;width:107px}#f90MusicPlayer .f90-music-stream iframe{height:64px}}
 @media(max-height:520px){#f90MusicPlayer{bottom:5px}}
+
+#f90MusicPlayer .f90-music-stream{max-height:none}
+#f90MusicPlayer .f90-music-stream iframe.f90-external-radio{height:120px;max-height:120px;width:100%;background:var(--surface,#111726)}
+#f90MusicPlayer #f90MusicPlay[hidden],#f90MusicPlayer #f90MusicVolume[hidden]{display:none!important}
+@media(max-width:680px){#f90MusicPlayer .f90-music-stream iframe.f90-external-radio{height:120px}}
