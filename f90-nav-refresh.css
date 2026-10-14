@@ -145,3 +145,20 @@
 @media(max-width:650px){#f90LogoSky img:nth-child(n+8){display:none}#f90LogoSky img{opacity:.055}.site-header .header-inner{min-height:97px!important}}
 @media(prefers-reduced-motion:reduce){#f90LogoSky img{animation:none!important;will-change:auto}}
 @media(prefers-reduced-data:reduce){#f90LogoSky img:nth-child(n+4){display:none}}
+
+/* Exact geometric center of the header content, independent of side controls. */
+.site-header .header-inner{position:relative!important}
+.site-header #headerBrand,.site-header .header-inner>#headerBrand{
+  position:absolute!important;left:50%!important;right:auto!important;inset-inline-start:auto!important;
+  top:3px!important;transform:translateX(-50%)!important;
+  grid-column:auto!important;grid-row:auto!important;justify-self:auto!important;
+  width:clamp(118px,25vw,190px)!important;max-width:190px!important;
+  height:58px!important;z-index:4!important
+}
+.site-header #headerBrand img{width:100%!important;height:100%!important;object-fit:contain!important}
+@media(min-width:650px){.site-header #headerBrand,.site-header .header-inner>#headerBrand{top:3px!important;width:180px!important;height:64px!important}}
+@media(max-width:390px){.site-header #headerBrand,.site-header .header-inner>#headerBrand{width:clamp(105px,32vw,124px)!important;top:3px!important;height:58px!important}}
+/* Home uses the uploaded official storefront logo, not a generic grid icon. */
+.f90-mobile-dock .f90-home-dock-logo{display:block;width:27px;height:27px;object-fit:contain;flex:none;filter:drop-shadow(0 0 6px rgba(255,64,105,.32))}
+.f90-mobile-dock a.active .f90-home-dock-logo{filter:drop-shadow(0 0 9px rgba(255,64,105,.63))}
+@media(max-width:380px){.f90-mobile-dock .f90-home-dock-logo{width:23px;height:23px}}
