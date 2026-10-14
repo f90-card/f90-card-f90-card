@@ -258,3 +258,21 @@
 /* Override former seven-mark mobile limit without increasing large screen GPU load. */
 @media(max-width:650px){#f90LogoSky img:nth-child(n+8):nth-child(-n+14){display:block!important}}
 @media(prefers-reduced-data:reduce){#f90LogoSky img:nth-child(n+7){display:none!important}}
+
+/* Drawer redesign: translucent, slimmer than viewport, uniquely accented action rows */
+#drawer.drawer{width:min(89vw,376px)!important;max-width:376px!important;margin-inline-start:0!important;background:linear-gradient(160deg,rgba(18,26,44,.93),rgba(23,16,35,.92))!important;backdrop-filter:blur(23px) saturate(130%)!important;-webkit-backdrop-filter:blur(23px) saturate(130%)!important;border-inline-start:1px solid rgba(251,100,143,.56)!important;box-shadow:-10px 0 47px rgba(5,8,22,.48),inset 0 0 30px rgba(232,40,90,.07)!important}
+#drawer #drawerProfile{max-width:100%;min-width:0}
+#drawer .drawer-head{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:center}
+#drawer .drawer-head strong{flex:1}
+#drawer #drawerLinks{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;padding:0 9px}
+#drawer #drawerLinks>a,#drawer #drawerLinks>button{--row-glow:#fd4a76;margin:3px 0!important;display:flex;align-items:center;gap:11px;min-height:48px;padding:9px 13px!important;border:1px solid color-mix(in srgb,var(--row-glow) 58%,transparent)!important;border-radius:14px!important;box-shadow:inset 0 0 13px color-mix(in srgb,var(--row-glow) 11%,transparent),0 0 11px color-mix(in srgb,var(--row-glow) 16%,transparent)!important;background:linear-gradient(125deg,color-mix(in srgb,var(--row-glow) 12%,transparent),rgba(31,35,57,.23))!important;color:#f5f3fa!important;font-size:13px;font-weight:750}
+#drawer #drawerLinks>a:nth-of-type(4n+2){--row-glow:#38c5e6}
+#drawer #drawerLinks>a:nth-of-type(4n+3){--row-glow:#f5ae5f}
+#drawer #drawerLinks>a:nth-of-type(4n){--row-glow:#b387ff}
+#drawer #drawerLinks svg{color:var(--row-glow)!important;filter:drop-shadow(0 0 4px var(--row-glow))}
+#drawer .f90-drawer-quick-grid a{box-shadow:inset 0 0 10px rgba(247,82,134,.1),0 0 11px rgba(247,82,134,.18)}
+#drawer .drawer-preferences{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 11px;padding:12px 0}
+#drawer .drawer-preferences .f90-theme-toggle{min-height:45px!important;border:1px solid rgba(255,97,147,.6)!important;box-shadow:0 0 12px rgba(247,69,109,.22)}
+:root[data-theme="cream"] #drawer.drawer{background:linear-gradient(165deg,rgba(255,248,252,.96),rgba(244,234,248,.95))!important}
+:root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button{color:#593149!important;background:color-mix(in srgb,var(--row-glow) 10%,#fff)!important}
+@media(max-width:390px){#drawer.drawer{width:90vw!important}#drawer #drawerLinks>a,#drawer #drawerLinks>button{min-height:43px!important;font-size:12px}}
