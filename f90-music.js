@@ -37,6 +37,7 @@
   function schedule() {
     if(!playing||!context)return;
     const p=stations[station],seconds=60/p.bpm/2;
+    if(nextTime<context.currentTime-.2)nextTime=context.currentTime+.05;
     while(nextTime<context.currentTime+.15){
       const n=p.notes[step%p.notes.length];
       tone(n,nextTime,Math.min(seconds*.82,.4),p.wave,p.accent);
@@ -74,6 +75,6 @@
     if(!show && playing)stop();
   }
   window.addEventListener("hashchange",visible);
-  document.addEventListener("visibilitychange",()=>{if(document.hidden&&playing)stop();});
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && playing && context?.state==="running") { nextTime=context.currentTime+.05; schedule(); } });
   visible();
 })();
