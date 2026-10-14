@@ -34,3 +34,22 @@
 @media(max-width:800px){.f90-quran-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:530px){.f90-quran-hero{min-height:220px;border-radius:20px;padding:28px 18px}.f90-quran-grid{grid-template-columns:1fr;gap:8px}.f90-quran-surah{min-height:65px}.f90-quran-open{font-size:12px}.f90-quran-reader{padding:18px 14px}.f90-quran-verses{font-size:26px;line-height:2.5}}
 @media(prefers-reduced-motion:reduce){.f90-quran-surah{transition:none}}
+
+/* Quran audio and adhkar */
+.f90-adhkar-section{margin:12px 0 32px}
+.f90-adhkar-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.f90-adhkar-card{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:155px;padding:20px;border-radius:19px;border:1px solid color-mix(in srgb,#a99055 38%,var(--line));background:var(--surface);text-align:center}
+.f90-adhkar-card small{font-weight:800;color:#aa873d;font-size:12px}
+.f90-adhkar-card p{font-family:"Amiri","Noto Naskh Arabic",serif;font-size:clamp(19px,2vw,25px);line-height:1.8;margin:0;color:var(--text)}
+.f90-adhkar-card span{font-size:11px;color:var(--muted)}
+.f90-quran-audio{display:flex;align-items:center;flex-wrap:wrap;gap:14px;padding:17px;margin:0 0 27px;border-radius:18px;border:1px solid color-mix(in srgb,#a99055 50%,var(--line));background:color-mix(in srgb,#ac914e 9%,var(--surface))}
+.f90-quran-audio>div{flex:1;min-width:180px}
+.f90-quran-audio strong,.f90-quran-audio small{display:block}
+.f90-quran-audio strong{font-size:15px}.f90-quran-audio small{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.6}
+#f90QuranListen{padding:11px 17px;border-radius:12px;background:#26564a;color:white;border:1px solid #498675;cursor:pointer;font-weight:800}
+#f90QuranListen:disabled{opacity:.6;cursor:wait}
+#f90QuranVolume{width:110px;accent-color:#a88a45}
+.f90-quran-audio label{font-size:12px}
+#f90QuranAudioStatus{width:100%;font-size:12px;color:var(--muted);margin:0}
+@media(max-width:800px){.f90-adhkar-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:530px){.f90-adhkar-grid{grid-template-columns:1fr}.f90-adhkar-card{min-height:120px;padding:15px}.f90-quran-audio{gap:10px}#f90QuranVolume{width:100px}}
