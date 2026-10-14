@@ -1916,8 +1916,20 @@
           S.news = latest.news;
           // Keep refreshed availability in memory; do not interrupt an open purchase.
           const buying = !!document.querySelector(".checkout-form, #checkoutForm, [data-checkout-form]");
-          if (!buying && Array.isArray(latest.products)) S.products = latest.products;
-          if (!buying && Array.isArray(latest.categories)) S.categories = latest.categories;
+          if (!buying && Array.isArray(latest.products) && Array.isArray(latest.categories)) {
+            const previous = JSON.stringify(S.products.map(p => [p.id,p.is_active,p.stock,p.price,p.commerce?.availability]));
+            const incoming = JSON.stringify(latest.products.map(p => [p.id,p.is_active,p.stock,p.price,p.commerce?.availability]));
+            S.products = latest.products;
+            S.categories = latest.categories;
+            // Only repaint browse pages when the supplier-facing catalog actually changed.
+            // Never interrupt an active modal, a focused input, or a checkout.
+            const page = (location.hash || "#/").split("/")[1] || "";
+            if (previous !== incoming && ["", "category", "favorites", "search"].includes(page)
+                && !document.querySelector(".modal:not([hidden]), [role=dialog]:not([hidden])")
+                && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+              await route();
+            }
+          }
           updateStoreBell();
         } catch {
           // Keep previous news and continue normal browsing if offline.
