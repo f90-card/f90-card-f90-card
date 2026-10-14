@@ -1053,7 +1053,7 @@
 
   function apiGuide() {
     main.innerHTML = `<section class="f90-merchant-hub" dir="ltr" lang="en">
-      <header class="f90-merchant-hero"><span>F90 CARD · Developer Platform</span><h1>Build on F90 CARD.</h1><p>A documented reseller API for approved merchants. Server-only tokens, catalog discovery, orders, balance and order status.</p><div class="f90-merchant-actions"><a class="button" href="./docs/F90_MERCHANT_API_EN.md" download>Send this to your developer ↗</a><a class="button secondary" href="./docs/F90_PROVIDER_PROTOCOL_EN.md" download>Supplier protocol</a><a class="button secondary" href="${S.me?.role==="trader" ? "#/developers" : "#/support"}">${S.me?.role==="trader" ? "Manage my API tokens" : "Request reseller access"}</a></div><p dir="rtl" lang="ar">دليل إنجليزي جاهز للإرسال للمبرمج، مع شرح عربي داخل الملفات. إنشاء المفاتيح متاح للحساب المفعّل كتاجر فقط.</p></header>
+      <header class="f90-merchant-hero"><span>F90 CARD · Developer Platform</span><h1>Build on F90 CARD.</h1><p>A documented reseller API for approved merchants. Server-only tokens, catalog discovery, orders, balance and order status.</p><div class="f90-merchant-actions"><a class="button" href="./docs/F90_MERCHANT_API_EN.md" download>Send this to your developer ↗</a><a class="button secondary" href="./docs/F90_PROVIDER_PROTOCOL_EN.md" download>Supplier protocol</a><a class="button secondary" href="${["trader","manager","admin"].includes(S.me?.role) ? "#/developers" : "#/support"}">${S.me?.role==="trader" ? "Manage my API tokens" : ["manager","admin"].includes(S.me?.role) ? "View merchant API console" : "Request reseller access"}</a></div><p dir="rtl" lang="ar">دليل إنجليزي جاهز للإرسال للمبرمج، مع شرح عربي داخل الملفات. إنشاء المفاتيح متاح للحساب المفعّل كتاجر فقط.</p></header>
       <div class="f90-merchant-grid">
         <section><b>01 · Authenticate</b><p>Approved traders receive private tokens. Keys must stay in the merchant's server.</p><small dir="rtl" lang="ar">التوثيق: المفتاح لا يوضع في موقع العميل.</small></section>
         <section><b>02 · Discover</b><p>Fetch categories and services with prices, units, available quantities and required account fields.</p><small dir="rtl" lang="ar">المنتجات: راجع بيانات الخدمة والعملة والكمية.</small></section>
@@ -1139,7 +1139,7 @@
     $("mobileDock")?.querySelectorAll("[data-dock-page]").forEach((link) => {
       link.classList.toggle("active", link.dataset.dockPage === (page || ""));
     });
-    if (page === "developers" && S.me?.role !== "trader") {
+    if (page === "developers" && !["trader","manager","admin"].includes(S.me?.role)) {
       location.hash = "#/";
       return;
     }
