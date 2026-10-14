@@ -649,8 +649,20 @@
       if (form.isConnected) select.closest(".f90-recipient-chooser").hidden = true;
     }
   }
+  function isAppInstalled() {
+    return window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+  function syncInstallButtons() {
+    const installed=isAppInstalled();
+    const header=$("installButton");
+    if(header)header.hidden=installed||!installPrompt;
+    document.querySelectorAll('[data-action="install"]').forEach(button=>button.hidden=installed);
+    const state=$("f90InstallState");
+    if(state)state.hidden=!installed;
+  }
   function installPage() {
-    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "اختصار آمن لمتجرك على شاشة هاتفك، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="./assets/icons/icon-192.png" alt="شعار تطبيق F90 Card" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت الموقع كتطبيق للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>أندرويد</h3><p>افتح الموقع عبر Chrome، ثم من قائمة المتصفح اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</p></section><section><h3>آيفون وآيباد</h3><p>افتح الموقع في Safari، واضغط «مشاركة»، ثم «إضافة إلى الشاشة الرئيسية».</p></section></div><p class="muted small">إذا كان التطبيق مثبتًا بالفعل، يمكنك فتحه مباشرة من الشاشة الرئيسية.</p></section>`;
+    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "تطبيق متجرك على الشاشة الرئيسية، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="./assets/icons/icon-192.png" alt="شعار تطبيق F90 Card" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت المتجر للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><p id="f90InstallState" class="f90-install-success" hidden>التطبيق مفتوح بوضع التثبيت على جهازك.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>◉ أندرويد</h3><p>اضغط زر التثبيت. إذا لم يُظهر المتصفح طلب التثبيت، افتح قائمة Chrome واختر «تثبيت التطبيق».</p></section><section><h3> آيفون وآيباد</h3><p>افتح المتجر عبر Safari، ثم اختر «مشاركة» و«إضافة إلى الشاشة الرئيسية». لا يسمح Safari بالتثبيت المباشر عبر زر الموقع.</p></section></div><p class="muted small">يتطلب التثبيت موافقتك. يتوفر زر التثبيت المباشر عندما يدعمه المتصفح.</p></section>`;
+    syncInstallButtons();
   }
   async function wallet() {
     const me = S.me;
@@ -1668,6 +1680,7 @@
         if (installPrompt) {
           await installPrompt.prompt();
           installPrompt = null;
+          syncInstallButtons();
         } else
           modal(
             "تثبيت أف تسعين كارد",
@@ -1693,7 +1706,7 @@
     route();
   });
   $("installButton").addEventListener("click", async () => {
-    if (installPrompt) await installPrompt.prompt();
+    if (installPrompt) { await installPrompt.prompt(); installPrompt=null; syncInstallButtons(); }
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
@@ -1739,9 +1752,14 @@
   window.addEventListener("beforeinstallprompt", (ev) => {
     ev.preventDefault();
     installPrompt = ev;
-    $("installButton").hidden = false;
+    syncInstallButtons();
   });
-  A.client.auth.onAuthStateChange((event) => {
+  window.addEventListener("appinstalled", () => {
+    installPrompt=null;
+    syncInstallButtons();
+  });
+  window.matchMedia?.("(display-mode: standalone)")?.addEventListener?.("change",syncInstallButtons);
+    A.client.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY")
       setTimeout(() => {
         location.hash = "#/reset";
