@@ -1452,7 +1452,7 @@
     const names=["طربي · عربي","رومانسي","حماسي","هادئ","نشيط"];
     const data=Array.isArray(S.settings.config?.music_stations)?S.settings.config.music_stations:[];
     main.innerHTML=head("إذاعات ميوزك أف تسعين","إدارة مصادر البث الصوتي الحقيقي. مشغّل DataMind FM المجاني متاح افتراضياً؛ أضف محطات أخرى إذا لديك إذن استخدامها.")
-      + '<section class="panel"><h2>المحطة المباشرة الأساسية</h2><p><b>DataMind FM</b> · بث 24/7 من المصدر الأصلي، مسموح بإدراج مشغله مجاناً مع نسب المصدر إليه.</p><a class="button secondary" href="https://datamind.fm/embed/" target="_blank" rel="noopener noreferrer">توثيق البث والمشغّل ↗</a></section>'
+      + '<section class="panel"><h2>محطات حقيقية مفعّلة افتراضياً</h2><p><b>DataMind FM</b> · بث موسيقي هادئ وسينمائي 24/7.</p><p><b>5FM</b> · بث حماسي وموسيقى عالمية عبر مشغّل RadioHubZA الذي يسمح بإدراجه في المواقع التجارية.</p><div class="actions"><a class="button secondary" href="https://datamind.fm/embed/" target="_blank" rel="noopener noreferrer">مشغّل DataMind ↗</a><a class="button secondary" href="https://radiohubza.co.za/widgets?station=5fm" target="_blank" rel="noopener noreferrer">مشغّل 5FM ↗</a></div></section>'
       + '<form id="musicStationsForm" class="panel"><h2>مصادر البث الإضافية</h2><p class="muted">ضع رابط HTTPS مباشر لصوت MP3/AAC أو بث Icecast/SHOUTcast المصرّح بإدراجه. إذا لم تدخل مصدراً فعلياً فلن يظهر خيار وهمي للمستمع.</p><div class="f90-radio-sources">'
       + names.map((name,i)=>{const row=data.find(x=>x.id==="mood-"+i)||{};return '<fieldset class="f90-radio-source"><legend>'+e(name)+'</legend>'
        + field("radio_name_"+i,"الاسم الذي يظهر للمستمع","text",row.name||name,'maxlength="55"')
