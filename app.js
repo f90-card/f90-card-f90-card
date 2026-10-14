@@ -43,7 +43,7 @@
   const href = (kind, id) => `#/${kind}/${encodeURIComponent(id)}`;
   const image = (src, alt = "", cls = "") =>
     C.safeUrl(src)
-      ? `<img src="${e(C.safeUrl(src))}" alt="${e(alt)}" class="${cls}" loading="lazy" decoding="async">`
+      ? `<img src="${e(C.safeUrl(src))}" alt="${e(alt)}" class="${cls}" loading="lazy" decoding="async" onerror="this.onerror=null;this.hidden=true;this.insertAdjacentHTML('afterend','<span class=&quot;image-placeholder&quot;>صورة غير متاحة</span>')">`
       : `<div class="image-placeholder">${I("grid")}<span>${e(alt)}</span></div>`;
   const field = (name, label, type = "text", value = "", attrs = "") =>
     `<label class="field"><span>${label}</span>${type === "textarea" ? `<textarea name="${name}" ${attrs}>${e(value)}</textarea>` : `<input name="${name}" type="${type}" value="${e(value)}" ${attrs}>`}</label>`;
