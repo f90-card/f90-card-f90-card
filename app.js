@@ -108,7 +108,7 @@
     const c = S.settings.config || {};
     document.documentElement.style.setProperty("--f90-edge-color", /^#[0-9a-fA-F]{6}$/.test(c.edge_glow_color || "") ? c.edge_glow_color : "#ff2444");
     document.documentElement.style.setProperty("--f90-edge-duration", `${Math.max(4, Math.min(60, Number(c.edge_glow_speed) || 14))}s`);
-    document.documentElement.style.setProperty("--f90-flip-duration", `${Math.max(1.5, Math.min(15, Number(c.card_flip_speed) || 4.5))}s`);
+    document.documentElement.style.setProperty("--f90-reveal-duration", `${Math.max(0.2, Math.min(3, Number(c.card_flip_speed) || 0.8))}s`);
     document.documentElement.classList.toggle("f90-edge-on", c.edge_glow_enabled !== false);
     document.documentElement.classList.toggle("f90-flip-on", c.card_flip_enabled !== false);
     const
