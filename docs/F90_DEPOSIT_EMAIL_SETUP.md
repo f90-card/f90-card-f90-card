@@ -1,29 +1,46 @@
-# F90 CARD — Deposit Email Notifications (integration handoff)
+# F90 CARD: secure email notices for new deposits
 
-**Current state: prepared, not delivering.** The database stores one private delivery job for each approved recipient on each **new pending deposit**. No emails are sent until a transactional email provider is connected and an authenticated worker is deployed.
+**Deployment status, 2026-10-14**
+- Pending deposit trigger installed: `f90_new_deposit_email_queue`.
+- Private queue: `f90_private.deposit_email_queue` (RLS enabled, not readable from frontend).
+- Delivery Edge Function deployed: `f90-deposit-mail`, JWT verification **enabled**.
+- Server-only queue claim and result RPCs: `public.f90_mail_claim_batch` and `public.f90_mail_complete`; execute permissions for `service_role` only.
+- Each new pending deposit produces one job per configured administrator address, de-duplicated by `(deposit_id,recipient)`.
+- Email message is intentionally generic, only mentioning a pending deposit and linking to the protected admin dashboard. It never sends receipt images, customer contact details, passwords or keys.
+- Resend acknowledges an API request before the job is marked `sent`; it does not prove inbox delivery.
 
-## Security architecture
-- Trigger: `f90_new_deposit_email_queue` on `public.f90_deposits`, only for `NEW.status = 'pending'`.
-- Delivery queue: `f90_private.deposit_email_queue`, private schema, RLS enabled, no direct access for anonymous or authenticated browser clients.
-- Two destination addresses have been stored in the private SQL trigger; they are **not** published in the frontend or this repository.
-- Uniqueness: `(deposit_id, recipient)` prevents duplicate notifications for the same event.
-- Queue statuses: pending / sending / sent / failed / disabled.
-- There are **no SMTP credentials, Resend API keys or sender-domain credentials** in GitHub.
+## NOT ACTIVE YET: required owner/provider configuration
+To enable *actual* automatic delivery, first obtain a transactional email service account and sender authorization. In Supabase → Edge Functions → Secrets, set:
 
-## To activate instant email delivery
-1. Connect a transactional mail provider such as **Resend** to F90 administration.
-2. Verify a sender domain you control. Set the sender and the mail provider API key in **Supabase Edge Function secrets only**.
-3. Create a worker with service-level authentication; do not expose a public unauthenticated endpoint. Read a batch of pending queue rows, mark each as sending with atomic claim, send to the designated recipient, and mark as sent or failed.
-4. Dispatch the worker through a trusted database webhook or `pg_net` with a stored secret, not by passing the provider API key in browser code.
-5. Send **only minimal details:** “إيداع جديد في F90 CARD. ادخل لوحة الإدارة لمراجعته” with a link to the admin. Never attach receipts, passwords, customer identity documents, full payment details or keys.
-6. Rate-limit, bound retries, record failure reasons, and monitor provider delivery receipts. Mark success **only after** provider API acknowledges acceptance; an API acknowledgment still does not prove inbox arrival.
-7. Test once with a controlled pending deposit in a staging or dedicated test account. Do not use a real customer balance as a test.
+- `RESEND_API_KEY`: valid private Resend API key
+- `F90_EMAIL_FROM`: verified sender such as `F90 CARD <notice@owned-domain.example>`
+- `F90_EMAIL_DISPATCH_SECRET`: random secret (28+ bytes of entropy)
 
-## Required secrets
-- `RESEND_API_KEY`: configured privately through Supabase.
-- `RESEND_FROM`: verified sender, e.g. `F90 CARD <notify@verified-domain.example>`.
-- Dedicated worker authentication secret.
+No real value for these secrets has been installed during this build. **Never put them in public GitHub or browser JS.**
 
-**Do not enable this feature or tell customers email is active until a live delivery test passes.**
+Configure a trusted server-side scheduler or trigger to POST to:
+```
+https://xzqnrpycjxfbyrfaolud.supabase.co/functions/v1/f90-deposit-mail
+Authorization: Bearer <SECURE_SUPABASE_SERVER_JWT>
+x-f90-dispatch-secret: <PRIVATE_F90_EMAIL_DISPATCH_SECRET>
+Content-Type: application/json
+```
+Store the scheduler's credentials in protected Supabase Vault/secret manager, not publicly accessible database rows. An administrator should test the handler with a valid secret; the function returns 503 if the sender provider isn't configured, and must not be treated as working while 503 is returned.
 
-Reference: https://supabase.com/docs/guides/functions/examples/send-emails
+## How it works
+1. New pending deposit is saved in `public.f90_deposits` (normal verified F90 workflow).
+2. Trigger creates private queue jobs without generating an outgoing customer-facing message.
+3. The authenticated worker claims up to 10 jobs with row locks and retry limits.
+4. Worker sends via Resend REST API with a stable idempotency key per recipient/job.
+5. Worker records success/error; failed calls retry only after a delay.
+6. The owner checks whether messages appear in the two inboxes and records evidence.
+
+## Acceptance criteria
+- [ ] Provider key configured and sender verified
+- [ ] Scheduler securely invokes Edge Function after deposit with no publicly exposed key
+- [ ] Worker shows `accepted > 0` on a controlled test notification
+- [ ] Both recipient inboxes receive the mail and correct admin link
+- [ ] Repeated trigger or retried job doesn't create duplicate messages
+- [ ] Existing deposits and customer balances remain unchanged
+
+Until all acceptance items pass, state the status accurately as **queue + sender deployed; actual email delivery not enabled**.
