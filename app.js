@@ -721,7 +721,7 @@
       const data = JSON.parse(localStorage.getItem(key) || "[]");
       return Array.isArray(data) ? data.filter((row) =>
         row && typeof row.id === "string" && typeof row.label === "string" &&
-        typeof row.value === "string" && ["phone", "account_id"].includes(row.kind)).slice(0, 100) : [];
+        typeof row.value === "string" && ["phone", "account_id", "email"].includes(row.kind)).slice(0, 100) : [];
     } catch { return []; }
   }
   function saveLocalRecipients(rows) {
@@ -750,7 +750,7 @@
         </form>
       </section>
       <section class="panel"><h2>البيانات المحفوظة</h2>
-        ${S.savedRecipients.length ? `<div class="f90-recipient-list">${S.savedRecipients.map((item) => `<article class="f90-recipient-item" data-recipient-search="${e([item.label,item.value,item.kind].join(" ").toLocaleLowerCase("ar"))}"><div><strong>${e(item.label)}</strong><span class="muted small">${item.kind === "phone" ? "هاتف" : "معرّف حساب"}</span><code dir="ltr">${e(item.value)}</code></div><div class="actions"><button class="button secondary small" data-action="recipient-edit" data-id="${e(item.id)}">تعديل</button><button class="button ghost small" data-action="recipient-delete" data-id="${e(item.id)}">حذف</button></div></article>`).join("")}</div>` : '<p class="muted">لم تحفظ أي بيانات بعد.</p>'}
+        ${S.savedRecipients.length ? `<div class="f90-recipient-list">${S.savedRecipients.map((item) => `<article class="f90-recipient-item" data-recipient-search="${e([item.label,item.value,item.kind].join(" ").toLocaleLowerCase("ar"))}"><div><strong>${e(item.label)}</strong><span class="muted small">${item.kind === "phone" ? "هاتف" : item.kind === "email" ? "بريد إلكتروني" : "معرّف حساب"}</span><code dir="ltr">${e(item.value)}</code></div><div class="actions"><button class="button secondary small" data-action="recipient-edit" data-id="${e(item.id)}">تعديل</button><button class="button ghost small" data-action="recipient-delete" data-id="${e(item.id)}">حذف</button></div></article>`).join("")}</div>` : '<p class="muted">لم تحفظ أي بيانات بعد.</p>'}
       </section>
     </div>`;
   }
@@ -1276,10 +1276,11 @@
     }
     if (form.id === "recipientForm") {
       const rows = localRecipients();
-      const kind = data.kind === "phone" ? "phone" : "account_id";
+      const kind = ["phone", "account_id", "email"].includes(data.kind) ? data.kind : "account_id";
       const label = String(data.label || "").trim().slice(0, 50);
       const value = String(data.value || "").trim().slice(0, 120);
       if (!label || value.length < 2) throw new Error("أدخل الاسم والمعرّف الصحيح");
+      if (kind === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error("أدخل بريدًا إلكترونيًا صحيحًا");
       const id = data.id || C.key();
       const index = rows.findIndex((item) => item.id === id);
       if (index < 0 && rows.length >= 100) throw new Error("دفتر العملاء ممتلئ");
