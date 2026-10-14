@@ -731,11 +731,11 @@
     const feeRecorded = d.method_snapshot?.deposit_fee_percent !== undefined && d.method_snapshot?.deposit_fee_percent !== null;
     const gross = Number(d.usd_amount || 0);
     const fee = feeEnabled ? Math.round(gross * pct * 10000) / 1000000 : 0;
-    const net = gross - fee;
+    const net = Math.round((gross - fee) * 1000000) / 1000000;
     const feeInfo = feeEnabled
-      ? `<p class="f90-deposit-fee-line">عمولة الإيداع ${e(pct)}٪: −${e(C.money(fee,"USD",true))} · الصافي ${e(C.money(net,"USD",true))}</p>`
+      ? `<p class="f90-deposit-fee-line">عمولة الإيداع ${e(pct)}٪: −${e(C.money(fee,"USD",true))} · ${d.status === "approved" ? "الصافي المضاف" : "الصافي المتوقع"} ${e(C.money(net,"USD",true))}</p>`
       : `<p class="muted small">${feeRecorded ? "لم تُسجّل عمولة إيداع لهذه العملية." : "لا تتوفر بيانات عمولة إيداع مؤكدة لهذه العملية؛ راجع حركة المحفظة لمعرفة الرصيد المضاف."}</p>`;
-    return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p>${feeInfo}<div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><div class="f90-deposit-record-amount"><small>${feeEnabled ? "الصافي المحسوب" : "المبلغ قبل العمولة"}</small><strong class="record-price">${e(C.money(feeEnabled ? net : gross, "USD", true))}</strong></div></article>`;
+    return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p>${feeInfo}<div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><div class="f90-deposit-record-amount"><small>${feeEnabled ? (d.status === "approved" ? "الصافي المعتمد" : "الصافي المتوقع") : "المبلغ قبل العمولة"}</small><strong class="record-price">${e(C.money(feeEnabled ? net : gross, "USD", true))}</strong></div></article>`;
   }
   function deposit(methodId) {
     if (!S.me?.profile?.is_verified) {
