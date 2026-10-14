@@ -2772,6 +2772,10 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 .image-tile,.method-tile,.f90-welcome-service {transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
 .image-tile:hover,.method-tile:hover,.f90-welcome-service:hover {transform:translateY(-4px);box-shadow:0 12px 34px color-mix(in srgb,var(--accent) 22%,transparent)}
 :root[data-theme="dark"] .button:not(.secondary):not(.ghost):not(.danger) {box-shadow:0 5px 19px #fa244438, inset 0 1px #fff4}
+.button:not(:disabled)::after {content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;opacity:0;border:1px solid transparent;background:conic-gradient(from var(--f90-glow-turn,0deg),transparent 0 42%,#2dd9ec 50%,#b983f4 56%,transparent 64%) border-box;-webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);mask-composite:exclude}
+:root[data-theme="dark"] .button:not(:disabled):hover::after,:root[data-theme="dark"] .button:not(:disabled):focus-visible::after {opacity:1;animation:f90-border-turn 3s linear infinite}
+@property --f90-glow-turn {syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes f90-border-turn {to{--f90-glow-turn:360deg}}
 .button:not(:disabled):active,.icon-button:not(:disabled):active {transform:scale(.97)}
 :root[data-theme="dark"] :is(.button.secondary,.method-tile,.f90-home-search):hover {border-color:#29c8df99;box-shadow:0 0 0 1px #29c8df55,0 0 18px #29c8df30}
 .method-tile {aspect-ratio:auto;min-height:180px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background-color:var(--surface);text-align:center;color:var(--text)}
@@ -2803,5 +2807,6 @@ body:has(#quickProductPanel:not([hidden])) { overflow: hidden; }
 @media(prefers-reduced-motion:reduce) {
  .image-tile,.method-tile,.f90-welcome-service,.f90-mobile-dock a {transition:none!important}
  .image-tile:hover,.method-tile:hover,.f90-welcome-service:hover {transform:none}
+ .button:not(:disabled)::after{animation:none!important}
 }
 @media print {.f90-mobile-dock{display:none!important}}
