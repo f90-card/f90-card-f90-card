@@ -403,7 +403,7 @@
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = () => image(f90Fallback(), "قيد التعبئة", "f90-refill-image");
   function f90TileArt(src, name, disabled) {
-    const front = disabled ? f90RefillArt() : image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(), name);
+    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(), name);
     const back = C.safeUrl(S.settings.config?.card_back_image || "./assets/sections/services.png");
     return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-back">${image(back, "F90 CARD")}</span><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
   }
