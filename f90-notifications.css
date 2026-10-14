@@ -1,0 +1,14 @@
+/* F90 notification center, responsive and light-theme friendly */
+.f90-news-item{display:flex;align-items:flex-start;gap:15px;min-width:0;padding:20px;margin-bottom:13px;border:1px solid var(--f90-strong-border,var(--line));border-radius:19px;background:linear-gradient(135deg,var(--surface),var(--surface2));color:var(--text);text-decoration:none;box-shadow:0 8px 28px #00000010;transition:border-color .2s,transform .2s,box-shadow .2s}
+a.f90-news-item:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 12px 32px #0002}
+.f90-news-icon{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:15px;color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line))}
+.f90-news-icon svg{width:22px;height:22px}
+.f90-news-content{flex:1;min-width:0;overflow-wrap:anywhere}
+.f90-news-content h3{font-size:clamp(15px,1.5vw,19px);margin:0 0 9px}
+.f90-news-content p{line-height:1.85;margin:0 0 12px}
+.f90-news-content small{color:var(--muted);font-size:12px}
+.f90-news-arrow{align-self:center;color:var(--accent)}
+.f90-news-arrow svg{width:18px;height:18px}
+:root[data-theme="cream"] .f90-news-item{background:linear-gradient(145deg,#fffdf9,#f5eee8);border-color:#d8b9bd;color:#25212a}
+:root[data-theme="cream"] .f90-news-content p{color:#60545d}
+@media(max-width:550px){.f90-news-item{padding:14px 12px;gap:11px;border-radius:15px}.f90-news-icon{flex-basis:39px;width:39px;height:39px;border-radius:12px}.f90-news-icon svg{width:19px;height:19px}.f90-news-arrow{display:none}}
