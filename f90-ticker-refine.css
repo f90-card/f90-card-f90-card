@@ -2,12 +2,12 @@
 .promotion{width:min(100% - 24px,1150px);min-height:0!important;height:auto!important;margin:10px auto 14px;padding:0!important;border:1px solid color-mix(in srgb,var(--accent) 48%,var(--line))!important;border-radius:14px!important;overflow:hidden;background:linear-gradient(105deg,#17111e,#301522 52%,#17111e)!important;box-shadow:0 5px 17px #0002,0 0 0 1px #ff476314}
 .promotion[hidden]{display:none!important}
 .promotion .f90-ticker-window{overflow:hidden;width:100%;height:34px;display:flex;align-items:center}
-.promotion .promotion-track{display:flex;flex:0 0 auto;gap:0!important;width:max-content;align-items:center;white-space:nowrap;animation:f90-ticker-rtl var(--promo-duration,28s) linear infinite!important;animation-play-state:running!important;will-change:transform}
-.promotion .f90-ticker-copy{display:flex;align-items:center;flex:0 0 auto;gap:30px;padding-inline:15px;min-width:max-content}
+.promotion .promotion-track{display:flex;flex:0 0 auto;gap:0!important;width:max-content;align-items:center;white-space:nowrap;animation:f90-ticker-rtl var(--promo-duration,28s) linear infinite!important;animation-play-state:running!important;direction:ltr;will-change:transform}
+.promotion .f90-ticker-copy{display:flex;align-items:center;flex:0 0 auto;gap:30px;padding-inline:15px;min-width:max-content;direction:rtl}
 .promotion .f90-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;line-height:1.2;color:#fff;white-space:nowrap}
 .promotion .f90-ticker-item img{max-height:23px!important;max-width:32px!important;width:auto;height:auto;object-fit:contain}
 .promotion .f90-promo-pause{display:none!important}
-@keyframes f90-ticker-rtl{from{transform:translateX(0)}to{transform:translateX(50%)}}
+@keyframes f90-ticker-rtl{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .f90-swipe-hero{margin-bottom:0!important;overflow:visible!important}
 .f90-swipe-hero .f90-hero-link{overflow:hidden;border-radius:inherit}
 .f90-swipe-hero .f90-hero-controls{position:absolute!important;top:calc(100% + 7px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%);background:transparent!important;padding:0!important;z-index:4}
