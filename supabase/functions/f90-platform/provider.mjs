@@ -153,7 +153,7 @@ export async function callProvider(
   if (provider.adapter === "f90") {
     if (!["services", "balance"].includes(action))
       throw new ProviderError("ربط F90 للتجربة والقراءة فقط؛ الطلبات الآلية معطلة");
-    if (!/^[a-z0-9-]+\\.supabase\\.co$/i.test(u.hostname) ||
+    if (!/^[a-z0-9-]+\.supabase\.co$/i.test(u.hostname) ||
         u.pathname !== "/functions/v1/f90-platform")
       throw new ProviderError("أدخل عنوان F90 Merchant API الرسمي");
     let response;
