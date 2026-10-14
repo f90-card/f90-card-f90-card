@@ -164,7 +164,10 @@
       )
         ? C.safeUrl(c.app_icon_url || S.settings.logo_url)
         : "./assets/icons/icon-512.png";
-    document.title = S.settings.store_name || "أف تسعين كارد";
+    const storeSearchName = String(S.settings.store_name || "أف تسعين كارد").trim() || "أف تسعين كارد";
+    document.title = /شحن الألعاب والتطبيقات والبطاقات الرقمية/.test(storeSearchName)
+      ? storeSearchName
+      : storeSearchName + " | شحن الألعاب والتطبيقات والبطاقات الرقمية";
     if (location.hostname.endsWith(".vercel.app") || c.vercel_manifest)
       document.querySelector("link[rel=manifest]").href = "./api/manifest";
   }
