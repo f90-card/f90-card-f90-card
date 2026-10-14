@@ -650,7 +650,7 @@
     const result = { items: localRecipients() };
     if (seq !== S.route) return;
     S.savedRecipients = result.items || [];
-    $("recipientsContent").outerHTML = `<div class="f90-recipient-layout">
+    $("recipientsContent").outerHTML = `<div class="f90-recipient-toolbar"><div><strong>جهاتك المحفوظة</strong><span class="muted small"> ${e(S.savedRecipients.length)} من 100 جهة</span></div><label class="f90-recipient-search"><span>بحث في دفتر العملاء</span><input id="recipientSearch" type="search" placeholder="ابحث بالاسم أو المعرّف" autocomplete="off"></label></div><div class="f90-recipient-layout">
       <section class="panel"><h2 id="recipientFormTitle">إضافة جهة</h2>
         <form id="recipientForm">
           <input type="hidden" name="id" value="">
@@ -662,7 +662,7 @@
         </form>
       </section>
       <section class="panel"><h2>البيانات المحفوظة</h2>
-        ${S.savedRecipients.length ? `<div class="f90-recipient-list">${S.savedRecipients.map((item) => `<article class="f90-recipient-item"><div><strong>${e(item.label)}</strong><span class="muted small">${item.kind === "phone" ? "هاتف" : "معرّف حساب"}</span><code dir="ltr">${e(item.value)}</code></div><div class="actions"><button class="button secondary small" data-action="recipient-edit" data-id="${e(item.id)}">تعديل</button><button class="button ghost small" data-action="recipient-delete" data-id="${e(item.id)}">حذف</button></div></article>`).join("")}</div>` : '<p class="muted">لم تحفظ أي بيانات بعد.</p>'}
+        ${S.savedRecipients.length ? `<div class="f90-recipient-list">${S.savedRecipients.map((item) => `<article class="f90-recipient-item" data-recipient-search="${e([item.label,item.value,item.kind].join(" ").toLocaleLowerCase("ar"))}"><div><strong>${e(item.label)}</strong><span class="muted small">${item.kind === "phone" ? "هاتف" : "معرّف حساب"}</span><code dir="ltr">${e(item.value)}</code></div><div class="actions"><button class="button secondary small" data-action="recipient-edit" data-id="${e(item.id)}">تعديل</button><button class="button ghost small" data-action="recipient-delete" data-id="${e(item.id)}">حذف</button></div></article>`).join("")}</div>` : '<p class="muted">لم تحفظ أي بيانات بعد.</p>'}
       </section>
     </div>`;
   }
@@ -1489,6 +1489,13 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target?.id === "recipientSearch") {
+      const term=ev.target.value.trim().toLocaleLowerCase("ar");
+      document.querySelectorAll(".f90-recipient-item").forEach(item=>{
+        item.hidden=!!term&&!item.dataset.recipientSearch.includes(term);
+      });
+      return;
+    }
     if (ev.target?.id === "orderHistorySearch") {
       const term = ev.target.value.trim().toLocaleLowerCase("ar");
       let visible = 0;
@@ -1569,7 +1576,7 @@
         form.elements.namedItem("value").value = item.value;
         $("recipientFormTitle").textContent = "تعديل جهة";
         form.scrollIntoView({ behavior: "smooth", block: "start" });
-        form.elements.label.focus();
+        form.elements.namedItem("label")?.focus();
       } else if (action === "recipient-delete") {
         const item = S.savedRecipients.find((row) => row.id === button.dataset.id);
         if (!item) return;
