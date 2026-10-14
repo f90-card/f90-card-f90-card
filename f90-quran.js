@@ -68,7 +68,7 @@
       }finally{clearTimeout(timeout);if(activeController===controller)activeController=null;if(token===prayerRequest&&prayerForm.isConnected)button.disabled=false;}
     }
     prayerForm.addEventListener("submit",ev=>{ev.preventDefault();loadPrayer();});
-    const schedulePrayer=()=>{coords=null;prayerRequest++;if(activeController)activeController.abort();clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
+    const schedulePrayer=()=>{coords=null;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();prayerRequest++;if(activeController)activeController.abort();clearTimeout(prayerTimer);prayerTimer=setTimeout(()=>{if(prayerForm.isConnected)loadPrayer();},900);};
     countryInput.addEventListener("change",schedulePrayer);
     countryInput.addEventListener("input",schedulePrayer);
     cityInput.addEventListener("input",schedulePrayer);
@@ -82,7 +82,7 @@
     locationButton.addEventListener("click",()=>{
       if(!navigator.geolocation){main.querySelector("#f90PrayerStatus").textContent="تحديد الموقع غير مدعوم في المتصفح.";return;}
       locationButton.disabled=true;
-      navigator.geolocation.getCurrentPosition(pos=>{coords={latitude:pos.coords.latitude,longitude:pos.coords.longitude};locationButton.disabled=false;loadPrayer();},()=>{locationButton.disabled=false;main.querySelector("#f90PrayerStatus").textContent="تعذر تحديد الموقع؛ يمكنك إدخال الدولة والمدينة يدوياً.";},{timeout:10000,maximumAge:300000});
+      navigator.geolocation.getCurrentPosition(pos=>{coords={latitude:pos.coords.latitude,longitude:pos.coords.longitude};locationButton.disabled=false;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();loadPrayer();},()=>{locationButton.disabled=false;main.querySelector("#f90PrayerStatus").textContent="تعذر تحديد الموقع؛ يمكنك إدخال الدولة والمدينة يدوياً.";},{timeout:10000,maximumAge:300000});
     });
     loadPrayer();
     const grid=main.querySelector("#f90QuranGrid");
