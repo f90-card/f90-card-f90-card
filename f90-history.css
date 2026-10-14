@@ -1,0 +1,16 @@
+/* F90 order history search and responsive transaction layout */
+.f90-record-search-wrap{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:18px 0 20px;padding:17px;border:1px solid var(--f90-strong-border,var(--line));border-radius:18px;background:linear-gradient(135deg,var(--surface),var(--surface2))}
+.f90-record-search-wrap .field{flex:1 1 250px;margin:0;min-width:0}
+.f90-record-search-wrap input{width:100%;min-height:47px;border-radius:12px}
+.f90-record-search-wrap [role="status"]{flex:1 1 170px;line-height:1.7}
+.f90-search-empty{padding:22px 16px;border:1px dashed var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface));border-radius:14px;text-align:center;color:var(--muted);line-height:1.8}
+.f90-search-empty[hidden]{display:none!important}
+#historyRecords .record[hidden]{display:none!important}
+#historyRecords .record{min-width:0;gap:13px}
+#historyRecords .record .record-main{flex:1;min-width:0}
+#historyRecords .record .record-price{flex:0 1 auto;text-align:left;overflow-wrap:anywhere}
+#historyRecords .record h3{overflow-wrap:anywhere}
+.pagination{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;margin-top:24px}
+.pagination .button{min-width:80px}
+:root[data-theme="cream"] .f90-record-search-wrap{border-color:#d9bdc0}
+@media(max-width:600px){.f90-record-search-wrap{padding:12px;gap:8px}.f90-record-search-wrap .field{flex-basis:100%}.f90-record-search-wrap [role="status"]{flex-basis:100%}#historyRecords .record{flex-wrap:wrap;padding:14px 12px}#historyRecords .record .record-price{margin-inline-start:auto}}
