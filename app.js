@@ -138,15 +138,15 @@
     if (officialLogo && logoSky.dataset.logo !== officialLogo) {
       logoSky.dataset.logo = officialLogo;
       logoSky.replaceChildren();
-      for (let n = 0; n < 13; n++) {
+      for (let n = 0; n < 24; n++) {
         const ghost = document.createElement("img");
         ghost.src = officialLogo;
         ghost.alt = "";
         ghost.decoding = "async";
         ghost.loading = "lazy";
-        ghost.style.setProperty("--x", ((n * 37 + 13) % 92 + 4) + "%");
-        ghost.style.setProperty("--y", ((n * 41 + 19) % 90 + 5) + "%");
-        ghost.style.setProperty("--s", (42 + n % 4 * 19) + "px");
+        ghost.style.setProperty("--x", ((n * 37 + Math.floor(n / 6) * 11 + 13) % 92 + 4) + "%");
+        ghost.style.setProperty("--y", ((n * 23 + Math.floor(n / 5) * 17 + 19) % 90 + 5) + "%");
+        ghost.style.setProperty("--s", (36 + n % 5 * 15) + "px");
         ghost.style.setProperty("--delay", (-n * 5.6) + "s");
         ghost.style.setProperty("--drift", ((n % 2 ? -1 : 1) * (14 + n % 5 * 9)) + "px");
         logoSky.append(ghost);
