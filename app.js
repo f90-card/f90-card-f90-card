@@ -1387,6 +1387,7 @@
     }
     if (form.id === "checkoutForm") {
       if (!S.me) {
+        auth("login");
         location.hash = "#/auth";
         return;
       }
