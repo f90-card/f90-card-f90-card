@@ -1109,7 +1109,9 @@
       if (ids.has(id)) continue;
       ids.add(id);
       if (!(Number(item.rate) > 0) || !item.name) continue;
-      const category = providerServiceCategory(item);
+      const category = provider.adapter === "smm"
+        ? { id: S.categories.find(c => c.name === "خدمات السوشيال ميديا" && !c.parent_id)?.id || "", review: false }
+        : providerServiceCategory(item);
       if (!category.id) throw new Error("لا توجد أقسام في المتجر لاستيراد الخدمات");
       if (category.review) review++;
       entries.push({ id, name: String(item.name).slice(0, 200), category: category.id });
