@@ -254,3 +254,7 @@
 }
 @media(prefers-reduced-motion:reduce){#f90LogoSky img{animation:none!important}}
 @media(prefers-reduced-data:reduce){#f90LogoSky img:nth-child(n+7){display:none!important}}
+
+/* Override former seven-mark mobile limit without increasing large screen GPU load. */
+@media(max-width:650px){#f90LogoSky img:nth-child(n+8):nth-child(-n+14){display:block!important}}
+@media(prefers-reduced-data:reduce){#f90LogoSky img:nth-child(n+7){display:none!important}}
