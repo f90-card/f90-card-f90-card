@@ -708,13 +708,14 @@
     // Never infer or deduct a fee locally from a historical or pending deposit.
     const pct = Number(d.method_snapshot?.deposit_fee_percent);
     const feeEnabled = Number.isFinite(pct) && pct > 0 && pct <= 100;
+    const feeRecorded = d.method_snapshot?.deposit_fee_percent !== undefined && d.method_snapshot?.deposit_fee_percent !== null;
     const gross = Number(d.usd_amount || 0);
     const fee = feeEnabled ? Math.round(gross * pct * 10000) / 1000000 : 0;
     const net = gross - fee;
     const feeInfo = feeEnabled
       ? `<p class="f90-deposit-fee-line">رسوم خدمة الإيداع ${e(pct)}٪: −${e(C.money(fee,"USD",true))} · الصافي ${e(C.money(net,"USD",true))}</p>`
-      : `<p class="muted small">المبلغ المسجل قبل أي رسوم؛ راجع الرصيد المعتمد في المحفظة.</p>`;
-    return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p>${feeInfo}<div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><strong class="record-price">${e(C.money(feeEnabled ? net : gross, "USD", true))}</strong></article>`;
+      : `<p class="muted small">${feeRecorded ? "لم تُسجّل رسوم لهذه العملية." : "لا تتوفر بيانات رسوم مؤكدة لهذا الإيداع؛ راجع حركة المحفظة لمعرفة الرصيد المضاف."}</p>`;
+    return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p>${feeInfo}<div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><div class="f90-deposit-record-amount"><small>${feeEnabled ? "الصافي المحسوب" : "المبلغ قبل الرسوم"}</small><strong class="record-price">${e(C.money(feeEnabled ? net : gross, "USD", true))}</strong></div></article>`;
   }
   function deposit(methodId) {
     if (!S.me?.profile?.is_verified) {
