@@ -39,3 +39,9 @@
 .f90-visual-preview-hero>small{font-size:10px;color:#fa7898}
 @media(max-width:880px){.f90-visual-editor-form{grid-template-columns:1fr}.f90-visual-preview{position:static;order:-1}.f90-visual-preview-hero{min-height:160px}}
 @media(max-width:490px){.f90-visual-fields{grid-template-columns:1fr}.f90-visual-fields .field:nth-child(n){grid-column:1}}
+
+.f90-admin-glossary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:13px 0}
+.f90-admin-glossary>div{min-width:0;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));background:var(--surface2);border-radius:12px}
+.f90-admin-glossary b{min-width:44px;padding:5px 6px;border-radius:8px;text-align:center;background:color-mix(in srgb,var(--accent) 15%,var(--surface));color:var(--accent);font-variant-numeric:tabular-nums}
+.f90-admin-glossary span{font-size:11px;line-height:1.5;color:var(--muted)}
+@media(max-width:560px){.f90-admin-glossary{grid-template-columns:1fr}}
