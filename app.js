@@ -731,14 +731,69 @@
     catch { throw new Error("تعذّر الحفظ على هذا الجهاز؛ تحقق من مساحة المتصفح وإعدادات الخصوصية"); }
     S.savedRecipients = rows;
   }
+  async function recipientUser() {
+    const { data, error } = await A.client.auth.getUser();
+    if (error || !data?.user?.id) throw new Error("انتهت جلسة الحساب، سجّل الدخول مجددًا لحفظ دفتر العملاء");
+    return data.user.id;
+  }
+  async function cloudRecipients() {
+    const userId = await recipientUser();
+    const table = A.client.from("f90_saved_recipients");
+    let { data, error } = await table.select("id,kind,label,value").eq("user_id",userId).order("created_at",{ascending:true}).limit(100);
+    if (error) throw new Error("تعذر تحميل دفتر العملاء من حسابك: " + error.message);
+    let rows = data || [];
+    const migrationKey = "f90-recipients-cloud-import:" + userId;
+    let imported = false;
+    try { imported = localStorage.getItem(migrationKey) === "1"; } catch {}
+    if (!imported) {
+      const legacy = localRecipients().filter(item => !rows.some(row => row.kind === item.kind && row.value === item.value));
+      if (legacy.length) {
+        const payload = legacy.slice(0, Math.max(0,100 - rows.length)).map(item => ({
+          id: crypto.randomUUID(), user_id:userId, kind:item.kind, label:item.label, value:item.value
+        }));
+        if (payload.length) {
+          const response = await A.client.from("f90_saved_recipients").insert(payload).select("id,kind,label,value");
+          if (response.error) throw new Error("تعذّر نقل البيانات القديمة إلى الحساب: " + response.error.message);
+          rows = [...rows,...(response.data || [])];
+        }
+      }
+      try { localStorage.setItem(migrationKey,"1"); } catch {}
+    }
+    S.savedRecipients = rows;
+    try { saveLocalRecipients(rows); } catch {}
+    return rows;
+  }
+  async function cloudSaveRecipient(item) {
+    const userId = await recipientUser();
+    const validId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id || "");
+    const payload = {id: validId ? item.id : crypto.randomUUID(),user_id:userId,kind:item.kind,label:item.label,value:item.value};
+    const { data, error } = await A.client.from("f90_saved_recipients").upsert(payload,{onConflict:"id"}).select("id,kind,label,value").single();
+    if (error) throw new Error("تعذر حفظ البيانات في الحساب: " + error.message);
+    const next = S.savedRecipients.filter(row => row.id !== item.id);
+    next.push(data);
+    S.savedRecipients = next;
+    try { saveLocalRecipients(next); } catch {}
+  }
+  async function cloudDeleteRecipient(id) {
+    const userId = await recipientUser();
+    const {error} = await A.client.from("f90_saved_recipients").delete().eq("id",id).eq("user_id",userId);
+    if (error) throw new Error("تعذّر حذف بيانات العميل: " + error.message);
+    const next = S.savedRecipients.filter(row => row.id !== id);
+    S.savedRecipients = next;
+    try { saveLocalRecipients(next); } catch {}
+  }
   async function recipients() {
     const seq = S.route;
     main.innerHTML = pageHead("دفتر العملاء", "احفظ معرّفات الألعاب وأرقام الهاتف التي تستخدمها للشحن. لا تحفظ كلمات مرور أو بيانات دفع هنا.") +
       '<div id="recipientsContent" class="loading">جارٍ تحميل البيانات المحفوظة…</div>';
-    const result = { items: localRecipients() };
+    let cloudError = null;
+    let items = [];
+    try { items = await cloudRecipients(); }
+    catch (err) { cloudError = err; items = localRecipients(); }
     if (seq !== S.route) return;
+    const result = { items };
     S.savedRecipients = result.items || [];
-    $("recipientsContent").outerHTML = `<div class="f90-recipient-toolbar"><div><strong>جهاتك المحفوظة</strong><span class="muted small"> ${e(S.savedRecipients.length)} من 100 جهة</span></div><label class="f90-recipient-search"><span>بحث في دفتر العملاء</span><input id="recipientSearch" type="search" placeholder="ابحث بالاسم أو المعرّف" autocomplete="off"></label></div><p id="recipientSearchEmpty" class="muted small" hidden role="status">لا توجد جهة مطابقة. جرّب اسمًا أو معرّفًا آخر.</p><div class="f90-recipient-layout">
+    $("recipientsContent").outerHTML = `${cloudError ? `<p class="notice error" role="alert">${e(cloudError.message)}. البيانات المعروضة نسخة محلية، ولن تُزامن حتى يعود الاتصال.</p>` : `<p class="notice" role="status">جهاتك محفوظة في حسابك ومتاحة على أجهزتك عند تسجيل الدخول.</p>`}<div class="f90-recipient-toolbar"><div><strong>جهاتك المحفوظة</strong><span class="muted small"> ${e(S.savedRecipients.length)} من 100 جهة</span></div><label class="f90-recipient-search"><span>بحث في دفتر العملاء</span><input id="recipientSearch" type="search" placeholder="ابحث بالاسم أو المعرّف" autocomplete="off"></label></div><p id="recipientSearchEmpty" class="muted small" hidden role="status">لا توجد جهة مطابقة. جرّب اسمًا أو معرّفًا آخر.</p><div class="f90-recipient-layout">
       <section class="panel"><h2 id="recipientFormTitle">إضافة جهة</h2>
         <form id="recipientForm">
           <input type="hidden" name="id" value="">
@@ -758,7 +813,7 @@
     const select = form.querySelector("#savedRecipient");
     if (!select) return;
     try {
-      const result = { items: localRecipients() };
+      const result = { items: await cloudRecipients() };
       if (!form.isConnected) return;
       S.savedRecipients = result.items || [];
       const kinds = [...form.elements].filter((el) => el.name?.startsWith("customer_"))
@@ -1275,7 +1330,7 @@
       return;
     }
     if (form.id === "recipientForm") {
-      const rows = localRecipients();
+      const rows = await cloudRecipients();
       const kind = ["phone", "account_id", "email"].includes(data.kind) ? data.kind : "account_id";
       const label = String(data.label || "").trim().slice(0, 50);
       const value = String(data.value || "").trim().slice(0, 120);
@@ -1288,8 +1343,8 @@
         throw new Error("هذا المعرّف محفوظ بالفعل. يمكنك تعديل الجهة الموجودة بدل إضافتها مرتين.");
       const item = { id, kind, label, value };
       if (index < 0) rows.push(item); else rows[index] = item;
-      saveLocalRecipients(rows);
-      toast("تم حفظ البيانات في دفتر العملاء");
+      await cloudSaveRecipient(item);
+      toast("تم حفظ البيانات في حسابك");
       await recipients();
       return;
     }
@@ -1674,7 +1729,7 @@
         if (!item) return;
         modal("حذف البيانات المحفوظة", `<p>حذف ${e(item.label)} من دفتر العملاء؟ لن يؤثر ذلك على الطلبات السابقة.</p><div class="actions"><button class="button secondary" data-close-modal>إلغاء</button><button class="button" data-action="recipient-delete-confirm" data-id="${e(item.id)}">حذف</button></div>`);
       } else if (action === "recipient-delete-confirm") {
-        saveLocalRecipients(localRecipients().filter((item) => item.id !== button.dataset.id));
+        await cloudDeleteRecipient(button.dataset.id);
         closeModal();
         toast("حُذفت البيانات المحفوظة");
         await recipients();
