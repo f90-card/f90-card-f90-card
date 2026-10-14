@@ -1,0 +1,19 @@
+/* F90 Music: tiny persistent branded console on the home/welcome page. */
+#f90MusicPlayer[hidden]{display:none!important}
+#f90MusicPlayer{position:fixed;z-index:30;bottom:20px;left:16px;direction:rtl;display:flex;flex-wrap:wrap;align-items:center;gap:9px 15px;width:min(420px,calc(100vw - 30px));padding:9px 13px;border-radius:18px;border:1px solid rgba(248,65,103,.62);background:linear-gradient(120deg,rgba(17,25,38,.94),rgba(36,17,36,.93));box-shadow:0 5px 30px #0007,0 0 17px rgba(247,39,82,.22);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);color:white}
+.f90-music-brand{display:flex;align-items:center;gap:8px;flex:1;min-width:135px}
+.f90-music-brand strong{font-size:12px;display:block;color:#fff}
+.f90-music-brand small{font-size:10px;color:#c9b9c9;display:block;line-height:1.4}
+.f90-music-pulse{display:grid;place-items:center;flex:none;height:32px;width:32px;border-radius:12px;background:rgba(242,46,91,.14);color:#ff6188;border:1px solid #f949765a;box-shadow:inset 0 0 12px #f9336328}
+#f90MusicPlayer.is-playing .f90-music-pulse{animation:f90music-pulse 1.4s ease-in-out infinite alternate}
+.f90-music-ctrl{display:flex;align-items:center;gap:7px}
+.f90-music-ctrl select{background:#192135;color:#fff;border:1px solid #fa4d7859;border-radius:9px;max-width:108px;min-height:35px;padding:4px;font-size:11px}
+#f90MusicPlay{height:35px;width:35px;min-width:35px;cursor:pointer;border:1px solid #f95b88b0;border-radius:11px;color:#fff;background:linear-gradient(130deg,#db2858,#981c49);font-weight:900}
+#f90MusicVolume{accent-color:#ff426e;width:64px}
+@keyframes f90music-pulse{from{box-shadow:0 0 5px #ee437844}to{box-shadow:0 0 17px #ef3e80ab}}
+:root[data-theme="cream"] #f90MusicPlayer{background:linear-gradient(120deg,rgba(255,248,252,.96),rgba(248,234,245,.96));color:#582a3f;border-color:#db6890}
+:root[data-theme="cream"] .f90-music-brand strong{color:#582a3f}
+:root[data-theme="cream"] .f90-music-brand small{color:#7b546d}
+@media(max-width:680px){#f90MusicPlayer{left:8px;bottom:calc(69px + env(safe-area-inset-bottom));width:min(330px,calc(100vw - 16px));padding:7px 9px;border-radius:14px;gap:5px 10px}.f90-music-brand{min-width:105px}.f90-music-brand strong{font-size:11px}.f90-music-brand small{font-size:9px}.f90-music-ctrl select{max-width:90px}#f90MusicVolume{width:43px}}
+@media(max-width:350px){#f90MusicPlayer{width:calc(100vw - 12px);left:6px}.f90-music-ctrl select{max-width:80px}#f90MusicVolume{width:34px}}
+@media(prefers-reduced-motion:reduce){#f90MusicPlayer.is-playing .f90-music-pulse{animation:none}}
