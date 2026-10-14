@@ -1,0 +1,55 @@
+{
+  "purpose": "Audited source metadata for F90 Card product app imagery. Images are stored in Supabase Storage and mapped into public.products. This is a one-time batch; do not overwrite manually chosen images.",
+  "date": "2026-10-14",
+  "license_note": "App marks belong to their respective owners; verify brand image usage permissions.",
+  "entries": [
+    {
+      "product": "مانجو ستار",
+      "app": "Mango Star",
+      "source": "https://apps.apple.com/us/app/mango-star/id6473814110",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-01.png"
+    },
+    {
+      "product": "بوكت شات",
+      "app": "Pocket Chat - Voice and games",
+      "source": "https://pocket-chat-voice-and-games.en.uptodown.com/android",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-02.jpg"
+    },
+    {
+      "product": "فانسي لايف",
+      "app": "Fancy Live",
+      "source": "https://apps.apple.com/us/app/fancy-live-chat-live-streaming/id1612786710",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-03.png"
+    },
+    {
+      "product": "هلا مي",
+      "app": "HalaMe",
+      "source": "https://play.google.com/store/apps/details?id=com.halamate.app",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-04.png"
+    },
+    {
+      "product": "آشا لايف",
+      "app": "Asha Live",
+      "source": "https://apps.apple.com/sa/app/asha-live-group-chat-room/id1619288992",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-05.png"
+    },
+    {
+      "product": "بارتي ستار",
+      "app": "Party Star",
+      "source": "https://party-star-live-chat-and-games.en.uptodown.com/android",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-06.jpg"
+    },
+    {
+      "product": "تاكا لايف",
+      "app": "Taka Live",
+      "source": "https://taka-voice-party-and-live-room.en.uptodown.com/android",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-07.jpg"
+    },
+    {
+      "product": "تامي شات",
+      "app": "Tami Voice Chat",
+      "source": "https://mwm.ai/apps/tami-voice-chat-party/6478942884",
+      "storage_url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-08.png"
+    }
+  ]
+}
