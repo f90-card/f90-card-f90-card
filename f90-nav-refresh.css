@@ -18,3 +18,36 @@
 :root[data-theme="cream"] .f90-mobile-dock a{color:#785764}
 :root[data-theme="cream"] .f90-mobile-dock a.active{color:#a51f46!important;background:rgba(170,35,70,.095)}
 @media(prefers-reduced-motion:reduce){.f90-theme-toggle,.f90-theme-toggle-track i,.f90-mobile-dock a{transition:none!important}}
+
+/* F90 premium side drawer, inspired by the supplied layout, in the F90 brand palette */
+#drawer.drawer{width:min(92vw,420px);max-width:420px;background:radial-gradient(circle at 100% 0%,rgba(244,38,77,.18),transparent 54%),linear-gradient(155deg,#161c2b,#0c101b 58%,#1a101e);border-inline-start:1px solid rgba(255,107,137,.34);box-shadow:-24px 0 75px #0009;overscroll-behavior:contain}
+#drawer .drawer-head{padding:20px 18px;border-bottom:1px solid rgba(240,115,152,.18)}
+#drawer .drawer-head strong{font-size:16px;letter-spacing:.1px}
+#drawer #drawerProfile{padding:10px 14px}
+#drawer .drawer-profile{border-radius:20px;padding:13px;background:linear-gradient(120deg,rgba(244,45,84,.12),rgba(75,106,164,.12));border:1px solid rgba(255,108,140,.22)}
+#drawer .drawer-profile strong{font-size:17px}
+#drawer .f90-drawer-wallet-card{margin:13px 0;padding:17px;border:1px solid rgba(252,174,101,.44);background:linear-gradient(125deg,rgba(245,147,64,.13),rgba(39,57,90,.36));border-radius:20px;box-shadow:inset 0 1px rgba(255,255,255,.06),0 9px 30px #0002}
+#drawer .f90-drawer-wallet-heading{display:flex;align-items:center;gap:8px;color:#f2c690;font-size:13px;font-weight:800}
+#drawer .f90-drawer-wallet-heading svg{width:19px;height:19px}
+#drawer .f90-drawer-wallet-card>strong{display:block;font-size:clamp(22px,6vw,29px);margin:9px 0 15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#fff}
+#drawer .f90-drawer-wallet-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#drawer .f90-drawer-wallet-actions a{display:flex;gap:7px;align-items:center;justify-content:center;border:1px solid rgba(245,169,96,.42);border-radius:13px;min-height:44px;text-decoration:none;background:rgba(251,174,94,.07);color:#ffe2b5;font-weight:800;font-size:12px}
+#drawer .f90-drawer-wallet-actions svg{width:17px;height:17px}
+#drawer .f90-drawer-quick-title{text-align:center;margin:14px 0 10px;color:#aeb3c6;font-size:12px}
+#drawer .f90-drawer-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#drawer .f90-drawer-quick-grid a{min-height:84px;border:1px solid rgba(251,85,118,.32);border-radius:16px;text-decoration:none;color:#f7eaf0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;font-size:13px;font-weight:850;background:linear-gradient(145deg,rgba(67,88,123,.28),rgba(170,36,78,.16));box-shadow:inset 0 1px rgba(255,255,255,.07)}
+#drawer .f90-drawer-quick-grid a:nth-child(2n){border-color:rgba(80,183,225,.34);background:linear-gradient(145deg,rgba(45,98,137,.29),rgba(79,46,94,.13))}
+#drawer .f90-drawer-quick-grid svg{width:24px;height:24px;color:#ff7c9a;filter:drop-shadow(0 0 6px #ed3e6780)}
+#drawer .f90-drawer-quick-grid a:nth-child(2n) svg{color:#6edafa}
+#drawer .f90-drawer-group{margin-top:20px;padding:6px 12px;color:#c6b6c7}
+#drawer #drawerLinks>a,#drawer #drawerLinks>button{margin:5px 13px;border:1px solid rgba(247,94,136,.23);border-radius:15px;min-height:51px;background:linear-gradient(120deg,rgba(255,255,255,.038),rgba(202,49,105,.09));transition:border-color .15s,transform .15s}
+#drawer #drawerLinks>a:hover,#drawer #drawerLinks>button:hover{border-color:rgba(255,101,142,.64);transform:translateX(-2px)}
+#drawer #drawerLinks svg{color:#ff7a98}
+#drawer .drawer-preferences{margin:16px 13px;padding:12px;border-top:1px solid #fff2}
+#drawer .f90-theme-toggle{background:rgba(242,67,101,.11);border-color:rgba(255,127,150,.35)}
+:root[data-theme="cream"] #drawer.drawer{background:linear-gradient(145deg,#fff8f6,#f7eaf1);border-color:#dca9b8;box-shadow:-20px 0 65px #30101933}
+:root[data-theme="cream"] #drawer .f90-drawer-wallet-card{background:linear-gradient(140deg,#503044,#352a43)}
+:root[data-theme="cream"] #drawer .f90-drawer-quick-grid a{background:#fff0f5;color:#552c42}
+:root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button{background:#fff7fa;color:#562e42;border-color:#ead0d9}
+@media(max-width:520px){#drawer.drawer{width:min(94vw,400px)}#drawer #drawerProfile{padding-inline:11px}#drawer .f90-drawer-wallet-card{margin:10px 0;padding:14px}#drawer .f90-drawer-quick-grid a{min-height:74px}}
+@media(prefers-reduced-motion:reduce){#drawer #drawerLinks>a,#drawer #drawerLinks>button{transition:none}}
