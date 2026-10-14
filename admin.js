@@ -798,7 +798,7 @@
           : "يمكنك تعديل العنصر أو إخفاؤه أو تكراره وترتيبه.",
         `<button class="button" data-action="dynamic-new">${I("plus")}إضافة</button>`,
       ) +
-      `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row">${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions"><button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
+      `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row" draggable="true" data-dynamic-index="${n}"><span class="catalog-drag-handle" aria-hidden="true">⠿</span>${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions"><button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
   }
   function editDynamic(kind, item = null, index = -1) {
     if (kind === "coupons") throw new Error("إدارة الكوبونات متوقفة");
@@ -2310,6 +2310,39 @@
   }
   document.addEventListener("pointerup", (ev) => { void endPointerSort(ev); });
   document.addEventListener("pointercancel", (ev) => { void endPointerSort(ev, true); });
+  let dynamicDragFrom = null;
+  document.addEventListener("dragstart",(ev)=>{
+    const row = ev.target.closest(".catalog-row[data-dynamic-index]");
+    if (!row || !S.dynamicKind) return;
+    dynamicDragFrom = Number(row.dataset.dynamicIndex);
+    ev.dataTransfer.setData("text/plain", String(dynamicDragFrom));
+    ev.dataTransfer.effectAllowed = "move";
+  });
+  document.addEventListener("dragover",(ev)=>{
+    if (dynamicDragFrom !== null && ev.target.closest(".catalog-row[data-dynamic-index]")) ev.preventDefault();
+  });
+  document.addEventListener("dragend",()=>{ dynamicDragFrom = null; });
+  document.addEventListener("drop",async(ev)=>{
+    const row = ev.target.closest(".catalog-row[data-dynamic-index]");
+    if (!row || dynamicDragFrom === null || !S.dynamicKind) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const from = dynamicDragFrom, to = Number(row.dataset.dynamicIndex);
+    dynamicDragFrom = null;
+    if (from === to || from < 0 || to < 0) return;
+    const rows = [...S.dynamicItems];
+    if (!rows[from] || !rows[to]) return;
+    rows.splice(to,0,rows.splice(from,1)[0]);
+    try {
+      row.closest(".catalog-list")?.setAttribute("aria-busy","true");
+      await configSave({ [configKey(S.dynamicKind)]:rows });
+      publicListPage(S.dynamicKind);
+      toast("تم حفظ الترتيب مباشرة");
+    } catch (err) {
+      row.closest(".catalog-list")?.removeAttribute("aria-busy");
+      toast(errorMessage(err));
+    }
+  });
   document.addEventListener("dragstart", (ev) => {
     const row = ev.target.closest("[data-row-id]");
     if (row) {
