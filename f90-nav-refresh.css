@@ -236,3 +236,21 @@
 .site-header .header-inner>.f90-header-theme{left:auto!important;right:44px!important;inset-inline-start:auto!important;inset-inline-end:44px!important}
 .site-header #storeBell{margin-inline-start:0!important}
 @media(max-width:520px){.site-header .header-inner>.f90-header-theme{right:39px!important;inset-inline-end:39px!important}}
+
+/* F90 logo constellation: intentionally visible but behind all controls */
+#f90LogoSky{z-index:0!important;opacity:1;pointer-events:none}
+#f90LogoSky img{opacity:.14!important;filter:grayscale(.15) drop-shadow(0 0 9px rgba(239,61,109,.24))!important;animation-duration:35s}
+#f90LogoSky img:nth-child(3n){opacity:.105!important;animation-duration:43s}
+#f90LogoSky img:nth-child(4n){opacity:.175!important;animation-duration:51s}
+#f90LogoSky img:nth-child(5n){opacity:.12!important;animation-duration:39s}
+:root[data-theme="cream"] #f90LogoSky img{opacity:.12!important;filter:grayscale(.25) drop-shadow(0 0 8px rgba(167,45,84,.16))!important}
+:root[data-theme="cream"] #f90LogoSky img:nth-child(3n){opacity:.085!important}
+:root[data-theme="cream"] #f90LogoSky img:nth-child(4n){opacity:.15!important}
+@media(max-width:650px){
+ #f90LogoSky img:nth-child(n+15){display:none!important}
+ #f90LogoSky img{opacity:.095!important}
+ #f90LogoSky img:nth-child(4n){opacity:.12!important}
+ :root[data-theme="cream"] #f90LogoSky img{opacity:.085!important}
+}
+@media(prefers-reduced-motion:reduce){#f90LogoSky img{animation:none!important}}
+@media(prefers-reduced-data:reduce){#f90LogoSky img:nth-child(n+7){display:none!important}}
