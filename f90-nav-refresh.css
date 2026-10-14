@@ -276,3 +276,12 @@
 :root[data-theme="cream"] #drawer.drawer{background:linear-gradient(165deg,rgba(255,248,252,.96),rgba(244,234,248,.95))!important}
 :root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button{color:#593149!important;background:color-mix(in srgb,var(--row-glow) 10%,#fff)!important}
 @media(max-width:390px){#drawer.drawer{width:90vw!important}#drawer #drawerLinks>a,#drawer #drawerLinks>button{min-height:43px!important;font-size:12px}}
+
+/* F90 drawer unified permanent red neon across every navigation item */
+#drawer.drawer{border-inline-start:1px solid rgba(255,55,93,.76)!important;box-shadow:-14px 0 50px rgba(9,4,14,.6),inset 0 0 25px rgba(240,38,77,.12)!important}
+#drawer #drawerLinks>a,#drawer #drawerLinks>button,#drawer .f90-drawer-quick-grid a,#drawer .f90-drawer-wallet-actions a,#drawer .f90-drawer-vip-link,#drawer .f90-theme-toggle{--row-glow:#f82b52!important;border:1px solid rgba(250,47,89,.7)!important;box-shadow:0 0 12px rgba(242,34,80,.29),inset 0 0 14px rgba(242,34,80,.13)!important;background:linear-gradient(125deg,rgba(248,42,87,.12),rgba(28,20,37,.24))!important}
+#drawer #drawerLinks>a:nth-of-type(n),#drawer #drawerLinks>button:nth-of-type(n){--row-glow:#f82b52!important;border-color:rgba(250,47,89,.7)!important}
+#drawer #drawerLinks svg,#drawer .f90-drawer-quick-grid svg,#drawer .f90-drawer-wallet-actions svg{color:#ff4f75!important;filter:drop-shadow(0 0 5px rgba(255,51,97,.64))!important}
+#drawer .f90-drawer-quick-grid a:nth-child(n){border-color:rgba(250,47,89,.7)!important;background:linear-gradient(125deg,rgba(248,42,87,.12),rgba(28,20,37,.24))!important}
+:root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button,:root[data-theme="cream"] #drawer .f90-drawer-quick-grid a{color:#742341!important;background:rgba(255,232,238,.95)!important}
+@media(prefers-reduced-motion:reduce){#drawer #drawerLinks>a,#drawer #drawerLinks>button{transition:none!important}}
