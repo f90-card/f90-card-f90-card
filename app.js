@@ -147,6 +147,24 @@
       ? `<span class="badge verified f90-verified-mark" title="حساب موثّق" aria-label="حساب موثّق">${I("check")}<span>موثّق</span></span>`
       : `<span class="badge">غير موثّق</span>`;
   }
+  function f90SocialLinks() {
+    const c = S.settings.config || {};
+    const items = (Array.isArray(c.social_links) ? c.social_links : []).filter(x => x.enabled !== false && C.safeUrl(x.url));
+    const channel = String(c.whatsapp_channel_url || "").trim();
+    if (/^https:\/\/whatsapp\.com\/channel\/[a-zA-Z0-9]+\/?(?:\?.*)?$/.test(channel) &&
+        !items.some(x => String(x.url).replace(/\/$/, "") === channel.replace(/\/$/, ""))) {
+      items.unshift({name_ar:"قناة واتساب الرسمية",url:channel,icon_url:"",enabled:true,f90_channel:true});
+    }
+    return items.slice(0,24);
+  }
+  function f90SocialCards() {
+    return f90SocialLinks().map(x => {
+      const name = e(x.name_ar || "تواصل معنا");
+      const pic = C.safeUrl(x.icon_url);
+      const symbol = x.f90_channel ? "◉" : "↗";
+      return `<a class="f90-social-card" href="${e(C.safeUrl(x.url))}" target="_blank" rel="noopener noreferrer" aria-label="${name}">${pic ? image(pic,name,"f90-social-card-icon") : `<span class="f90-social-fallback" aria-hidden="true">${symbol}</span>`}<span>${name}</span><span class="f90-social-arrow" aria-hidden="true">↗</span></a>`;
+    }).join("");
+  }
   function chrome() {
     brand();
     const me = S.me,
@@ -159,6 +177,7 @@
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
+    $("drawerProfile").insertAdjacentHTML("beforeend", `<div class="f90-drawer-social"><div class="f90-drawer-social-title">تابع منصاتنا الرسمية</div><div class="f90-social-card-grid">${f90SocialCards() || '<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>'}</div></div>`);
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
@@ -229,7 +248,7 @@
         .join(
           "",
         )}</nav></div><div><h3>نبقى معك</h3><nav><a href="#/support">الدعم الفني</a><a href="mailto:${e(S.settings.contact_email || "")}">البريد الإلكتروني</a>${(
-        c.social_links || []
+        f90SocialLinks()
       )
         .filter((s) => s.enabled && C.safeUrl(s.url))
         .map(
@@ -407,6 +426,7 @@
          .join("")}</div>`
      : empty("تُجهّز أقسام المتجر حاليًا")
  }
+ ${f90SocialLinks().length ? `<section class="f90-home-social"><div class="section-head"><h2>تواصل معنا وتابع جديدنا</h2><span>روابط منصات F90 CARD الرسمية</span></div><div class="f90-social-card-grid">${f90SocialCards()}</div></section>` : ""}
  <div class="value-strip">${[
    ["wallet", "شراء من محفظتك", "سعر واضح قبل التأكيد"],
    ["clock", "تابع كل خطوة", "حالة طلبك داخل حسابك"],
