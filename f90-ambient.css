@@ -1,0 +1,23 @@
+/* F90 ambient signature: GPU-friendly transform-only motion, no image downloads */
+:root{--f90-ambient-a:#d91f48;--f90-ambient-b:#66152f;--f90-ambient-line:#f14a6a18;--f90-ambient-glow:#e7224940}
+:root[data-theme="cream"]{--f90-ambient-a:#b9294d;--f90-ambient-b:#c8899d;--f90-ambient-line:#ab2a4911;--f90-ambient-glow:#a41c3420}
+body{position:relative;isolation:isolate;background-color:var(--bg)}
+body::before,body::after{content:"";position:fixed;z-index:-1;pointer-events:none;inset:-18vh -15vw;transform:translate3d(0,0,0);will-change:transform;contain:paint}
+body::before{background:radial-gradient(ellipse 34% 28% at 18% 24%,var(--f90-ambient-glow),transparent 73%),radial-gradient(ellipse 31% 27% at 83% 72%,color-mix(in srgb,var(--f90-ambient-b) 24%,transparent),transparent 74%);opacity:.85;animation:f90-ambient-float 32s ease-in-out infinite alternate}
+body::after{background-image:linear-gradient(120deg,transparent 48%,var(--f90-ambient-line) 49.5%,transparent 51%),radial-gradient(circle at 20% 35%,var(--f90-ambient-a) 0 2px,transparent 3px),radial-gradient(circle at 80% 66%,var(--f90-ambient-b) 0 2px,transparent 3px);background-size:240px 240px,290px 290px,370px 370px;opacity:.23;animation:f90-ambient-drift 44s linear infinite}
+@keyframes f90-ambient-float{0%{transform:translate3d(-2%,1%,0) scale(1)}100%{transform:translate3d(3%,-3%,0) scale(1.08)}}
+@keyframes f90-ambient-drift{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(80px,-55px,0)}}
+.main-content{position:relative;isolation:isolate}
+.main-content::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:8px;right:0;width:min(36vw,440px);height:min(36vw,440px);border-radius:50%;background:conic-gradient(from 25deg,transparent 0 30%,color-mix(in srgb,var(--accent) 12%,transparent) 40%,transparent 55% 78%,color-mix(in srgb,var(--accent) 7%,transparent) 85%,transparent);filter:blur(35px);opacity:.48;animation:f90-page-aura 26s linear infinite}
+@keyframes f90-page-aura{to{transform:rotate(360deg)}}
+:root[data-theme="cream"] body::before{opacity:.45}
+:root[data-theme="cream"] body::after{opacity:.17}
+:root[data-theme="cream"] .main-content::before{opacity:.26}
+.site-header,.site-footer,.f90-mobile-dock,.drawer,.modal-backdrop,.f90-bell-panel{isolation:isolate}
+:root[data-theme="cream"] .brand img,:root[data-theme="cream"] .drawer-profile img{filter:drop-shadow(0 2px 5px #0004)}
+/* Separate Quran experience retains its own calm visual identity */
+.main-content[data-page="quran"]::before{opacity:.13}
+.main-content[data-page="quran"] .f90-quran{position:relative;z-index:1}
+@media(max-width:700px){body::before{opacity:.55}body::after{opacity:.12}.main-content::before{width:230px;height:230px;filter:blur(26px);opacity:.25}}
+@media(prefers-reduced-motion:reduce){body::before,body::after,.main-content::before{animation:none!important;will-change:auto!important}}
+@media(prefers-reduced-data:reduce){body::after{display:none}}
