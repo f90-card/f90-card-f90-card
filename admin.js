@@ -994,6 +994,20 @@
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
+    const endpointInput = $("modalRoot").querySelector('#providerForm [name="endpoint"]');
+    const adapterInput = $("modalRoot").querySelector('#providerForm [name="adapter"]');
+    // Advisory only: suggest a known adapter based on a VERIFIED known hostname.
+    // Unknown supplier APIs require documentation and explicit administrator review.
+    if (!p && endpointInput && adapterInput) {
+      endpointInput.addEventListener("change", () => {
+        let hostname = "";
+        try { hostname = new URL(endpointInput.value).hostname.toLowerCase(); } catch { return; }
+        if (hostname === "api.yassen-card.com" || hostname === "yassen-card.com") {
+          adapterInput.value = "yassen";
+          toast("تم اقتراح بروتوكول ياسين كارد؛ افحص الاتصال قبل التفعيل");
+        }
+      });
+    }
   }
   async function importProvider(p) {
     S.pendingProviderImport = null;
