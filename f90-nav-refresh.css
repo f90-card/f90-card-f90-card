@@ -51,3 +51,26 @@
 :root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button{background:#fff7fa;color:#562e42;border-color:#ead0d9}
 @media(max-width:520px){#drawer.drawer{width:min(94vw,400px)}#drawer #drawerProfile{padding-inline:11px}#drawer .f90-drawer-wallet-card{margin:10px 0;padding:14px}#drawer .f90-drawer-quick-grid a{min-height:74px}}
 @media(prefers-reduced-motion:reduce){#drawer #drawerLinks>a,#drawer #drawerLinks>button{transition:none}}
+
+/* Centered F90 logo, drawer on the right, wallet and glowing bell on the left */
+.site-header .header-inner{display:grid;grid-template-columns:46px minmax(0,1fr) minmax(88px,max-content) 46px;grid-template-rows:minmax(66px,auto) auto;gap:4px 7px;position:relative;direction:rtl;align-items:center;padding-top:5px;padding-bottom:8px}
+.site-header .header-inner>.header-actions{display:contents}
+.site-header #menuButton{grid-column:1;grid-row:1;justify-self:start;z-index:2}
+.site-header #headerBrand{grid-row:1;position:absolute;inset-inline-start:50%;transform:translateX(50%);z-index:1;width:clamp(95px,21vw,155px);height:59px;max-width:none;margin:0}
+.site-header #headerBrand img{max-width:100%}
+.site-header #headerWallet{grid-column:3;grid-row:1;z-index:2;min-width:0;justify-self:end;max-width:145px;overflow:hidden;text-overflow:ellipsis;font-size:12px;padding:7px 9px}
+.site-header #headerWallet span{overflow:hidden;text-overflow:ellipsis}
+.site-header #storeBell{grid-column:4;grid-row:1;z-index:2;justify-self:end}
+.site-header #searchForm{grid-column:1/-1;grid-row:2;justify-self:center;max-width:670px;width:100%;margin:4px auto 0}
+.site-header .f90-header-bell{position:relative;isolation:isolate;border-radius:50%;color:#ff648f!important;border:1px solid rgba(255,108,148,.45);background:radial-gradient(circle,rgba(245,49,101,.20),rgba(19,22,42,.68));box-shadow:0 0 15px rgba(247,51,109,.25),inset 0 0 10px rgba(253,73,125,.13)}
+.site-header .f90-bell-svg{height:22px;width:22px;display:block;filter:drop-shadow(0 0 5px rgba(252,50,102,.9));transform-origin:50% 10%}
+.site-header .f90-header-bell.f90-bell-new{box-shadow:0 0 15px rgba(246,48,99,.5),0 0 28px rgba(245,45,89,.22);animation:f90BellPulse .75s ease-out 3}
+.site-header .f90-header-bell.f90-bell-new .f90-bell-svg{animation:f90BellSwing .55s ease-in-out 4}
+@keyframes f90BellSwing{0%,100%{transform:rotate(0)}20%{transform:rotate(17deg)}50%{transform:rotate(-15deg)}80%{transform:rotate(9deg)}}
+@keyframes f90BellPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6)}}
+:root[data-theme="cream"] .site-header .f90-header-bell{background:#fff2f7;border-color:#dd9db2;color:#a92252!important}
+:root[data-theme="cream"] .site-header #headerWallet{background:#fff6fa}
+@media(min-width:930px){.site-header .header-inner{grid-template-columns:55px minmax(0,1fr) minmax(110px,max-content) 48px}.site-header #headerBrand{height:68px;width:170px}}
+@media(max-width:520px){.site-header .header-inner{grid-template-columns:42px minmax(0,1fr) minmax(78px,max-content) 42px;gap:3px 4px}.site-header #headerBrand{width:clamp(88px,27vw,124px);height:56px}.site-header #headerWallet{max-width:110px;padding:6px;font-size:10px}.site-header #headerWallet svg{height:16px;width:16px}.site-header #storeBell{width:39px;height:39px}}
+@media(max-width:365px){.site-header #headerBrand{width:85px}.site-header #headerWallet{max-width:89px}.site-header .header-inner{grid-template-columns:39px minmax(0,1fr) minmax(76px,max-content) 39px}}
+@media(prefers-reduced-motion:reduce){.site-header .f90-header-bell.f90-bell-new,.site-header .f90-header-bell.f90-bell-new .f90-bell-svg{animation:none}}
