@@ -1906,6 +1906,19 @@
       theme(initialTheme);
       promotions();
       await route();
+      // Receive new supplier price/status news while the store remains open.
+      // This is a read-only poll; never modify checkout quotes or local catalog mid-purchase.
+      setInterval(async () => {
+        if (document.visibilityState === "hidden") return;
+        try {
+          const latest = await A.call("catalog");
+          if (!Array.isArray(latest?.news)) return;
+          S.news = latest.news;
+          updateStoreBell();
+        } catch {
+          // Keep previous news and continue normal browsing if offline.
+        }
+      }, 120000);
       const channel = String(S.settings.config?.whatsapp_channel_url || "").trim();
       const channelValid = /^https:\/\/whatsapp\.com\/channel\/[a-zA-Z0-9]+\/?(?:\?.*)?$/.test(channel);
       const channelKey = "f90-channel-invite:" + channel;
