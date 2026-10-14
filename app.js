@@ -743,7 +743,7 @@
               .filter((r) => r.is_enabled && r.per_usd)
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
-          )}</div><div class="notice" id="depositEstimate">أدخل المبلغ لعرض القيمة قبل أي رسوم. تُحدد الرسوم النهائية عند اعتماد الإيداع.</div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
+          )}</div><div class="notice" id="depositEstimate">أدخل المبلغ لعرض القيمة قبل الرسوم. عمولة 2٪ المطلوبة لم تُفعّل بعد على الخادم.</div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
   }
   function orderRecord(o) {
@@ -1538,16 +1538,23 @@
       quoteTimer = setTimeout(() => quoteProduct(p), 350);
     }
     if (ev.target.closest("#depositForm")) {
-      const f = $("depositForm"),
-        r = S.rates.find((r) => r.currency === f.elements.currency.value);
-      $("depositEstimate").textContent =
-        "القيمة قبل أي رسوم: " +
-        C.money(
-          Number(f.elements.amount.value || 0) / Number(r?.per_usd || 1),
-          "USD",
-          true,
-        ) +
-        " · لا تشمل رسومًا غير مفعّلة في نظام الإيداع";
+      const f = $("depositForm");
+      const estimate = $("depositEstimate");
+      if (!estimate) return;
+      const amount = Number(f.elements.amount.value);
+      const rate = S.rates.find((row) => row.currency === f.elements.currency.value && row.is_enabled);
+      const perUsd = Number(rate?.per_usd);
+      if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
+        estimate.textContent = "أدخل مبلغًا صالحًا لعرض قيمته قبل الرسوم.";
+        return;
+      }
+      if (!Number.isFinite(perUsd) || perUsd <= 0) {
+        estimate.textContent = "سعر الصرف لهذه العملة غير متاح حاليًا؛ لا يمكن حساب المبلغ.";
+        return;
+      }
+      const gross = amount / perUsd;
+      estimate.textContent = "القيمة قبل الرسوم: " + C.money(gross,"USD",true) +
+        " · العمولة المطلوبة 2٪ غير مفعّلة حاليًا في الخادم، لذلك لا يُعرض صافي مؤكد.";
     }
   });
   document.addEventListener("change", (ev) => {
