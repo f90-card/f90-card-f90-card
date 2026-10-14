@@ -157,10 +157,27 @@
     }
     return items.slice(0,24);
   }
+  function f90PlatformIcon(item) {
+    const label = String(item.name_ar || "").toLowerCase();
+    const url = String(item.url || "").toLowerCase();
+    const platforms = [
+      [/whatsapp|واتساب/, "whatsapp"],
+      [/instagram|انستغرام|إنستغرام/, "instagram"],
+      [/facebook|فيسبوك/, "facebook"],
+      [/tiktok|تيك.?توك/, "tiktok"],
+      [/telegram|تيليجرام|تلغرام/, "telegram"],
+      [/youtube|يوتيوب/, "youtube"],
+      [/snapchat|سناب/, "snapchat"],
+      [/twitter|x\\.com|تويتر/, "x"],
+      [/discord|ديسكورد/, "discord"]
+    ];
+    const match = platforms.find(([re]) => re.test(label) || re.test(url));
+    return match ? "https://cdn.jsdelivr.net/npm/simple-icons@v15/icons/" + match[1] + ".svg" : "";
+  }
   function f90SocialCards() {
     return f90SocialLinks().map(x => {
       const name = e(x.name_ar || "تواصل معنا");
-      const pic = C.safeUrl(x.icon_url);
+      const pic = C.safeUrl(x.icon_url) || f90PlatformIcon(x);
       const symbol = x.f90_channel ? "◉" : "↗";
       return `<a class="f90-social-card" href="${e(C.safeUrl(x.url))}" target="_blank" rel="noopener noreferrer" aria-label="${name}">${pic ? image(pic,name,"f90-social-card-icon") : `<span class="f90-social-fallback" aria-hidden="true">${symbol}</span>`}<span>${name}</span><span class="f90-social-arrow" aria-hidden="true">↗</span></a>`;
     }).join("");
