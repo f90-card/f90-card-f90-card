@@ -46,6 +46,7 @@
     ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
     ["infrastructure", "الخوادم والمراقبة", "chart", ["manager"]],
     ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
+    ["music", "إذاعات ميوزك F90", "bell", ["manager"]],
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
@@ -1447,6 +1448,41 @@
     }
   }
 
+  function musicStationsPage(){
+    const names=["طربي · عربي","رومانسي","حماسي","هادئ","نشيط"];
+    const data=Array.isArray(S.settings.config?.music_stations)?S.settings.config.music_stations:[];
+    main.innerHTML=head("إذاعات ميوزك أف تسعين","إدارة مصادر البث الصوتي الحقيقي. مشغّل DataMind FM المجاني متاح افتراضياً؛ أضف محطات أخرى إذا لديك إذن استخدامها.")
+      + '<section class="panel"><h2>المحطة المباشرة الأساسية</h2><p><b>DataMind FM</b> · بث 24/7 من المصدر الأصلي، مسموح بإدراج مشغله مجاناً مع نسب المصدر إليه.</p><a class="button secondary" href="https://datamind.fm/embed/" target="_blank" rel="noopener noreferrer">توثيق البث والمشغّل ↗</a></section>'
+      + '<form id="musicStationsForm" class="panel"><h2>مصادر البث الإضافية</h2><p class="muted">ضع رابط HTTPS مباشر لصوت MP3/AAC أو بث Icecast/SHOUTcast المصرّح بإدراجه. إذا لم تدخل مصدراً فعلياً فلن يظهر خيار وهمي للمستمع.</p><div class="f90-radio-sources">'
+      + names.map((name,i)=>{const row=data.find(x=>x.id==="mood-"+i)||{};return '<fieldset class="f90-radio-source"><legend>'+e(name)+'</legend>'
+       + field("radio_name_"+i,"الاسم الذي يظهر للمستمع","text",row.name||name,'maxlength="55"')
+       + field("radio_url_"+i,"رابط بث HTTPS مباشر","url",row.url||'','dir="ltr" placeholder="https://station.example/live.mp3"')
+       + field("radio_credit_"+i,"اسم المحطة صاحبة الحقوق","text",row.credit||'','maxlength="70"')
+       + field("radio_home_"+i,"رابط موقع المحطة الرسمي","url",row.home_url||'','dir="ltr" placeholder="https://..."')
+       + check("radio_active_"+i,"عرض المحطة في المتجر",row.enabled!==false)
+       + '</fieldset>'}).join("")
+      + '</div><label class="f90-radio-legal"><input type="checkbox" name="rights_confirmed" required> أؤكد أن لدي تصريحاً بإدراج جميع المصادر المضافة وأنها تعمل عبر HTTPS، وأن الموسيقى ليست مرفوعة على خوادم المتجر دون حق.</label><button type="submit" class="button">حفظ محطات البث الحقيقي</button></form>'
+      +'<section class="panel"><h3>إرشادات التشغيل</h3><p>المحطة لا تبدأ بصوت تلقائي قبل ضغط الزائر على تشغيل، وفق سياسة المتصفح. قد تتوقف بعض المحطات أو تمنع تشغيلها حسب منطقة المستمع، وتُعرض رسالة عند حدوث خطأ. روابط الموسيقى ليست مفاتيح API.</p><a class="button secondary" href="./index.html#/welcome" target="_blank" rel="noopener noreferrer">تجربة المشغّل ↗</a></section>';
+  }
+  async function saveMusicStations(form,d){
+    if(!form.elements.rights_confirmed.checked)throw new Error("تأكد من تصريح إدراج مصادر البث قبل النشر");
+    const stations=[];
+    for(let i=0;i<5;i++){
+      const url=String(d["radio_url_"+i]||"").trim();
+      if(!url)continue;
+      let parsed;try{parsed=new URL(url)}catch{throw new Error("رابط المحطة "+(i+1)+" غير صحيح")}
+      if(parsed.protocol!=="https:"||parsed.username||parsed.password||parsed.hash||parsed.port)throw new Error("كل محطات الموسيقى تحتاج رابط HTTPS عام خالياً من كلمات المرور");
+      if(url.length>999)throw new Error("رابط المحطة طويل جداً");
+      const credit=String(d["radio_credit_"+i]||"").trim().slice(0,70);
+      if(!credit)throw new Error("اكتب اسم المحطة صاحبة البث للمصدر "+(i+1));
+      const home=String(d["radio_home_"+i]||"").trim();
+      if(home&&(!/^https:\/\//i.test(home)||home.length>999))throw new Error("رابط الموقع الرسمي يجب أن يكون HTTPS");
+      stations.push({id:"mood-"+i,name:String(d["radio_name_"+i]||"").trim().slice(0,55)||credit,
+        url,credit,home_url:home,type:"radio",enabled:form.elements["radio_active_"+i]?.checked===true});
+    }
+    await configSave({music_stations:stations});
+    musicStationsPage();toast("حُفظت مصادر بث الموسيقى وتظهر بعد تحديث المتجر");
+  }
   async function infrastructurePage() {
     const started = performance.now();
     const healthCheck = A.call("health").then(
@@ -1575,6 +1611,7 @@
       else if (page === "infrastructure") await infrastructurePage();
       else if (page === "integration") integrationCenter();
       else if (page === "design-center") designCenter();
+      else if (page === "music") musicStationsPage();
       else if (page === "traders") await traders();
     } catch (err) {
       main.innerHTML =
@@ -1601,6 +1638,7 @@
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
+    if (form.id === "musicStationsForm") return saveMusicStations(form, d);
     if (form.id === "searchUsers") {
       S.search = d.search;
       S.offset = 0;
