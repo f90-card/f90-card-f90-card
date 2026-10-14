@@ -279,8 +279,8 @@
     const el=$("promotionBar");
     el.hidden=!rows.length;
     if(!rows.length)return;
-    const content=rows.map(p=>`<span>${p.image_url?image(p.image_url,p.text_ar||"إعلان"):""}${e(p.text_ar||"")}</span>`).join("");
-    el.innerHTML=`<div class="promotion-track" style="--promo-duration:${Math.max(8,Number(rows[0].animation_seconds)||25)}s">${content}<span class="duplicate" aria-hidden="true">${content}</span></div><button class="icon-button f90-promo-pause" data-action="toggle-promo" aria-label="إيقاف حركة الشريط" aria-pressed="false" title="إيقاف الحركة">Ⅱ</button>`;
+    const content=rows.map(p=>`<span class="f90-ticker-item">${p.image_url?image(p.image_url,p.text_ar||"إعلان"):""}${e(p.text_ar||"")}</span>`).join("");
+    el.innerHTML=`<div class="f90-ticker-window"><div class="promotion-track" style="--promo-duration:${Math.max(18,Number(rows[0].animation_seconds)||28)}s"><div class="f90-ticker-copy">${content}</div><div class="f90-ticker-copy" aria-hidden="true">${content}</div></div></div>`;
   }
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = () => image(f90Fallback(), "قيد التعبئة", "f90-refill-image");
@@ -359,8 +359,8 @@
           : null;
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
-    main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-hidden="true">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span><button class="f90-hero-pause" data-action="pause-banner" aria-label="${S.carouselPaused?"تشغيل":"إيقاف"} تبديل الإعلانات" aria-pressed="${S.carouselPaused}">${S.carouselPaused?"▶":"Ⅱ"}</button></div>` : ""}</section>`}
- <form class="f90-home-search" id="homeSearchForm" role="search"><label class="sr-only" for="homeSearch">ابحث في الأقسام والخدمات</label><input id="homeSearch" type="search" placeholder="دوّر على لعبة، بطاقة أو خدمة..." autocomplete="off"><button class="button secondary" type="submit">${I("search")}بحث</button></form>
+    main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
+
  <div class="section-head" id="categories"><h2>اختر عالمك</h2><span>كل ما تحتاجه، أقرب إليك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -388,6 +388,9 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
+    const promoEl=$("promotionBar");
+    const heroElForTicker=main.querySelector(".f90-swipe-hero");
+    if(promoEl&&heroElForTicker)heroElForTicker.insertAdjacentElement("afterend",promoEl);
     clearInterval(bannerTimer);
     if (slides.length > 1) {
       const advance=(direction=1)=>{
@@ -891,6 +894,8 @@
   }
   async function route() {
     const seq = ++S.route;
+    const ticker=$("promotionBar");
+    if(ticker && ticker.parentElement===main)main.parentElement.insertBefore(ticker,main);
     clearInterval(bannerTimer);
     clearInterval(maintenanceTimer);
     document.body.classList.remove("f90-in-maintenance");
@@ -1578,11 +1583,6 @@
           localStorage.setItem("f90-favorites", JSON.stringify(S.favorites));
         } catch {}
         toast(S.favorites.includes(id) ? "أضيفت للمفضلة" : "أزيلت من المفضلة");
-      } else if (action === "toggle-promo") {
-        const paused=$("promotionBar").classList.toggle("f90-promo-paused");
-        button.textContent=paused?"▶":"Ⅱ";
-        button.setAttribute("aria-pressed",String(paused));
-        button.setAttribute("aria-label",paused?"تشغيل حركة الشريط":"إيقاف حركة الشريط");
       }
       else if (action === "pause-banner") {
         S.carouselPaused=!S.carouselPaused;
