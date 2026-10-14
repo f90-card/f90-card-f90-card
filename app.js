@@ -452,7 +452,7 @@
         <div class="f90-experience-orbit orbit-one" aria-hidden="true"></div><div class="f90-experience-orbit orbit-two" aria-hidden="true"></div>
         <div class="f90-experience-copy"><span class="f90-experience-chip"><span class="f90-live-dot"></span> F90 CARD · أف تسعين كارد</span>
         <p class="f90-experience-pretitle">وجهتك إلى عالم الخدمات الرقمية</p>
-        <h1 id="f90-experience-title">عالمك الرقمي <span>بهوية مختلفة.</span></h1>
+        <h1 id="f90-experience-title">${e(w.title_ar || "عالمك الرقمي يبدأ هنا")} <span>F90 CARD.</span></h1>
         <p class="f90-experience-description">${e(w.subtitle_ar||"الألعاب، شحن التطبيقات والخدمات الرقمية في تجربة عربية واحدة. تصفّح، اختر، وتابع كل طلب بوضوح.")}</p>
         <div class="f90-experience-actions"><a class="button" href="#/">اكتشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/install">ثبّت التطبيق ${I("plus")}</a></div>
         <div class="f90-experience-signals"><span>${I("shield")} حساب موثّق للشراء</span><span>${I("clock")} متابعة الطلبات</span><span>${I("wallet")} محفظة بالدولار</span></div><div class="f90-experience-real-stats" aria-label="مؤشرات فعلية من المتجر"><div><strong>${S.categories.filter(c=>c.is_active&&!c.parent_id).length}</strong><span>قسم رئيسي متاح</span></div><div><strong>${available.length}</strong><span>خدمة متاحة بالكتالوج</span></div><div><strong>${methods.length}</strong><span>طريقة إيداع مفعّلة</span></div></div></div>
