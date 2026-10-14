@@ -1,0 +1,36 @@
+/* F90 Quran: intentionally distinct, quiet visual language */
+.f90-quran{max-width:1180px;margin:0 auto;color:var(--text);padding-bottom:55px}
+.f90-quran-hero{position:relative;isolation:isolate;overflow:hidden;min-height:260px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:40px 20px;border-radius:28px;border:1px solid #d9bc81;background:radial-gradient(circle at 50% 120%,#a7874c45,transparent 55%),linear-gradient(145deg,#122c28,#1a3830 60%,#112923);color:#fff}
+.f90-quran-hero:before{content:"";position:absolute;inset:13px;border:1px solid #c4ac785c;border-radius:19px;pointer-events:none}
+.f90-quran-eyebrow{font-size:12px;letter-spacing:.06em;font-weight:850;color:#f0d69c}
+.f90-quran-hero h1{font-size:clamp(34px,6vw,66px);margin:0;color:#fff;font-weight:900}
+.f90-quran-hero p{max-width:580px;margin:0;color:#e1e9dd;line-height:1.9}
+.f90-quran-ornament{position:absolute;left:28px;bottom:-34px;font-size:130px;color:#f1d49b12;pointer-events:none}
+.f90-quran-body{padding:35px 0}
+.f90-quran-heading{text-align:center;margin-bottom:22px}
+.f90-quran-heading h2{font-size:30px;margin:0 0 9px}.f90-quran-heading p{color:var(--muted);margin:0}
+.f90-quran-search-label{display:block;margin:0 0 9px;font-weight:800}
+#f90QuranSearch{display:block;width:100%;max-width:600px;min-height:48px;margin-bottom:24px;border-radius:13px;padding:10px 16px;background:var(--surface);border:1px solid var(--line);color:var(--text)}
+.f90-quran-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.f90-quran-surah{display:flex;align-items:center;gap:13px;min-width:0;min-height:78px;padding:13px;border-radius:16px;border:1px solid var(--line);background:var(--surface);color:var(--text);text-align:right;cursor:pointer;transition:transform .2s,border-color .2s}
+.f90-quran-surah:hover{transform:translateY(-2px);border-color:#b5975b}
+.f90-quran-surah[hidden]{display:none!important}
+.f90-quran-number{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;border-radius:12px;border:1px solid #bca472;background:color-mix(in srgb,#bc9c5e 12%,var(--surface));color:var(--text);font-weight:800}
+.f90-quran-surah strong{font-size:15px;overflow-wrap:anywhere}
+.f90-quran-open{margin-inline-start:auto;white-space:nowrap;color:var(--muted);font-size:11px}
+.f90-quran-reader{margin-top:28px;padding:clamp(17px,4vw,43px);border-radius:23px;border:1px solid #bda66f;background:var(--surface)}
+.f90-quran-reader[hidden],.f90-quran-body[hidden]{display:none!important}
+.f90-quran-reader-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:25px}
+.f90-quran-reader-head h2{font-size:clamp(25px,4vw,38px);margin:5px 0}
+.f90-quran-reader-head .f90-quran-eyebrow{color:#aa873d}
+#f90QuranBack{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:12px;padding:11px 15px;cursor:pointer}
+.f90-quran-verses{text-align:justify;text-align-last:center;font-family:"Amiri","Noto Naskh Arabic","Traditional Arabic",serif;font-size:clamp(24px,3vw,35px);line-height:2.65;color:var(--text)}
+.f90-quran-ayah{display:inline}
+.f90-quran-verse-num{white-space:nowrap;color:#b2934b;font-size:.63em;font-family:inherit}
+.f90-quran-source{color:var(--muted);font-size:12px;line-height:1.8;margin-top:24px}
+#f90QuranExternal{display:inline-flex;margin-top:12px;color:#a7863e;font-weight:800}
+.f90-quran-error{font-size:16px;font-family:inherit;color:var(--muted);line-height:1.8}
+:root[data-theme="cream"] .f90-quran-surah,:root[data-theme="cream"] .f90-quran-reader{background:#fffdf7;border-color:#d8c8a9}
+@media(max-width:800px){.f90-quran-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:530px){.f90-quran-hero{min-height:220px;border-radius:20px;padding:28px 18px}.f90-quran-grid{grid-template-columns:1fr;gap:8px}.f90-quran-surah{min-height:65px}.f90-quran-open{font-size:12px}.f90-quran-reader{padding:18px 14px}.f90-quran-verses{font-size:26px;line-height:2.5}}
+@media(prefers-reduced-motion:reduce){.f90-quran-surah{transition:none}}
