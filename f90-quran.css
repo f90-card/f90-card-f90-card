@@ -87,3 +87,10 @@
 .f90-live-quran audio{height:32px;max-width:100%;width:clamp(180px,36vw,330px)}
 .f90-live-quran a{color:var(--accent);text-decoration:none;font-size:10px}
 @media(max-width:520px){.f90-live-quran{gap:6px 8px;padding:5px 9px;margin-block:3px 5px}.f90-live-quran-title{font-size:11px}.f90-live-quran audio{width:min(100%,210px);height:30px}}
+
+/* Quran-only reciter/station switch, no autoplay */
+#f90LiveQuran .f90-quran-station-label{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:11px;font-weight:700;color:var(--text)}
+#f90LiveQuran #f90QuranStation{min-height:34px;max-width:185px;padding:4px 8px;border:1px solid color-mix(in srgb,var(--accent) 43%,var(--line));border-radius:10px;background:var(--surface2);color:var(--text);font-size:12px}
+#f90LiveQuran .f90-quran-station-status{font-size:10px;color:var(--muted);margin:0;max-width:190px;line-height:1.5}
+#f90LiveQuran audio{max-width:100%;min-width:180px}
+@media(max-width:600px){#f90LiveQuran{justify-content:center}#f90LiveQuran .f90-quran-station-label{width:100%;justify-content:center}#f90LiveQuran #f90QuranStation{max-width:230px}}
