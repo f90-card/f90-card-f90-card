@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="./f90-quran.css?v=20261014-2" />
     <link rel="stylesheet" href="./f90-ambient.css?v=20261014-1" />
     <link rel="stylesheet" href="./f90-atmosphere-v2.css?v=2" /><link rel="stylesheet" href="./f90-profile-deposit.css?v=3" />
+    <link rel="stylesheet" href="./f90-nav-refresh.css?v=1" />
     <script>
       try {
         document.documentElement.dataset.theme =
@@ -108,11 +109,7 @@
       <nav id="drawerLinks"></nav>
       <div class="drawer-preferences">
         <label>العملة<select id="currencySelect"></select></label
-        ><label
-          >مظهر الموقع<select id="themeSelect">
-            <option value="dark">أسود وأحمر</option>
-            <option value="cream">حليبي دافئ</option>
-          </select></label
+        ><button type="button" id="themeToggle" class="f90-theme-toggle" aria-label="تبديل مظهر الموقع" aria-pressed="false"><span class="f90-theme-toggle-icon" aria-hidden="true">☾</span><span class="f90-theme-toggle-label">تفعيل الثيم الفاتح</span><span class="f90-theme-toggle-track" aria-hidden="true"><i></i></span></button>
         >
       </div>
       <button class="button secondary" id="installButton" hidden>
