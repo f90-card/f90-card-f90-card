@@ -598,7 +598,7 @@
           },
         ];
     const productHtml = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)}</h1><div class="badges"><span class="badge">${disabled ? "الخدمة متوقفة مؤقتًا" : I(c.fulfillment === "automatic" ? "link" : "user") + (c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")}</span>${!disabled && c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${disabled ? '<p class="product-description">هذه الخدمة متوقفة مؤقتًا إلى حين تهيئة تنفيذها.</p>' : p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="actions"><button class="button secondary small" data-action="share">${I("copy")}نسخ الرابط</button><button class="button secondary small" data-action="favorite" data-id="${p.id}">${I("heart")}${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "أضف للمفضلة"}</button></div><div class="price-board" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
- <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "تأكيد الشراء من المحفظة" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
+ <form id="checkoutForm" data-product="${p.id}">${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) + `<p class="muted small">السعر لكل ${e(c.unit_quantity || 1)} ${e(c.quantity_label_ar || "وحدة")} · من ${e(c.quantity_min || 1)} إلى ${e(c.quantity_max || 1000000000)}</p>` : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some((f) => ["account_id", "phone"].includes(f.id)) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small"></p><div class="checkout-total"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small" style="margin-top:14px"></p></form></section></div>`;
     if (inline) {
       const panel = $("quickProductPanel");
       if (!panel) return;
@@ -1277,37 +1277,6 @@
       // checkout request; a second explicit click is required to spend wallet funds.
       const total = Number(S.quote.total_usd);
       if (!Number.isFinite(total) || total <= 0) throw new Error("تعذّر التحقق من سعر الطلب");
-      if (!confirmed) {
-        const item = S.products.find((item) => item.id === form.dataset.product);
-        if (!item) throw new Error("الخدمة غير متاحة");
-        const balance = Number(S.me.wallet.balance_usd);
-        const current = Object.fromEntries(new FormData(form));
-        const fingerprint = JSON.stringify(current);
-        pendingCheckout = {
-          form, fingerprint, quoteSeq: S.quoteSeq, total,
-          key: S.checkoutKey, productId: item.id
-        };
-        modal("مراجعة الطلب قبل الخصم",
-          `<div class="f90-checkout-review">
-            <div class="f90-review-brand"><img src="./f90-logo.png" alt="شعار F90 CARD" width="70" height="70"><strong>تأكيد الدفع من محفظتك</strong></div>
-            <div class="f90-review-service">${image(item.image_url, item.name)}<div><h3>${e(item.name)}</h3><span>${e(item.commerce?.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")} · ${e(item.commerce?.delivery_time || "تابع الحالة في طلباتك")}</span></div></div>
-            <div class="f90-review-total"><span>المبلغ النهائي</span><strong>${e(C.money(total, "USD", true))}</strong></div>
-            <div class="f90-review-fields"><h4>راجع بيانات الشحن قبل تأكيد الدفع</h4>${Object.entries(current).filter(([k])=>k.startsWith("customer_")).map(([k,v])=>`<div><span>${e(item.commerce?.fields?.find(f=>"customer_"+f.id===k)?.label_ar||"بيانات الحساب")}</span><strong dir="auto">${e(String(v||"—"))}</strong></div>`).join("")}</div>
-            <dl>
-              <div><dt>الكمية</dt><dd>${e(String(current.quantity || "1"))}</dd></div>
-              <div><dt>رصيدك الحالي</dt><dd>${e(C.money(balance, "USD", true))}</dd></div>
-              <div><dt>المبلغ المطلوب</dt><dd>${e(C.money(total, "USD", true))}</dd></div>
-              ${Number(S.quote.discount_usd) > 0 ? `<div><dt>خصم VIP</dt><dd>${e(C.money(S.quote.discount_usd, "USD", true))}</dd></div>` : ""}
-              <div class="f90-review-remaining"><dt>الرصيد المتوقع بعد الطلب</dt><dd>${e(C.money(balance - total, "USD", true))}</dd></div>
-            </dl>
-            <p class="f90-review-warning">تأكد من معرّف الحساب والكمية قبل الدفع. يتحقق الخادم من السعر النهائي مرة أخرى قبل الخصم.</p>
-            <div class="actions">
-              <button type="button" class="button secondary" data-close-modal>إلغاء</button>
-              <button type="button" class="button" data-action="confirm-wallet-checkout">تأكيد الخصم والشراء</button>
-            </div>
-          </div>`);
-        return;
-      }
       const p = S.products.find((p) => p.id === form.dataset.product),
         fields = {};
       for (const [k, v] of Object.entries(data))
@@ -1334,10 +1303,13 @@
           throw new Error("لم يتأكد تسجيل عملية الشراء. راجع طلباتك قبل إرسال طلب آخر.");
         o = recovered.order;
       }
-      // The order exists now. Navigate before optional account/chrome refreshes,
-      // so an unrelated UI error cannot leave the customer on the payment form.
+      // Keep the successful checkout in the same product panel. The backend
+      // remains authoritative and the idempotency key is rotated only on success.
       S.checkoutKey = C.key();
-      location.hash = href("order", o.id);
+      const completedForm = form;
+      if (completedForm.isConnected) {
+        completedForm.innerHTML = '<div class="notice success" role="status"><strong>تم تسجيل طلبك بنجاح</strong><p>يمكنك متابعة حالة الخدمة في سجل الطلبات.</p><a class="button" href="' + href("order", o.id) + '">عرض تفاصيل الطلب</a><button type="button" class="button secondary" data-action="close-quick-product">إغلاق</button></div>';
+      }
       let refreshed = false;
       try {
         refreshed = await refreshMe();
