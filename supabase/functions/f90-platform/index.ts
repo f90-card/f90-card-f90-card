@@ -304,7 +304,7 @@ async function assertProviderAvailable(productId: string) {
   if (!p?.is_enabled || p.config?.disconnected || p.config?.archived_at)
     throw new AppError("F90_UNAVAILABLE", 409, "الخدمة قيد التعبئة لدى المورّد");
   if (product?.commerce?.fulfillment === "automatic" &&
-      (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
+      (["omega", "f90"].includes(p.adapter) || p.config?.automatic_orders_enabled !== true))
     throw new AppError("F90_PROVIDER_NOT_READY");
 }
 async function publicCatalog() {
@@ -337,7 +337,7 @@ async function publicCatalog() {
     const product: any = productById.get(entry.product_id);
     return provider && (!provider.is_enabled ||
       (product?.commerce?.fulfillment === "automatic" &&
-        (provider.adapter === "omega" || provider.config?.automatic_orders_enabled !== true)));
+        (["omega", "f90"].includes(provider.adapter) || provider.config?.automatic_orders_enabled !== true)));
   }).map((entry: any) => entry.product_id));
   const visible = (id: string, seen = new Set<string>()): boolean => {
     if (seen.has(id)) return false;
@@ -1321,7 +1321,7 @@ async function staff(a: Actor, b: any) {
       .eq("id", uuid(b.id)).single()) : null;
     if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (!old && !b.token) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
-    const adapter = ["smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    const adapter = ["smm", "json", "omega", "yassen", "f90"].includes(b.adapter) ? b.adapter : "smm";
     if (new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
@@ -1337,7 +1337,7 @@ async function staff(a: Actor, b: any) {
     const autoOrders = b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
-    if (autoOrders && adapter === "omega")
+    if (autoOrders && ["omega", "f90"].includes(adapter))
       throw new AppError("F90_FIELDS", 400, "أوميغا متاح للقراءة فقط حاليًا");
     const d = {
       name: text(b.name, 150),
