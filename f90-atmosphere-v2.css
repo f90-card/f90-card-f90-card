@@ -1,0 +1,60 @@
+/* F90 signature atmosphere v2: visible on both themes, without covering controls */
+:root{
+ --f90-scene-base:#090c14;
+ --f90-scene-hot:rgba(224,29,65,.23);
+ --f90-scene-edge:rgba(159,24,55,.17);
+ --f90-scene-grid:rgba(245,83,112,.052);
+ --f90-scene-border:rgba(255,77,109,.29);
+}
+:root[data-theme="cream"]{
+ --f90-scene-base:#f6f0eb;
+ --f90-scene-hot:rgba(182,28,68,.095);
+ --f90-scene-edge:rgba(213,103,137,.11);
+ --f90-scene-grid:rgba(135,32,63,.042);
+ --f90-scene-border:rgba(154,43,77,.22);
+}
+html{background:var(--f90-scene-base)}
+body{
+ background-color:var(--bg)!important;
+ background-image:
+  radial-gradient(ellipse 55vw 50vh at 12% 8%,var(--f90-scene-hot),transparent 78%),
+  radial-gradient(ellipse 52vw 48vh at 96% 63%,var(--f90-scene-edge),transparent 80%),
+  radial-gradient(ellipse 45vw 42vh at 23% 112%,var(--f90-scene-hot),transparent 80%),
+  linear-gradient(115deg,transparent 0 48%,var(--f90-scene-grid) 49.7%,transparent 51% 100%)!important;
+ background-size:120% 120%,125% 125%,120% 120%,160px 160px!important;
+ background-attachment:fixed!important;
+ animation:f90-scene-shift 38s ease-in-out infinite alternate;
+}
+@keyframes f90-scene-shift{
+ 0%{background-position:0% 0%,100% 30%,25% 100%,0 0}
+ 100%{background-position:14% 8%,86% 65%,12% 85%,80px -80px}
+}
+/* More deliberate chrome-red accents, while keeping text and product imagery clear */
+main .panel,main .record,main .method-tile,main .f90-recipient-item{
+ border-color:color-mix(in srgb,var(--f90-scene-border) 50%,var(--line))!important;
+}
+main .panel{
+ box-shadow:0 10px 30px rgba(0,0,0,.075),inset 0 1px 0 rgba(255,255,255,.025);
+}
+main .panel:hover,main .method-tile:hover{
+ border-color:color-mix(in srgb,var(--accent) 44%,var(--line))!important;
+}
+main .section-head h2,main .page-head h1{position:relative}
+main .section-head h2::after{
+ content:"";display:block;width:42px;height:3px;margin-top:9px;border-radius:99px;
+ background:linear-gradient(90deg,var(--accent),transparent);
+ box-shadow:0 0 14px color-mix(in srgb,var(--accent) 38%,transparent);
+}
+:root[data-theme="cream"] main .panel{box-shadow:0 8px 24px rgba(85,38,52,.07)}
+:root[data-theme="cream"] body{background-color:var(--bg)!important}
+body.f90-in-maintenance{animation:none!important}
+@media(max-width:760px){
+ body{background-attachment:scroll!important;background-size:150% 130%,140% 120%,150% 130%,180px 180px!important;animation-duration:55s}
+ main .panel{box-shadow:0 5px 18px rgba(0,0,0,.055)}
+}
+@media(prefers-reduced-motion:reduce){
+ body{animation:none!important}
+}
+@media(prefers-reduced-data:reduce){
+ body{animation:none!important;background-image:radial-gradient(ellipse at 15% 5%,var(--f90-scene-hot),transparent 70%)!important}
+}
