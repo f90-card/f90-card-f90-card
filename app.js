@@ -274,34 +274,12 @@
   function promotions() {
     promoTimers.forEach(clearTimeout);
     promoTimers = [];
-    const rows = (S.settings.config.promotions || []).filter(
-      (x) => x.enabled && C.visibleSchedule(x),
-    );
-    const el = $("promotionBar");
-    function draw() {
-      el.hidden = !rows.length;
-      if (!rows.length) return;
-      const content = rows
-        .map(
-          (p) =>
-            `<span>${p.image_url ? image(p.image_url, p.text_ar || "إعلان") : ""}${e(p.text_ar || "")}</span>`,
-        )
-        .join("");
-      el.innerHTML = `<div class="promotion-track" style="--promo-duration:${Math.max(8, Number(rows[0].animation_seconds) || 25)}s">${content}<span class="duplicate" aria-hidden="true">${content}</span></div><button class="icon-button" data-action="hide-promo" aria-label="إغلاق الإعلان">${I("close")}</button>`;
-    }
-    draw();
-    for (const p of [...rows])
-      if (Number(p.display_seconds) > 0)
-        promoTimers.push(
-          setTimeout(
-            () => {
-              const i = rows.indexOf(p);
-              if (i >= 0) rows.splice(i, 1);
-              draw();
-            },
-            Math.max(1, Number(p.display_seconds)) * 1000,
-          ),
-        );
+    const rows=(S.settings.config.promotions||[]).filter(x=>x.enabled&&C.visibleSchedule(x));
+    const el=$("promotionBar");
+    el.hidden=!rows.length;
+    if(!rows.length)return;
+    const content=rows.map(p=>`<span>${p.image_url?image(p.image_url,p.text_ar||"إعلان"):""}${e(p.text_ar||"")}</span>`).join("");
+    el.innerHTML=`<div class="promotion-track" style="--promo-duration:${Math.max(8,Number(rows[0].animation_seconds)||25)}s">${content}<span class="duplicate" aria-hidden="true">${content}</span></div><button class="icon-button f90-promo-pause" data-action="toggle-promo" aria-label="إيقاف حركة الشريط" aria-pressed="false" title="إيقاف الحركة">Ⅱ</button>`;
   }
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = () => image(f90Fallback(), "قيد التعبئة", "f90-refill-image");
@@ -1040,9 +1018,11 @@
             empty("لا توجد إشعارات جديدة", "bell"),
           );
       } else if (page === "search") {
-        const q = (id || $("globalSearch").value).trim().toLocaleLowerCase("ar");
+        const searchInput = $("globalSearch");
+        const q = String(id || searchInput?.value || "").trim().toLocaleLowerCase("ar");
         main.innerHTML =
-          pageHead("نتائج البحث", q) +
+          pageHead("البحث في المتجر", q ? "نتائج البحث عن: " + e(q) : "ابحث عن الألعاب والتطبيقات والخدمات") +
+          `<form id="f90SearchPageForm" class="f90-search-page-form" role="search"><label for="f90SearchPageInput">ابحث في جميع أقسام المتجر</label><div><input id="f90SearchPageInput" type="search" value="${e(q)}" placeholder="اسم لعبة أو تطبيق أو خدمة..." autocomplete="off" required><button class="button" type="submit">${I("search")} بحث</button></div></form>` +
           `<div class="image-grid">${S.categories
             .filter((c) => c.name.toLocaleLowerCase("ar").includes(q))
             .map(categoryTile)
@@ -1384,6 +1364,12 @@
   }
   document.addEventListener("submit", async (ev) => {
     const form = ev.target;
+    if (form.id === "f90SearchPageForm") {
+      ev.preventDefault();
+      const term=$("f90SearchPageInput")?.value.trim();
+      if(term)location.hash=href("search",term);
+      return;
+    }
     if (form.id === "searchForm" || form.id === "homeSearchForm") {
       ev.preventDefault();
       S.offset = 0;
@@ -1571,7 +1557,12 @@
           localStorage.setItem("f90-favorites", JSON.stringify(S.favorites));
         } catch {}
         toast(S.favorites.includes(id) ? "أضيفت للمفضلة" : "أزيلت من المفضلة");
-      } else if (action === "hide-promo") $("promotionBar").hidden = true;
+      } else if (action === "toggle-promo") {
+        const paused=$("promotionBar").classList.toggle("f90-promo-paused");
+        button.textContent=paused?"▶":"Ⅱ";
+        button.setAttribute("aria-pressed",String(paused));
+        button.setAttribute("aria-label",paused?"تشغيل حركة الشريط":"إيقاف حركة الشريط");
+      }
       else if (action === "next-banner" || action === "prev-banner") {
         S.carousel += action === "next-banner" ? 1 : S.banners.length - 1;
         home();
