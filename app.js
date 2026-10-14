@@ -280,12 +280,22 @@
           "",
         )}<a class="button ghost small" href="#/install">تثبيت التطبيق</a></nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div></div>`;
   }
+  let previousUnreadCount = null;
   function updateStoreBell() {
     const badge = $("storeBellCount");
     if (!badge) return;
     let seen = "";
     try { seen = localStorage.getItem("f90-news-seen") || ""; } catch {}
     const unread = (S.news || []).filter((n) => n.created_at && n.created_at > seen).length;
+    const bell = $("storeBell");
+    if (unread > 0 && (previousUnreadCount === null || unread > previousUnreadCount) && bell) {
+      bell.classList.remove("f90-bell-new");
+      void bell.offsetWidth;
+      bell.classList.add("f90-bell-new");
+    } else if (!unread) {
+      bell?.classList.remove("f90-bell-new");
+    }
+    previousUnreadCount = unread;
     badge.hidden = !unread;
     badge.textContent = unread > 9 ? "9+" : String(unread);
     $("storeBell")?.setAttribute("aria-label", unread ? `الأخبار والإشعارات · ${unread} جديدة` : "الأخبار والإشعارات");
