@@ -1845,6 +1845,7 @@
       S.me = null;
       S.walletStale = false;
       S.savedRecipients = [];
+      if (S.settings?.store_name) chrome();
       if (location.hash !== "#/auth" && location.hash !== "#/register") {
         location.hash = "#/auth";
       } else if (S.settings?.config) {
