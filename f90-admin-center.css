@@ -1,0 +1,22 @@
+
+/* F90 admin single-place operational monitoring and management shortcuts */
+.f90-admin-center-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+.f90-admin-center-grid>.panel{border:1px solid color-mix(in srgb,var(--accent) 37%,var(--line));border-radius:19px;padding:21px;background:radial-gradient(circle at 0 0,rgba(242,39,83,.11),transparent 65%),var(--surface)}
+.f90-admin-center-grid>.panel h2{font-size:17px;margin:0 0 9px}
+.f90-admin-center-grid>.panel p{font-size:13px;color:var(--muted);line-height:1.85;min-height:52px}
+.f90-admin-center-grid>.panel .button{margin:5px;min-height:41px}
+.f90-design-link{text-decoration:none;display:flex;flex-direction:column;align-items:flex-start;transition:box-shadow .17s,border-color .17s}
+.f90-design-link span{font-size:12px;font-weight:800;color:var(--accent);margin-top:auto}
+.f90-design-link:hover{border-color:var(--accent)!important;box-shadow:0 0 16px color-mix(in srgb,var(--accent) 17%,transparent)}
+.f90-monitor-stat{min-width:0;border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line));border-radius:16px;padding:14px}
+.f90-monitor-stat small{display:block;font-size:11px;color:var(--muted)}
+.f90-monitor-stat strong{display:block;margin-block:6px;font-size:clamp(18px,2.6vw,26px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.f90-monitor-stat span{color:var(--muted);font-size:11px}
+.f90-monitor-list{display:grid;gap:11px;margin:16px 0}
+.f90-monitor-list article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;padding:12px;border:1px solid var(--line);background:var(--surface2);border-radius:12px}
+.f90-monitor-list article strong{min-width:0;overflow-wrap:anywhere}
+.f90-monitor-list article span{color:var(--muted);font-size:12px}
+.f90-monitor-list article span:nth-of-type(2){grid-column:1/-1}
+.f90-monitor-fault{grid-column:1/-1;color:var(--danger,#e9435a);overflow-wrap:anywhere}
+@media(max-width:700px){.f90-admin-center-grid{grid-template-columns:1fr}.f90-admin-center-grid>.panel{padding:14px}.f90-monitor-list article{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.f90-design-link{transition:none}}
