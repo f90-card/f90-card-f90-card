@@ -1020,7 +1020,7 @@
     S.importServices = services;
     const visibleServices = services.slice(0, 1000);
     const omega = p.adapter === "omega";
-    const bulk = ["omega", "yassen"].includes(p.adapter);
+    const bulk = ["omega", "yassen", "smm"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
     const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
     const priceNotice = ratePerUSD
@@ -1096,7 +1096,7 @@
     return fallbackResult;
   }
   async function importAllProviderDrafts(provider, status) {
-    if (!provider || !["omega", "yassen"].includes(provider.adapter))
+    if (!provider || !["omega", "yassen", "smm"].includes(provider.adapter))
       throw new Error("الاستيراد الشامل متاح لياسين وأوميغا");
     const services = S.importServices;
     if (!Array.isArray(services) || !services.length)
@@ -1939,7 +1939,7 @@
         return providers();
       } else if (action === "omega-import-all") {
         const provider = S.importProvider;
-        if (!provider || !["omega", "yassen"].includes(provider.adapter)) throw new Error("المورّد غير مدعوم");
+        if (!provider || !["omega", "yassen", "smm"].includes(provider.adapter)) throw new Error("المورّد غير مدعوم");
         const count = S.importServices?.length || 0;
         if (!count) throw new Error("لا توجد خدمات للاستيراد");
         modal("تأكيد استيراد جميع خدمات المورّد",
