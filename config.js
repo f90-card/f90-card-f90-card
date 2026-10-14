@@ -37,8 +37,6 @@
         autoRefreshToken: true,
         detectSessionInUrl: true,
         storage: window.localStorage,
-        storageKey: "f90-card-auth",
-        flowType: "pkce",
       },
     },
   );
