@@ -898,6 +898,9 @@
       await mfaChallenge();
       return;
     }
+    if (!["welcome", "", "auth"].includes(page)) {
+      main.innerHTML = '<div class="loading" role="status" aria-live="polite">جارٍ تحميل الصفحة…</div>';
+    }
     try {
       if (
         S.settings.config.maintenance?.enabled &&
@@ -1690,9 +1693,9 @@
       const accountRequest = refreshMe().catch((error) => error);
       Object.assign(S, await catalogRequest);
       if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
+      chrome();
       const accountResult = await accountRequest;
       if (accountResult instanceof Error) throw accountResult;
-      chrome();
       let initialTheme = S.settings.config.default_theme || "dark";
       try {
         initialTheme = localStorage.getItem("f90-theme") || initialTheme;
