@@ -554,12 +554,12 @@
         "اسحب لترتيب العناصر، أو استخدم الأسهم. التكرار ينشئ نسخة مخفية حتى تنشرها.",
         `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>`,
       ) +
-      `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع المورّدين"], ["__local__", "منتجات بدون مورّد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div>${kind === "products" ? '<div class="f90-bulk-bar"><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button><button type="button" class="button secondary small" data-action="bulk-image">صورة موحدة/إزالة الصور</button><button type="button" class="button danger small" data-action="bulk-delete">حذف المحدد</button></div>' : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
+      `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع المورّدين"], ["__local__", "منتجات بدون مورّد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}</div>${kind === "products" ? '<div class="f90-bulk-bar"><input id="productNameSearch" type="search" placeholder="بحث عن الخدمات والمنتجات..." aria-label="بحث عن الخدمات" value="${e(S.productSearch || '')}" style="min-width:180px;flex:1"><button type="button" class="button secondary small" data-action="bulk-fulfillment" data-mode="manual">شحن يدوي للمحدد</button><button type="button" class="button secondary small" data-action="bulk-fulfillment" data-mode="automatic">شحن آلي للمحدد</button><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button><button type="button" class="button secondary small" data-action="bulk-image">صورة موحدة/إزالة الصور</button><button type="button" class="button danger small" data-action="bulk-delete">حذف المحدد</button></div>' : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
         rows
           .filter(
             (r) =>
               kind === "products"
-                ? (!S.categoryFilter || r.category_id === S.categoryFilter) && (!S.providerFilter || (S.providerFilter === "__local__" ? !(S.internal || []).some((i) => i.product_id === r.id && i.provider_id) : (S.internal || []).some((i) => i.product_id === r.id && i.provider_id === S.providerFilter)))
+                ? (!S.productSearch || String(r.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase())) && (!S.categoryFilter || r.category_id === S.categoryFilter) && (!S.providerFilter || (S.providerFilter === "__local__" ? !(S.internal || []).some((i) => i.product_id === r.id && i.provider_id) : (S.internal || []).some((i) => i.product_id === r.id && i.provider_id === S.providerFilter)))
                 : kind === "categories"
                   ? (S.sectionFilter === "all" || (!S.sectionFilter || S.sectionFilter === "root" ? !r.parent_id : r.parent_id === S.sectionFilter))
                   : true,
@@ -582,14 +582,14 @@
     if (node) node.textContent = selectedBulkProducts().length + " محدد";
   }
   async function runBulkProducts(pending, status) {
-    if (!pending || !["show", "hide", "move", "image", "delete"].includes(pending.mode)) throw new Error("عملية جماعية غير معروفة");
+    if (!pending || !["show", "hide", "move", "image", "delete", "fulfillment"].includes(pending.mode)) throw new Error("عملية جماعية غير معروفة");
     let value = pending.mode === "move" ? pending.categoryId : null;
     if (pending.mode === "image") {
       const file = $("bulkImageFile")?.files?.[0];
       value = file ? (await A.upload(file, "f90-images", "products")).url :
         $("bulkImageURL")?.value?.trim() || "";
     }
-    const result = await A.call("catalog.bulk_products", { ids: pending.ids, mode: pending.mode, value });
+    const result = pending.mode === "fulfillment" ? await A.call("catalog.bulk_fulfillment", { ids: pending.ids, mode: pending.fulfillment }) : await A.call("catalog.bulk_products", { ids: pending.ids, mode: pending.mode, value });
     if (status) status.textContent = "اكتمل تعديل " + result.changed + " منتج";
     return { done: result.changed, failed: 0 };
   }
@@ -1694,7 +1694,7 @@
           toast(pending.enable ? "تم تفعيل المورّد" : "تم إيقاف خدمات المورّد");
           await providers();
         } finally { if (b.isConnected) b.disabled = false; }
-      } else if (action === "bulk-select-visible") {
+      } else if (action === "bulk-fulfillment") { const chosen = selectedBulkProducts(); if (!chosen.length) throw new Error("حدد منتجًا واحدًا على الأقل"); if (!manager()) throw new Error("هذا الإجراء متاح للمدير فقط"); const mode = b.dataset.mode; if (!["manual","automatic"].includes(mode)) throw new Error("طريقة تنفيذ غير صحيحة"); pendingBulk = { ids: chosen.map(p => p.id), mode: "fulfillment", fulfillment: mode }; modal("تعديل طريقة شحن " + chosen.length + " منتج", `<p>تغيير طريقة التنفيذ إلى ${mode === "automatic" ? "آلي عبر المورّد المرتبط" : "يدوي"} للمنتجات المحددة فقط. لن تتغير الأسعار أو الصور.</p><button class="button" data-action="bulk-confirm">تأكيد الحفظ</button><p id="bulkProgress" class="muted small"></p>`); } else if (action === "bulk-select-visible") {
         document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = true; });
         updateBulkCount();
       } else if (action === "bulk-clear") {
@@ -2206,7 +2206,7 @@
     }
   });
   document.addEventListener("input", (ev) => {
-    if (ev.target.id === "providerServiceSearch" || ev.target.matches('#importForm [name="margin_percent"]')) updateProviderImportPreview();
+    if (ev.target.id === "productNameSearch") { S.productSearch = ev.target.value; document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const p = S.products.find(x => x.id === row.dataset.rowId); row.hidden = !String(p?.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase()); }); } if (ev.target.id === "providerServiceSearch" || ev.target.matches('#importForm [name="margin_percent"]')) updateProviderImportPreview();
     if (ev.target.id === "imageURL")
       $("imagePreview").innerHTML = image(
         ev.target.value,
