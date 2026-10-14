@@ -7,7 +7,7 @@
 .promotion .f90-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;line-height:1.2;color:#fff;white-space:nowrap}
 .promotion .f90-ticker-item img{max-height:23px!important;max-width:32px!important;width:auto;height:auto;object-fit:contain}
 .promotion .f90-promo-pause{display:none!important}
-@keyframes f90-ticker-rtl{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes f90-ticker-rtl{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 .f90-swipe-hero{margin-bottom:0!important;overflow:visible!important}
 .f90-swipe-hero .f90-hero-link{overflow:hidden;border-radius:inherit}
 .f90-swipe-hero .f90-hero-controls{position:absolute!important;top:calc(100% + 7px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%);background:transparent!important;padding:0!important;z-index:4}
