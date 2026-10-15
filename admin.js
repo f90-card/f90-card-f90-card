@@ -1760,11 +1760,11 @@
       '<p>1. افتح <b>@BotFather</b> داخل Telegram وأنشئ بوتًا عبر /newbot. 2. افتح البوت الجديد وأرسل /start. 3. الصق توكن البوت واضغط «اكتشاف Chat ID». 4. احفظ الاتصال واختبر الإرسال.</p>'+
       '<form id="telegramConnectForm" autocomplete="off">'+
       field("bot_token","رمز Telegram Bot Token السري","password","",'required autocomplete="new-password" placeholder="123456789:..."')+
-      field("chat_id","معرّف محادثة تلجرام Chat ID","text","",'required inputmode="numeric" pattern="-?[0-9]{4,}" placeholder="123456789"')+
+      field("chat_id","معرّف المحادثة (يمكن اكتشافه تلقائيًا)","text","",'inputmode="numeric" pattern="-?[0-9]{4,}" placeholder="يُكتشف بعد إرسال /start"')+
       '<div id="telegramDiscoveredChats" class="f90-telegram-chat-choices" aria-live="polite"></div>'+
       '<div class="actions"><button class="button secondary" type="button" data-action="telegram-find-chat">اكتشاف Chat ID من البوت</button>'+
       '<button class="button" type="submit">حفظ اتصال تلجرام المشفر</button></div></form>'+
-      '<p class="muted small">يحفظ الخادم التوكن مشفرًا ولا يظهر في المتجر أو GitHub. يمكنك استبداله عند الحاجة. يرسل العامل التنبيهات كل دقيقة.</p>'+
+      '<p class="muted small">أرسل /start إلى البوت أولًا ثم احفظ. إذا كانت محادثة واحدة متاحة سيكتشف الموقع معرّفها تلقائيًا، وإذا ظهرت عدة محادثات اختر المستلم بنفسك. التوكن يُحفظ مشفرًا في Supabase ولا يظهر في GitHub. يرسل العامل التنبيهات كل دقيقة.</p>'+
       '<button class="button secondary" type="button" data-action="telegram-test" '+(result.configured?'':'disabled')+'>إرسال رسالة اختبار</button></section>'+
       '<section class="panel"><h2>سجل آخر إشعارات تلجرام</h2><p class="muted small">الإشعارات الظاهرة أدناه تشمل المحاولات الحالية؛ عدم وجود حالة «أُرسلت» يعني أن وصول الرسائل لم يتأكد بعد.</p>'+
       '<div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الحالة</th><th>الوقت</th><th>المحاولات</th></tr></thead><tbody>'+
@@ -1772,10 +1772,26 @@
       '</tbody></table></div></section>';
   }
   async function saveTelegramConnection(form){
-    const bot=String(form.elements.bot_token.value||"").trim(),
-      chat=String(form.elements.chat_id.value||"").trim();
-    if(!/^[0-9]{6,}:[A-Za-z0-9_-]{20,}$/.test(bot) || !/^-?[0-9]{4,}$/.test(chat))
-      throw new Error("تحقق من رمز البوت ومعرّف المحادثة");
+    const bot=String(form.elements.bot_token.value||"").trim();
+    let chat=String(form.elements.chat_id.value||"").trim();
+    if(!/^[0-9]{6,}:[A-Za-z0-9_-]{20,}$/.test(bot))
+      throw new Error("رمز البوت غير صحيح من حيث الصيغة");
+    if(!chat){
+      // A valid token is not the chat destination. Discover it only after
+      // the owner starts a chat; never pick an arbitrary recipient.
+      const discovery=await A.call("staff.telegram.discover",{bot_token:bot});
+      const chats=Array.isArray(discovery?.chats)?discovery.chats.filter(c=>/^-?[0-9]{4,}$/.test(String(c.id))):[];
+      if(chats.length!==1){
+        const target=document.querySelector("#telegramDiscoveredChats");
+        if(target && chats.length) target.innerHTML=
+          '<p class="muted small">وجدنا أكثر من محادثة. اختر المستلم من القائمة ثم اضغط حفظ مرة أخرى:</p>'+
+          chats.map(c=>'<button type="button" class="button secondary small" data-action="telegram-select-chat" data-chat-id="'+e(c.id)+'">'+e(c.name||"محادثة تلجرام")+' ('+e(c.id)+')</button>').join("");
+        throw new Error(chats.length?"اختر المحادثة التي تستقبل تنبيهات الإدارة.":"افتح البوت في تلجرام وأرسل /start، ثم أعد الحفظ. إذا كان لديه Webhook قديم فافصله من النظام السابق أولًا.");
+      }
+      chat=String(chats[0].id);
+      form.elements.chat_id.value=chat;
+    }
+    if(!/^-?[0-9]{4,}$/.test(chat))throw new Error("معرّف المحادثة غير صحيح");
     await A.call("staff.telegram.connect",{bot_token:bot,chat_id:chat});
     form.elements.bot_token.value="";
     toast("تم حفظ بوت تلجرام بشكل آمن. جرّب إرسال رسالة اختبار.");
