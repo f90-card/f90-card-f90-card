@@ -248,3 +248,17 @@
 .f90-home-phone-link:not([href]),.f90-home-laptop-link:not([href]){cursor:default;pointer-events:none}
 @media(max-width:390px){.f90-currency-welcome-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .f90-maintenance-screen{padding:12px 6px!important}}
+
+/* F90 radio: clear, chrome-style official logo with animated red sound rings. */
+.f90-radio-orb{background:radial-gradient(circle at 40% 20%,#e01b4924,#04050abf 70%)!important;
+ border:2px solid #f93869d9!important;box-shadow:0 0 9px #fb275e6b,inset 0 0 16px #fb275e3a!important}
+.f90-radio-orb::before,.f90-radio-orb::after{content:"";position:absolute;inset:-3px;
+ pointer-events:none;border:1.5px solid #ff416dcc;border-radius:50%;opacity:.8;animation:f90RadioNeonWaves 2.6s ease-out infinite}
+.f90-radio-orb::after{animation-delay:1.3s}
+.f90-radio-default-logo,.f90-radio-custom-icon{position:relative;z-index:2;filter:drop-shadow(0 0 6px #f42b69cc);
+ opacity:.96}
+@keyframes f90RadioNeonWaves{0%{transform:scale(1);opacity:.85}100%{transform:scale(1.43);opacity:0}}
+.f90-install-platform span{position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}
+.f90-install-platform{min-height:81px}
+@media(prefers-reduced-motion:reduce){.f90-radio-orb::before,.f90-radio-orb::after{animation:none!important;opacity:.3}}
