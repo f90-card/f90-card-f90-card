@@ -87,7 +87,7 @@
       ogg:"audio/ogg",mp4:"video/mp4",webm:"video/webm"};
     const rawMime=String(file?.type||"").toLowerCase();
     const suffix=String(file?.name||"").split(".").pop().toLowerCase();
-    const mediaMime=radio ? (radioMimeAliases[rawMime]||rawMime||radioMimes[suffix]||"") : file.type;
+    const mediaMime=radio ? (radioMimeAliases[rawMime]||(["audio/mpeg","audio/ogg","audio/wav","audio/mp4","audio/aac","audio/webm","video/mp4","video/webm"].includes(rawMime)?rawMime:(radioMimes[suffix]||rawMime))) : file.type;
     const types = [
       "image/jpeg",
       "image/png",
@@ -95,7 +95,7 @@
       ...(bucket === "f90-images" || bucket === "f90-avatars"
         ? ["image/gif"] : []),
       ...(video || radio ? ["video/mp4","video/webm"] : []),
-      ...(audio || radio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4","audio/aac"] : []),
+      ...(audio || radio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4","audio/aac",...(radio?["audio/webm"]:[])] : []),
     ];
     if (!types.includes(mediaMime)) throw new Error(radio ? "يرجى رفع ملف صوت أو فيديو بالصيغة المدعومة" : video ? "صيغة الفيديو غير مدعومة" : audio ? "صيغة الملف الصوتي غير مدعومة" : "اختر صورة بصيغة مدعومة");
     const {
@@ -109,7 +109,7 @@
       "image/gif": "gif",
       "video/mp4": "mp4",
       "video/webm": "webm",
-      "audio/mpeg":"mp3", "audio/ogg":"ogg", "audio/wav":"wav","audio/mp4":"m4a", "audio/aac":"aac",
+      "audio/mpeg":"mp3", "audio/ogg":"ogg", "audio/wav":"wav","audio/mp4":"m4a", "audio/aac":"aac", "audio/webm":"webm",
     }[mediaMime];
     const path =
       (bucket === "f90-images" || bucket === "f90-videos" || bucket === "f90-audio" || bucket === "f90-radio" ? folder || "catalog" : user.id) +
