@@ -25,9 +25,9 @@ jobs:
         run: |
           git config user.name 'F90 Campaign Bot'
           git config user.email 'f90-campaign-bot@users.noreply.github.com'
-          git pull --rebase origin main
           git add marketing/screenshots/*.png
           if ! git diff --staged --quiet; then
             git commit -m 'marketing: capture actual store mobile homepage'
+            git pull --rebase origin main
             git push
           fi
