@@ -1091,7 +1091,7 @@
     const omega = p.adapter === "omega";
     const bulk = ["omega", "yassen", "smm"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
-    const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
+    const ratePerUSD = p.adapter==="yassen"&&p.currency==="ILS" ? Number(p.config?.supplier_ils_per_usd??3.2) : fx?.is_enabled&&Number(fx.per_usd)>0?Number(fx.per_usd):null;
     const priceNotice = ratePerUSD
       ? `<div class="notice">عملة المورّد: ${e(p.currency)} · سعر الصرف المعتمد: ${e(ratePerUSD)} ${e(p.currency)} مقابل 1 USD. الأسعار أدناه تقديرية وفق الهامش، ويُعاد حسابها على الخادم وقت الاستيراد.</div>`
       : '<div class="notice warning">سعر صرف عملة المورّد غير مفعّل أو غير مضبوط. يمكنك معاينة الخدمات، لكن لا يمكن استيرادها حتى تضبط سعر الصرف في لوحة الإدارة.</div>';
@@ -1211,7 +1211,7 @@
     const form = $("importForm");
     if (!form) return;
     const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
-    const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
+    const ratePerUSD = S.importProvider?.adapter==="yassen"&&S.importProvider.currency==="ILS" ? Number(S.importProvider.config?.supplier_ils_per_usd??3.2) : fx?.is_enabled&&Number(fx.per_usd)>0?Number(fx.per_usd):null;
     const margin = Number(form.elements.margin_percent?.value);
     const validMargin = Number.isFinite(margin) && margin >= 0 && margin <= 10000;
     form.querySelectorAll("[data-import-preview]").forEach((cell) => {
@@ -2247,8 +2247,9 @@
     }
     if (form.id === "importForm") {
       const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
-      const perUSD = Number(fx?.per_usd);
-      if (!fx?.is_enabled || !(perUSD > 0)) throw new Error("اضبط سعر صرف عملة المورّد قبل الاستيراد");
+      const perUSD = S.importProvider?.adapter==="yassen"&&S.importProvider.currency==="ILS" ?
+        Number(S.importProvider.config?.supplier_ils_per_usd??3.2):Number(fx?.per_usd);
+      if (!(perUSD>0)||(!fx?.is_enabled&&S.importProvider?.adapter!=="yassen"))throw new Error("اضبط سعر صرف المورّد قبل الاستيراد");
       const margin = Number(d.margin_percent);
       if (!Number.isFinite(margin) || margin < 0 || margin > 10000) throw new Error("هامش الربح غير صالح");
       if (!d.category_id || !S.categories.some((category) => category.id === d.category_id))
