@@ -114,25 +114,13 @@
     try {
       localStorage.setItem("f90-theme", v);
     } catch {}
+    window.F90ThemeBackground?.setTheme(v);
     const toggle=$("themeToggle");
     if(toggle){toggle.setAttribute("aria-pressed",String(v==="cream"));toggle.querySelector(".f90-theme-toggle-icon").textContent=v==="cream"?"☀":"☾";toggle.querySelector(".f90-theme-toggle-label").textContent=v==="cream"?"تفعيل الثيم الداكن":"تفعيل الثيم الفاتح";}
   }
   function brand() {
     const c = S.settings.config || {};
-    const siteBg=C.safeUrl(c.site_background?.enabled ? c.site_background.url : "");
-    if(siteBg){
-      const dim=Math.max(0,Math.min(0.9,Number(c.site_background?.dim??0.48)));
-      document.body.style.backgroundImage='linear-gradient(rgba(8,8,13,'+dim+'),rgba(8,8,13,'+dim+')), url('+JSON.stringify(siteBg)+')';
-      document.body.style.backgroundSize="cover";
-      document.body.style.backgroundAttachment="fixed";
-      document.body.style.backgroundPosition="center";
-      document.body.style.backgroundRepeat="no-repeat";
-    }else{
-      document.body.style.backgroundImage="";
-      document.body.style.backgroundSize="";
-      document.body.style.backgroundAttachment="";
-      document.body.style.backgroundPosition="";
-    }
+    window.F90ThemeBackground?.sync(c,S.settings.logo_url);
     window.F90MediaPlayer?.sync(c);
     document.documentElement.style.setProperty("--f90-edge-color", /^#[0-9a-fA-F]{6}$/.test(c.edge_glow_color || "") ? c.edge_glow_color : "#ff2444");
     document.documentElement.style.setProperty("--f90-edge-duration", `${Math.max(4, Math.min(60, Number(c.edge_glow_speed) || 14))}s`);
