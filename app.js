@@ -2198,7 +2198,10 @@
       }
     }
   });
+  let bootRetryTimer = null;
+  let bootRetryAttempts = 0;
   async function boot() {
+    if (bootRetryTimer) { clearTimeout(bootRetryTimer); bootRetryTimer = null; }
     try {
       const catalogRequest = A.call("catalog");
       const accountRequest = refreshMe().catch((error) => error);
@@ -2238,6 +2241,7 @@
       promotions();
       await route();
       document.documentElement.dataset.f90Ready = "1";
+      bootRetryAttempts = 0;
       // Receive new supplier price/status news while the store remains open.
       // This is a read-only poll; never modify checkout quotes or local catalog mid-purchase.
       setInterval(async () => {
@@ -2311,10 +2315,21 @@
       if ("serviceWorker" in navigator)
         navigator.serviceWorker.register("./sw.js").catch(() => {});
     } catch (err) {
-      main.innerHTML =
-        pageHead("تعذّر تحميل المتجر") +
-        `<div class="notice error">${e(message(err))}</div><button class="button" id="bootRetry">إعادة المحاولة</button>`;
-      $("bootRetry").addEventListener("click", boot);
+      // A read-only emergency catalog may already be visible. Do not hide it.
+      if (!window.F90StartupRescue?.hasShown) {
+        main.innerHTML =
+          pageHead("جارٍ استعادة الاتصال بالخادم") +
+          `<div class="notice error">${e(message(err))}</div><button class="button" id="bootRetry">إعادة المحاولة الآن</button>`;
+        $("bootRetry")?.addEventListener("click", boot);
+      }
+      if (bootRetryAttempts < 3) {
+        const delay = [3000, 7000, 15000][bootRetryAttempts++];
+        bootRetryTimer = setTimeout(() => {
+          if (document.documentElement.dataset.f90Ready !== "1" && document.visibilityState !== "hidden") {
+            boot().catch(() => {});
+          }
+        }, delay);
+      }
     }
   }
   boot();
