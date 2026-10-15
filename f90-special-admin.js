@@ -42,7 +42,7 @@ async function renderSettings(main,settings){
  textarea("transfer_description","تفاصيل تحويل الأموال",c.transfer_description)+check("show_transfer","إظهار قسم التحويلات",c.show_transfer!==false)+'</section>'+
  '<section class="panel"><h2>بيع الحسابات والتصميم والمواقع</h2><div class="field-row">'+
  field("account_price_usd","سعر حساب Xena بالدولار (صفر = يُحدد لاحقًا)",c.account_price_usd||0,"number",'min="0" max="1000000" step="0.01"')+
- field("website_price_usd","سعر إنشاء الموقع بالدولار",c.website_price_usd||500,"number",'min="0" max="1000000" step="0.01"')+'</div>'+
+ '<div class="notice"><strong>سعر الموقع: 500$</strong><p>يُعدّل سعر خدمة «إنشاء موقع كامل ملك لك» من صفحة <a href="#/products">المنتجات</a> لأنها تستخدم الدفع الحقيقي من المحفظة.</p></div>'+'</div>'+
  textarea("account_description","وصف شراء حساب Xena",c.account_description)+
  textarea("website_description","وصف الموقع الكامل",c.website_description)+
  check("show_account","إظهار حسابات Xena",c.show_account!==false)+
@@ -119,7 +119,7 @@ document.addEventListener("submit",async ev=>{
  const d=new FormData(form);
  const old=currentSettings?.config?.special_services||{};
  const c={...old};
- for(const k of ["salary_usd_per_100k","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd","website_price_usd"]){
+ for(const k of ["salary_usd_per_100k","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd"]){
   const raw=Number(d.get(k));
   if(!Number.isFinite(raw)||raw<0)throw Error("قيمة غير صحيحة في "+k);
   c[k]=raw;
