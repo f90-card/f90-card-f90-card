@@ -1,110 +1,124 @@
-# F90 CARD Merchant API — Integration Guide
-**English technical reference | الشرح العربي أسفل الأقسام**
+# F90 CARD Merchant API Documentation
 
-> **Status:** The API routes, trader key creation, scopes, rate limiting, and usage logs below exist in F90 CARD. IP allowlists and Webhook delivery are **not yet implemented** and must not be assumed secure or active.
+This reference documents **F90 CARD's real production API**, not the supplier API.
 
-## 1. Getting access | تفعيل التاجر
-1. Register an account in F90 CARD, complete identity verification, and request **Trader** role from the store administrator.
-2. Log in and open `#/developers` in the store.
-3. Create an API token for your **server**, selecting scopes `catalog`, `balance`, and/or `orders`, a rate limit (10–120 requests per minute), and an optional expiration.
-4. **Copy the token when it is first shown**. F90 stores only its secure hash and a display prefix; later pages show the prefix, not the secret.
-5. The owner can review traders, revoke and manage keys, and view usage in the administrative console.
+## Endpoint and authentication
 
-**بالعربي:** الإدارة توافق على التاجر أولاً. ينشئ التاجر توكناً من حسابه، ويحفظه في خادم موقعه فقط، وليس في الواجهة العامة.
+**Base endpoint:** `https://xzqnrpycjxfbyrfaolud.supabase.co/functions/v1/f90-platform`
 
-## 2. Endpoint | عنوان الاتصال
-```text
+**Method:** HTTP `POST` with `Content-Type: application/json`
+
+**Required API header:** `x-f90-key: YOUR_F90_API_TOKEN`
+
+Responses use `{"data": ...}` on success and `{"error":{"code":"F90_...","message":"..."}}` on failure.
+
+A merchant must have a verified, active trader account. Only **one active token** is permitted per trader. A token rotation invalidates the previous token in the same database transaction. You can select permissions: `catalog`, `balance`, and `orders`; limit requests to 10–120 per minute; and set an expiration date.
+
+**Allow all IP addresses** is intended for testing only. When disabled, the server requires a configured address in the allowlist and a client IP header from its platform gateway. IP restrictions are supplemental and must not replace secret-token authentication. Availability of a trustworthy client IP header must be checked with your deployment before enabling restrictions.
+
+## Categories
+
+Scope: `catalog`.
+
+```http
 POST https://xzqnrpycjxfbyrfaolud.supabase.co/functions/v1/f90-platform
 Content-Type: application/json
-x-f90-key: YOUR_SERVER_SIDE_TOKEN
-```
-All requests are JSON over HTTPS. A successful response contains `data`; failures return `error` and an appropriate HTTP status.
+x-f90-key: YOUR_F90_API_TOKEN
 
-**بالعربي:** يُرسل الطلب من خادم التاجر. لا تُنسخ مفاتيح التاجر داخل HTML أو تطبيق الهاتف أو GitHub.
-
-## 3. Read products and wallet | المنتجات والرصيد
-```json
 {"action":"categories"}
 ```
+
+Response `data` is a list of objects with `id`, `name`, and `parent_id`.
+
+## Products
+
+Scope: `catalog`.
+
 ```json
 {"action":"services"}
 ```
+
+Returns `data` as an array of product objects. Useful fields include `service` (product UUID), `name`, `category`, `rate` (USD), `type`, `unit_quantity`, `min`, `max`, `quantity_step`, `fields`, `fulfillment` and `availability`.
+
+Get one product:
+
 ```json
 {"action":"service","service":"PRODUCT_UUID"}
 ```
+
+Review the returned required fields, availability, and quantity settings. An unavailable/refilling product must not be ordered.
+
+## Wallet balance
+
+Scope: `balance`.
+
 ```json
 {"action":"balance"}
 ```
-Display only the items returned as orderable and honour the service's unit quantity, allowed quantity step, customer fields, fulfillment mode, availability and price. Prices are in USD unless the response explicitly specifies another currency.
 
-**بالعربي:** يعرض `services` المنتجات والكمية وطريقة التنفيذ. راجع توافر المنتج والسعر قبل إنشاء الطلب.
+Returns `{"data":{"balance":125.5,"currency":"USD"}}` (example). Financial ledger amounts use USD.
 
-## 4. Create an order | إنشاء طلب
-The seller API exposes `add`; consult the live OpenAPI document and the API response for the precise service-specific customer fields. The standard shape is:
+## Quote a service
+
+Scope: `orders`. **Read-only**: does not charge a wallet.
+
+```json
+{"action":"quote","product_id":"PRODUCT_UUID","quantity":1}
+```
+
+Returns `data` with `subtotal_usd`, `discount_usd`, `total_usd`, and `quantity`.
+
+## Create a paid order
+
+Scope: `orders`. Uses your trader's wallet. **This creates a real order and may debit your wallet.** Generate a unique UUID reference for each intended order and reuse the *same reference* when recovering after a timeout.
+
 ```json
 {
-  "action":"add",
-  "service":"PRODUCT_UUID",
-  "quantity":1000,
-  "link":"CUSTOMER_ACCOUNT_IDENTIFIER",
-  "idempotency_key":"merchant-order-000001"
+  "action":"checkout",
+  "product_id":"PRODUCT_UUID",
+  "quantity":1,
+  "fields":{"account_id":"PLAYER_ACCOUNT"},
+  "idempotency_key":"ecbdd545-e616-4aee-8770-7eefa977bcd0"
 }
 ```
-Check the returned status and order identifier. **Never blindly retry an order after an ambiguous network failure.** Reuse the same idempotency key, inspect the order status, and request support when outcome is uncertain.
 
-**بالعربي:** الطلب يخصم من المحفظة حسب صلاحيات التاجر. `idempotency_key` يحمي من تكرار نفس الطلب عند انقطاع الاتصال.
+Use the exact `fields` required by the service. A first successful order returns status 201 and `{"data":{...order fields...}}`. Repeating the same reference with the same parameters returns the existing order, rather than creating another charge. Reuse of that reference with different data returns `F90_IDEMPOTENCY_CONFLICT`.
 
-## 5. Order status | متابعة الطلب
+## Order status
+
+Scope: `orders`.
+
 ```json
-{"action":"status","order":"ORDER_UUID"}
-```
-Query periodically with sensible backoff. Some orders require manual review or supplier confirmation. A delayed answer is not a reason to create another order.
-
-**بالعربي:** راقب الطلب باستخدام معرفه؛ لا تعِد إرساله لمجرد تأخر التنفيذ.
-
-## 6. Example server-side call | مثال برمجي
-```js
-// Node.js 20+, executed on the merchant SERVER only.
-const endpoint = "https://xzqnrpycjxfbyrfaolud.supabase.co/functions/v1/f90-platform";
-const token = process.env.F90_API_KEY;
-if (!token) throw new Error("F90_API_KEY missing");
-
-async function f90(action, payload = {}) {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-f90-key": token
-    },
-    body: JSON.stringify({ action, ...payload }),
-    signal: AbortSignal.timeout(20000)
-  });
-  const body = await response.json();
-  if (!response.ok || body.error) throw new Error(body.error?.message || String(response.status));
-  return body.data;
-}
-console.log(await f90("services"));
+{"action":"status","id":"ORDER_UUID"}
 ```
 
-## 7. API token and monitoring | حماية المفتاح
-- An approved verified trader can create, rotate by revoking and creating a new key, update granted scopes, and review server-recorded usage.
-- Keep the token secret in a server environment variable. Do not log or paste it into client-side code.
-- **Allowed source IP list:** NOT ACTIVE. No IP enforcement is applied by F90 to trader keys at this time. Do not show a list as though access is IP restricted.
-- **Webhook URL:** NOT ACTIVE. F90 does not deliver signed status callbacks at this time. Use `status` polling.
-- The owner can use **Admin → Traders & API** to review trader accounts, permissions, balances and keys.
+Returns `{"data":{"order":{...},"events":[...],"requests":[]}}`. Only your own orders are visible.
 
-**بالعربي:** حقول IP وWebhook مخطط لها وليست مفعّلة، لذلك لا تعتمد عليها لحماية المفتاح. الأساس الآن هو الصلاحيات والتوكن وتاريخ الانتهاء والحدود.
+## Order history
 
-## 8. Standard integration documents | ملفات المبرمج
-- `docs/openapi.json` — OpenAPI description supplied with F90
-- `docs/postman.json` — Postman collection
-- `docs/reseller-example.mjs` — server-side example
-- `docs/F90_PROVIDER_PROTOCOL_EN.md` — incoming supplier protocol/adapter guidelines
-- `docs/api-ar.md` — existing Arabic reference
+Scope: `orders`.
 
-## 9. Errors and operations | الأخطاء
-Handle unauthorized, forbidden, insufficient balance, price changed and rate limited responses without retry storms. Distinguish a confirmed error from an uncertain network failure. In case of doubt, query order status and consult admin.
+```json
+{"action":"history","kind":"orders","offset":0}
+```
 
-**بالعربي:** إذا انقطع الاتصال بعد عملية شراء فلا تعيد الطلب تلقائياً. راجع الحالة أولاً.
+Returns an object with `items` and `count`. Pages contain up to 50 entries.
 
-© F90 CARD — Technical merchant integration reference. This document contains no API secrets.
+## Error handling
+
+| HTTP | Code | Meaning |
+|---|---|---|
+| 401 | F90_AUTH | Missing, revoked, invalid or expired token |
+| 403 | F90_FORBIDDEN | Permission, role, status or IP blocked |
+| 403 | F90_VERIFICATION_REQUIRED | Account verification required |
+| 402 | F90_INSUFFICIENT_BALANCE | Insufficient funds |
+| 400 | F90_QUANTITY | Invalid quantity |
+| 400 | F90_FIELDS | Invalid or missing fields |
+| 409 | F90_REFILLING | Service temporarily unavailable |
+| 409 | F90_PRICE_CHANGED | Price changed |
+| 409 | F90_IDEMPOTENCY_CONFLICT | Reference already used differently |
+| 429 | F90_LIMIT | Too many requests |
+
+The API uses **POST actions**, not the GET routes of Yassen Card. No webhook delivery is currently provided. Merchant tokens belong on the merchant's backend, never in public frontend code or a repository.
+
+**Safety:** Avoid sending any paid order while testing an integration in production. Use the read-only catalog, balance, and quote actions first.
