@@ -222,6 +222,7 @@ async function harness(file = "index.html", options = {}) {
   });
   Object.assign(window, {
     F90API: A,
+    F90_CONFIG: { SUPABASE_URL: "https://example.invalid", SUPABASE_KEY: "test-public-key" },
     F90Core: require("../store-core.js"),
     F90Reports: {
       history: async () => {},
