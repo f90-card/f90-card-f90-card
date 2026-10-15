@@ -76,12 +76,9 @@
 
 /* Performance: skip painting off-screen catalog cards without removing or reordering them. */
 @supports (content-visibility:auto) {
-  .main-content .image-grid > .image-tile,
-  .main-content .image-grid > .category-tile,
-  .main-content .image-grid > .product-tile,
   .main-content .records > .record {
     content-visibility:auto;
-    contain-intrinsic-size:auto 230px;
+    contain-intrinsic-size:auto 95px;
   }
 }
 @media(max-width:650px) {
