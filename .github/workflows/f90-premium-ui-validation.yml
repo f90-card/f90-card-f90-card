@@ -1,0 +1,36 @@
+name: F90 premium checkout and install validation
+
+on:
+  push:
+    branches: [f90-premium-checkout-install-20261015]
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'f90-premium-checkout-install.css'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  ui-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - name: Check source syntax
+        run: |
+          node --check app.js
+          node --check api.js
+          node --check store-core.js
+      - name: Run basic and site safety tests
+        run: |
+          npm test
+          node --test tests/f90-audit.test.cjs
+          node --test tests/theme-parity.test.mjs
