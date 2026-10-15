@@ -68,6 +68,27 @@ test("Administration has its own install manifest", () => {
   assert.match(manifest.start_url,/admin\.html/);
   assert.match(adminHtml,/id="adminInstall"/);
 });
+test("Minimal welcome phone offers the real shared authentication form", () => {
+  const phone=read("f90-welcome-scene.js");
+  assert.match(phone,/id="authForm"/);
+  assert.match(phone,/data-mode="login"/);
+  assert.match(phone,/name="password"/);
+  assert.match(phone,/مرحبًا بك في كازية أف تسعين كارد/);
+  assert.match(app,/signInWithPassword/);
+});
+test("IP settings remain editable after a merchant token is issued", () => {
+  assert.match(app,/API TOKEN Settings/);
+  assert.match(app,/Allowed IP addresses/);
+  assert.match(app,/name="allow_all_ips"/);
+  assert.match(app,/key\.update/);
+});
+test("Install icons can be uploaded at both PWA-required sizes", () => {
+  assert.match(admin,/uploadAppInstallIcons/);
+  assert.match(admin,/\[192,512\]/);
+  assert.match(admin,/admin_app_icon_192_url/);
+  assert.match(app,/f90-install-manifest\?app=store/);
+  assert.match(admin,/f90-install-manifest\?app=admin/);
+});
 test("Merchant and client entry points use the latest F90 styles", () => {
   assert.match(mainHtml,/f90-store-polish-2026\.css/);
   assert.match(adminHtml,/f90-store-polish-2026\.css/);
