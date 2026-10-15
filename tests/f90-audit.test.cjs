@@ -129,3 +129,41 @@ test("Manager balance adjustments preserve a reason and traceable idempotency ke
 test("No test makes any paid order or wallet adjustment", () => {
   assert.doesNotMatch(read(__filename.slice(root.length+1)), /\b(?:fetch|supabase\.from)\([^)]*\)\s*\.\s*(?:insert|update|delete)\(/);
 });
+
+
+test("Telegram connection selects exactly one discovered chat and clears token after secure save", async () => {
+  const start = admin.indexOf("  async function saveTelegramConnection(form){");
+  const end = admin.indexOf("  async function saveTelegramAlerts(form){", start);
+  assert.ok(start >= 0 && end > start);
+  const calls = [], form = { elements: {
+    bot_token: { value: "1234567890:" + "A".repeat(35) },
+    chat_id: { value: "" },
+  } };
+  const connect = vm.runInNewContext("(" + admin.slice(start,end).trim() + ")", {
+    A:{call:async(action,data)=>{
+      calls.push({action,data});
+      if(action==="staff.telegram.discover")return {chats:[{id:"123456789",type:"private",name:"Owner"}]};
+      return {configured:true};
+    }},
+    document:{querySelector:()=>null},e:String,toast:()=>{},telegramAlerts:async()=>{},
+  });
+  await connect(form);
+  assert.deepEqual(calls.map(x=>x.action),["staff.telegram.discover","staff.telegram.connect"]);
+  assert.equal(calls[1].data.chat_id,"123456789");
+  assert.equal(form.elements.bot_token.value,"");
+  assert.equal(form.elements.chat_id.value,"123456789");
+});
+
+test("Telegram connection never selects an arbitrary recipient if multiple chats exist", async () => {
+  const start=admin.indexOf("  async function saveTelegramConnection(form){");
+  const end=admin.indexOf("  async function saveTelegramAlerts(form){",start);
+  const calls=[], target={innerHTML:""};
+  const connect=vm.runInNewContext("("+admin.slice(start,end).trim()+")",{
+    A:{call:async(action)=>{calls.push(action);return {chats:[
+      {id:"123456789",name:"One"},{id:"987654321",name:"Two"}]};}},
+    document:{querySelector:()=>target},e:String,toast:()=>{},telegramAlerts:async()=>{},
+  });
+  await assert.rejects(connect({elements:{bot_token:{value:"1234567890:"+"A".repeat(35)},chat_id:{value:""}}}),/اختر المحادثة/);
+  assert.deepEqual(calls,["staff.telegram.discover"]);
+  assert.match(target.innerHTML,/telegram-select-chat/);
+});
