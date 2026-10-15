@@ -15,17 +15,23 @@
     if (session) headers.Authorization = "Bearer " + session.access_token;
     let response;
     try {
-      response = await fetch(endpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ action, ...data }),
-        cache: "no-store",
-      });
-    } catch {
-      // The server may have committed a payment before the connection failed.
-      const err = new Error("انقطع الاتصال قبل تأكيد نتيجة العملية");
-      err.uncertain = true;
-      throw err;
+      const isReadOnly=["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const timeout=isReadOnly?13000:0;
+      const controller=timeout?new AbortController():null;
+      const timeoutId=controller?setTimeout(()=>controller.abort(),timeout):null;
+      try{
+        response=await fetch(endpoint,{
+          method:"POST",headers,body:JSON.stringify({action,...data}),
+          cache:"no-store",...(controller?{signal:controller.signal}:{})
+        });
+      }finally{if(timeoutId)clearTimeout(timeoutId);}
+    } catch(err) {
+      // Read-only timeouts are safe to retry. Never assume a paid operation failed.
+      const isReadOnly=["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const failure=new Error(isReadOnly?"تأخر اتصال الخادم. حاول إعادة تحميل المتجر.":"انقطع الاتصال قبل تأكيد نتيجة العملية");
+      failure.code=isReadOnly?"F90_NETWORK_TIMEOUT":"F90_NETWORK_UNKNOWN";
+      failure.uncertain=!isReadOnly;
+      throw failure;
     }
     let body;
     try {
