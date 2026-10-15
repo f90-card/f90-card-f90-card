@@ -2114,14 +2114,14 @@
   });
   // New pages start from the top; browser Back/Forward restores each page's
   // previous scroll position. Keep this separate from catalog auto-refresh.
-  if("scrollRestoration" in history)history.scrollRestoration="manual";
+  if(window.history && "scrollRestoration" in window.history)window.history.scrollRestoration="manual";
   const f90ScrollPositions=new Map();
   let f90ScrollSequence=0,f90ScrollRestore=false;
   function f90EntryKey(){
-    const current=history.state?.f90ScrollEntry;
+    const current=window.history?.state?.f90ScrollEntry;
     if(typeof current==="string" && current.startsWith("f90-entry-"))return current;
     const fresh="f90-entry-"+Date.now().toString(36)+"-"+(++f90ScrollSequence);
-    history.replaceState({...history.state,f90ScrollEntry:fresh},"",location.href);
+    window.history?.replaceState?.({...(window.history?.state||{}),f90ScrollEntry:fresh},"",location.href);
     return fresh;
   }
   let f90ActiveEntry=f90EntryKey();
