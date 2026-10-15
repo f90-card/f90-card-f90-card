@@ -71,7 +71,10 @@ function render(kind,settings,user){
    '<p class="f90-special-tiny">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز • لا يوجد سقف ثابت معلن</p>'+
    moneyPanel(min*c.salary_usd_per_100k/100000,0,min*c.salary_usd_per_100k/100000,0,"الرصيد المستحق بعد الاعتماد");
  }else if(transfer){
-   fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+methods.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name_ar)+'</option>').join("")+'</select></label>'+
+   fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
+     methods.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name_ar)+'</option>').join("")+'</select></label>'+
+   '<div class="f90-transfer-methods" role="group" aria-label="خيارات التحويل">'+
+     methods.map((x,i)=>'<button type="button" data-f90-transfer-method="'+esc(x.id)+'" aria-pressed="'+(i===0)+'">'+esc(x.name_ar)+'</button>').join("")+'</div>'+
    input("amount","صافي المبلغ الذي سيصل للمستلم USD","number",'required min="1" max="1000000" step="0.01" inputmode="decimal" placeholder="0.00"')+
    '<label class="field"><span>بيانات المستلم والتحويل</span><textarea name="details" required minlength="3" maxlength="2000" rows="4" placeholder="بيانات المستلم والوسيلة ورقم الحساب أو العنوان"></textarea></label>'+
    moneyPanel(0,0,0,c.transfer_fee_percent,"إجمالي الخصم من المحفظة")+
@@ -112,6 +115,15 @@ function updateEstimate(form){
  form.querySelector("[data-fee]").textContent=fmt(fee);
  form.querySelector("[data-net]").textContent=fmt(k==="salary"?total:v);
 }
+document.addEventListener("click",ev=>{
+ const opt=ev.target.closest?.("[data-f90-transfer-method]");
+ if(!opt)return;
+ const form=opt.closest("form"),selector=form?.elements?.service;
+ if(!selector)return;
+ selector.value=opt.dataset.f90TransferMethod;
+ form.querySelectorAll("[data-f90-transfer-method]").forEach(btn=>
+    btn.setAttribute("aria-pressed",String(btn===opt)));
+});
 document.addEventListener("input",ev=>{if(ev.target.closest?.("#f90SpecialForm"))updateEstimate(ev.target.form);});
 document.addEventListener("submit",async ev=>{
  if(ev.target?.id!=="f90SpecialForm")return;
