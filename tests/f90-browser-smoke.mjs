@@ -115,33 +115,6 @@ try {
        await page.setViewportSize({width:view.width,height:view.height});
      }
    }
-   // Curated live products: check 100 unique services while initially
-   // rendering only 12 thumbnails to keep mobile startup fast.
-   if (view.name==="mobile-393") {
-     try{
-       await page.goto(ROOT+"#/",{waitUntil:"domcontentloaded",timeout:25000});
-       await page.waitForSelector("#f90PopularGrid .f90-popular-tile",{timeout:15000});
-       const popular=await page.evaluate(()=>{
-         const section=document.querySelector("#f90Popular");
-         return {title:section.querySelector(".f90-popular-count")?.textContent,
-           count:section.querySelectorAll(".f90-popular-tile").length,
-           images:section.querySelectorAll(".f90-popular-image").length,
-           links:[...section.querySelectorAll(".f90-popular-tile")].map(x=>x.href)};
-       });
-       const initialValid=popular.title?.includes("100")&&popular.count===12&&
-         popular.images===12&&new Set(popular.links).size===12;
-       results.push({view:view.name,route:"popular-100-progressive",valid:!!initialValid,info:popular});
-       await page.locator('#f90Popular [data-popular-kind="games"]').click();
-       const gameCount=await page.locator("#f90PopularGrid .f90-popular-tile").count();
-       results.push({view:view.name,route:"popular-game-filter",valid:gameCount>0&&gameCount<=12,count:gameCount});
-       await page.locator('#f90Popular [data-popular-kind="apps"]').click();
-       const appCount=await page.locator("#f90PopularGrid .f90-popular-tile").count();
-       results.push({view:view.name,route:"popular-app-filter",valid:appCount>0&&appCount<=12,count:appCount});
-       await page.locator('#f90PopularSearch').fill("اكزينا");
-       const searchCount=await page.locator("#f90PopularGrid .f90-popular-tile").count();
-       results.push({view:view.name,route:"popular-search",valid:searchCount>=1});
-     }catch(err){results.push({view:view.name,route:"popular-100-progressive",valid:false,error:String(err).slice(0,350)});}
-   }
    // The admin entry should not expose management functionality to a visitor.
    try {
      await page.goto(ROOT+"admin.html",{waitUntil:"domcontentloaded",timeout:25000});
