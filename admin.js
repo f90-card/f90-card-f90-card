@@ -533,6 +533,7 @@
       select("vip","المستوى",[["","تلقائي بحسب الإنفاق"],...S.vip.map(t=>[t.level,"تخصيص المستوى "+t.level])],u.vip_override||"")+
       '<button class="button secondary" type="submit">حفظ صلاحيات الحساب</button></form></section></section>'
     );
+    document.querySelector("#modalRoot .modal")?.classList.add("f90-finance-modal");
   }
   function categoryOptions(includeEmpty = true, exclude) {
     const list = includeEmpty ? [["", "بدون قسم / القسم الرئيسي"]] : [];
