@@ -1,0 +1,32 @@
+name: F90 creative expansion
+on:
+  push:
+    paths: ['marketing/creative_v3.py']
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-core
+          pip install --quiet pillow qrcode
+      - name: Produce independent campaign images
+        run: python marketing/creative_v3.py
+      - name: Commit images
+        run: |
+          git config user.name 'F90 Campaign Bot'
+          git config user.email 'f90-campaign-bot@users.noreply.github.com'
+          git add marketing/creative-v3/*.png
+          if ! git diff --staged --quiet; then
+            git commit -m "marketing: eight new F90 posters and scan codes"
+            git pull --rebase origin main
+            git push
+          fi
