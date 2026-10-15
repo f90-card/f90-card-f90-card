@@ -78,6 +78,14 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/staff\.telegram\.test/);
   assert.match(admin,/telegram-alerts/);
 });
+test("Telegram integration is manager-configured and never embeds bot secrets in public files", () => {
+  assert.match(admin,/telegramConnectForm/);
+  assert.match(admin,/staff\.telegram\.connect/);
+  assert.match(admin,/staff\.telegram\.discover/);
+  assert.match(admin,/staff\.telegram\.test/);
+  assert.doesNotMatch(mainHtml, /F90_TELEGRAM_BOT_TOKEN/);
+  assert.doesNotMatch(read("f90-welcome-scene.js"), /api\.telegram\.org\/bot/);
+});
 test("IP settings remain editable after a merchant token is issued", () => {
   assert.match(app,/API TOKEN Settings/);
   assert.match(app,/Allowed IP addresses/);
