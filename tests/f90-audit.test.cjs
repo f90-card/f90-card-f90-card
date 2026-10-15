@@ -40,14 +40,17 @@ test("VIP levels are up to 15 and admin discount cap is 3%", () => {
   assert.match(app,/Math\.min\(15,/);
   assert.match(admin,/max="3"/);
 });
-test("The burgundy welcome screen uses a real auth route and lazy optional media", () => {
-  const welcome=read("f90-welcome-scene.js");
-  assert.match(welcome,/promo\.enabled===true/);
-  assert.match(welcome,/source data-src/);
-  assert.match(welcome,/#\/auth/);
-  assert.match(app,/syncWelcomePhoneVideo/);
-  assert.match(app,/IntersectionObserver/);
-  assert.match(admin,/promo_video_enabled/);
+test("Welcome information page is restored and owner-only home phone media stays separate", () => {
+  const phone=read("f90-welcome-scene.js");
+  assert.match(app,/function welcome\(\)/);
+  assert.match(app,/f90-experience-hero/);
+  assert.match(app,/f90-experience-questions/);
+  assert.match(app,/F90WelcomeScene\.homePhone/);
+  assert.match(phone,/promo_video/);
+  assert.match(phone,/source data-src/);
+  assert.match(phone,/wa\.me/);
+  assert.doesNotMatch(phone,/id="authForm"/);
+  assert.match(admin,/promo_video_image_file/);
 });
 test("Real English API guide and single-token UI are available", () => {
   const docs=read("f90-merchant-v2.js");
@@ -68,13 +71,12 @@ test("Administration has its own install manifest", () => {
   assert.match(manifest.start_url,/admin\.html/);
   assert.match(adminHtml,/id="adminInstall"/);
 });
-test("Minimal welcome phone offers the real shared authentication form", () => {
-  const phone=read("f90-welcome-scene.js");
-  assert.match(phone,/id="authForm"/);
-  assert.match(phone,/data-mode="login"/);
-  assert.match(phone,/name="password"/);
-  assert.match(phone,/مرحبًا بك في كازية أف تسعين كارد/);
-  assert.match(app,/signInWithPassword/);
+test("Route scroll restoration is back-aware and Telegram settings are restricted to managers", () => {
+  assert.match(app,/f90ScrollPositions/);
+  assert.match(app,/history\.scrollRestoration="manual"/);
+  assert.match(admin,/telegramAlertsForm/);
+  assert.match(admin,/staff\.telegram\.test/);
+  assert.match(admin,/telegram-alerts/);
 });
 test("IP settings remain editable after a merchant token is issued", () => {
   assert.match(app,/API TOKEN Settings/);
