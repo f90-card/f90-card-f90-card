@@ -5,7 +5,7 @@
 const VOLUME_KEY="f90-radio-volume";
 let bubble=null,panel=null,slider=null,percent=null,note=null,media=null;
 let state={enabled:false,mode:"audio",revision:""},cachedSource="";
-let loading=false,retryDelay=3000,retryTimer=null,refreshing=false,lastInteraction=false,started=false;
+let loading=false,retryDelay=3000,retryTimer=null,stallTimer=null,refreshing=false,lastInteraction=false,started=false;
 function safeUrl(value){try{const u=new URL(String(value||""),location.href);return ["https:","http:"].includes(u.protocol)?u.href:"";}catch{return "";}}
 function getVolume(){try{const v=localStorage.getItem(VOLUME_KEY);return v===null?0.35:Math.max(0,Math.min(1,Number(v)||0));}catch{return .35;}}
 function setVolume(v){try{localStorage.setItem(VOLUME_KEY,String(v));}catch{}}
@@ -53,6 +53,7 @@ function ensure(){
 function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=null;}}
 function destroy(){
  clearRetry();
+ if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
  if(media){media.pause();media.removeAttribute("src");media.load();media.remove();media=null;}
  cachedSource="";started=false;loading=false;
 }
@@ -102,7 +103,7 @@ function createMedia(mode){
  el.volume=getVolume();el.muted=el.volume===0;
  document.body.appendChild(el);
  media=el;
- el.addEventListener("error",()=>{
+ const recover=()=>{
    if(!state.enabled||el!==media)return;
    setNote("جارٍ إعادة الاتصال بالصوت");
    cachedSource="";
@@ -113,6 +114,16 @@ function createMedia(mode){
      void prepareSource().then(()=>{if(started||lastInteraction)void begin();});
    },retryDelay);
    retryDelay=Math.min(retryDelay*2,30000);
+ };
+ el.addEventListener("error",recover);
+ el.addEventListener("waiting",()=>{
+   if(stallTimer)clearTimeout(stallTimer);
+   stallTimer=setTimeout(()=>{stallTimer=null;recover();},20000);
+ });
+ el.addEventListener("playing",()=>{
+   if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
+   clearRetry();
+   setNote("");
  });
  el.addEventListener("ended",()=>{
    if(state.enabled){try{el.currentTime=0;}catch{} void begin();}
