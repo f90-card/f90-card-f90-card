@@ -38,7 +38,7 @@ test("currency onboarding and maintenance do not change settled USD wallet figur
  assert.match(app,/currency-welcome/);
  assert.match(app,/select\("display_currency"/);
  assert.match(app,/default_display_currency/);
- assert.match(app,/!\\["manager", "admin"\\]\.includes\(S\.me\?\.role\)/);
+ assert.ok(app.includes('!["manager", "admin"].includes(S.me?.role)'));
  assert.match(app,/const value=code==="USD"\?Number\(usd\):C\.convert\(usd,code,S\.rates\)/);
 });
 test("restored original device media remains non-clickable by default, radio starts at 2%",()=>{
