@@ -1,0 +1,28 @@
+name: Inspect new F90 shorts visually
+on:
+  push:
+    branches: [main]
+    paths: ['marketing/review_motion_extra.py']
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python -m pip install --quiet pillow
+      - run: python marketing/review_motion_extra.py
+      - name: Save preview grid
+        run: |
+          git config user.name 'F90 Campaign Bot'
+          git config user.email 'f90-campaign-bot@users.noreply.github.com'
+          git add marketing/creative-v3/motion-extra-review.jpg
+          if ! git diff --staged --quiet; then
+            git commit -m 'marketing: motion QC review for four 25fps shorts'
+            git pull --rebase origin main
+            git push
+          fi
