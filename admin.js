@@ -53,6 +53,7 @@
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
     ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
     ["media-center", "مركز الموسيقى واليوتيوب", "music", ["manager"]],
+    ["telegram-alerts", "تنبيهات تلجرام", "send", ["manager"]],
     ["policies", "المعلومات والسياسات", "doc", ["manager"]],
     ["settings", "الهوية والإعدادات", "edit", ["manager"]],
   ];
@@ -1608,7 +1609,8 @@
          ["العملات","العملة الافتراضية وأسعار الصرف","rates"],
          ["مستويات VIP","المستويات والخصومات من 1 إلى 15","vip"],
          ["الخوادم والمراقبة","اتصال الخادم والموردين والتنبيهات","infrastructure"],
-         ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"]
+         ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"],
+         ["تلجرام","الإيداعات والتوثيق والطلبات المهمة فقط","telegram-alerts"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
   }
   async function uploadAppInstallIcons(file,folder){
@@ -1723,6 +1725,43 @@
     await A.call("settings.save",{data:next});
     await refreshSettings();mediaCenter();toast("تم حفظ مصدر الموسيقى وحالة تشغيله");
   }
+  async function telegramAlerts(){
+    const prefs=S.settings.config?.telegram_alerts||{};
+    let result;
+    try{result=await A.call("staff.telegram");}catch(error){
+      main.innerHTML=head("تنبيهات تلجرام","حصل خطأ أثناء قراءة سجل الإرسال")+
+        '<div class="notice error">'+e(String(error.message||error))+'</div>';return;
+    }
+    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض"};
+    const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة"};
+    const recent=(result.recent||[]).map(x=>
+      '<tr><td>'+e(labels[x.event_type]||x.event_type)+'</td><td>'+e(states[x.status]||x.status)+'</td>'+
+      '<td>'+e(C.date(x.created_at))+'</td><td>'+e(x.attempt_count||0)+'</td></tr>').join("");
+    main.innerHTML=head("تنبيهات الإدارة عبر Telegram","الإيداعات الجديدة والأحداث المهمة فقط، من خادم المتجر إلى محادثة الإدارة.")+
+      '<section class="panel"><h2>اختيار أنواع التنبيهات</h2><form id="telegramAlertsForm">'+
+      check("telegram_deposits","إشعار عن كل طلب إيداع جديد",prefs.deposits_enabled!==false)+
+      check("telegram_verification","إشعار طلب توثيق جديد بدون إرسال وثائق الهوية",prefs.verification_enabled!==false)+
+      check("telegram_order_reviews","طلبات اعتراض أو إلغاء تتطلب المراجعة",prefs.order_reviews_enabled!==false)+
+      '<p class="muted small">لن تُرسل تنبيهات لجميع المشتريات العادية أو رسائل تسويقية. تكرار نفس طلب الإيداع لا ينشئ إشعارًا جديدًا.</p>'+
+      '<button class="button" type="submit">حفظ أنواع التنبيهات</button></form></section>'+
+      '<section class="panel"><h2>توصيل البوت بأمان</h2><p>أنشئ بوتًا من Telegram عبر @BotFather، وافتح محادثة معه وأرسل /start. احصل على معرّف المحادثة Chat ID، ثم أضف القيم التالية في إعدادات أسرار Supabase Edge Functions وليس في GitHub أو شاشة المتجر:</p>'+
+      '<pre dir="ltr">F90_TELEGRAM_BOT_TOKEN\nF90_TELEGRAM_CHAT_ID\nF90_TELEGRAM_DISPATCH_SECRET</pre>'+
+      '<p>احفظ نفس قيمة F90_TELEGRAM_DISPATCH_SECRET في Supabase Vault باسم <code>f90_telegram_dispatch_secret</code>. يرسل العامل الرسائل دوريًا كل دقيقة، ويحفظ الطلبات غير المرسلة في طابور للمحاولة لاحقًا.</p>'+
+      '<div class="notice warning">الاتصال لا يكتمل بمجرد إنشاء الصفحة. يلزم إعداد أسرار البوت ومعرّف المحادثة، ثم اختبار رسالة في تلجرام. لا ترسل توكن البوت لأي شخص.</div></section>'+
+      '<section class="panel"><h2>سجل آخر إشعارات تلجرام</h2><p class="muted small">الإشعارات الظاهرة أدناه تشمل المحاولات الحالية؛ عدم وجود حالة «أُرسلت» يعني أن وصول الرسائل لم يتأكد بعد.</p>'+
+      '<div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الحالة</th><th>الوقت</th><th>المحاولات</th></tr></thead><tbody>'+
+      (recent||'<tr><td colspan="4">لا توجد تنبيهات جديدة منذ تفعيل الربط</td></tr>')+
+      '</tbody></table></div></section>';
+  }
+  async function saveTelegramAlerts(form){
+    const c=S.settings.config||{};
+    const telegram_alerts={...c.telegram_alerts,
+      deposits_enabled:form.elements.telegram_deposits.checked,
+      verification_enabled:form.elements.telegram_verification.checked,
+      order_reviews_enabled:form.elements.telegram_order_reviews.checked};
+    await A.call("settings.save",{data:{...S.settings,config:{...c,telegram_alerts}}});
+    await refreshSettings();await telegramAlerts();toast("تم حفظ أنواع إشعارات تلجرام");
+  }
   async function route() {
     S.token++;
     closeModal();
@@ -1768,6 +1807,7 @@
       else if (page === "integration") integrationCenter();
       else if (page === "design-center") designCenter();
       else if (page === "media-center") mediaCenter();
+      else if (page === "telegram-alerts") await telegramAlerts();
       else if (page === "traders") await traders();
     } catch (err) {
       main.innerHTML =
@@ -1795,6 +1835,7 @@
     if (form.id === "settingsForm") return saveSettings(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);
+    if (form.id === "telegramAlertsForm") return saveTelegramAlerts(form);
     if (form.id === "searchUsers") {
       S.search = d.search;
       S.offset = 0;
