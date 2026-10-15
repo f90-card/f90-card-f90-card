@@ -1190,6 +1190,7 @@
       id = "";
     }
     main.dataset.page = page || "home";
+    document.body.classList.toggle("f90-welcome-route",page==="welcome");
     $("mobileDock")?.querySelectorAll("[data-dock-page]").forEach((link) => {
       link.classList.toggle("active", link.dataset.dockPage === (page || ""));
     });
