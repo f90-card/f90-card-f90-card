@@ -78,3 +78,23 @@ test("salary and transfer pages render on the existing storefront router",async(
   assert.match(transfer.document.getElementById("mainContent").textContent,/تحويل الأموال/);
  }finally{transfer.cleanup();}
 });
+
+test("full website order is linked to the real USD 500 checkout with WhatsApp field",()=>{
+ const app=read("app.js"),ui=read("f90-special.js");
+ const sql=read("supabase/migrations/20261015220000_f90_website_checkout.sql");
+ assert.match(app,/specialRoute==="website" \? href\("product","f90-full-website-500"\)/);
+ assert.match(ui,/#\/product\/f90-full-website-500/);
+ assert.match(sql,/'f90-full-website-500'/);
+ assert.match(sql,/'USD'/);
+ assert.match(sql,/500/);
+ assert.match(sql,/'fulfillment','manual'/);
+ assert.match(sql,/'label_ar','رقم واتساب للتواصل'/);
+});
+test("financial operations reuse atomic existing salary and wallet debit RPCs",()=>{
+ const ui=read("f90-special.js"),admin=read("f90-special-admin.js"),guard=read("supabase/migrations/20261015213000_secure_finance_rpcs.sql");
+ for(const name of ["f90_submit_salary","f90_submit_transfer"])assert.ok(ui.includes(name),name);
+ for(const name of ["f90_review_salary","f90_review_transfer"])assert.ok(admin.includes(name),name);
+ assert.match(guard,/revoke execute on function public\.f90_submit_transfer/);
+ assert.match(guard,/grant execute on function public\.f90_submit_transfer.*to authenticated/);
+ assert.match(guard,/f90_special_nonfinancial_only/);
+});
