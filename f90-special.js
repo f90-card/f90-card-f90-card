@@ -31,15 +31,32 @@ const links=[
 let visibleConfig=defaults;
 function home(settings){
  const c=conf(settings);
- const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],
-   ["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
- const items=ads.filter(([kind])=>c["show_"+kind]!==false);
- if(!items.length)return "";
- return '<section class="f90-special-home"><h2>إعلانات خدمات F90 CARD</h2>'+
- '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+
- items.map(([id,title])=>'<a href="#/special/'+id+'" class="f90-special-ad">'+
- '<img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
+ const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
+ return '<section class="f90-special-home" aria-label="إعلانات الخدمات">'+
+ '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+ads.filter(([id])=>c["show_"+id]!==false).map(([id,title])=>
+ '<a href="'+(id==="website"?"#/product/f90-full-website-500":"#/special/"+id)+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
  '</div></section>';
+}
+function category(slug,settings){
+ const root=document.getElementById("mainContent"),c=conf(settings);
+ const group={
+  "money-transfer":{title:"تحويل الأموال",banner:"transfer",kind:"transfer",items:Array.isArray(settings?.config?.money_transfer?.methods)?settings.config.money_transfer.methods.filter(x=>x.enabled!==false).map(x=>[x.id,x.name_ar]):[]},
+  "account-sales":{title:"بيع حسابات Xena Live",banner:"account",kind:"account",items:[["","شراء حساب Xena Live"]]},
+  "design-services":{title:"احصل على تصميم احترافي",banner:"design",kind:"design",items:defaults.design_services.map((x,i)=>[String(i+1),x])},
+  "complete-website":{title:"موقع كامل ملك لك",banner:"website",kind:"website",items:[["","إنشاء موقع شامل الخدمات"]]}
+ }[slug];
+ if(!group)return false;
+ const img=String(c[group.banner+"_banner_url"]||images[group.banner]);
+ const links=group.items.map(([id,title],i)=>{
+  const href="#/special/"+group.kind+(id?"/"+encodeURIComponent(id):"");
+  return '<a class="f90-special-section-option" href="'+href+'" aria-label="'+esc(title)+'">'+
+  '<span class="f90-special-option-number">'+String(i+1).padStart(2,"0")+'</span><strong>'+esc(title)+'</strong><span aria-hidden="true">‹</span></a>';
+ }).join("");
+ root.innerHTML='<section class="f90-special-section"><div class="f90-special-category-tools">'+
+ '<button type="button" class="button secondary small" data-action="share" title="نسخ رابط القسم" aria-label="نسخ رابط القسم">⧉</button></div>'+
+ '<img class="f90-special-section-banner" src="'+esc(img)+'" alt="'+esc(group.title)+'" loading="eager">'+
+ '<div class="f90-special-section-options">'+links+'</div></section>';
+ return true;
 }
 function moneyPanel(gross,fee,net,feePercent,label){
  return '<div class="f90-special-estimate" role="status" aria-live="polite">'+
@@ -48,7 +65,7 @@ function moneyPanel(gross,fee,net,feePercent,label){
  '<div class="f90-special-net"><span>الصافي بعد العمولة</span><strong data-net>'+fmt(net)+'</strong></div></div>';
 }
 const input=(name,label,type="text",attr="")=>'<label class="field"><span>'+label+'</span><input name="'+name+'" type="'+type+'" '+attr+'></label>';
-function render(kind,settings,user){
+function render(kind,settings,user,selected=""){
  const config=settings?.config||{},sal=config.salary_withdrawal||{},tr=config.money_transfer||{};
  const c=visibleConfig={...conf(settings),
   salary_usd_per_100k:Number(sal.coins_per_usd)>0?100000/Number(sal.coins_per_usd):10,
@@ -73,7 +90,7 @@ function render(kind,settings,user){
    moneyPanel(min*c.salary_usd_per_100k/100000,0,min*c.salary_usd_per_100k/100000,0,"الرصيد المستحق بعد الاعتماد");
  }else if(transfer){
    fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
-     methods.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name_ar)+'</option>').join("")+'</select></label>'+
+     methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+'</option>').join("")+'</select></label>'+
    '<div class="f90-transfer-methods" role="group" aria-label="خيارات التحويل">'+
      methods.map((x,i)=>'<button type="button" data-f90-transfer-method="'+esc(x.id)+'" aria-pressed="'+(i===0)+'">'+esc(x.name_ar)+'</button>').join("")+'</div>'+
    input("amount","صافي المبلغ الذي سيصل للمستلم USD","number",'required min="1" max="1000000" step="0.01" inputmode="decimal" placeholder="0.00"')+
@@ -82,7 +99,7 @@ function render(kind,settings,user){
    '<p class="f90-special-tiny">تضاف عمولة '+c.transfer_fee_percent+'٪ فوق المبلغ الصافي. المدة المتوقعة: من '+c.transfer_eta_min_minutes+' إلى '+c.transfer_eta_max_minutes+' دقيقة بعد المراجعة.</p>'+
    '<p class="f90-special-tiny">رصيد محفظتك الحالي: '+(isSigned?fmt(Number(user?.wallet?.balance_usd)||0):"سجّل الدخول")+'</p>';
  }else{
-   fields=(design?'<label class="field"><span>نوع التصميم</span><select name="service">'+defaults.design_services.map(x=>'<option>'+x+'</option>').join("")+'</select></label>':'')+
+   fields=(design?'<label class="field"><span>نوع التصميم</span><select name="service">'+defaults.design_services.map((x,i)=>'<option '+(selected===String(i+1)?'selected':'')+'>'+x+'</option>').join("")+'</select></label>':'')+
      input("contact","رقم واتساب للتواصل","tel",'required minlength="6" maxlength="90" inputmode="tel" dir="ltr" placeholder="+970..."')+
      (design?'<label class="field"><span>تفاصيل التصميم</span><textarea name="details" rows="3" maxlength="3000" placeholder="الفكرة، المناسبة، الألوان والمقاسات المطلوبة"></textarea></label>':"");
    const price=website?num(c.website_price_usd,500,0):account?num(c.account_price_usd,0,0):0;
@@ -91,18 +108,17 @@ function render(kind,settings,user){
  const notice=(!isSigned?'<p class="f90-special-alert">سجّل الدخول قبل إرسال طلبك. <a href="#/auth">تسجيل الدخول</a></p>':
  ((salary||transfer)&&!isVerified?'<p class="f90-special-alert">توثيق الحساب مطلوب قبل العمليات المالية. <a href="#/verification">توثيق الحساب</a></p>':''));
  const enabled=c["show_"+d]!==false && (!salary||sal.enabled===true) && (!transfer||tr.enabled===true&&methods.length>0);
+ const footnote=transfer?"يُخصم صافي المبلغ والعمولة من المحفظة فور تقديم الطلب، ويُسترد المبلغ عند رفضه بعد مراجعة الإدارة.":
+   salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.";
+
  document.getElementById("mainContent").innerHTML=
  '<section class="f90-special-page" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
  '<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'"></div>'+
  '<div class="f90-special-panel"><h1>'+title+'</h1><p>'+esc(desc)+'</p>'+
  notice+'<form id="f90SpecialForm" data-kind="'+esc(d)+'"><input type="hidden" name="kind" value="'+esc(d)+'">'+
- fields+'<p class="f90-special-alert" data-status hidden></p>'+
+ fields+'<p class="f90-special-footnote">'+esc(footnote)+'</p><p class="f90-special-alert" data-status hidden></p>'+
  '<button class="button full" type="submit" '+(!enabled||!isSigned||((salary||transfer)&&!isVerified)?"disabled":"")+'>'+
- (transfer?"تأكيد طلب التحويل":"إرسال الطلب للمراجعة")+'</button></form>'+
- '<p class="f90-special-footnote">'+(transfer?
- "يُخصم صافي المبلغ والعمولة من المحفظة فور تقديم الطلب، ويُسترد المبلغ عند رفضه بعد مراجعة الإدارة.":
- salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.")+
- '</p></div></section>';
+ (transfer?"تأكيد طلب التحويل":"إرسال الطلب للمراجعة")+'</button></form></div></section>';
  updateEstimate(document.getElementById("f90SpecialForm"));
 }
 function updateEstimate(form){
@@ -168,5 +184,5 @@ document.addEventListener("submit",async ev=>{
  }catch(err){out.textContent=String(err?.message||"تعذر تسجيل الطلب");button.disabled=false;}
  finally{delete form.dataset.busy;}
 });
-window.F90Special={home,render,defaults};
+window.F90Special={home,render,category,defaults};
 })();

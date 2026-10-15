@@ -693,6 +693,11 @@
       main.innerHTML = empty("القسم غير موجود");
       return;
     }
+    if(c.slug?.startsWith("transfer-") &&
+      S.categories.some(parent=>parent.id===c.parent_id && parent.slug==="money-transfer")){
+      location.hash="#/special/transfer/"+encodeURIComponent(c.slug.slice("transfer-".length));
+      return;
+    }
     if (categoryIsUnavailable(c)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     if (
       c.presentation?.routing === "direct" &&
@@ -701,6 +706,9 @@
       location.hash = href("product", c.presentation.direct_product_id);
       return;
     }
+    if(["money-transfer","account-sales","design-services","complete-website"].includes(c.slug) &&
+      !S.categories.some(x=>x.parent_id===c.id) && !S.products.some(x=>x.category_id===c.id) &&
+      window.F90Special?.category(c.slug,S.settings)) return;
     const parents = [];
     let parent = c;
     const visited = new Set();
@@ -1436,7 +1444,7 @@
     closeModal();
     toggleDrawer(false);
     const raw = (location.hash || "#/welcome").replace(/^#\/?/, "");
-    let [page, id] = raw.split("/");
+    let [page, id, serviceChoice] = raw.split("/");
     try {
       id = id ? decodeURIComponent(id) : "";
     } catch {
@@ -1535,7 +1543,7 @@
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
-      else if (page === "special") window.F90Special?.render(id,S.settings,S.me);
+      else if (page === "special") window.F90Special?.render(id,S.settings,S.me,serviceChoice ? decodeURIComponent(serviceChoice) : "");
       else if (["orders", "deposits", "history"].includes(page))
         await history(page);
       else if (page === "order") await order(id);
