@@ -157,3 +157,49 @@
 .f90-special-option-number{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:10px;background:color-mix(in srgb,var(--accent) 15%,var(--surface2));color:var(--accent);font-size:11px;font-variant-numeric:tabular-nums;font-weight:800}
 .f90-special-section-option:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:520px){.f90-special-section-options{grid-template-columns:1fr;gap:8px}.f90-special-section-option{min-height:55px;padding:11px}.f90-special-section-banner{border-radius:12px}}
+
+/* Device showcase: burgundy high-end phone outline and silver laptop, without a camera overlay. */
+.f90-home-devices .f90-home-phone-shell{
+  box-sizing:border-box;
+  padding:clamp(0px,calc(var(--f90-phone-size,178px)*.04),7px);
+  border-width:clamp(0px,calc(var(--f90-phone-size,178px)*.012),2px);
+  border-color:#c65c72;
+  background:linear-gradient(126deg,#2d0613 0%,#851c38 12%,#420515 27%,#3b0819 72%,#b34d67 93%,#26040f);
+  box-shadow:0 14px 30px #0005,inset 0 1px 5px #ffffff44,7px 4px 23px #7b16354a;
+}
+.f90-home-devices .f90-home-phone-screen{
+  box-sizing:border-box;border-width:clamp(0px,calc(var(--f90-phone-size,178px)*.012),2px);
+}
+.f90-home-devices .f90-home-phone-island{display:none!important}
+.f90-home-devices .f90-home-laptop-display{
+  border-width:clamp(0px,calc(var(--f90-laptop-size,320px)*.0219),7px);
+  border-bottom-width:clamp(0px,calc(var(--f90-laptop-size,320px)*.035),11px);
+  background:#09090b;
+}
+.f90-home-devices .f90-home-laptop-base{height:clamp(0px,calc(var(--f90-laptop-size,320px)*.031),10px)}
+@media(max-width:680px){
+ .f90-home-devices{width:100%;box-sizing:border-box;gap:min(10px,2vw);padding:7px 2px 12px}
+ .f90-home-devices .f90-home-phone-link{width:min(var(--f90-phone-mobile-size,153px),43vw);flex:none}
+ .f90-home-devices .f90-home-phone-shell{
+  width:min(var(--f90-phone-mobile-size,153px),43vw)!important;
+  height:calc(min(var(--f90-phone-mobile-size,153px),43vw)*1.92)!important;
+  padding:clamp(0px,calc(min(var(--f90-phone-mobile-size,153px),43vw)*.04),6px);
+  border-width:clamp(0px,calc(min(var(--f90-phone-mobile-size,153px),43vw)*.012),2px)
+ }
+ .f90-home-devices .f90-home-laptop-link{width:min(var(--f90-laptop-mobile-size,220px),47vw)!important;min-width:0;max-width:47vw}
+ .f90-home-devices .f90-home-laptop-display{
+  border-width:clamp(0px,calc(min(var(--f90-laptop-mobile-size,220px),47vw)*.022),5px);
+  border-bottom-width:clamp(0px,calc(min(var(--f90-laptop-mobile-size,220px),47vw)*.035),8px)
+ }
+ .f90-home-devices .f90-home-laptop-base{height:clamp(0px,calc(min(var(--f90-laptop-mobile-size,220px),47vw)*.031),7px)}
+ /* Shorter footer with the same links, rather than giant panels on phones. */
+ #footer.site-footer{padding:14px 0 max(58px,env(safe-area-inset-bottom));margin-top:15px}
+ #footer .footer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #footer .footer-grid>div{min-width:0}
+ #footer .footer-grid h3{font-size:12px;margin:6px 0}
+ #footer .footer-grid p,#footer .footer-grid nav a{font-size:11px;line-height:1.45}
+ #footer .footer-grid nav{gap:6px}
+ #footer .f90-footer-logo{width:38px;height:38px}
+ #footer .footer-bottom{padding:10px 0 0;gap:5px;font-size:10px}
+}
+@media(max-width:370px){#footer .footer-grid{gap:7px}}
