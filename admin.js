@@ -133,7 +133,9 @@
       Math.max(-100, Math.min(100, Number(c.logo_y) || 0)) + "px",
     );
     $("adminFavicon").href =
-      C.safeUrl(c.app_icon_url || S.settings.logo_url) || "./f90-logo.png";
+      C.safeUrl(c.admin_app_icon_url || c.app_icon_url || S.settings.logo_url) || "./f90-logo.png";
+    const installApple=$("adminAppleIcon");
+    if(installApple)installApple.href=C.safeUrl(c.admin_app_icon_url || c.app_icon_url) || "./assets/icons/icon-192.png";
     $("adminBrand").innerHTML = image(
       S.settings.logo_url || "./f90-logo.png",
       "أف تسعين كارد",
@@ -2743,6 +2745,15 @@
     applyAdminTheme(document.documentElement.dataset.theme === "dark" ? "cream" : "dark");
   });
   applyAdminTheme(document.documentElement.dataset.theme);
+  let adminInstallEvent=null;
+  window.addEventListener("beforeinstallprompt",(ev)=>{ev.preventDefault();adminInstallEvent=ev;});
+  $("adminInstall")?.addEventListener("click",async()=>{
+    if(adminInstallEvent){
+      const event=adminInstallEvent;adminInstallEvent=null;
+      await event.prompt();return;
+    }
+    toast("في أندرويد افتح قائمة المتصفح واختر تثبيت التطبيق. على آيفون: مشاركة ثم إضافة إلى الشاشة الرئيسية.");
+  });
   $("adminLogout").addEventListener("click", async () => {
     await A.client.auth.signOut();
     location.href = "./index.html#/auth";
