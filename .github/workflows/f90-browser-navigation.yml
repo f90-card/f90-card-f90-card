@@ -1,0 +1,21 @@
+name: F90 browser navigation verification
+on:
+  push:
+    branches: [main]
+    paths: ['tests/f90-browser-navigation.py']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check route entry, browser back scroll and account bubble
+        run: python tests/f90-browser-navigation.py
