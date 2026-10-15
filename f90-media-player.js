@@ -21,6 +21,7 @@ function render(){
  head.innerHTML='<strong>F90 CARD · MUSIC</strong><button type="button" class="f90-media-minimize" aria-label="تصغير المشغل">−</button>';
  dock.append(head);
  head.querySelector("button").addEventListener("click",()=>dock.classList.toggle("is-minimized"));
+ if(config.mode==="youtube"){head.querySelector("button").hidden=true;dock.classList.remove("is-minimized");}
  if(config.mode==="youtube"){
    const id=youtubeId(config.youtube_url||"");
    if(!id){dock.hidden=true;return;}
