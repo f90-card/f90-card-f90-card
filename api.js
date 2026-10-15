@@ -71,13 +71,13 @@
     }
     return body.data;
   }
-  async function upload(file, bucket, folder) {
+  async function upload(file, bucket, folder, onProgress) {
     if (!client) throw new Error("تعذّر تحميل اتصال التخزين بالخادم. حدّث الصفحة ثم حاول مجددًا.");
     const video = bucket === "f90-videos";
     const audio = bucket === "f90-audio";
     const radio = bucket === "f90-radio";
-    if (!file || file.size > (radio ? 41943040 : video ? 20971520 : audio ? 12582912 : 5242880))
-      throw new Error(radio ? "ملف الراديو يجب أن يكون صوتًا أو فيديو صالحًا ولا يتجاوز 40 ميجابايت" : video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : audio ? "اختر ملف صوت MP3 أو OGG أو WAV حتى 12 ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
+    if (!file || file.size > (radio ? 50000000 : video ? 20971520 : audio ? 12582912 : 5242880))
+      throw new Error(radio ? "ملف الراديو يجب أن يكون صوتًا أو فيديو صالحًا ولا يتجاوز 50 ميجابايت" : video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : audio ? "اختر ملف صوت MP3 أو OGG أو WAV حتى 12 ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
     // Mobile browsers label M4A/MP3/WAV files inconsistently.
     // Normalize the content type before applying the private radio upload policy.
     const radioMimeAliases={"audio/x-m4a":"audio/mp4","audio/m4a":"audio/mp4",
@@ -117,11 +117,46 @@
       crypto.randomUUID() +
       "." +
       extension;
-    const { error } = await client.storage
-      .from(bucket)
-      .upload(path, file, { contentType: mediaMime, upsert: false });
-    if (error)
-      throw new Error(radio ? "تعذّر رفع الراديو إلى المساحة الخاصة. تحقق من صلاحية المدير وحجم الملف." : video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
+    // Large radio tracks use Supabase's official TUS resumable endpoint.
+    // The configured Free-plan bucket limit remains 50 MB per file.
+    // Keep ordinary uploads for small files and unrelated checkout/media paths.
+    if(radio && file.size>6*1024*1024 && window.tus?.Upload){
+      const {data:{session}}=await client.auth.getSession();
+      if(!session?.access_token)throw new Error("سجّل دخول المدير مجددًا قبل رفع الملفات الصوتية");
+      const baseUrl=new URL(window.F90_CONFIG.SUPABASE_URL);
+      const projectRef=baseUrl.hostname.split(".")[0];
+      const endpoint="https://"+projectRef+".storage.supabase.co/storage/v1/upload/resumable";
+      await new Promise((resolve,reject)=>{
+        const upload=new window.tus.Upload(file,{
+          endpoint,
+          retryDelays:[0,3000,5000,10000,20000],
+          headers:{
+            authorization:"Bearer "+session.access_token,
+            apikey:window.F90_CONFIG.SUPABASE_KEY,
+          },
+          uploadDataDuringCreation:true,
+          removeFingerprintOnSuccess:true,
+          metadata:{bucketName:bucket,objectName:path,contentType:mediaMime,cacheControl:"3600"},
+          chunkSize:6*1024*1024,
+          onProgress:(sent,total)=>{
+            if(typeof onProgress==="function")onProgress(total?sent/total:0);
+          },
+          onError:error=>reject(new Error("تعذّر رفع المقطع أو استكماله، تحقق من حجم الملف والاتصال ثم أعد المحاولة")),
+          onSuccess:()=>resolve()
+        });
+        upload.findPreviousUploads().then(previous=>{
+          if(previous.length)upload.resumeFromPreviousUpload(previous[0]);
+          upload.start();
+        }).catch(reject);
+      });
+    }else{
+      const { error } = await client.storage
+        .from(bucket)
+        .upload(path, file, { contentType: mediaMime, upsert: false });
+      if (error)
+        throw new Error(radio ? "تعذّر رفع الراديو إلى المساحة الخاصة. تحقق من صلاحية المدير وحد 50 ميجابايت." : video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
+      if(typeof onProgress==="function")onProgress(1);
+    }
     return {
       path,
       url: radio ? "" : client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
