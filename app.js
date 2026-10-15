@@ -2328,10 +2328,38 @@
   });
   let bootRetryTimer = null;
   let bootRetryAttempts = 0;
+  // Public catalog only: session-scoped warm start speeds repeat visits.
+  // Never store wallet balances, auth, order state, or authoritative prices.
+  const publicCatalogCacheKey="f90-public-catalog-fast-v1";
+  function readWarmCatalog(){
+    try{
+      const record=JSON.parse(sessionStorage.getItem(publicCatalogCacheKey)||"null");
+      if(!record||Date.now()-record.saved>45000 || record.saved>Date.now() ||
+         !Array.isArray(record.catalog?.products) ||
+         !Array.isArray(record.catalog?.categories) ||
+         !record.catalog?.settings?.config) return null;
+      return record.catalog;
+    }catch{return null;}
+  }
+  function saveWarmCatalog(catalog){
+    if(!Array.isArray(catalog?.products)||!Array.isArray(catalog?.categories)||
+       !catalog.settings?.config)return;
+    const save=()=>{
+      try{
+        const json=JSON.stringify({saved:Date.now(),catalog});
+        if(json.length<2000000)sessionStorage.setItem(publicCatalogCacheKey,json);
+      }catch{/* Browsers may disable session storage. */}
+    };
+    if("requestIdleCallback" in window)requestIdleCallback(save,{timeout:3000});
+    else setTimeout(save,0);
+  }
   async function boot() {
     if (bootRetryTimer) { clearTimeout(bootRetryTimer); bootRetryTimer = null; }
     try {
-      const catalogRequest = A.call("catalog");
+      const warmCatalog=readWarmCatalog();
+      const networkCatalog=A.call("catalog");
+      const catalogRequest=warmCatalog?Promise.resolve(warmCatalog):networkCatalog;
+      if(!warmCatalog)networkCatalog.then(saveWarmCatalog).catch(()=>{});
       const accountRequest = refreshMe().catch((error) => error);
       Object.assign(S, await catalogRequest);
       if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
@@ -2370,6 +2398,17 @@
       theme(initialTheme);
       promotions();
       await route();
+      if(warmCatalog){
+        networkCatalog.then(fresh=>{
+          saveWarmCatalog(fresh);
+          // Preserve an open quote or a focused user form without re-rendering.
+          if(!document.getElementById("checkoutForm") &&
+             !document.getElementById("depositForm") &&
+             !document.getElementById("modalRoot")?.children.length){
+            Object.assign(S,fresh);
+          }
+        }).catch(()=>{/* Public pages remain usable with the short-lived cache. */});
+      }
       document.documentElement.dataset.f90Ready = "1";
       bootRetryAttempts = 0;
       // Receive new supplier price/status news while the store remains open.
