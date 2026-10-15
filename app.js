@@ -2141,7 +2141,7 @@
     try{await route();}finally{
       requestAnimationFrame(()=>{
         if(expected===location.href && f90ActiveEntry===next){
-          window.scrollTo({top:restore?saved:0,behavior:"instant"});
+          window.scrollTo({top:restore?saved:0,behavior:"auto"});
         }
         requestAnimationFrame(()=>{f90ScrollRestore=false;});
       });
