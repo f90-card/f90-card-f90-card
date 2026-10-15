@@ -1451,6 +1451,7 @@
       id = "";
     }
     main.dataset.page = page || "home";
+    if(page) S.homeAnnouncementShown=false;
     document.body.classList.remove('f90-welcome-route');
     $("mobileDock")?.querySelectorAll("[data-dock-page]").forEach((link) => {
       link.classList.toggle("active", link.dataset.dockPage === (page || ""));
@@ -1527,6 +1528,13 @@
       if (page === "welcome") welcome();
       else if (!page) {
         home();
+        const announcement=S.settings.config?.popup_announcement;
+        if(announcement?.enabled && announcement.every_home_visit && announcement.text_ar &&
+          !S.homeAnnouncementShown && !S.settings.config?.maintenance?.enabled){
+          S.homeAnnouncementShown=true;
+          modal("إشعار F90 CARD",'<p class="f90-popup-copy">'+e(announcement.text_ar)+'</p>'+
+            '<button type="button" class="button full" data-action="close-modal">متابعة المتجر</button>');
+        }
         if (!S.greetedStore) {
           S.greetedStore = true;
           toast("أهلًا " + (S.me?.profile?.display_name || "بك") + " في أف تسعين كارد");
@@ -2624,7 +2632,7 @@
           `<div class="f90-channel-invite"><span class="f90-channel-mark" aria-hidden="true">◉</span><p>انضم إلى قناتنا الرسمية لمتابعة الإعلانات والعروض والتحديثات المهمة.</p><p class="muted small">ننصح بالانضمام حتى تصلك المستجدات. يمكنك استخدام المتجر دون الاشتراك.</p><a class="button full" href="${e(channel)}" target="_blank" rel="noopener noreferrer">الانتقال إلى قناة واتساب</a><button class="button ghost full" data-action="channel-dismiss" data-key="${e(channelKey)}">متابعة التصفح</button></div>`);
       } else {
       const popup = S.settings.config?.popup_announcement;
-      if (popup?.enabled && popup.text_ar) {
+      if (popup?.enabled && popup.text_ar && !popup.every_home_visit) {
         const key = "f90-popup-read:" + (popup.revision || popup.text_ar);
         let read = false;
         try { read = localStorage.getItem(key) === "1"; } catch {}
