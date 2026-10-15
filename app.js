@@ -2103,10 +2103,49 @@
     });
     $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
   });
-  window.addEventListener("hashchange", () => {
-    S.offset = 0;
-    window.scrollTo({ top: 0, behavior: "auto" });
-    route();
+  // New pages start from the top; browser Back/Forward restores each page's
+  // previous scroll position. Keep this separate from catalog auto-refresh.
+  if("scrollRestoration" in history)history.scrollRestoration="manual";
+  const f90ScrollPositions=new Map();
+  let f90ScrollSequence=0,f90ScrollRestore=false;
+  function f90EntryKey(){
+    const current=history.state?.f90ScrollEntry;
+    if(typeof current==="string" && current.startsWith("f90-entry-"))return current;
+    const fresh="f90-entry-"+Date.now().toString(36)+"-"+(++f90ScrollSequence);
+    history.replaceState({...history.state,f90ScrollEntry:fresh},"",location.href);
+    return fresh;
+  }
+  let f90ActiveEntry=f90EntryKey();
+  f90ScrollPositions.set(f90ActiveEntry,Math.max(0,window.scrollY));
+  window.addEventListener("scroll",()=>{
+    if(!f90ScrollRestore)f90ScrollPositions.set(f90ActiveEntry,Math.max(0,window.scrollY));
+  },{passive:true});
+  document.addEventListener("click",ev=>{
+    const link=ev.target.closest?.('a[href^="#"]:not([href^="#/"])');
+    if(!link)return;
+    const target=document.getElementById(link.getAttribute("href").slice(1));
+    if(!target)return;
+    ev.preventDefault();
+    target.scrollIntoView({behavior:"smooth",block:"start"});
+  },{capture:true});
+  window.addEventListener("hashchange",async()=>{
+    const previous=f90ActiveEntry;
+    // The passive scroll listener has captured the outgoing page position.
+    if(!f90ScrollPositions.has(previous))f90ScrollPositions.set(previous,window.scrollY);
+    const next=f90EntryKey(),restore=f90ScrollPositions.has(next);
+    const saved=restore?f90ScrollPositions.get(next):0;
+    f90ActiveEntry=next;
+    f90ScrollRestore=true;
+    S.offset=0;
+    const expected=location.href;
+    try{await route();}finally{
+      requestAnimationFrame(()=>{
+        if(expected===location.href && f90ActiveEntry===next){
+          window.scrollTo({top:restore?saved:0,behavior:"instant"});
+        }
+        requestAnimationFrame(()=>{f90ScrollRestore=false;});
+      });
+    }
   });
   window.addEventListener("beforeinstallprompt", (ev) => {
     ev.preventDefault();
