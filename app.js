@@ -214,6 +214,14 @@
       return `<a class="f90-social-card" href="${e(C.safeUrl(x.url))}" target="_blank" rel="noopener noreferrer" aria-label="${name}">${pic ? image(pic,name,"f90-social-card-icon") : `<span class="f90-social-fallback" aria-hidden="true">${symbol}</span>`}<span>${name}</span><span class="f90-social-arrow" aria-hidden="true">↗</span></a>`;
     }).join("");
   }
+  function displayMoney(usd, fine = false) {
+    const target = S.rates.find(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd) > 0);
+    if (S.currency === "USD" || !target) return C.money(usd,"USD",fine);
+    const converted = C.convert(usd, S.currency, S.rates);
+    if (converted === null) return C.money(usd,"USD",fine);
+    const amount = new Intl.NumberFormat("ar",{minimumFractionDigits:2,maximumFractionDigits:fine?6:2}).format(converted);
+    return amount + " " + (target.name_ar || S.currency);
+  }
   function chrome() {
     brand();
     const me = S.me,
@@ -222,13 +230,13 @@
     updateStoreBell();
     $("headerWallet").innerHTML =
       I("wallet") +
-      `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : "$" + e(new Intl.NumberFormat("en-US", {minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(me.wallet?.balance_usd || 0)))) : "المحفظة"}</span>`;
+      `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(displayMoney(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
     $("drawerProfile").innerHTML =
       `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
     $("drawerProfile").insertAdjacentHTML("beforeend", `<div class="f90-drawer-social"><div class="f90-drawer-social-title">تابع منصاتنا الرسمية</div><div class="f90-social-card-grid">${f90SocialCards() || '<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>'}</div></div>`);
     const drawerBalance = me && !me.needs_mfa && !S.walletStale
-      ? e(C.money(me.wallet?.balance_usd, "USD", true))
+      ? e(displayMoney(me.wallet?.balance_usd,true))
       : me ? "الرصيد يحتاج تحديث" : "سجّل الدخول لعرض الرصيد";
     $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
     const links = [
@@ -280,7 +288,7 @@
       $("headerWallet").before(adminShortcut);
     } else if (!staff) adminShortcut?.remove();
     const enabled = S.rates.filter((r) => r.is_enabled && r.per_usd);
-    if (!enabled.some((r) => r.currency === S.currency)) S.currency = "USD";
+    if (!enabled.some((r) => r.currency === S.currency)) S.currency = S.settings.currency && enabled.some(r=>r.currency===S.settings.currency) ? S.settings.currency : "USD";
     $("currencySelect").innerHTML = enabled
       .map(
         (r) =>
@@ -580,10 +588,10 @@
     quickProductOpener = null;
   }
   function priceBoard(total) {
-    return ["USD", "ILS", "JOD"]
+    return [S.currency, ...S.rates.filter(r=>r.is_enabled&&r.currency!==S.currency).map(r=>r.currency)].slice(0,4)
       .map((code) => {
         const n = C.convert(total, code, S.rates);
-        return `<div class="${code === "USD" ? "usd" : ""}"><small>${C.currencyNames[code]}</small><strong>${n === null ? "لم يُحدد الصرف" : e(C.money(n, code))}</strong></div>`;
+        return `<div class="${code === "USD" ? "usd" : ""}"><small>${S.rates.find(r=>r.currency===code)?.name_ar || C.currencyNames[code] || code}</small><strong>${n === null ? "لم يُحدد الصرف" : e(C.money(n, code))}</strong></div>`;
       })
       .join("");
   }
@@ -609,17 +617,17 @@
       const summaryTotal = $("f90CheckoutTopTotal");
       const summaryBalance = $("f90CheckoutTopBalance");
       const summaryRemaining = $("f90CheckoutTopRemaining");
-      if (summaryTotal) summaryTotal.textContent = C.money(quote.total_usd, "USD", true);
-      if (summaryBalance) summaryBalance.textContent = S.me ? C.money(S.me.wallet?.balance_usd, "USD", true) : "سجّل الدخول";
+      if (summaryTotal) summaryTotal.textContent = displayMoney(quote.total_usd,true);
+      if (summaryBalance) summaryBalance.textContent = S.me ? displayMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
       if (summaryRemaining) {
         summaryRemaining.textContent = S.me
-          ? C.money(Number(S.me.wallet?.balance_usd || 0) - Number(quote.total_usd), "USD", true)
+          ? displayMoney(Number(S.me.wallet?.balance_usd || 0) - Number(quote.total_usd),true)
           : "بعد تسجيل الدخول";
         summaryRemaining.classList.toggle("f90-insufficient", !!S.me && Number(S.me.wallet?.balance_usd || 0) < Number(quote.total_usd));
       }
       $("discountHint").textContent =
         Number(quote.discount_usd) > 0
-          ? "الخصم المطبق: " + C.money(quote.discount_usd, "USD", true)
+          ? "الخصم المطبق: " + displayMoney(quote.discount_usd,true)
           : "";
       $("quoteError").textContent = "";
       $("buyButton").disabled = C.unavailable(p);
@@ -628,7 +636,7 @@
       $("walletHint").innerHTML = insufficient
         ? `<span class="notice error">رصيدك لا يكفي. <a href="#/deposit">أضف رصيدًا</a> وانتظر اعتماد الإيداع.</span>`
         : S.me
-          ? `<div class="f90-wallet-preview"><span>الرصيد الحالي: <b>${e(C.money(S.me.wallet.balance_usd,"USD",true))}</b></span><span>الرصيد المتوقع بعد الشراء: <b>${e(C.money(Number(S.me.wallet.balance_usd)-Number(quote.total_usd),"USD",true))}</b></span></div>`
+          ? `<div class="f90-wallet-preview"><span>الرصيد الحالي: <b>${e(displayMoney(S.me.wallet.balance_usd,true))}</b></span><span>الرصيد المتوقع بعد الشراء: <b>${e(displayMoney(Number(S.me.wallet.balance_usd)-Number(quote.total_usd),true))}</b></span></div>`
           : "سجّل الدخول للشراء من محفظتك.";
     } catch (err) {
       if (!f.isConnected || seq !== S.quoteSeq) return;
@@ -882,13 +890,32 @@
     syncInstallButtons();
   }
   async function wallet() {
-    const me = S.me;
-    main.innerHTML = `${pageHead("محفظتك الرقمية", "كل المبالغ بالدولار الأمريكي")}<section class="wallet-showcase"><div>${I("wallet")}<p style="margin-top:13px;margin-bottom:5px">رصيدك الحالي</p><div class="amount">${e(C.money(me.wallet.balance_usd, "USD", true))}</div><small>الرصيد متاح بعد اعتماد إيداعك من الإدارة</small></div><div class="wallet-actions"><a class="button" href="#/deposit">${I("plus")}إضافة رصيد</a><a class="button secondary" href="#/history">سجل الحركات</a></div></section><nav class="f90-wallet-shortcuts" aria-label="اختصارات المحفظة"><a href="#/deposit">${I("plus")}<span>إيداع جديد</span></a><a href="#/deposits">${I("clock")}<span>الإيداعات</span></a><a href="#/history">${I("doc")}<span>حركات الرصيد</span></a><a href="#/orders">${I("grid")}<span>طلباتي</span></a></nav><div class="profile-stats f90-wallet-stats"><div><span class="f90-stat-icon">${I("wallet")}</span><strong>${e(C.money(me.wallet.balance_usd))}</strong><span>الرصيد المتاح</span></div><div><span class="f90-stat-icon">${I("grid")}</span><strong>${e(C.money(me.spent_usd))}</strong><span>مشتريات مكتملة</span></div><div><span class="f90-stat-icon">${I("shield")}</span><strong>مسبق الدفع</strong><span>لا يوجد رصيد مدين</span></div></div><div class="section-head"><h2>آخر الإيداعات</h2><a href="#/deposits" class="muted small">عرض السجل الكامل</a></div><div id="walletDeposits" class="loading">جارٍ تحميل السجل…</div><div class="actions"><a class="button secondary" href="#/history">الحركات والرصيد بعد كل عملية</a><a class="button secondary" href="#/orders">الطلبات وتفاصيلها</a></div>`;
-    const r = await A.call("history", { kind: "deposits" });
-    if ($("walletDeposits"))
-      $("walletDeposits").outerHTML = r.items.length
-        ? `<div class="records">${r.items.slice(0, 5).map(depositRecord).join("")}</div>`
-        : empty("لم تقدّم طلب إيداع بعد", "wallet");
+    const me = S.me, balance = Number(me.wallet?.balance_usd || 0);
+    const logo = C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png";
+    const customerId = me.profile?.customer_id || "F90 CARD";
+    main.innerHTML = pageHead("محفظة F90 CARD", "رصيدك وحركات المحفظة في صفحة واحدة، بعملة العرض المحددة.") +
+      '<section class="f90-visa-wallet"><div class="f90-visa-top"><img src="'+e(logo)+'" alt="شعار F90 CARD"><span>F90 WALLET · DIGITAL</span></div>'+
+      '<div class="f90-visa-chip" aria-hidden="true">▦</div><span class="f90-visa-label">رصيدك المتاح</span><strong class="f90-visa-amount">'+e(displayMoney(balance,true))+'</strong>'+
+      '<div class="f90-visa-bottom"><span>'+e(me.profile?.display_name||"عميل F90")+'</span><span>'+e(customerId)+'</span></div>'+
+      '<small class="f90-visa-rights">© F90 CARD · محفظة رقمية داخل المتجر، وليست بطاقة مصرفية</small></section>'+
+      '<div class="f90-wallet-summary"><div><small>المحفظة الأساسية</small><strong>'+e(C.money(balance,"USD",true))+'</strong></div>'+
+      '<div><small>عملة العرض</small><strong>'+e(S.currency)+'</strong></div>'+
+      '<div><small>مشتريات مكتملة</small><strong>'+e(displayMoney(me.spent_usd,true))+'</strong></div></div>'+
+      '<nav class="f90-wallet-links"><a class="button" href="#/deposit">إضافة رصيد</a><a class="button secondary" href="#/deposits">كل الإيداعات</a><a class="button secondary" href="#/orders">سجل الطلبات</a></nav>'+
+      '<section class="panel f90-wallet-ledger"><div class="section-head"><h2>جدول العمليات والرصيد</h2><a href="#/history" class="muted small">عرض السجل الكامل</a></div><div id="f90WalletLedger" class="loading">جارٍ تحميل الحركات…</div></section>'+
+      '<section class="panel"><div class="section-head"><h2>آخر الإيداعات</h2><a href="#/deposits" class="muted small">عرض الكل</a></div><div id="walletDeposits" class="loading">جارٍ التحميل…</div></section>';
+    const [historyResult,depositsResult]=await Promise.allSettled([
+      A.call("history",{kind:"ledger",offset:0}),A.call("history",{kind:"deposits",offset:0})
+    ]);
+    const ledgerBox=$("f90WalletLedger");
+    if(ledgerBox)ledgerBox.outerHTML=historyResult.status==="fulfilled"
+      ? (historyResult.value.items.length ? '<div class="table-wrap"><table class="f90-wallet-table"><thead><tr><th>التاريخ</th><th>العملية</th><th>المبلغ</th><th>الرصيد بعدها</th></tr></thead><tbody>'+
+      historyResult.value.items.slice(0,20).map(x=>'<tr><td>'+e(C.date(x.created_at))+'</td><td>'+e(x.description||x.kind)+'</td><td class="'+(Number(x.amount_usd)>=0?'ledger-plus':'ledger-minus')+'">'+e(displayMoney(x.amount_usd,true))+'</td><td>'+e(displayMoney(x.balance_after,true))+'</td></tr>').join("")+
+      '</tbody></table></div>' : empty("لا توجد حركات رصيد بعد","wallet")) : '<div class="notice error">تعذّر تحميل الحركات. حاول تحديث الصفحة.</div>';
+    const depositsBox=$("walletDeposits");
+    if(depositsBox)depositsBox.outerHTML=depositsResult.status==="fulfilled"
+      ? (depositsResult.value.items.length ? '<div class="records">'+depositsResult.value.items.slice(0,5).map(depositRecord).join("")+'</div>' : empty("لم تقدّم طلب إيداع بعد","wallet"))
+      : '<div class="notice error">تعذّر تحميل الإيداعات.</div>';
   }
   function depositRecord(d) {
     // Fees must be recorded by the server in the immutable payment-method snapshot.
@@ -923,7 +950,7 @@
               "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
               "wallet",
             )
-        : `<div class="split"><section class="panel"><div class="actions" style="margin-bottom:22px"><a class="button secondary small" href="#/deposit">تغيير الطريقة</a><h2 style="margin:0">${e(m.name_ar)}</h2></div>${image(m.image_url, m.name_ar, "file-preview")}<p class="product-description">${e(m.details_ar || "راجع بيانات التحويل مع الإدارة قبل إرسال المبلغ.")}</p>${m.destination ? `<div class="notice"><b>${e(m.destination)}</b><button class="button ghost small" data-action="copy-text" data-text="${e(m.destination)}">نسخ</button></div>` : ""}<p class="muted small">لا يُضاف الرصيد حتى تعتمد الإدارة صحة التحويل. سعر الصرف يُحفظ لحظة تقديم الطلب.</p></section><section class="panel"><h2>بيانات الإيداع</h2><form id="depositForm"><div class="field-row">${field("amount", "المبلغ المحوّل", "number", "", 'required min="0.000001" max="1000000" step="0.000001"')}${select(
+        : `<div class="split"><section class="panel"><div class="actions" style="margin-bottom:22px"><a class="button secondary small" href="#/deposit">تغيير الطريقة</a><h2 style="margin:0">${e(m.name_ar)}</h2></div>${image(m.image_url, m.name_ar, "file-preview")}${C.safeUrl(m.barcode_url) ? `<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3><img src="${e(C.safeUrl(m.barcode_url))}" alt="باركود ${e(m.name_ar)}" loading="lazy"><small>افتح تطبيق الدفع وامسح الرمز إذا كانت الطريقة تدعم ذلك.</small></div>` : ""}<div class="f90-deposit-instructions"><h3>معلومات وتعليمات الإيداع</h3><p class="product-description">${e(m.details_ar || "راجع بيانات التحويل مع الإدارة قبل إرسال المبلغ.")}</p></div>${m.destination ? `<div class="notice"><b>${e(m.destination)}</b><button class="button ghost small" data-action="copy-text" data-text="${e(m.destination)}">نسخ</button></div>` : ""}<p class="muted small">لا يُضاف الرصيد حتى تعتمد الإدارة صحة التحويل. سعر الصرف يُحفظ لحظة تقديم الطلب.</p></section><section class="panel"><h2>بيانات الإيداع</h2><form id="depositForm"><div class="field-row">${field("amount", "المبلغ المحوّل", "number", "", 'required min="0.000001" max="1000000" step="0.000001"')}${select(
             "currency",
             "عملة التحويل",
             S.rates
@@ -1983,6 +2010,8 @@
     try {
       localStorage.setItem("f90-currency", S.currency);
     } catch {}
+    S.currencyPreference = true;
+    chrome();
     route();
   });
   $("installButton").addEventListener("click", async () => {
