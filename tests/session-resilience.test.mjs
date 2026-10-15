@@ -22,7 +22,7 @@ function harness({ session = "token", result, failure, existing = { profile: { d
     },
   };
   const fn = vm.runInNewContext("(" + source.slice(start, end).trim() + ")", {
-    A, S, toast: (value) => messages.push(value), message: (err) => err.message,
+    A, S, location: {hash:"#/"}, toast: (value) => messages.push(value), message: (err) => err.message,
   });
   return { S, messages, refreshMe: fn };
 }
@@ -54,11 +54,12 @@ test("expired account credentials clear the cached user", async () => {
   assert.equal(h.S.walletStale, false);
 });
 
-test("forbidden account clears cached identity", async () => {
+test("forbidden refresh never treats stale wallet as a current verified balance", async () => {
   const error = Object.assign(new Error("الحساب موقوف"), { code: "F90_FORBIDDEN" });
   const h = harness({ failure: error });
   assert.equal(await h.refreshMe(), false);
-  assert.equal(h.S.me, null);
+  assert.equal(h.S.walletStale, true);
+  assert.equal(h.messages.length, 1);
 });
 
 test("real sign-out clears identity rather than using cached wallet", async () => {
@@ -68,17 +69,18 @@ test("real sign-out clears identity rather than using cached wallet", async () =
   assert.equal(h.S.walletStale, false);
 });
 
-test("confirmed checkout navigates before optional account refresh", () => {
+test("confirmed checkout shows the recorded order without requiring a second purchase", () => {
   const handler = source.indexOf('if (form.id === "checkoutForm")');
   const checkout = source.indexOf('o = await A.call("checkout"', handler);
-  const navigation = source.indexOf('location.hash = href("order", o.id);', checkout);
-  const refresh = source.indexOf('refreshed = await refreshMe();', navigation);
-  assert.ok(handler >= 0 && checkout > handler && navigation > checkout && refresh > navigation);
+  const confirmation = source.indexOf('completedForm.innerHTML', checkout);
+  const refresh = source.indexOf('refreshed = await refreshMe();', confirmation);
+  assert.ok(handler >= 0 && checkout > handler && confirmation > checkout && refresh > confirmation);
+  assert.match(source.slice(confirmation, refresh), /عرض تفاصيل الطلب/);
 });
 
 test("stale wallet amount is never shown as current balance in header", () => {
   const header = source.slice(source.indexOf("function chrome()"), source.indexOf("  async function refreshMe()"));
-  assert.match(header, /S\.walletStale \? "الرصيد يحتاج تحديث"/);
+  assert.match(header, /S\.walletStale \? "تحديث الرصيد"/);
 });
 
 test("checkout refuses stale wallet balance unless refresh succeeds", () => {
