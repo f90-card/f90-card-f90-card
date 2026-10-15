@@ -87,3 +87,13 @@ body.f90-welcome-route .f90-minimal-welcome{background:transparent!important}
 @keyframes f90HomePhoneRotate{0%,100%{transform:rotateY(-20deg) rotateX(4deg) translateY(0)}22%{transform:rotateY(16deg) rotateX(-3deg) translateY(-9px)}48%{transform:rotateY(-11deg) rotateX(4deg) translateY(6px)}73%{transform:rotateY(21deg) rotateX(-4deg) translateY(-7px)}}
 @media(max-width:600px){.f90-home-phone-ad{min-height:317px;margin:12px auto 16px}.f90-home-phone-link{min-height:308px}.f90-home-phone-shell{width:153px;height:295px;border-radius:34px}.f90-home-phone-screen{border-radius:27px}.f90-home-phone-island{width:53px;height:15px}}
 @media(prefers-reduced-motion:reduce){.f90-home-phone-shell{animation:none;transform:rotateY(-7deg)}}
+
+/* Telegram manager-only setup: secrets remain masked and chat discovery stays inside the panel. */
+.f90-telegram-chat-choices{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;min-height:5px}
+.f90-telegram-chat-choices .button{max-width:100%;white-space:normal;text-align:start;overflow-wrap:anywhere}
+#telegramConnectForm{max-width:780px;display:grid;gap:12px}
+#telegramConnectForm input[name="bot_token"]{direction:ltr;text-align:left;font-family:ui-monospace,Consolas,monospace}
+#telegramConnectForm input[name="chat_id"]{direction:ltr;text-align:left}
+#telegramConnectForm .actions{display:flex;flex-wrap:wrap;gap:10px}
+#telegramConnectForm .actions button{min-width:0}
+@media(max-width:620px){#telegramConnectForm .actions{flex-direction:column}#telegramConnectForm .actions button{width:100%}}
