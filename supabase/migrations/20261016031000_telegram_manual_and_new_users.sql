@@ -37,7 +37,7 @@ BEGIN
  VALUES(key,ev,content)
  ON CONFLICT(event_key) DO NOTHING;
  RETURN NEW;
-END $function$
+END $function$;
 
 DROP TRIGGER IF EXISTS f90_telegram_on_new_user ON public.profiles;
 CREATE TRIGGER f90_telegram_on_new_user AFTER INSERT ON public.profiles
