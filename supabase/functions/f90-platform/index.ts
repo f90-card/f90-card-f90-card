@@ -363,6 +363,7 @@ async function publicCatalog() {
   const yassenProductIds = new Set(linked.filter((entry: any) => entry.provider_id === yassenId)
     .map((entry: any) => entry.product_id));
   const allowedCategoryIds = new Set<string>();
+  const categoriesById = new Map(categories.map((entry:any)=>[entry.id,entry]));
   for (const product of products) {
     if (!yassenProductIds.has(product.id)) continue;
     let categoryId = product.category_id;
@@ -370,7 +371,7 @@ async function publicCatalog() {
     while (categoryId && !seen.has(categoryId)) {
       allowedCategoryIds.add(categoryId);
       seen.add(categoryId);
-      categoryId = categories.find((entry: any) => entry.id === categoryId)?.parent_id;
+      categoryId = (categoriesById.get(categoryId) as any)?.parent_id;
     }
   }
   const providerById = new Map(check(rows[7]).map((p: any) => [p.id, p]));
