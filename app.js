@@ -24,7 +24,7 @@
     vip: [],
     me: null,
     walletStale: false,
-    currency: "USD",
+    currency: "ILS",
     route: 0,
     quote: null,
     checkoutKey: null,
@@ -49,7 +49,7 @@
     quickProductOpener = null;
   try {
     S.currencyPreference = !!localStorage.getItem("f90-currency");
-    S.currency = localStorage.getItem("f90-currency") || "USD";
+    S.currency = localStorage.getItem("f90-currency") || "ILS";
     S.favorites = JSON.parse(localStorage.getItem("f90-favorites") || "[]");
   } catch {}
   const href = (kind, id) => `#/${kind}/${encodeURIComponent(id)}`;
@@ -353,7 +353,7 @@
       ["", "الرئيسية", "grid"],
       ["orders", "طلباتي", "clock"],
       ["search", "بحث", "search"],
-    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : page === "profile" ? `<span class="f90-profile-dock-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" width="42" height="42"></span>` : I(icon)}<span>${label}</span></a>`).join("");
+    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : page === "profile" ? `<span class="f90-profile-dock-emblem">${S.me?.profile?.avatar_url ? `<img src="${e(C.safeUrl(S.me.profile.avatar_url))}" alt="صورتي الشخصية" width="42" height="42">` : I("user")}</span>` : I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
       `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav>${Object.entries(
         {
@@ -2493,7 +2493,7 @@
       if(!warmCatalog)networkCatalog.then(saveWarmCatalog).catch(()=>{});
       const accountRequest = refreshMe().catch((error) => error);
       Object.assign(S, await catalogRequest);
-      if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
+      if (!S.currencyPreference) S.currency = S.settings.config?.default_display_currency || S.settings.currency || "ILS";
       // Render authenticated navigation only after restoring the account.
       // Previously chrome() ran while S.me was still null, leaving the drawer
       // and wallet in guest mode even when a valid session existed.
@@ -2561,7 +2561,7 @@
           if (latest.settings) S.settings = latest.settings;
           const validCurrency = S.rates.some(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd)>0);
           if (!S.currencyPreference || !validCurrency)
-            S.currency = S.settings.currency || "USD";
+            S.currency = S.settings.config?.default_display_currency || S.settings.currency || "ILS";
           const displayCurrencyChanged = previousRates !== incomingRates || oldDefaultCurrency !== S.settings.currency || !validCurrency;
           // Keep refreshed availability in memory; do not interrupt an open purchase.
           const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("depositForm") || !!document.getElementById("modalRoot")?.children.length;
