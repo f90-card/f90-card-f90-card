@@ -14,10 +14,13 @@ test("special service modules compile and both entry points load in correct orde
  assert.match(storefront,/f90-special\.css/);
  assert.match(admin,/f90-special\.css/);
 });
-test("customer financial requests have independently verified server pricing and no auto credit",()=>{
+test("dedicated wallet transfers and salary approval remain server-authoritative",()=>{
  const ui=read("f90-special.js"),sql=read("supabase/migrations/20261015210000_f90_special_requests.sql");
  assert.match(ui,/client\.rpc\("f90_special_submit"/);
- assert.match(ui,/p_amount: Number/);
+ assert.match(ui,/p_amount:value/);
+ assert.match(ui,/client\.rpc\("f90_submit_salary"/);
+ assert.match(ui,/client\.rpc\("f90_submit_transfer"/);
+ assert.match(ui,/p_net:value/);
  assert.match(ui,/salary_usd_per_100k:10/);
  assert.match(ui,/transfer_fee_percent:2/);
  assert.match(ui,/100000/);
