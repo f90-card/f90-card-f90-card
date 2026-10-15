@@ -97,3 +97,22 @@ body.f90-welcome-route .f90-minimal-welcome{background:transparent!important}
 #telegramConnectForm .actions{display:flex;flex-wrap:wrap;gap:10px}
 #telegramConnectForm .actions button{min-width:0}
 @media(max-width:620px){#telegramConnectForm .actions{flex-direction:column}#telegramConnectForm .actions button{width:100%}}
+
+/* Manager-controlled homepage phone placement. Defaults reproduce the original ad. */
+.f90-home-phone-ad{
+  transform:translate3d(var(--f90-phone-x,0px),var(--f90-phone-y,0px),0);
+  min-height:max(360px,calc(var(--f90-phone-size,178px)*2.04));
+}
+.f90-home-phone-link{min-height:calc(var(--f90-phone-size,178px)*1.92)}
+.f90-home-phone-shell{
+  width:var(--f90-phone-size,178px);
+  height:calc(var(--f90-phone-size,178px)*1.92);
+}
+@media(max-width:600px){
+ .f90-home-phone-ad{min-height:max(317px,calc(var(--f90-phone-mobile-size,153px)*2.04))}
+ .f90-home-phone-link{min-height:calc(var(--f90-phone-mobile-size,153px)*1.92)}
+ .f90-home-phone-shell{
+   width:var(--f90-phone-mobile-size,153px);
+   height:calc(var(--f90-phone-mobile-size,153px)*1.92);
+ }
+}
