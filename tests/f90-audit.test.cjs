@@ -86,6 +86,16 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/staff\.telegram\.test/);
   assert.match(admin,/telegram-alerts/);
 });
+test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
+  assert.match(adminHtml, /admin\.js\?v=20261015-telegram-autodiscover1/);
+  assert.match(admin, /if\(!chat\)\{/);
+  assert.match(admin, /staff\.telegram\.discover/);
+  assert.match(admin, /chats\.length!==1/);
+  assert.match(admin, /staff\.telegram\.connect/);
+  assert.match(admin, /form\.elements\.bot_token\.value=""/);
+  assert.doesNotMatch(admin, /field\("chat_id"[^\n]*"required inputmode=/);
+});
+
 test("Telegram integration is manager-configured and never embeds bot secrets in public files", () => {
   assert.match(admin,/telegramConnectForm/);
   assert.match(admin,/staff\.telegram\.connect/);
