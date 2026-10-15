@@ -1,9 +1,14 @@
 (function () {
   "use strict";
   const client = window.f90Supabase;
-  const endpoint =
-    window.F90_CONFIG.SUPABASE_URL + "/functions/v1/f90-platform";
+  const endpoint = window.F90_CONFIG?.SUPABASE_URL
+    ? window.F90_CONFIG.SUPABASE_URL + "/functions/v1/f90-platform" : "";
   async function call(action, data = {}) {
+    if (!client || !endpoint) {
+      const error = new Error("تعذّر اتصال المتجر بالخادم. أعد المحاولة بعد التأكد من الاتصال بالإنترنت.");
+      error.code = "F90_SDK_UNAVAILABLE";
+      throw error;
+    }
     // Public catalog never needs a session. Avoid blocking first paint on auth storage.
     const { data: { session } } = action === "catalog" || action === "health"
       ? { data: { session: null } }
@@ -16,7 +21,8 @@
     let response;
     try {
       const isReadOnly=["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
-      const timeout=isReadOnly?13000:0;
+      // A bounded wait prevents indefinite spinners. Mutating calls remain ambiguous on timeout.
+      const timeout=isReadOnly?13000:45000;
       const controller=timeout?new AbortController():null;
       const timeoutId=controller?setTimeout(()=>controller.abort(),timeout):null;
       try{
@@ -42,16 +48,23 @@
       err.uncertain = response.ok || response.status >= 500;
       throw err;
     }
-    if (!response.ok || body.error) {
-      const err = new Error(body.error?.message || "تعذّر إكمال العملية");
-      err.code = body.error?.code;
+    if (!response.ok || body?.error) {
+      const err = new Error(body?.error?.message || "تعذّر إكمال العملية");
+      err.code = body?.error?.code;
       err.status = response.status;
       err.uncertain = response.status >= 500;
+      throw err;
+    }
+    if (!body || typeof body !== "object" || !Object.prototype.hasOwnProperty.call(body, "data")) {
+      const err = new Error("رد الخادم غير مكتمل. أعد المحاولة بعد التحقق من حالة الخدمة.");
+      err.code = "F90_BAD_RESPONSE";
+      err.uncertain = !["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       throw err;
     }
     return body.data;
   }
   async function upload(file, bucket, folder) {
+    if (!client) throw new Error("تعذّر تحميل اتصال التخزين بالخادم. حدّث الصفحة ثم حاول مجددًا.");
     const video = bucket === "f90-videos";
     const audio = bucket === "f90-audio";
     if (!file || file.size > (video ? 20971520 : audio ? 12582912 : 5242880))
