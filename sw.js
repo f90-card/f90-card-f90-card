@@ -1,8 +1,10 @@
-const CACHE = "f90-static-v3-12";
+const CACHE = "f90-static-v3-13";
 const STATIC = [
   "./offline.html",
   "./styles.css",
   "./store-core.js",
+  "./f90-startup-rescue.js",
+  "./f90-catalog-rescue.json",
   "./icon.svg",
   "./f90-logo.png",
 ];
