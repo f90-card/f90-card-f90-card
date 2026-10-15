@@ -1869,7 +1869,7 @@ async function staff(a: Actor, b: any) {
       throw new AppError("F90_FIELDS", 400, "توجد معرّفات خدمات فارغة أو مكررة");
     const categoryId = uuid(b.category_id);
     const allCategories = check(
-      await db.from("categories").select("id,name"),
+      await db.from("categories").select("id,name,parent_id,presentation"),
     );
     const categoryIds = new Set(allCategories.map((c: any) => c.id));
     if (!categoryIds.has(categoryId)) throw new AppError("F90_FIELDS", 400, "القسم غير موجود");
@@ -1880,9 +1880,21 @@ async function staff(a: Actor, b: any) {
     const margin = Number(b.margin_percent ?? p.margin_percent);
     if (!Number.isFinite(margin) || margin < 0 || margin > 10000)
       throw new AppError("F90_FIELDS", 400, "هامش الربح غير صالح");
-    const exchange = Number(rate.per_usd);
-    if (!rate.is_enabled || !Number.isFinite(exchange) || exchange <= 0)
+    const exchange = p.adapter==="yassen" && p.currency==="ILS"
+      ? Number(p.config?.supplier_ils_per_usd??3.2) : Number(rate.per_usd);
+    const supplierFee=p.adapter==="yassen"?Number(p.config?.supplier_commission_percent??0):0;
+    if(!Number.isFinite(exchange)||exchange<=0||!Number.isFinite(supplierFee)||supplierFee<0||supplierFee>50)
       throw new AppError("F90_RATE_MISSING");
+    const categoryById=new Map(allCategories.map((c:any)=>[c.id,c]));
+    const extraFor=(id:string)=>{
+      let current:string|undefined=id,total=0,seen=new Set<string>();
+      for(let depth=0;current&&depth<18&&!seen.has(current);depth++){
+        seen.add(current);const row:any=categoryById.get(current);
+        if(!row)break;
+        total+=Number(row.presentation?.extra_margin_percent||0);current=row.parent_id;
+      }
+      return Number.isFinite(total)?total:0;
+    };
     const serviceById = new Map(services.map((service: any) => [String(service.id), service]));
     const preview = requested.map((id: string) => {
       const service: any = serviceById.get(id);
@@ -1891,7 +1903,7 @@ async function staff(a: Actor, b: any) {
       const unit = Number(service.unit_quantity);
       const min = Number(service.min);
       const max = Number(service.max);
-      const cost = supplierPrice / exchange;
+      const cost = supplierPrice / exchange * (1+supplierFee/100);
       const price = Math.round(cost * (1 + margin / 100) * 1e6) / 1e6;
       if (![supplierPrice, unit, min, max, cost, price].every(Number.isFinite) ||
           supplierPrice <= 0 || unit <= 0 || min <= 0 || max < min || price <= 0)
@@ -1901,9 +1913,9 @@ async function staff(a: Actor, b: any) {
       const chosenCategoryId = uuid(categoriesByService[id] || categoryId);
       if (!categoryIds.has(chosenCategoryId))
         throw new AppError("F90_FIELDS", 400, "القسم المحدد للخدمة غير موجود: " + id);
-      // Prices are marked up by 5% when Omega's configured margin is 5%;
-      // the sale stays hidden until staff reviews the details and supplier.
-      return { service, name, cost, price, chosenCategoryId };
+      const effectivePrice=Math.round(cost*(1+(margin+extraFor(chosenCategoryId))/100)*1e6)/1e6;
+      if(effectivePrice<=0||effectivePrice>1000000)throw new AppError("F90_FIELDS",400,"الهامش الإضافي غير صالح");
+      return {service,name,cost,price:effectivePrice,chosenCategoryId};
     });
     const saved = [];
     for (const { service: s, name, cost, price, chosenCategoryId } of preview) {

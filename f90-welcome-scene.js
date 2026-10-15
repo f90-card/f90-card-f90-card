@@ -7,9 +7,7 @@ function homePhone(cfg,brandLogo){
   if(p.enabled!==true)return "";
   const mode=p.mode==="image"?"image":p.mode==="text"?"image":"video";
   const video=safe(p.url),still=safe(p.image_url||p.poster_url);
-  const phone=String(c.whatsapp||"").replace(/\D/g,"")||"970568181910";
-  const contact="https://wa.me/"+phone+"?text="+encodeURIComponent("مرحبًا، أريد التواصل مع خدمة عملاء F90 CARD");
-  const target=safe(p.link_url)||contact;
+  const target=safe(p.link_url);
   const number=(value,min,max,fallback)=>{
     const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;
   };
@@ -27,9 +25,9 @@ function homePhone(cfg,brandLogo){
     ? '<video class="f90-home-laptop-video" muted playsinline loop preload="none"'+(laptopImage?' poster="'+esc(laptopImage)+'"':"")+'><source data-src="'+esc(laptopVideo)+'" type="'+(/\.webm(?:[?#]|$)/i.test(laptopVideo)?"video/webm":"video/mp4")+'"></video>'
     : '<img src="'+esc(laptopImage||still||'./f90-logo.png')+'" alt="إعلان أف تسعين كارد" loading="lazy">';
   return '<section class="f90-home-phone-ad f90-home-devices" style="'+esc(style)+'" aria-label="إعلانات الأجهزة">'+
-  '<a class="f90-home-phone-link" href="'+esc(target)+'" target="_blank" rel="noopener noreferrer" aria-label="تواصل مع خدمة عملاء أف تسعين كارد عبر واتساب">'+
-  '<span class="f90-home-phone-shell"><span class="f90-home-phone-screen">'+media+'<img class="f90-home-phone-mark" src="'+esc(safe(brandLogo)||"./f90-logo.png")+'" alt="" aria-hidden="true" loading="lazy"></span></span></a>'+
-  '<a class="f90-home-laptop-link" href="'+esc(safe(laptop.link_url)||target)+'" target="_blank" rel="noopener noreferrer" aria-label="إعلان الكمبيوتر المحمول"><span class="f90-home-laptop-shell"><span class="f90-home-laptop-display">'+laptopMedia+'</span><span class="f90-home-laptop-base"></span></span></a></section>';
+  '<a class="f90-home-phone-link"'+(target?' href="'+esc(target)+'" target="_blank" rel="noopener noreferrer"':'')+' aria-label="إعلان F90 CARD">'+
+  '<span class="f90-home-phone-shell"><span class="f90-home-phone-screen">'+media+'</span><img class="f90-home-phone-mark" src="'+esc(safe(brandLogo)||"./f90-logo.png")+'" alt="" aria-hidden="true" loading="lazy"></span></a>'+
+  '<a class="f90-home-laptop-link"'+(safe(laptop.link_url)?' href="'+esc(safe(laptop.link_url))+'" target="_blank" rel="noopener noreferrer"':'')+' aria-label="إعلان الكمبيوتر المحمول"><span class="f90-home-laptop-shell"><span class="f90-home-laptop-display">'+laptopMedia+'</span><span class="f90-home-laptop-base"></span></span></a></section>';
 }
 window.F90WelcomeScene={homePhone};
 })();

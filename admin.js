@@ -59,6 +59,7 @@
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["special-settings", "أسعار وخدمات F90", "edit", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
+    ["pricing-center", "سعر المورد وهوامش الربح", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
@@ -176,7 +177,7 @@
       ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","special-requests","verification","ledger","audit"]],
       ["العملاء والتجار",["users","traders","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
-      ["المدفوعات والأسعار",["payments","rates","vip","special-settings"]],
+      ["المدفوعات والأسعار",["pricing-center","rates","payments","vip","special-settings"]],
       ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
       ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
     ];
@@ -643,7 +644,7 @@
           )
           .map(
             (r) =>
-              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${kind === "products" ? `<input type="checkbox" class="f90-bulk-check" aria-label="تحديد ${e(r.name)}" value="${e(r.id)}">` : ""}<button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
+              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${kind === "products" ? `<input type="checkbox" class="f90-bulk-check" aria-label="تحديد ${e(r.name)}" value="${e(r.id)}">` : ""}<button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button>${kind === "products" || kind === "categories" ? `<a class="button secondary small" href="#/pricing-center" title="هامش الربح الإضافي">هامش الربح</a>` : ""}<button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
           )
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
@@ -1060,7 +1061,7 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 13, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
@@ -1090,7 +1091,7 @@
     const omega = p.adapter === "omega";
     const bulk = ["omega", "yassen", "smm"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
-    const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
+    const ratePerUSD = p.adapter==="yassen"&&p.currency==="ILS" ? Number(p.config?.supplier_ils_per_usd??3.2) : fx?.is_enabled&&Number(fx.per_usd)>0?Number(fx.per_usd):null;
     const priceNotice = ratePerUSD
       ? `<div class="notice">عملة المورّد: ${e(p.currency)} · سعر الصرف المعتمد: ${e(ratePerUSD)} ${e(p.currency)} مقابل 1 USD. الأسعار أدناه تقديرية وفق الهامش، ويُعاد حسابها على الخادم وقت الاستيراد.</div>`
       : '<div class="notice warning">سعر صرف عملة المورّد غير مفعّل أو غير مضبوط. يمكنك معاينة الخدمات، لكن لا يمكن استيرادها حتى تضبط سعر الصرف في لوحة الإدارة.</div>';
@@ -1210,7 +1211,7 @@
     const form = $("importForm");
     if (!form) return;
     const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
-    const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
+    const ratePerUSD = S.importProvider?.adapter==="yassen"&&S.importProvider.currency==="ILS" ? Number(S.importProvider.config?.supplier_ils_per_usd??3.2) : fx?.is_enabled&&Number(fx.per_usd)>0?Number(fx.per_usd):null;
     const margin = Number(form.elements.margin_percent?.value);
     const validMargin = Number.isFinite(margin) && margin >= 0 && margin <= 10000;
     form.querySelectorAll("[data-import-preview]").forEach((cell) => {
@@ -1593,12 +1594,12 @@
       field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
       field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1000" rows="2"`)+
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
-      '<div class="f90-design-video-fields"><h3>إعلان هاتف خمري في الصفحة الرئيسية فقط</h3><p class="muted small">تُعرض الصورة أو الفيديو الذي ترفعه بنفسك داخل الهاتف. لا أزرار أو كتابة مفروضة داخل الشاشة. الضغط في أي موضع على الهاتف يفتح خدمة العملاء في واتساب. إخفاء الإعلان يُخفي الهاتف بالكامل.</p>'+
+      '<div class="f90-design-video-fields"><h3>إعلان هاتف خمري في الصفحة الرئيسية فقط</h3><p class="muted small">تُعرض الصورة أو الفيديو الذي ترفعه بنفسك داخل الهاتف. لا أزرار أو كتابة مفروضة داخل الشاشة. لن يُفتح أي رابط تلقائيًا؛ يمكنك تحديد رابط اختياري. إخفاء الإعلان يُخفي الهاتف بالكامل.</p>'+
       check("promo_video_enabled","إظهار إعلان الفيديو في الصفحة الرئيسية",c.promo_video?.enabled===true)+
       select("promo_video_mode","المحتوى داخل الهاتف",[["video","فيديو صامت"],["image","صورة ثابتة أو GIF"]],c.promo_video?.mode==="image"?"image":c.promo_video?.url?"video":"image")+
       field("promo_video_image_url","رابط صورة شاشة الهاتف","url",c.promo_video?.image_url||"")+
       field("promo_video_image_file","رفع صورة أو GIF لشاشة الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
-      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = واتساب المتجر)"')+
+      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = بدون رابط)"')+
       field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","range",c.promo_video?.phone_size??178,'min="1" max="480" step="1"')+
       field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","range",c.promo_video?.phone_size_mobile??153,'min="1" max="360" step="1"')+
       '<h4>إعلان اللابتوب بجانب الهاتف</h4>'+ 
@@ -2087,6 +2088,7 @@
       else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
       else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
+      else if (page === "pricing-center") await window.F90PricingAdmin.render(main);
       else if (page === "vip") vip();
       else if (page === "policies") policies();
       else if (page === "providers") await providers();
@@ -2245,8 +2247,9 @@
     }
     if (form.id === "importForm") {
       const fx = S.rates.find((rate) => rate.currency === S.importProvider?.currency);
-      const perUSD = Number(fx?.per_usd);
-      if (!fx?.is_enabled || !(perUSD > 0)) throw new Error("اضبط سعر صرف عملة المورّد قبل الاستيراد");
+      const perUSD = S.importProvider?.adapter==="yassen"&&S.importProvider.currency==="ILS" ?
+        Number(S.importProvider.config?.supplier_ils_per_usd??3.2):Number(fx?.per_usd);
+      if (!(perUSD>0)||(!fx?.is_enabled&&S.importProvider?.adapter!=="yassen"))throw new Error("اضبط سعر صرف المورّد قبل الاستيراد");
       const margin = Number(d.margin_percent);
       if (!Number.isFinite(margin) || margin < 0 || margin > 10000) throw new Error("هامش الربح غير صالح");
       if (!d.category_id || !S.categories.some((category) => category.id === d.category_id))

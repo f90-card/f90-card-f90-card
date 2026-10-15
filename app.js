@@ -24,7 +24,7 @@
     vip: [],
     me: null,
     walletStale: false,
-    currency: "USD",
+    currency: "ILS",
     route: 0,
     quote: null,
     checkoutKey: null,
@@ -49,7 +49,7 @@
     quickProductOpener = null;
   try {
     S.currencyPreference = !!localStorage.getItem("f90-currency");
-    S.currency = localStorage.getItem("f90-currency") || "USD";
+    S.currency = localStorage.getItem("f90-currency") || "ILS";
     S.favorites = JSON.parse(localStorage.getItem("f90-favorites") || "[]");
   } catch {}
   const href = (kind, id) => `#/${kind}/${encodeURIComponent(id)}`;
@@ -353,7 +353,7 @@
       ["", "الرئيسية", "grid"],
       ["orders", "طلباتي", "clock"],
       ["search", "بحث", "search"],
-    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : page === "profile" ? `<span class="f90-profile-dock-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" width="42" height="42"></span>` : I(icon)}<span>${label}</span></a>`).join("");
+    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : page === "profile" ? `<span class="f90-profile-dock-emblem">${S.me?.profile?.avatar_url ? `<img src="${e(C.safeUrl(S.me.profile.avatar_url))}" alt="صورتي الشخصية" width="42" height="42">` : I("user")}</span>` : I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
       `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav>${Object.entries(
         {
@@ -978,7 +978,7 @@
               ["+44", "+44"],
             ],
             "+970",
-          )}${field("phone", "رقم الهاتف <small>اختياري</small>", "tel", "", 'autocomplete="tel-national" maxlength="25" dir="ltr"')}</div><label class="check-field"><input type="checkbox" required>أوافق على <a href="#/policy/terms">الشروط</a> و<a href="#/policy/privacy">سياسة الخصوصية</a></label>`
+          )}${field("phone", "رقم الهاتف <small>اختياري</small>", "tel", "", 'autocomplete="tel-national" maxlength="25" dir="ltr"')}</div>${select("display_currency","عملة عرض الأسعار",S.rates.filter(r=>r.is_enabled&&r.per_usd).map(r=>[r.currency,r.name_ar]),S.currency||"ILS")}<label class="check-field"><input type="checkbox" required>أوافق على <a href="#/policy/terms">الشروط</a> و<a href="#/policy/privacy">سياسة الخصوصية</a></label>`
         : ""
     }<p class="inline-error" id="authError"></p><button class="button full" type="submit">${mode === "register" ? "إنشاء حساب" : mode === "forgot" ? "أرسل رابط الاستعادة" : "دخول"}</button></form>${mode !== "forgot" ? `<div class="divider">أو</div><button class="google-button" data-action="google"><span class="f90-google-mark" aria-hidden="true">G</span>المتابعة باستخدام جوجل</button><button class="button ghost small" style="margin-top:16px" data-action="auth-tab" data-mode="forgot">نسيت كلمة المرور؟</button>` : '<p class="muted small" style="margin-top:16px">ستصلك رسالة إذا كان البريد مرتبطًا بحساب.</p>'}</section></div>`;
   }
@@ -1494,14 +1494,14 @@
     try {
       if (
         S.settings.config.maintenance?.enabled &&
-        !["manager", "designer", "admin"].includes(S.me?.role) &&
+        !["manager", "admin"].includes(S.me?.role) &&
         !["auth", "security", "support"].includes(page)
       ) {
         const maintenance = S.settings.config.maintenance;
         const until = maintenance.until ? new Date(maintenance.until).getTime() : NaN;
         const hasCountdown = Number.isFinite(until);
         document.body.classList.add("f90-in-maintenance");
-        main.innerHTML = `<section class="f90-maintenance-screen" role="status" aria-label="الموقع تحت الصيانة"><div class="f90-maintenance-decor" aria-hidden="true"></div><div class="f90-maintenance-content"><img class="f90-maintenance-logo" src="./assets/icons/icon-192.png" alt="شعار F90 Card" width="110" height="110"><span class="f90-maintenance-tag">F90 CARD</span><h1>نعتذر لكم، الموقع قيد الصيانة حاليًا</h1><p>${e(maintenance.text_ar || "نعمل على تحسين خدماتنا، وسنعود للعمل قريبًا.")}</p>${hasCountdown ? '<div class="f90-maintenance-countdown" id="maintenanceClock" aria-label="الوقت المتبقي حتى الموعد المحدد"></div>' : '<p class="muted">سيعود الموقع للعمل عند انتهاء الصيانة.</p>'}<small>نشكر لكم صبركم وتفهّمكم</small></div></section>`;
+        main.innerHTML = `<section class="f90-maintenance-screen" role="status" aria-label="الموقع تحت الصيانة"><div class="f90-maintenance-decor" aria-hidden="true"></div><div class="f90-maintenance-content"><img class="f90-maintenance-logo" src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="شعار F90 Card" width="110" height="110"><span class="f90-maintenance-tag">F90 CARD</span><h1>نعتذر لكم، الموقع قيد الصيانة حاليًا</h1><p>${e(maintenance.text_ar || "نعمل على تحسين خدماتنا، وسنعود للعمل قريبًا.")}</p>${hasCountdown ? '<div class="f90-maintenance-countdown" id="maintenanceClock" aria-label="الوقت المتبقي حتى الموعد المحدد"></div>' : '<p class="muted">سيعود الموقع للعمل عند انتهاء الصيانة.</p>'}<small>نشكر لكم صبركم وتفهّمكم</small></div></section>`;
         if (hasCountdown) {
           const tick = () => {
             const el = $("maintenanceClock");
@@ -1638,6 +1638,10 @@
           throw new Error(
             "تعذّر إنشاء الحساب. تحقق من البريد وقوة كلمة المرور أو جرّب لاحقًا",
           );
+        if(S.rates.some(x=>x.currency===data.display_currency&&x.is_enabled)){
+          S.currency=data.display_currency;S.currencyPreference=true;
+          try{localStorage.setItem("f90-currency",S.currency)}catch{}
+        }
         if (!r.data.session) {
           modal(
             "تحقق من بريدك",
@@ -2082,7 +2086,13 @@
     }
     const action = button.dataset.action;
     try {
-      if (action === "channel-dismiss") {
+      if (action === "currency-welcome") {
+        const desired=button.dataset.currency;
+        if(!S.rates.some(r=>r.currency===desired&&r.is_enabled&&Number(r.per_usd)>0))throw new Error("العملة غير متاحة");
+        S.currency=desired;S.currencyPreference=true;
+        try{localStorage.setItem("f90-currency",desired);}catch{}
+        closeModal();chrome();await route();
+      } else if (action === "channel-dismiss") {
         try { localStorage.setItem(button.dataset.key, "1"); } catch {}
         closeModal();
       } else if (action === "popup-read") {
@@ -2493,7 +2503,7 @@
       if(!warmCatalog)networkCatalog.then(saveWarmCatalog).catch(()=>{});
       const accountRequest = refreshMe().catch((error) => error);
       Object.assign(S, await catalogRequest);
-      if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
+      if (!S.currencyPreference) S.currency = S.settings.config?.default_display_currency || S.settings.currency || "ILS";
       // Render authenticated navigation only after restoring the account.
       // Previously chrome() ran while S.me was still null, leaving the drawer
       // and wallet in guest mode even when a valid session existed.
@@ -2561,7 +2571,7 @@
           if (latest.settings) S.settings = latest.settings;
           const validCurrency = S.rates.some(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd)>0);
           if (!S.currencyPreference || !validCurrency)
-            S.currency = S.settings.currency || "USD";
+            S.currency = S.settings.config?.default_display_currency || S.settings.currency || "ILS";
           const displayCurrencyChanged = previousRates !== incomingRates || oldDefaultCurrency !== S.settings.currency || !validCurrency;
           // Keep refreshed availability in memory; do not interrupt an open purchase.
           const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("depositForm") || !!document.getElementById("modalRoot")?.children.length;
@@ -2603,7 +2613,13 @@
       const channelKey = "f90-channel-invite:" + channel;
       let channelSeen = false;
       try { channelSeen = localStorage.getItem(channelKey) === "1"; } catch {}
-      if (channelValid && S.settings.config?.whatsapp_channel_popup !== false && !channelSeen) {
+      if (!S.currencyPreference && S.rates.some(r=>r.is_enabled&&Number(r.per_usd)>0)) {
+        const preferred=S.settings.config?.default_display_currency || "ILS";
+        modal("اختر عملتك الافتراضية",
+          '<p>اختر العملة التي تريد عرض أسعار وخدمات المتجر بها. يمكنك تغييرها لاحقًا من إعدادات الموقع. أرصدة المحفظة والتسوية المالية تبقى بالدولار.</p>'+
+          '<div class="f90-currency-welcome-grid">'+S.rates.filter(r=>r.is_enabled&&Number(r.per_usd)>0).map(r=>
+             '<button type="button" data-action="currency-welcome" data-currency="'+e(r.currency)+'" class="f90-currency-option'+(r.currency===preferred?' is-recommended':'')+'">'+e(r.name_ar)+' <small>'+e(r.currency)+'</small></button>').join("")+'</div>');
+      } else if (channelValid && S.settings.config?.whatsapp_channel_popup !== false && !channelSeen) {
         modal("تابع قناة F90 CARD على واتساب",
           `<div class="f90-channel-invite"><span class="f90-channel-mark" aria-hidden="true">◉</span><p>انضم إلى قناتنا الرسمية لمتابعة الإعلانات والعروض والتحديثات المهمة.</p><p class="muted small">ننصح بالانضمام حتى تصلك المستجدات. يمكنك استخدام المتجر دون الاشتراك.</p><a class="button full" href="${e(channel)}" target="_blank" rel="noopener noreferrer">الانتقال إلى قناة واتساب</a><button class="button ghost full" data-action="channel-dismiss" data-key="${e(channelKey)}">متابعة التصفح</button></div>`);
       } else {

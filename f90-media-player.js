@@ -4,13 +4,13 @@
 // Customers may set their personal volume; browser autoplay policy always applies.
 const VOLUME_KEY="f90-radio-volume";
 let bubble,panel,slider,percent,note,media,trackTitle;
-let state={enabled:false,revision:"",tracks:[],selected_index:0,start_seconds:0,volume:.35,mode:"audio"};
+let state={enabled:false,revision:"",tracks:[],selected_index:0,start_seconds:0,volume:.02,mode:"audio"};
 let trackIndex=0,sourceUrl="",loading=false,loadSequence=0,seekOnLoad=0,started=false,userGesture=false;
 let retryTimer=null,retryMs=3000,stallTimer=null,refreshing=false;
 const clamp=(x,lo,hi,otherwise=lo)=>{const n=Number(x);return Number.isFinite(n)?Math.min(hi,Math.max(lo,n)):otherwise;};
 function url(value){try{const parsed=new URL(String(value||""),location.href);return parsed.protocol==="https:"?parsed.href:"";}catch{return "";}}
 function volume(){
- try{const value=localStorage.getItem(VOLUME_KEY);return value===null?clamp(state.volume,0,1,.35):clamp(value,0,1,.35);}catch{return clamp(state.volume,0,1,.35);}
+ try{const value=localStorage.getItem(VOLUME_KEY);return value===null ? .02 : clamp(value,0,1,.02);}catch{return .02;}
 }
 function hint(message){if(note)note.textContent=message||"";}
 function setVolume(v){try{localStorage.setItem(VOLUME_KEY,String(v));}catch{}}
@@ -25,8 +25,8 @@ function ensure(){
  '<div class="f90-radio-popup" id="f90RadioPopup" hidden>'+
  '<strong class="f90-radio-title">راديو أف تسعين</strong>'+
  '<small id="f90RadioTrack" class="f90-radio-current"></small>'+
- '<label for="f90RadioVolume">مستوى الصوت <output id="f90RadioPercent">35%</output></label>'+
- '<input type="range" id="f90RadioVolume" min="0" max="100" value="35" aria-label="مستوى صوت المتجر">'+
+ '<label for="f90RadioVolume">مستوى الصوت <output id="f90RadioPercent">2%</output></label>'+
+ '<input type="range" id="f90RadioVolume" min="0" max="100" value="2" aria-label="مستوى صوت المتجر">'+
  '<small class="f90-radio-hint" id="f90RadioHint" role="status"></small></div>';
  document.body.appendChild(bubble);
  panel=bubble.querySelector("#f90RadioPopup");slider=bubble.querySelector("#f90RadioVolume");
@@ -179,7 +179,7 @@ function apply(next){
  const changed=enabled!==state.enabled||revision!==state.revision||mode!==state.mode||
    JSON.stringify(tracks)!==JSON.stringify(state.tracks);
  state={enabled,tracks,selected_index:index,start_seconds:clamp(next?.start_seconds,0,86400),
-    volume:clamp(next?.volume,0,1,.35),revision,mode};
+    volume:clamp(next?.volume,0,1,.02),revision,mode};
  appearance(next?.bubble);
  bubble.hidden=!enabled;
  document.body.classList.toggle("f90-radio-on",enabled);
