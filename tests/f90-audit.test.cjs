@@ -127,6 +127,8 @@ test("Radio controls are manager only, with configurable icon and mobile layout"
   assert.match(admin,/promo_phone_x/);
   assert.match(admin,/promo_phone_y/);
   assert.match(radio,/function applyBubble\(value\)/);
+  assert.match(radio,/stallTimer/);
+  assert.match(radio,/addEventListener\("waiting"/);
   assert.match(radio,/f90-radio-custom-icon/);
   assert.match(radio,/media\.state/);
   assert.doesNotMatch(radio,/id="f90RadioPause"|id="f90RadioNext"|id="f90RadioStop"/);
@@ -162,7 +164,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-radio-mobile4/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-radio-mobile5/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
