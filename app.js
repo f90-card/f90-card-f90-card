@@ -57,8 +57,9 @@
     const valid = C.safeUrl(src);
     const fallback = C.safeUrl(S.settings?.config?.card_fallback_image || S.settings?.config?.card_back_image || "./assets/sections/services.png");
     const use = valid && !String(valid).includes("/app-placeholders/") ? valid : fallback;
+    const checkout=String(cls).includes("f90-checkout-image");
     return use
-      ? `<img src="${e(use)}" alt="${e(alt)}" class="${e(cls)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${e(fallback)}';">`
+      ? `<img src="${e(use)}" alt="${e(alt)}" class="${e(cls)}" width="256" height="256" loading="${checkout?"eager":"lazy"}" fetchpriority="${checkout?"high":"low"}" decoding="async" onerror="this.onerror=null;this.src='${e(fallback)}';">`
       : `<div class="image-placeholder">${I("grid")}<span>${e(alt)}</span></div>`;
   };
   const field = (name, label, type = "text", value = "", attrs = "") =>
@@ -247,6 +248,27 @@
     if(!symbol)try{symbol=new Intl.NumberFormat("en",{style:"currency",currency:code,currencyDisplay:"narrowSymbol"}).formatToParts(0).find(p=>p.type==="currency")?.value||code;}catch{symbol=code;}
     return symbol+" "+new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:fine?6:2}).format(value);
   }
+  // Display-only formatting; full precision is retained in the authoritative
+  // server quote, wallet checks, idempotency key and order confirmation.
+  function f90CheckoutMoney(usd, balance = false){
+    const rate=S.rates.find(r=>r.currency===S.currency&&r.is_enabled&&Number(r.per_usd)>0);
+    const code=rate?.currency||"USD";
+    const value=code==="USD"?Number(usd):C.convert(usd,code,S.rates);
+    if(!Number.isFinite(value))return "—";
+    const symbols={USD:"$",ILS:"₪",JOD:"د.أ",EUR:"€",SAR:"ر.س",AED:"د.إ",EGP:"ج.م",TRY:"₺",GBP:"£"};
+    const symbol=symbols[code]||code;
+    const printed=balance?Math.trunc(value):value;
+    return symbol+" "+new Intl.NumberFormat("en-US",{
+      minimumFractionDigits:0,maximumFractionDigits:balance?0:1
+    }).format(printed);
+  }
+  function f90ShortLimit(value){
+    const n=Number(value);
+    if(!Number.isFinite(n))return "—";
+    const format=x=>new Intl.NumberFormat("en-US",{maximumFractionDigits:1}).format(x);
+    return Math.abs(n)>=1000000?format(n/1000000)+"M":format(n);
+  }
+
   function chrome() {
     brand();
     const me = S.me,
@@ -457,9 +479,10 @@
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = (src, name) => image(C.safeUrl(src) || f90Fallback(), name || "قيد التعبئة", "f90-refill-image");
   function f90TileArt(src, name, disabled) {
-    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(), name);
-    const back = C.safeUrl(S.settings.config?.card_back_image || "./assets/sections/services.png");
-    return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-back">${image(back, "F90 CARD")}</span><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
+    // One real thumbnail per product/category; the old two-face animation
+    // doubled image downloads and delayed visible catalog icons.
+    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(),name);
+    return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
   }
   const f90SeenTiles = new Set();
   const f90FlipObserver = typeof IntersectionObserver === "function" ? new IntersectionObserver((entries) => {
@@ -916,12 +939,12 @@
       f.dataset.quotedQuantity = String(qty);
       delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
-      if (price) {price.removeAttribute("aria-busy");price.textContent=displayMoney(quote.total_usd,true);}
+      if (price) {price.removeAttribute("aria-busy");price.textContent=f90CheckoutMoney(quote.total_usd);}
       $("checkoutTotal").textContent = C.money(
         C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
       );
       $("f90CheckoutTopBalance").textContent = S.me ?
-        displayMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
+        f90CheckoutMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
       $("discountHint").textContent = Number(quote.discount_usd)>0
         ? "خصم VIP: " + displayMoney(quote.discount_usd,true) : "";
       $("quoteError").textContent = "";
@@ -981,7 +1004,7 @@
         ${inline ? '<button type="button" class="f90-visa-close" data-action="close-quick-product" aria-label="إغلاق كرت الشراء">×</button>' : '<a href="#/" class="f90-visa-close" aria-label="العودة إلى المتجر">×</a>'}
       </div>
       <div class="f90-visa-product">
-        <div class="product-art">${image(p.image_url,p.name)}</div>
+        <div class="product-art">${image(p.image_url,p.name,"f90-checkout-image")}</div>
         <div class="product-info">
           <h1>${e(p.name)}</h1>
           <p class="f90-visa-subtitle">شحن آمن وفوري</p>
@@ -993,11 +1016,12 @@
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         <div class="f90-checkout-summary">
           <div class="f90-visa-price"><span class="f90-visa-coins" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span><span class="f90-visa-price-copy"><span>سعر التكلفة</span><strong id="f90CheckoutTopTotal" aria-live="polite">جارٍ حساب السعر…</strong></span></div>
-          <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(displayMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
+          <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(f90CheckoutMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
         </div>
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
         ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
+        ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
         <p id="quoteError" class="inline-error" role="status"></p>
@@ -2052,13 +2076,10 @@
       const total=$("checkoutTotal");
       if(total)total.textContent="جارٍ تحديث السعر…";
       const shown=$("f90CheckoutTopTotal");
+      // Never display a speculative price. The first visible amount must
+      // come from the confirmed quote API for the current quantity.
       if(shown){
-        const estimated=Number(C.previewPrice(p,qty));
-        const validQty=raw!==""&&Number.isFinite(qty)&&qty>0&&
-          qty>=Number(p.commerce?.quantity_min||1)&&
-          qty<=Number(p.commerce?.quantity_max||1000000000);
-        shown.textContent=validQty&&Number.isFinite(estimated)&&estimated>0
-          ? "≈ "+displayMoney(estimated,true)+" · تقديري" : "جارٍ تحديث السعر…";
+        shown.textContent="جارٍ تحديث السعر…";
         shown.setAttribute("aria-busy","true");
       }
       clearTimeout(quoteTimer);
@@ -2068,7 +2089,7 @@
         if(shown){shown.textContent="أدخل كمية صحيحة";shown.removeAttribute("aria-busy");}
         return;
       }
-      quoteTimer=setTimeout(()=>quoteProduct(p),120);
+      quoteTimer=setTimeout(()=>quoteProduct(p),85);
     }
     if (ev.target.closest("#depositForm")) {
       const f = $("depositForm");
@@ -2388,23 +2409,17 @@
     });
     $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
   });
-  // New pages start from the top; browser Back/Forward restores each page's
-  // previous scroll position. Keep this separate from catalog auto-refresh.
-  if(window.history && "scrollRestoration" in window.history)window.history.scrollRestoration="manual";
-  const f90ScrollPositions=new Map();
-  let f90ScrollSequence=0,f90ScrollRestore=false;
-  function f90EntryKey(){
-    const current=window.history?.state?.f90ScrollEntry;
-    if(typeof current==="string" && current.startsWith("f90-entry-"))return current;
-    const fresh="f90-entry-"+Date.now().toString(36)+"-"+(++f90ScrollSequence);
-    window.history?.replaceState?.({...(window.history?.state||{}),f90ScrollEntry:fresh},"",location.href);
-    return fresh;
+  // Every route, including browser Back/Forward, starts at the top without
+  // the previous page's scroll offset or delayed smooth-scroll animation.
+  if(window.history && "scrollRestoration" in window.history)
+    window.history.scrollRestoration="manual";
+  function f90ScrollTopNow(){
+    const root=document.documentElement;
+    root.classList.add("f90-route-jump");
+    window.scrollTo(0,0);
+    root.scrollTop=0;
+    document.body.scrollTop=0;
   }
-  let f90ActiveEntry=f90EntryKey();
-  f90ScrollPositions.set(f90ActiveEntry,Math.max(0,window.scrollY));
-  window.addEventListener("scroll",()=>{
-    if(!f90ScrollRestore)f90ScrollPositions.set(f90ActiveEntry,Math.max(0,window.scrollY));
-  },{passive:true});
   document.addEventListener("click",ev=>{
     const link=ev.target.closest?.('a[href^="#"]:not([href^="#/"])');
     if(!link)return;
@@ -2414,22 +2429,12 @@
     target.scrollIntoView({behavior:"smooth",block:"start"});
   },{capture:true});
   window.addEventListener("hashchange",async()=>{
-    const previous=f90ActiveEntry;
-    // The passive scroll listener has captured the outgoing page position.
-    if(!f90ScrollPositions.has(previous))f90ScrollPositions.set(previous,window.scrollY);
-    const next=f90EntryKey(),restore=f90ScrollPositions.has(next);
-    const saved=restore?f90ScrollPositions.get(next):0;
-    f90ActiveEntry=next;
-    f90ScrollRestore=true;
-    S.offset=0;
-    const expected=location.href;
-    try{await route();}finally{
-      requestAnimationFrame(()=>{
-        if(expected===location.href && f90ActiveEntry===next){
-          window.scrollTo({top:restore?saved:0,behavior:"auto"});
-        }
-        requestAnimationFrame(()=>{f90ScrollRestore=false;});
-      });
+    const url=location.href;
+    f90ScrollTopNow();S.offset=0;
+    try{await route();}
+    finally{
+      if(url===location.href)f90ScrollTopNow();
+      requestAnimationFrame(()=>document.documentElement.classList.remove("f90-route-jump"));
     }
   });
   window.addEventListener("beforeinstallprompt", (ev) => {
