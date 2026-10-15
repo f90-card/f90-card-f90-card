@@ -1,0 +1,56 @@
+name: F90 CARD safe site audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'admin.js'
+      - 'api.js'
+      - 'index.html'
+      - 'admin.html'
+      - 'styles.css'
+      - 'f90-*.css'
+      - 'tests/f90-*'
+      - '.github/workflows/f90-safe-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Source safety checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/f90-audit.test.cjs
+
+  browser:
+    name: Public site and responsive viewports
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: npm install --no-save --ignore-scripts playwright
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check public pages without logging in or buying
+        run: node tests/f90-browser-smoke.mjs
+      - name: Save screenshots and issue report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f90-safe-audit-results
+          path: artifacts/f90-smoke/
+          if-no-files-found: ignore
