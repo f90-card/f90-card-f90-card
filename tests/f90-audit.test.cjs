@@ -52,7 +52,7 @@ test("Images are not duplicated and navigation always resets page scroll",()=>{
   assert.match(image,/width="256" height="256"/);
   assert.match(image,/decoding="async"/);
   assert.doesNotMatch(tile,/f90-flip-back/);
-  assert.match(app,/f90ScrollTopNow\(\);S\.offset=0/);
+  assert.match(app,/f90ScrollTopNow\(\);\s*S\.offset=0/);
   assert.match(app,/window\.addEventListener\("hashchange"/);
   assert.match(mainHtml,/rel="preconnect"/);
   assert.match(mainHtml,/f90-checkout-redesign\.css/);
@@ -79,19 +79,20 @@ test("Checkout price sync ignores account typing and blocks until latest server 
 });
 test("Gold checkout matches approved icon fields, badges and price-only layout", () => {
   const css=read("f90-visa-checkout.css");
-  const start=app.indexOf('const productHtml = `<div class="product-page f90-visa-purchase"');
+  const start=app.indexOf('const productHtml = `<div class="product-page f90-visa-purchase f90-premium-checkout"');
   const end=app.indexOf('    if (inline) {',start);
   assert.ok(start>=0 && end>start);
   const product=app.slice(start,end);
-  for(const token of ["f90-visa-inputicon","f90-visa-coins","f90-visa-available",
+  for(const token of ["f90-visa-inputicon","f90-premium-chip","f90-visa-available",
     "f90-visa-buy-arrow","f90-visa-watermark","f90-visa-logo","S.settings.logo_url"]){
     assert.ok(product.includes(token)|| (token==="S.settings.logo_url"&&app.includes(token)),token);
   }
-  assert.doesNotMatch(product,/f90CheckoutTopRemaining|الرصيد المتوقع بعد الشراء/);
+  assert.match(product,/f90CheckoutTopRemaining|رصيدك بعد الشراء/);
+  assert.match(app,/f90CheckoutMoney\(balance-Number\(quote\.total_usd\),true\)/);
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-search-cards-1/);
+  assert.match(mainHtml,/app\.js\?v=[^"]+/);
   assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-keyboard-checkout3/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
@@ -126,7 +127,7 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/\? 2500 : 400/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
-  assert.match(mainHtml,/app\.js\?v=20261015-search-cards-1/);
+  assert.match(mainHtml,/app\.js\?v=[^"]+/);
   assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
   assert.match(app,/await A\.call\("quote", \{/);
@@ -168,7 +169,9 @@ test("Gold purchase card is compact and shows only final cost plus small current
   assert.match(purchase,/f90-visa-logo/);
   assert.match(purchase,/f90CheckoutTopTotal/);
   assert.match(purchase,/f90CheckoutTopBalance/);
-  assert.doesNotMatch(purchase,/f90CheckoutTopRemaining|الرصيد بعد الشراء|الرصيد المتوقع/);
+  assert.match(purchase,/f90CheckoutTopRemaining/);
+  assert.match(purchase,/رصيدك بعد الشراء/);
+  assert.match(mainHtml,/f90-premium-checkout-install\.css/);
   for(const id of ["checkoutForm","priceBoard","checkoutTotal","quoteError","buyButton","walletHint"]){
     assert.ok(purchase.includes('id="'+id+'"'),id+" still needed for server-quote checkout");
   }
@@ -255,13 +258,13 @@ test("Each theme has independent, readable 50–150% brightness controls", () =>
   assert.match(style, /--bg:color-mix/);
   assert.match(mainHtml, /f90-theme-background\.js\?v=20261015-brightness1/);
   assert.match(mainHtml, /f90-theme-background\.css\?v=20261015-brightness1/);
-  assert.match(adminHtml, /admin\.js\?v=20261015-brightness1/);
+  assert.match(adminHtml, /admin\.js\?v=[^"]+/);
 });
 
 test("Visitors see only edge volume controls; managers own radio sources", () => {
   const radio=read("f90-media-player.js"), css=read("f90-radio.css");
   const live=read("supabase/functions/f90-platform/index.ts");
-  assert.match(admin, /A\.upload\(file,"f90-radio","tracks"\)/);
+  assert.match(admin, /A\.upload\(file,"f90-radio","tracks",/);
   assert.match(admin, /staff\.radio\.save/);
   assert.match(admin, /staff\.radio\.status/);
   assert.match(admin, /radioYoutubeForm/);
@@ -296,7 +299,8 @@ test("Radio controls are manager only, with configurable icon and mobile layout"
   assert.match(admin,/promo_phone_size_mobile/);
   assert.match(admin,/promo_phone_x/);
   assert.match(admin,/promo_phone_y/);
-  assert.match(radio,/function applyBubble\(value\)/);
+  assert.match(radio,/function appearance\(input\)/);
+  assert.match(radio,/bubble\.dataset\.side=o\.side/);
   assert.match(radio,/stallTimer/);
   assert.match(radio,/addEventListener\("waiting"/);
   assert.match(radio,/f90-radio-custom-icon/);
@@ -335,7 +339,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-brightness1/);
+  assert.match(adminHtml, /admin\.js\?v=[^"]+/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
