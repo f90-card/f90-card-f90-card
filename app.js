@@ -1637,7 +1637,7 @@
       if (!scopes.length) throw new Error("اختر صلاحية واحدة على الأقل");
       const values = {name:data.name,scopes,requests_per_minute:Number(data.requests_per_minute),
         expires_at:data.expires_at||null,allow_all_ips:form.elements.allow_all_ips?.checked===true,
-        allowed_ips:String(form.elements.allowed_ips?.value||"").split(/[\\r\\n,]+/).map(x=>x.trim()).filter(Boolean),
+        allowed_ips:String(form.elements.allowed_ips?.value||"").split(/[\r\n,]+/).map(x=>x.trim()).filter(Boolean),
         replace_existing:!!S.me?.keys?.some(k=>k.is_active)};
       if (form.id === "keySettingsForm") {
         await A.call("key.update", { id: S.editKey.id, ...values });
