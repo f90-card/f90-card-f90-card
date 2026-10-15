@@ -43,9 +43,9 @@ const form=verified?'<form id="keyForm" class="f90-api-token-form">'+
 '<fieldset><legend>API permissions</legend><label><input name="scope_catalog" type="checkbox" checked>Catalog</label><label><input name="scope_balance" type="checkbox" checked>Balance</label><label><input name="scope_orders" type="checkbox" checked>Create and track orders</label></fieldset>'+
 '<label>Requests per minute<input type="number" name="requests_per_minute" min="10" max="120" value="60" required></label>'+
 '<label>Expiration date (optional)<input name="expires_at" type="date"></label>'+
-'<label class="f90-api-allowall"><input name="allow_all_ips" type="checkbox" checked>Allow all IP addresses (development/testing only)</label>'+
+'<label class="f90-api-allowall"><input name="allow_all_ips" type="checkbox" '+(active?.allow_all_ips===false?'':'checked')+'>Allow all IP addresses (development/testing only)</label>'+
 '<p class="f90-api-warning">For better security, disable this setting after development and use your server IP. IP checks supplement a secret API token; they do not replace secure authentication.</p>'+
-'<label>Allowed IP addresses, one per line (required when Allow all is off)<textarea name="allowed_ips" rows="3" placeholder="203.0.113.10"></textarea></label>'+
+'<label>Allowed IP addresses, one per line (required when Allow all is off)<textarea name="allowed_ips" rows="3" placeholder="203.0.113.10">'+esc((active?.allowed_ips||[]).join("\n"))+'</textarea></label>'+
 '<button class="button" type="submit">'+(active?"Rotate token and revoke the previous one":"Generate one API token")+'</button>'+
 '</form>':'<p>Identity verification is required before creating a token. <a href="#/verification">Verify your account</a>.</p>';
 return '<div class="f90-token-page" dir="ltr"><header class="f90-api-doc-head"><img src="'+esc(logo)+'" alt="F90 CARD"><div><span>F90 CARD · SECURE MERCHANT ACCESS</span><h1>API TOKEN</h1><p>One active token per trader. You can rotate it at any time; the previous one becomes invalid immediately. The full secret is only visible once.</p><a class="button secondary" href="#/api-guide">Open API Documentation</a></div></header>'+
