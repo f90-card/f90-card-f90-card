@@ -840,8 +840,7 @@ async function staff(a: Actor, b: any) {
       if(!value)return true;
       try{const u=new URL(value);
         return u.protocol==="https:"&&!u.username&&!u.password&&
-          !/(^|\.)youtu(?:be)?\.com$/.test(u.hostname)&&
-          !/youtu\.be$/.test(u.hostname);
+          !/(^|\.)(youtube\.com|youtube-nocookie\.com|youtu\.be|googlevideo\.com)$/i.test(u.hostname);
       }catch{return false;}
     };
     if(!acceptable(direct))throw new AppError("F90_FIELDS",400,"أدخل رابط بث صوت مباشر HTTPS وليس رابط YouTube");
