@@ -36,7 +36,7 @@ test("currency onboarding and maintenance do not change settled USD wallet figur
  assert.doesNotThrow(()=>new vm.Script(core));
  assert.match(app,/S\.currency = localStorage\.getItem\("f90-currency"\) \|\| "ILS"/);
  assert.match(app,/currency-welcome/);
- assert.match(app,/name="display_currency"/);
+ assert.match(app,/select\("display_currency"/);
  assert.match(app,/default_display_currency/);
  assert.match(app,/!\\["manager", "admin"\\]\.includes\(S\.me\?\.role\)/);
  assert.match(app,/const value=code==="USD"\?Number\(usd\):C\.convert\(usd,code,S\.rates\)/);
