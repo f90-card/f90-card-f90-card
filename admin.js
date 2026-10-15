@@ -1810,8 +1810,9 @@
       '<p class="muted small">قد يحتاج المستمع للمس الشعار مرة واحدة للسماح بتشغيل الصوت حسب سياسة المتصفح. يستطيع الزائر التحكم بمستوى الصوت فقط.</p>'+
       select("music_source_mode","مصدر الراديو",[["file","ألبوم الملفات المرفوعة"],["link","رابط بث مباشر HTTPS"]],radio.source_mode||"file")+
       '<div class="f90-radio-album"><h3>ألبوم الملفات الصوتية</h3>'+
-      '<p class="muted small">اختر عدة ملفات من هاتفك دفعة واحدة. سيتم تشغيل الملفات بالترتيب وإعادتها من البداية بعد آخر مقطع. كل ملف حتى 40 ميجابايت، والألبوم حتى 40 ملفًا. ارفع موادًا لديك حق استخدامها.</p>'+
+      '<p class="muted small">اختر عدة ملفات من هاتفك دفعة واحدة. سيتم تشغيل الملفات بالترتيب وإعادتها من البداية بعد آخر مقطع. الحد الحالي 50 ميجابايت للملف لأن التخزين مجاني، والألبوم حتى 40 ملفًا. الملفات الأكبر تحتاج خطة تخزين تدعمها. ارفع موادًا لديك حق استخدامها.</p>'+
       field("music_audio_files","إضافة ملفات متعددة من الجهاز","file","",'multiple accept=".mp3,.m4a,.aac,.wav,.ogg,.mp4,.webm,audio/*,video/mp4,video/webm"')+
+      '<div class="f90-radio-upload-state" role="status" aria-live="polite" id="f90RadioUploadState" hidden><span id="f90RadioUploadLabel">تجهيز الرفع</span><progress id="f90RadioUploadProgress" max="100" value="0" style="width:100%"></progress></div>'+
       '<div id="f90RadioTracks" class="f90-radio-track-list">'+(trackRows||'<p class="muted" id="f90EmptyAlbum">لم تضف مقاطع للألبوم بعد</p>')+'</div>'+
       '<div class="f90-radio-current-controls"><label class="field"><span>بداية التشغيل الافتراضية بالثواني</span><input type="number" name="music_start_seconds" min="0" max="86400" step="1" value="'+e(radio.start_seconds??0)+'"></label>'+
       '<p class="muted small">حدد المقطع من علامة البداية ثم اكتب الثانية التي يبدأ منها للزائر. يمكنك معاينة المقطع وتقديمه أو إرجاعه قبل الحفظ.</p>'+
@@ -1826,7 +1827,7 @@
       field("bubble_icon_url","رابط صورة بديلة (اختياري)","url",radio.bubble?.icon_url||"",'placeholder="https://example.com/icon.png"')+
       field("bubble_icon_file","أو رفع صورة للفقاعة","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
       select("bubble_side","جانب الفقاعة",[['right','اليمين'],['left','اليسار']],radio.bubble?.side||'right')+
-      field("bubble_vertical","الموضع من أعلى الشاشة (%)","number",radio.bubble?.vertical??76,'min="12" max="88" step="1"')+
+      '<p class="muted small">الفقاعة ثابتة أعلى شريط التنقل السفلي حتى أثناء التمرير</p>'+
       field("bubble_size_mobile","حجم الفقاعة على الهاتف","number",radio.bubble?.size_mobile??49,'min="32" max="88" step="1"')+
       field("bubble_size_desktop","حجم الفقاعة على الكمبيوتر","number",radio.bubble?.size_desktop??54,'min="32" max="100" step="1"')+
       field("bubble_opacity","شفافية الفقاعة","number",radio.bubble?.opacity??0.85,'min="0.35" max="1" step="0.05"')+'</div>'+
@@ -1883,9 +1884,15 @@
       selected:!!row.querySelector("[name=radio_selected_track]")?.checked
     }));
     if(album.length+files.length>40)throw new Error("الحد الأقصى للألبوم 40 مقطعًا");
-    if(files.some(file=>!file.size||file.size>41943040))throw new Error("كل ملف يجب أن يكون صالحًا ولا يتجاوز 40 ميجابايت");
-    for(const file of files){
-      const uploaded=await A.upload(file,"f90-radio","tracks");
+    if(files.some(file=>!file.size||file.size>50000000))throw new Error("كل ملف يجب أن يكون صالحًا ولا يتجاوز 50 ميجابايت");
+    for(const [index,file] of files.entries()){
+      const holder=$("f90RadioUploadState"),status=$("f90RadioUploadLabel"),progress=$("f90RadioUploadProgress");
+      if(holder)holder.hidden=false;
+      if(status)status.textContent="جارٍ رفع الملف "+(index+1)+" من "+files.length+" • "+file.name;
+      if(progress)progress.value=0;
+      const uploaded=await A.upload(file,"f90-radio","tracks",ratio=>{
+        if(progress)progress.value=Math.round(ratio*100);
+      });
       album.push({path:uploaded.path,title:String(file.name||"").replace(/\.[^.]+$/,"").slice(0,90)||"مقطع صوتي",selected:false});
     }
     const selectedIndex=Math.max(0,album.findIndex(a=>a.selected));
