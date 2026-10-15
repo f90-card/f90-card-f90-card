@@ -64,7 +64,7 @@ items=[
   ('04-خدمات-الهاتف.png','خدمات الهاتف','اكتشف فئة أرصدة الجوال','mobile.png','#081b2a','#061f39','#59c4ff',3),
   ('05-طرق-الدفع.png','طرق الدفع المتاحة','راجع تعليمات الإيداع قبل التحويل','payments.png','#05291c','#13251f','#35cd83',4),
   ('06-الخدمات-الرقمية.png','أف تسعين كارد','خدمات رقمية منظمة','services.png','#240a18','#310b1d','#ff5676',5),
-  ('07-جولة-المتجر.png','تصفح متجرك من الهاتف','واجهة حقيقية من F90 CARD','hero.png','#130e1e','#0c111b','#ff607a',6),
+  ('07-جولة-المتجر.png','تصفح متجرك من الهاتف','واجهة حقيقية من المتجر','hero.png','#130e1e','#0c111b','#ff607a',6),
   ('08-اكتشف-الأقسام.png','أقسام متعددة','اختر الفئة التي تناسبك','games.png','#1f1027','#10172d','#bf8ff5',7),
 ]
 def draw_one(entry):
@@ -132,11 +132,11 @@ def draw_one(entry):
         paste_logo(im,540,152,370)
         text(im,title,540,350,73)
         text(im,sub,540,449,35,accent)
-        add_section(im,'games.png',(57,533,523,784),accent)
+        add_section(im,'services.png',(57,533,523,784),accent)
         add_section(im,'apps.png',(556,533,1023,784),accent)
         add_section(im,'cards.png',(57,819,523,1035),accent)
         add_section(im,'ai.png',(556,819,1023,1035),accent)
-        qrpair(im,1100,accent)
+        qrpair(im,1050,accent)
     lower(im)
     im.save(O/filename,optimize=True)
     print(filename, (O/filename).stat().st_size,flush=True)
