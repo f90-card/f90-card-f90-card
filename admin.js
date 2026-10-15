@@ -1541,17 +1541,14 @@
     main.innerHTML=head("مركز التحكم المرئي","عدّل العناوين والصور والتصميم دون تعديل ملفات البرمجة.",
       `<a class="button secondary small" href="./index.html#/welcome" target="_blank" rel="noopener noreferrer">معاينة صفحة التعريف ↗</a>`) +
       `<section class="panel f90-visual-editor"><h2>صفحة التعريف والموقع</h2><p class="muted">إعداداتك الحالية ستبقى محفوظة؛ عدّل فقط الحقول التي تريدها.</p><form id="designCenterForm" class="f90-visual-editor-form"><div class="f90-visual-fields">`+
-      field("welcome_title","عنوان صفحة التعريف","text",w.title_ar||"عالمك الرقمي يبدأ هنا",`required maxlength="100"`)+
-      field("welcome_subtitle","وصف صفحة التعريف","textarea",w.subtitle_ar||"الألعاب وشحن التطبيقات والخدمات الرقمية في مكان واحد.",`maxlength="350" rows="3"`)+
-      field("welcome_image","رابط صورة التعريف","url",w.image_url||"",`placeholder="https://..." dir="ltr"`)+
-      field("welcome_image_file","رفع صورة تعريف جديدة","file","",`accept="image/png,image/jpeg,image/webp"`)+
+      '<div class="notice">تم تبسيط قسم «تعرّف على أف تسعين»: عنوان ثابت «مرحبًا بك في كازية أف تسعين كارد» وهاتف ثلاثي الأبعاد فقط. لا تُعرض صورة أو وصف أو أزرار إضافية خارج الهاتف. عدّل النصوص الثلاثة وشاشة الهاتف أدناه.</div>'+
       field("hero_image","رابط بانر الصفحة الرئيسية","url",c.hero_image||"",`placeholder="https://..." dir="ltr"`)+
       field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
       field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1000" rows="2"`)+
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
       '<div class="f90-design-video-fields"><h3>إعلان فيديو بتصميم هاتف ثلاثي الأبعاد</h3><p class="muted small">ارفع فيديو MP4/WebM حتى ٢٠ ميجابايت. يعرض بلا صوت، ويتوقف خارج الشاشة. عند تعطيله يختفي القسم بالكامل.</p>'+
       check("promo_video_enabled","إظهار إعلان الفيديو في الصفحة الرئيسية",c.promo_video?.enabled===true)+
-      select("promo_video_mode","طريقة العرض داخل الهاتف",[["text","نص داخل الهاتف"],["video","فيديو صامت"]],c.promo_video?.mode||"text")+
+      select("promo_video_mode","طريقة العرض داخل الهاتف",[["text","نص داخل الهاتف"],["video","فيديو صامت"]],c.promo_video?.mode||(c.promo_video?.url?"video":"text"))+
       field("promo_video_title","عنوان إعلان الهاتف","text",c.promo_video?.title_ar||"F90 CARD",'maxlength="120"')+
       field("promo_video_display_text","النص المتوهج داخل الشاشة","textarea",c.promo_video?.display_text||"F90 CARD",'maxlength="130"')+
       field("promo_video_message_1","النص المتحرك رقم 1","text",c.promo_video?.messages?.[0]||"أولوياتنا إسعادك وراحتك معنا",'maxlength="150"')+
@@ -1580,8 +1577,7 @@
       field("edge_glow_color","لون التوهج","color",c.edge_glow_color||"#ff2444")+
       check("edge_glow_enabled","تفعيل توهج الكروت والأزرار",c.edge_glow_enabled!==false)+
       `<button class="button" type="submit">حفظ التعديلات مباشرة</button></div><aside class="f90-visual-preview"><span>معاينة تقريبية · Preview</span><div class="f90-visual-preview-hero">`+
-      image(w.image_url||c.hero_image||S.settings.logo_url,"صورة التعريف","f90-visual-preview-image")+
-      `<strong id="f90VisualPreviewTitle">${e(w.title_ar||"عالمك الرقمي يبدأ هنا")}</strong><p id="f90VisualPreviewDescription">${e(w.subtitle_ar||"خدمات F90 CARD الرقمية")}</p><small>F90 CARD · أف تسعين كارد</small></div><p class="muted small">النصوص فقط تتغير فوراً في المعاينة؛ اختر حفظ للتحديث النهائي.</p></aside></form></section>`+
+      `<strong>مرحبًا بك في كازية أف تسعين كارد</strong><div class="f90-admin-phone-preview"><div class="f90-admin-phone-display"><img src="${e(C.safeUrl(S.settings.logo_url)||"./f90-logo.png")}" alt="شعار F90 CARD"><span>F90 CARD</span></div></div><small>معاينة شكلية؛ شاهد الحركة وتسجيل الدخول في صفحة التعريف.</small></div></aside></form></section>`+
       `<div class="f90-admin-center-grid">${[
         ["الشعار والثيم","اللوغو الرسمي، أيقونة التثبيت، ألوان الموقع","settings"],
         ["صور الأقسام","إنشاء وتعديل صور وأسماء وترتيب الأقسام","categories"],
@@ -1598,10 +1594,8 @@
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
   }
   async function saveVisualDesign(form,d){
-    const prior=S.settings,c=prior.config||{},rawTitle=String(d.welcome_title||"").trim().slice(0,100);
-    if(!rawTitle)throw new Error("يجب كتابة عنوان صفحة التعريف");
-    const welcomeFile=form.elements.welcome_image_file.files?.[0],heroFile=form.elements.hero_file.files?.[0];
-    const welcomeUrl=welcomeFile?.size?(await A.upload(welcomeFile,"f90-images","branding")).url:String(d.welcome_image||"").trim();
+    const prior=S.settings,c=prior.config||{},rawTitle="مرحبًا بك في كازية أف تسعين كارد";
+    const heroFile=form.elements.hero_file.files?.[0];
     const heroUrl=heroFile?.size?(await A.upload(heroFile,"f90-images","banners")).url:String(d.hero_image||"").trim();
     const videoFile=form.elements.promo_video_file?.files?.[0];
     const posterFile=form.elements.promo_video_poster_file?.files?.[0];
@@ -1616,7 +1610,7 @@
     const artUrl=artFile?.size?(await A.upload(artFile,"f90-images","branding")).url:String(d.install_art_url||"").trim();
     const adminIconUrl=adminFile?.size?(await A.upload(adminFile,"f90-images","branding")).url:String(d.admin_app_icon_url||"").trim();
     const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1000),config:{...c,
-      welcome:{...c.welcome,title_ar:rawTitle,subtitle_ar:String(d.welcome_subtitle||"").trim().slice(0,350),image_url:welcomeUrl},
+      welcome:{...c.welcome,title_ar:rawTitle},
       hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
       show_banners:form.elements.show_banners.checked,
       show_intro:form.elements.show_intro.checked,
@@ -2548,9 +2542,7 @@
   });
   document.addEventListener("input", (ev) => {
     if (ev.target.form?.id === "designCenterForm") {
-      const form=ev.target.form,title=$("f90VisualPreviewTitle"),desc=$("f90VisualPreviewDescription");
-      if(title)title.textContent=form.elements.welcome_title.value||"F90 CARD";
-      if(desc)desc.textContent=form.elements.welcome_subtitle.value||"";
+      // Preview is static by design. The interactive 3D phone is rendered on the live page.
       return;
     }
     if (ev.target.id === "adminCategorySearch") { S.categorySearch = ev.target.value; document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const category = S.categories.find(x => x.id === row.dataset.rowId); row.style.display = String(category?.name || "").toLocaleLowerCase().includes(S.categorySearch.toLocaleLowerCase()) ? "" : "none"; }); }
