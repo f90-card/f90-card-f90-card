@@ -4,19 +4,27 @@
   const endpoint = window.F90_CONFIG?.SUPABASE_URL
     ? window.F90_CONFIG.SUPABASE_URL + "/functions/v1/f90-platform" : "";
   async function call(action, data = {}) {
-    if (!client || !endpoint) {
+    // Public catalog/health are safe, anonymous, read-only calls.
+    // Send them as CORS-simple requests: this avoids an OPTIONS preflight
+    // that can succeed at the edge while the browser's POST never follows.
+    const publicRead = action === "catalog" || action === "health";
+    if ((!client && !publicRead) || !endpoint) {
       const error = new Error("تعذّر اتصال المتجر بالخادم. أعد المحاولة بعد التأكد من الاتصال بالإنترنت.");
       error.code = "F90_SDK_UNAVAILABLE";
       throw error;
     }
     // Public catalog never needs a session. Avoid blocking first paint on auth storage.
-    const { data: { session } } = action === "catalog" || action === "health"
+    const { data: { session } } = publicRead
       ? { data: { session: null } }
       : await client.auth.getSession();
-    const headers = {
-      "Content-Type": "application/json",
-      apikey: window.F90_CONFIG.SUPABASE_KEY,
-    };
+    // A text/plain JSON body is intentionally accepted by f90-platform.
+    // Keep apikey/Authorization for authenticated and financial actions.
+    const headers = publicRead
+      ? { "Content-Type": "text/plain;charset=UTF-8" }
+      : {
+          "Content-Type": "application/json",
+          apikey: window.F90_CONFIG.SUPABASE_KEY,
+        };
     if (session) headers.Authorization = "Bearer " + session.access_token;
     let response;
     try {
