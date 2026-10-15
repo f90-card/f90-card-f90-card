@@ -858,10 +858,24 @@ async function staff(a: Actor, b: any) {
     const m=check(row).config?.music||{}, r=check(src);
     return {enabled:m.enabled===true,volume:Number(m.volume??0.35),
       bubble:m.bubble||{},
-      has_media:!!r.media_path,has_direct:!!r.direct_audio_url,
+      has_media:!!r.media_path||!!m.playlist?.length,has_direct:!!r.direct_audio_url,
       has_youtube:!!r.youtube_url,mode:r.mode||"audio",
+      playlist:Array.isArray(m.playlist)?m.playlist:[],
+      source_mode:m.source_mode==="link"?"link":"file",
+      selected_index:Number(m.selected_index||0),start_seconds:Number(m.start_seconds||0),
       direct_audio_url:r.direct_audio_url||"",
       youtube_url:r.youtube_url||"",updated_at:r.updated_at};
+  }
+  if (action === "staff.radio.preview") {
+    requireRole(a,"manager");
+    const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
+    const playlist=Array.isArray(settings.config?.music?.playlist)?settings.config.music.playlist:[];
+    const idx=integer(b.index,0,Math.max(0,playlist.length-1));
+    const path=String(playlist[idx]?.path||"");
+    if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/i.test(path))
+      throw new AppError("F90_FIELDS",400,"ملف الألبوم غير صالح");
+    const ticket=check(await db.storage.from("f90-radio").createSignedUrl(path,900));
+    return {url:ticket.signedUrl};
   }
   if (action === "staff.radio.save") {
     requireRole(a,"manager");
@@ -887,13 +901,33 @@ async function staff(a: Actor, b: any) {
           throw new Error("invalid");
       }catch{throw new AppError("F90_FIELDS",400,"رابط YouTube غير صحيح");}
     }
-    const enabled=b.enabled===true;
-    if(enabled&&!p&&!direct)throw new AppError("F90_FIELDS",400,"ارفع ملفًا أو أدخل رابط بث صوت مباشر قبل التفعيل. لا يمكن بث YouTube مخفيًا.");
-    const volume=Math.max(0,Math.min(1,Number(b.volume??0.35)||0));
-    const revision=p!==current.media_path||direct!==current.direct_audio_url ? new Date().toISOString() : current.updated_at;
+    const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
+    const previous=settings.config?.music||{};
+    const playlistInput=b.playlist===undefined?(Array.isArray(previous.playlist)?previous.playlist:[]):b.playlist;
+    if(!Array.isArray(playlistInput)||playlistInput.length>40)
+      throw new AppError("F90_FIELDS",400,"الألبوم يسمح بحد أقصى 40 ملفًا صوتيًا");
+    const playlist=playlistInput.map((item:any)=>{
+      const path=text(item?.path,400),title=text(item?.title,90);
+      if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/i.test(path))
+        throw new AppError("F90_FIELDS",400,"مسار أحد ملفات الألبوم غير مدعوم");
+      return {path,title:title||"مقطع صوتي"};
+    });
+    if(new Set(playlist.map((x:any)=>x.path)).size!==playlist.length)
+      throw new AppError("F90_FIELDS",400,"لا يمكن تكرار نفس الملف داخل الألبوم");
+    const sourceMode=b.source_mode==="link"?"link":b.source_mode==="file"?"file":previous.source_mode==="link"?"link":"file";
+    const selectedIndex=playlist.length?integer(b.selected_index??previous.selected_index??0,0,playlist.length-1):0;
+    const startSeconds=num(b.start_seconds??previous.start_seconds??0,0,86400);
+    const enabled=b.enabled===undefined?previous.enabled===true:b.enabled===true;
+    if(enabled && (sourceMode==="link"?!direct:!(playlist.length||p)))
+      throw new AppError("F90_FIELDS",400,"أضف ملفات صوتية للألبوم أو رابط بث مباشر قبل تشغيل الراديو");
+    const volume=Math.max(0,Math.min(1,Number(b.volume??previous.volume??0.35)||0));
+    const playbackChanged=JSON.stringify(playlist)!==JSON.stringify(previous.playlist||[])
+      ||sourceMode!==previous.source_mode||selectedIndex!==Number(previous.selected_index||0)
+      ||startSeconds!==Number(previous.start_seconds||0)
+      ||p!==current.media_path||direct!==current.direct_audio_url;
+    const revision=playbackChanged?new Date().toISOString():current.updated_at;
     check(await db.from("f90_radio_sources").update({media_path:p,
       direct_audio_url:direct,youtube_url:youtube,mode,updated_at:revision}).eq("id",1).select("id").single());
-    const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
     const currentBubble=settings.config?.music?.bubble||{};
     const incoming=b.bubble&&typeof b.bubble==="object"&&!Array.isArray(b.bubble)?b.bubble:{};
     const side=["left","right"].includes(incoming.side)?incoming.side:(currentBubble.side==="left"?"left":"right");
@@ -913,7 +947,8 @@ async function staff(a: Actor, b: any) {
       icon_url:icon,
       opacity:bounded(incoming.opacity??currentBubble.opacity,0.35,1,0.7)
     };
-    const config={...settings.config,music:{enabled,volume,loop:true,bubble}};
+    const config={...settings.config,music:{...previous,enabled,volume,loop:true,bubble,
+      playlist,source_mode:sourceMode,selected_index:selectedIndex,start_seconds:startSeconds}};
     check(await db.from("site_settings").update({config}).eq("id",1).select("id").single());
     await auditSafe(a.id,"radio.configure","radio",{enabled,mode,has_media:!!p,has_direct:!!direct});
     return {saved:true,enabled,revision};
@@ -2089,8 +2124,14 @@ Deno.serve(async (req: Request) => {
         db.from("f90_radio_sources").select("media_path,direct_audio_url,mode,updated_at").eq("id",1).single()
       ]);
       const m=check(settings).config?.music||{},r=check(source);
-      return out({enabled:m.enabled===true&&!!(r.media_path||r.direct_audio_url),
+      const list=Array.isArray(m.playlist)?m.playlist:[];
+      const linkMode=m.source_mode==="link";
+      return out({enabled:m.enabled===true&&!!(linkMode?r.direct_audio_url:(list.length||r.media_path)),
         mode:r.mode==="video"?"video":"audio",revision:r.updated_at||"",
+        selected_index:Math.min(Math.max(0,Number(m.selected_index||0)),Math.max(0,list.length-1)),
+        start_seconds:Number(m.start_seconds||0),
+        volume:Number(m.volume??0.35),
+        tracks:list.map((x:any)=>({title:text(x.title,90),mode:/\.(mp4|webm)$/i.test(x.path)?"video":"audio"})),
         bubble:m.bubble||{} });
     }
     if (action === "media.ticket") {
@@ -2100,6 +2141,16 @@ Deno.serve(async (req: Request) => {
       const music = row.config?.music || {};
       const selected=check(await db.from("f90_radio_sources").select("media_path,mode,direct_audio_url").eq("id",1).single());
       if(music.enabled!==true)throw new AppError("F90_NOT_FOUND",404,"الراديو متوقف من الإدارة");
+      const playlist=Array.isArray(music.playlist)?music.playlist:[];
+      if(music.source_mode!=="link"&&playlist.length){
+        const index=integer(b.track_index??music.selected_index??0,0,playlist.length-1);
+        const path=String(playlist[index]?.path||"");
+        if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/i.test(path))
+          throw new AppError("F90_NOT_FOUND",404,"المقطع الصوتي غير متاح");
+        const ticket=check(await db.storage.from("f90-radio").createSignedUrl(path,3600));
+        return out({url:ticket.signedUrl,mode:/\.(mp4|webm)$/i.test(path)?"video":"audio",index});
+      }
+      if(music.source_mode==="link"&&selected.direct_audio_url)return out({url:selected.direct_audio_url,mode:"audio"});
       if(selected.media_path){
         const path=selected.media_path;
         if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/.test(path))
