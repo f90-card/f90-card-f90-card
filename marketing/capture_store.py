@@ -17,3 +17,5 @@ with sync_playwright() as p:
     print('TITLE',page.title(),'URL',page.url,'BODY',page.locator('body').inner_text()[:1000])
     page.screenshot(path=str(out/'homepage-mobile.png'),full_page=False,animations='disabled')
     browser.close()
+
+# Re-run capture after CI upload workflow correction
