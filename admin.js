@@ -1778,6 +1778,15 @@
       '<p class="muted small">'+(radio.has_media?"هناك ملف خاص محفوظ حاليًا. يمكنك رفع ملف بديل.":"لم يتم اختيار ملف خاص حاليًا.")+' الحد الأقصى للملف: 40 ميجابايت.</p>'+
       field("music_direct_url","رابط بث صوت مباشر (وليس صفحة يوتيوب)","url",radio.direct_audio_url||"",'placeholder="https://example.com/radio.mp3"')+
       '<label class="field"><span>مستوى الصوت الافتراضي</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(radio.volume??settings.volume??0.35)+'" aria-label="مستوى الصوت الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(radio.volume??settings.volume??0.35)*100)+'%</output></label>'+
+      '<div class="f90-custom-bg-check"><h3>فقاعة الصوت على الهاتف والكمبيوتر</h3>'+
+      '<p class="muted small">هذه الأيقونة هي الشيء الوحيد الذي يراه الزائر. لا تسمح له بتغيير المصدر أو إيقاف البث العام.</p>'+
+      field("bubble_icon_url","رابط صورة أيقونة الراديو (HTTPS)","url",radio.bubble?.icon_url||"",'placeholder="https://example.com/icon.png"')+
+      field("bubble_icon_file","أو رفع صورة أيقونة من الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      select("bubble_side","جانب الشاشة",[['right','اليمين'],['left','اليسار']],radio.bubble?.side||'right')+
+      field("bubble_vertical","الموقع من أعلى الشاشة بالنسبة المئوية","number",radio.bubble?.vertical??62,'min="12" max="88" step="1"')+
+      field("bubble_size_mobile","حجم الأيقونة على الهاتف (بكسل)","number",radio.bubble?.size_mobile??44,'min="32" max="88" step="1"')+
+      field("bubble_size_desktop","حجم الأيقونة على الكمبيوتر (بكسل)","number",radio.bubble?.size_desktop??50,'min="32" max="100" step="1"')+
+      field("bubble_opacity","شفافية خلفية الفقاعة","number",radio.bubble?.opacity??0.7,'min="0.35" max="1" step="0.05"')+'</div>'+
       '<button class="button" type="submit">حفظ إعدادات الراديو وتطبيقها</button></form></section>'+
       '<section class="panel"><h2>رابط YouTube للإدارة فقط</h2>'+
       '<p class="muted small">يمكنك إضافة رابط YouTube ومعاينته هنا فقط. لا نستخدم YouTube لبث الصوت في خلفية مخفية، لأن هذا غير مسموح به في سياسات المشغّل. للبث المخفي ارفع الفيديو من هاتفك أو استخدم رابط بث صوت مباشر مرخّص.</p>'+
@@ -1791,8 +1800,23 @@
   async function saveMediaCenter(form,d){
     const mode=d.music_source_mode==="link"?"link":"file";
     const file=form.elements.music_audio_file.files?.[0];
+    const iconFile=form.elements.bubble_icon_file?.files?.[0];
+    const iconUrl=iconFile?.size
+      ? (await A.upload(iconFile,"f90-images","branding")).url
+      : String(d.bubble_icon_url||"").trim();
+    const numberIn=(value,min,max,fallback)=>{
+      const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+    };
     const changes={enabled:form.elements.music_enabled.checked,
-      volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35)))};
+      volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),
+      bubble:{
+        icon_url:iconUrl,
+        side:d.bubble_side==="left"?"left":"right",
+        vertical:numberIn(d.bubble_vertical,12,88,62),
+        size_mobile:numberIn(d.bubble_size_mobile,32,88,44),
+        size_desktop:numberIn(d.bubble_size_desktop,32,100,50),
+        opacity:numberIn(d.bubble_opacity,0.35,1,0.7)
+      }};
     if(mode==="file"){
       if(file?.size){
         const upload=await A.upload(file,"f90-radio","tracks");
