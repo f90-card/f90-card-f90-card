@@ -8,9 +8,9 @@ test("special service modules compile and both entry points load in correct orde
  for(const file of ["f90-special.js","f90-special-admin.js","f90-content-admin.js","app.js","admin.js","f90-welcome-scene.js"]){
   assert.doesNotThrow(()=>new vm.Script(read(file),{filename:file}));
  }
- assert.ok(storefront.indexOf("f90-special.js")<storefront.indexOf("app.js"));
- assert.ok(admin.indexOf("f90-special-admin.js")<admin.indexOf("admin.js"));
- assert.ok(admin.indexOf("f90-content-admin.js")<admin.indexOf("admin.js"));
+ assert.ok(storefront.indexOf("./f90-special.js")<storefront.indexOf("./app.js?v="));
+ assert.ok(admin.indexOf("./f90-special-admin.js")<admin.indexOf("./admin.js?v="));
+ assert.ok(admin.indexOf("./f90-content-admin.js")<admin.indexOf("./admin.js?v="));
  assert.match(storefront,/f90-special\.css/);
  assert.match(admin,/f90-special\.css/);
 });
@@ -43,7 +43,7 @@ test("services work on mobile with five unique banner visuals",()=>{
  const ui=read("f90-special.js"),css=read("f90-special.css"),app=read("app.js");
  assert.match(ui,/banner-transfer\.webp/);
  for(const item of ["banner-design.webp","banner-digital.webp","banner-website.webp","banner-salary.webp"])
-  assert.match(ui,item.replace(".","\\."));
+  assert.ok(ui.includes(item),item);
  assert.match(css,/@media\(max-width:740px\)/);
  assert.match(css,/scroll-snap-type:x mandatory/);
  assert.match(app,/f90-category-top/);
