@@ -16,7 +16,9 @@ test("supplier suspension marks linked services as refilling while disconnect hi
 test("disabled suppliers are blocked for quotes and new orders", () => {
   assert.match(edge, /async function assertProviderAvailable\(productId: string\)/);
   assert.match(edge, /if \(!p\?\.is_enabled \|\| p\.config\?\.disconnected \|\| p\.config\?\.archived_at\)/);
-  assert.match(edge, /if \(action === "quote"\) \{\s*await assertProviderAvailable/);
+  assert.match(edge, /quoteProductId \? assertProviderAvailable\(quoteProductId\) : Promise\.resolve\(\)/);
+  assert.match(edge, /const \[a\] = await Promise\.all\(/);
+  assert.match(edge, /if \(action === "quote"\) \{[\s\S]*?await rpc\("f90_quote"/);
   assert.match(edge, /const product = uuid\(b\.product_id \|\| b\.service\);\s*await assertProviderAvailable\(product\)/);
 });
 test("supplier toggle modifies only the supplier state and adds audit", () => {
