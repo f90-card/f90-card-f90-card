@@ -684,15 +684,61 @@
     main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${pageHead(c.name, "", `<button class="button secondary small" data-action="share">${I("copy")}نسخ رابط القسم</button>`)}${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><span>ابحث داخل ${e(c.name)}</span><input id="categoryFilter" type="search" autocomplete="off" placeholder="ابحث عن قسم أو خدمة..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
     if ($("categoryFilter")) $("categoryFilter").closest("label")?.insertAdjacentHTML("afterend", '<p id="categoryNoResults" class="muted" hidden>لا توجد نتائج مطابقة داخل هذا القسم.</p>');
   }
+  // Portaling the purchase sheet to <body> avoids parent stacking contexts
+  // (the footer and mobile dock previously appeared above a clipped checkout).
+  let checkoutPortalHome = null;
+  let checkoutViewportFrame = 0;
+  function updateCheckoutViewport() {
+    if (!document.body.classList.contains("f90-checkout-open")) return;
+    const view = window.visualViewport;
+    const available = view?.height || window.innerHeight;
+    const center = (view?.offsetTop || 0) + available / 2;
+    document.documentElement.style.setProperty("--f90-checkout-height", Math.max(120,available)+"px");
+    document.documentElement.style.setProperty("--f90-checkout-center", center+"px");
+    const panel = $("quickProductPanel");
+    const active = document.activeElement;
+    if (panel && active && panel.contains(active) && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) {
+      const box = active.getBoundingClientRect();
+      const top = (view?.offsetTop || 0) + 8;
+      const bottom = top + available - 12;
+      if (box.bottom > bottom) panel.scrollTop += box.bottom - bottom + 10;
+      if (box.top < top) panel.scrollTop -= top - box.top + 10;
+    }
+  }
+  function scheduleCheckoutViewport() {
+    if (checkoutViewportFrame) return;
+    checkoutViewportFrame = requestAnimationFrame(() => {
+      checkoutViewportFrame = 0;
+      updateCheckoutViewport();
+    });
+  }
+  window.visualViewport?.addEventListener("resize",scheduleCheckoutViewport,{passive:true});
+  window.visualViewport?.addEventListener("scroll",scheduleCheckoutViewport,{passive:true});
+  window.addEventListener("resize",scheduleCheckoutViewport,{passive:true});
+  document.addEventListener("focusin",e=>{
+    if (e.target.closest?.("#quickProductPanel")) scheduleCheckoutViewport();
+  });
   function closeQuickProduct() {
     const panel = $("quickProductPanel");
+    const backdrop = $("quickProductBackdrop");
     if (!panel || panel.hidden) return;
     panel.hidden = true;
-    $("quickProductBackdrop").hidden = true;
+    if (backdrop) backdrop.hidden = true;
     panel.replaceChildren();
+    document.body.classList.remove("f90-checkout-open");
+    if (checkoutPortalHome?.isConnected) {
+      if(backdrop)checkoutPortalHome.appendChild(backdrop);
+      checkoutPortalHome.appendChild(panel);
+    } else {
+      backdrop?.remove();
+      panel.remove();
+    }
+    checkoutPortalHome = null;
+    document.documentElement.style.removeProperty("--f90-checkout-height");
+    document.documentElement.style.removeProperty("--f90-checkout-center");
     S.quote = null;
     S.quoteSeq++;
-    if (quickProductOpener?.isConnected) quickProductOpener.focus();
+    if (quickProductOpener?.isConnected) quickProductOpener.focus({preventScroll:true});
     quickProductOpener = null;
   }
   function priceBoard(total) {
@@ -816,11 +862,17 @@
     </div>`;
     if (inline) {
       const panel = $("quickProductPanel");
-      if (!panel) return;
+      const backdrop = $("quickProductBackdrop");
+      if (!panel || !backdrop) return;
+      checkoutPortalHome = panel.parentElement;
       panel.innerHTML = productHtml;
+      document.body.append(backdrop,panel);
+      document.body.classList.add("f90-checkout-open");
       panel.hidden = false;
-      $("quickProductBackdrop").hidden = false;
-      panel.querySelector('[data-action="close-quick-product"]')?.focus();
+      backdrop.hidden = false;
+      panel.scrollTop = 0;
+      updateCheckoutViewport();
+      panel.querySelector('[data-action="close-quick-product"]')?.focus({preventScroll:true});
     } else {
       main.innerHTML = productHtml;
     }
