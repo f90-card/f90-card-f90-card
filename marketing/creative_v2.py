@@ -5,8 +5,8 @@ B=Path(__file__).resolve().parent.parent
 O=B/'marketing'/'creative-v2';O.mkdir(parents=True,exist_ok=True)
 SITE='https://f90-card.github.io/f90-card-f90-card/index.html#/'
 WA='https://wa.me/970568181910'
-FA='/usr/share/fonts/truetype/noto/NotoKufiArabic-ExtraBold.ttf'
-FM='/usr/share/fonts/truetype/noto/NotoKufiArabic-Medium.ttf'
+FA='/usr/share/fonts/truetype/noto/NotoKufiArabic-Bold.ttf'
+FM='/usr/share/fonts/truetype/noto/NotoKufiArabic-Regular.ttf'
 FE='/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 LOGO=Image.open(B/'f90-logo.png').convert('RGBA')
 bb=LOGO.getchannel('A').point(lambda v:255 if v>28 else 0).getbbox()
