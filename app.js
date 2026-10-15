@@ -800,6 +800,14 @@
       );
       $("f90CheckoutTopBalance").textContent = S.me ?
         f90CheckoutMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
+      const remainingLabel = $("f90CheckoutTopRemaining");
+      if (remainingLabel) {
+        const balance = Number(S.me?.wallet?.balance_usd);
+        remainingLabel.textContent = !S.me ? "سجّل الدخول"
+          : !Number.isFinite(balance) || !Number.isFinite(Number(quote.total_usd)) ? "—"
+          : balance < Number(quote.total_usd) ? "رصيد غير كافٍ"
+          : f90CheckoutMoney(balance-Number(quote.total_usd),true);
+      }
       $("discountHint").textContent = Number(quote.discount_usd)>0
         ? "خصم VIP: " + displayMoney(quote.discount_usd,true) : "";
       $("quoteError").textContent = "";
@@ -814,6 +822,7 @@
       delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
       if (price) {price.removeAttribute("aria-busy");price.textContent="السعر غير متاح";}
+      if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       $("checkoutTotal").textContent = "السعر غير متاح";
       $("walletHint").textContent = "";
       $("quoteError").textContent = message(err);
@@ -851,32 +860,42 @@
             required: true,
           },
         ];
+    const checkoutWords = [cat?.name, cat?.slug, p.name].filter(Boolean).join(" ").toLowerCase();
+    const checkoutKind = /تطبيق|لايف|كوينز|coins|live|شات|chat/.test(checkoutWords) ? "apps"
+      : /ببجي|جواكر|العاب|ألعاب|game|pubg|free fire|roblox|steam|ludo/.test(checkoutWords) ? "games"
+      : /اشتراك|ترفيه|شاهد|نتفلكس|netflix|disney|streaming/.test(checkoutWords) ? "subscriptions"
+      : /بطاق|كود|gift|itunes|apple|google play/.test(checkoutWords) ? "cards"
+      : /تواصل|انستجرام|فيسبوك|social|تيك توك/.test(checkoutWords) ? "social"
+      : /رصيد هاتف|اتصالات|mobile/.test(checkoutWords) ? "mobile" : "services";
+    const checkoutQuantityLabel = c.quantity_label_ar || (checkoutKind === "apps" ? "كمية الكوينز" : "الكمية المطلوبة");
     const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";
-    const productHtml = `<div class="product-page f90-visa-purchase" dir="rtl">
+    const productHtml = `<div class="product-page f90-visa-purchase f90-premium-checkout" data-checkout-kind="${e(checkoutKind)}" dir="rtl">
       <img class="f90-visa-watermark" src="${e(officialLogo)}" alt="" aria-hidden="true" loading="lazy">
       <div class="f90-visa-card-header">
         <img class="f90-visa-logo" src="${e(officialLogo)}" alt="F90 CARD" loading="lazy">
         ${inline ? '<button type="button" class="f90-visa-close" data-action="close-quick-product" aria-label="إغلاق كرت الشراء">×</button>' : '<a href="#/" class="f90-visa-close" aria-label="العودة إلى المتجر">×</a>'}
       </div>
       <div class="f90-visa-product">
+        <span class="f90-premium-chip" aria-hidden="true"><svg viewBox="0 0 44 32" fill="none"><rect x="1" y="1" width="42" height="30" rx="6" stroke="currentColor" stroke-width="2"/><path d="M15 1v30M29 1v30M1 11h42M1 21h42M15 11l14 10M29 11 15 21" stroke="currentColor" stroke-width="1.5"/></svg></span>
         <div class="product-art">${image(p.image_url,p.name,"f90-checkout-image")}</div>
         <div class="product-info">
           <h1>${e(p.name)}</h1>
-          <p class="f90-visa-subtitle">شحن آمن وفوري</p>
+          <p class="f90-visa-subtitle">${e(c.fulfillment === "automatic" ? "شحن إلكتروني مباشر" : "خدمة رقمية عبر F90 CARD")}</p>
           <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "تنفيذ مباشر" : "حسب معالجة الطلب"}</span><span class="f90-visa-available"><span aria-hidden="true">●</span> متاح الآن</span></div>
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
       <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(C.previewPrice(p,c.quantity_min||1))}</div>
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
-        <div class="f90-checkout-summary">
-          <div class="f90-visa-price"><span class="f90-visa-coins" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span><span class="f90-visa-price-copy"><span>سعر التكلفة</span><strong id="f90CheckoutTopTotal" aria-live="polite">جارٍ حساب السعر…</strong></span></div>
-          <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(f90CheckoutMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
-        </div>
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
         ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
-        ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
+        ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
+        <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
+          <div class="f90-visa-price"><span>السعر النهائي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-busy="true">جارٍ حساب السعر…</strong></div>
+          <div class="f90-visa-balance"><span>رصيدك الحالي</span><strong id="f90CheckoutTopBalance">${S.me ? e(f90CheckoutMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
+          <div class="f90-visa-remaining"><span>رصيدك بعد الشراء</span><strong id="f90CheckoutTopRemaining">—</strong></div>
+        </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
         <p id="quoteError" class="inline-error" role="status"></p>
@@ -1088,16 +1107,48 @@
   function isAppInstalled() {
     return window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
   }
+  function f90InstallDevice() {
+    const agent=navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(agent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+      ? "ios" : /Android/i.test(agent) ? "android" : "windows";
+  }
+  function f90InstallHelp(device) {
+    if (device === "ios") return "على iPhone أو iPad: افتح F90 CARD باستخدام Safari، اضغط مشاركة، ثم «إضافة إلى الشاشة الرئيسية»، وأكّد الإضافة.";
+    if (device === "windows") return "على Windows: افتح المتجر باستخدام Edge أو Chrome، ثم من قائمة المتصفح اختر «تثبيت هذا الموقع كتطبيق» إذا كان الخيار متاحًا.";
+    return "على Android: افتح المتجر باستخدام Chrome، واضغط «تثبيت التطبيق» من قائمة المتصفح. إذا ظهر طلب تثبيت مباشر، وافق عليه.";
+  }
   function syncInstallButtons() {
     const installed=isAppInstalled();
     const header=$("installButton");
-    if(header)header.hidden=installed||!installPrompt;
-    document.querySelectorAll('[data-action="install"]').forEach(button=>button.hidden=installed);
+    if(header) header.hidden=installed || !installPrompt;
+    const action=$("f90InstallAction");
+    document.querySelectorAll('[data-action="install"]').forEach(button=>{
+      if(button !== action)button.hidden=installed;
+    });
     const state=$("f90InstallState");
     if(state)state.hidden=!installed;
+    if(action){
+      action.disabled=installed;
+      const device=document.querySelector('.f90-install-platform[aria-pressed="true"]')?.dataset.platform || f90InstallDevice();
+      action.querySelector("span").textContent=installed?"التطبيق مثبت بالفعل":
+        installPrompt && device!=="ios"?"تثبيت الآن":"عرض خطوات التثبيت";
+    }
   }
   function installPage() {
-    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "تطبيق متجرك على الشاشة الرئيسية، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="${e(C.safeUrl(S.settings.config?.install_art_url || S.settings.config?.app_icon_url || "./assets/icons/icon-192.png") || "./assets/icons/icon-192.png")}" alt="صورة تثبيت تطبيق F90 CARD" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت المتجر للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><p id="f90InstallState" class="f90-install-success" hidden>التطبيق مفتوح بوضع التثبيت على جهازك.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>◉ أندرويد</h3><p>اضغط زر التثبيت. إذا لم يُظهر المتصفح طلب التثبيت، افتح قائمة Chrome واختر «تثبيت التطبيق».</p></section><section><h3> آيفون وآيباد</h3><p>افتح المتجر عبر Safari، ثم اختر «مشاركة» و«إضافة إلى الشاشة الرئيسية». لا يسمح Safari بالتثبيت المباشر عبر زر الموقع.</p></section></div><p class="muted small">يتطلب التثبيت موافقتك. يتوفر زر التثبيت المباشر عندما يدعمه المتصفح.</p></section>`;
+    const selected=f90InstallDevice();
+    const installIcon=e(C.safeUrl(S.settings.config?.app_icon_url || "./assets/icons/icon-192.png") || "./assets/icons/icon-192.png");
+    const official=e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png");
+    const platforms=[
+      {id:"ios",name:"Apple · iPhone",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.05 12.5c-.03-3.02 2.46-4.5 2.57-4.57-1.4-2.04-3.57-2.32-4.34-2.34-1.84-.2-3.62 1.08-4.56 1.08-.96 0-2.41-1.05-3.99-1.02-2.06.03-3.97 1.2-5.03 3.03-2.15 3.73-.55 9.22 1.55 12.25 1.03 1.49 2.25 3.16 3.87 3.1 1.55-.07 2.14-.99 3.99-.99s2.4.99 4 .96c1.65-.03 2.7-1.5 3.71-3a12.2 12.2 0 0 0 1.7-3.51c-.04-.02-3.23-1.24-3.26-4.98ZM14.29 3.52C15.14 2.49 15.72 1.06 15.56 0c-1.22.05-2.7.81-3.58 1.84-.78.88-1.47 2.35-1.28 3.73 1.36.1 2.75-.7 3.59-2.05Z" transform="translate(2 1) scale(.82)"/></svg>'},
+      {id:"android",name:"Android",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5.25 9a6.75 6.75 0 0 1 13.5 0ZM3.5 10.5h17v7.25A2.25 2.25 0 0 1 18.25 20H5.75a2.25 2.25 0 0 1-2.25-2.25ZM7 20h2v3H7Zm8 0h2v3h-2ZM2 11h1v7H2zm19 0h1v7h-1Z"/><path d="M6.5 2.5 9 6M17.5 2.5 15 6" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8.5" r=".7" fill="#111"/><circle cx="16" cy="8.5" r=".7" fill="#111"/></svg>'},
+      {id:"windows",name:"Windows",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M2 4.4 11 3v8H2zm10-1.56L22 1.4V11H12zM2 12h9v8.1L2 18.8zm10 0h10v10.6L12 21.1z"/></svg>'}
+    ];
+    main.innerHTML = '<section class="f90-install-premium" aria-labelledby="f90InstallHeading"><header class="f90-install-top"><img src="'+official+'" alt="شعار F90 CARD"><span class="f90-install-label">F90 DIGITAL EXPERIENCE</span></header>'+
+      '<div class="f90-install-hero"><div class="f90-install-hero-icon"><img src="'+installIcon+'" alt="أيقونة المتجر"></div><div><h1 id="f90InstallHeading">تثبيت F90 CARD</h1><p>أضف المتجر إلى جهازك للوصول السريع إلى خدماتك ومحفظتك وطلباتك.</p></div></div>'+
+      '<div class="f90-install-platforms" role="group" aria-label="اختر نظام جهازك">'+platforms.map(x=>'<button type="button" class="f90-install-platform" data-action="select-install-platform" data-platform="'+x.id+'" aria-pressed="'+(x.id===selected)+'" aria-label="'+x.name+'">'+x.icon+'<span>'+x.name+'</span></button>').join("")+'</div>'+
+      '<div class="f90-install-steps"><strong>طريقة التثبيت</strong><p id="f90InstallGuide">'+e(f90InstallHelp(selected))+'</p></div>'+
+      '<p id="f90InstallState" class="f90-install-success" hidden>تم تشغيل المتجر بوضع التطبيق على هذا الجهاز.</p>'+
+      '<button type="button" id="f90InstallAction" class="f90-install-cta" data-action="install"><span>عرض خطوات التثبيت</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v4h16v-4"/></svg></button></section>';
     syncInstallButtons();
   }
   async function wallet() {
@@ -1933,6 +1984,7 @@
       const shown=$("f90CheckoutTopTotal");
       // Never display a speculative price. The first visible amount must
       // come from the confirmed quote API for the current quantity.
+      if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       if(shown){
         shown.textContent="جارٍ تحديث السعر…";
         shown.setAttribute("aria-busy","true");
@@ -2186,16 +2238,21 @@
       } else if (action === "api-jump") {
         const target = document.getElementById(button.dataset.target);
         if (target && main.contains(target)) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (action === "select-install-platform") {
+        const device=ev.target.closest("[data-platform]")?.dataset.platform;
+        if (!["ios","android","windows"].includes(device)) return;
+        document.querySelectorAll(".f90-install-platform").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.platform===device)));
+        const guide=$("f90InstallGuide");
+        if(guide)guide.textContent=f90InstallHelp(device);
+        syncInstallButtons();
       } else if (action === "install") {
-        if (installPrompt) {
+        if(isAppInstalled()){toast("المتجر مثبت على جهازك بالفعل");return;}
+        const device=document.querySelector('.f90-install-platform[aria-pressed="true"]')?.dataset.platform || f90InstallDevice();
+        if(installPrompt && device!=="ios"){
           await installPrompt.prompt();
-          installPrompt = null;
+          installPrompt=null;
           syncInstallButtons();
-        } else
-          modal(
-            "تثبيت أف تسعين كارد",
-            "<p>على أندرويد: افتح قائمة المتصفح ثم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</p><p>على آيفون وآيباد: افتح الموقع في سفاري، اضغط مشاركة، ثم «إضافة إلى الشاشة الرئيسية».</p>",
-          );
+        } else modal("طريقة تثبيت F90 CARD",'<p>'+e(f90InstallHelp(device))+'</p>');
       }
     } catch (err) {
       toast(message(err));
@@ -2224,9 +2281,7 @@
     chrome();
     route();
   });
-  $("installButton").addEventListener("click", async () => {
-    if (installPrompt) { await installPrompt.prompt(); installPrompt=null; syncInstallButtons(); }
-  });
+  $("installButton").addEventListener("click", () => { location.hash = "#/install"; });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
       closeModal();
