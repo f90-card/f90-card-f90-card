@@ -184,8 +184,18 @@
     document.title = /شحن الألعاب والتطبيقات والبطاقات الرقمية/.test(storeSearchName)
       ? storeSearchName
       : storeSearchName + " | شحن الألعاب والتطبيقات والبطاقات الرقمية";
-    if (location.hostname.endsWith(".vercel.app") || c.vercel_manifest)
-      document.querySelector("link[rel=manifest]").href = "./api/manifest";
+    const manifestLink=document.querySelector('link[rel="manifest"]');
+    if(manifestLink && location.hostname.endsWith("github.io")){
+      const dynamicIcons=c.app_icon_192_url&&c.app_icon_512_url;
+      const rev=encodeURIComponent(String(c.app_icon_512_url||"").split("/").pop());
+      const dynamic=window.F90_CONFIG.SUPABASE_URL+"/functions/v1/f90-install-manifest?app=store&rev="+rev;
+      const desired=dynamicIcons?dynamic:new URL("./manifest.webmanifest",location.href).href;
+      if(dynamicIcons)manifestLink.setAttribute("crossorigin","anonymous");
+      if(manifestLink.href!==desired)manifestLink.href=desired;
+    }else if(manifestLink && (location.hostname.endsWith(".vercel.app") || c.vercel_manifest)){
+      const desired=new URL("./api/manifest",location.href).href;
+      if(manifestLink.href!==desired)manifestLink.href=desired;
+    }
   }
   function avatar(p, size = "") {
     return `<span class="avatar ${size}">${p?.avatar_url ? image(p.avatar_url, p.display_name) : I("user")}</span>`;
