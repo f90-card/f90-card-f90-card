@@ -116,3 +116,21 @@ body.f90-welcome-route .f90-minimal-welcome{background:transparent!important}
    height:calc(var(--f90-phone-mobile-size,153px)*1.92);
  }
 }
+
+/* Responsive paired device ads and compact category navigation. */
+.f90-home-devices{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(8px,3vw,36px);min-height:0;padding:20px 8px;max-width:100%;}
+.f90-home-devices .f90-home-phone-link{min-width:0;min-height:0;flex:0 0 auto}
+.f90-home-devices .f90-home-phone-shell{max-width:none}
+.f90-home-devices .f90-home-phone-island{display:none!important}
+.f90-home-laptop-link{display:block;width:var(--f90-laptop-size,320px);max-width:calc(100vw - 48px);text-decoration:none;color:inherit;flex:0 1 auto;perspective:1000px}
+.f90-home-laptop-shell{display:block;position:relative;width:100%;filter:drop-shadow(0 18px 19px #0007);transform:rotateY(-6deg)}
+.f90-home-laptop-display{display:block;aspect-ratio:16/10;overflow:hidden;border:7px solid #262630;border-bottom-width:11px;border-radius:13px 13px 4px 4px;background:#08080c;box-shadow:inset 0 0 0 1px #e3c3d0,0 0 0 1px #ad9aa2}
+.f90-home-laptop-display img,.f90-home-laptop-display video{display:block;width:100%;height:100%;object-fit:cover}
+.f90-home-laptop-base{display:block;width:112%;height:10px;position:relative;left:-6%;border-radius:2px 2px 70% 70%;background:linear-gradient(#d3d0d5,#605d66 60%,#26252e);box-shadow:0 2px 3px #0006}
+.f90-category-top{display:flex;justify-content:flex-start;margin:5px 0 10px}
+.f90-category-top .button{padding:6px 10px;font-size:11px;min-height:0}
+.f90-category-search{max-width:340px;margin:12px 0 18px}
+.f90-category-search input{min-height:36px;font-size:13px}
+.category-art{display:block;max-height:330px;object-fit:cover;width:100%;border-radius:18px}
+@media(max-width:650px){.f90-home-devices{gap:10px;padding:12px 5px}.f90-home-laptop-link{width:var(--f90-laptop-mobile-size,220px);min-width:0}.f90-home-devices .f90-home-phone-link{min-width:0}.f90-home-devices .f90-home-phone-shell{width:var(--f90-phone-mobile-size,153px);height:calc(var(--f90-phone-mobile-size,153px)*1.92)}.f90-home-laptop-display{border-width:4px;border-bottom-width:7px;border-radius:8px 8px 2px 2px}.f90-home-laptop-base{height:6px}.f90-category-search{max-width:250px}}
+@media(max-width:370px){.f90-home-devices{gap:5px}.f90-home-laptop-link{max-width:45vw}.f90-home-devices .f90-home-phone-shell{max-width:45vw;height:auto;aspect-ratio:1/1.92}}
