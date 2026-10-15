@@ -1732,7 +1732,7 @@
       main.innerHTML=head("تنبيهات تلجرام","حصل خطأ أثناء قراءة سجل الإرسال")+
         '<div class="notice error">'+e(String(error.message||error))+'</div>';return;
     }
-    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض"};
+    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",test:"رسالة اختبار"};
     const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة"};
     const recent=(result.recent||[]).map(x=>
       '<tr><td>'+e(labels[x.event_type]||x.event_type)+'</td><td>'+e(states[x.status]||x.status)+'</td>'+
@@ -1747,7 +1747,7 @@
       '<section class="panel"><h2>توصيل البوت بأمان</h2><p>أنشئ بوتًا من Telegram عبر @BotFather، وافتح محادثة معه وأرسل /start. احصل على معرّف المحادثة Chat ID، ثم أضف القيم التالية في إعدادات أسرار Supabase Edge Functions وليس في GitHub أو شاشة المتجر:</p>'+
       '<pre dir="ltr">F90_TELEGRAM_BOT_TOKEN\nF90_TELEGRAM_CHAT_ID\nF90_TELEGRAM_DISPATCH_SECRET</pre>'+
       '<p>احفظ نفس قيمة F90_TELEGRAM_DISPATCH_SECRET في Supabase Vault باسم <code>f90_telegram_dispatch_secret</code>. يرسل العامل الرسائل دوريًا كل دقيقة، ويحفظ الطلبات غير المرسلة في طابور للمحاولة لاحقًا.</p>'+
-      '<div class="notice warning">الاتصال لا يكتمل بمجرد إنشاء الصفحة. يلزم إعداد أسرار البوت ومعرّف المحادثة، ثم اختبار رسالة في تلجرام. لا ترسل توكن البوت لأي شخص.</div></section>'+
+      '<div class="notice warning">الاتصال لا يكتمل بمجرد إنشاء الصفحة. يلزم إعداد أسرار البوت ومعرّف المحادثة، ثم اختبار رسالة في تلجرام. لا ترسل توكن البوت لأي شخص.</div><button class="button secondary" type="button" data-action="telegram-test">وضع رسالة اختبار في قائمة تلجرام</button></section>'+
       '<section class="panel"><h2>سجل آخر إشعارات تلجرام</h2><p class="muted small">الإشعارات الظاهرة أدناه تشمل المحاولات الحالية؛ عدم وجود حالة «أُرسلت» يعني أن وصول الرسائل لم يتأكد بعد.</p>'+
       '<div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الحالة</th><th>الوقت</th><th>المحاولات</th></tr></thead><tbody>'+
       (recent||'<tr><td colspan="4">لا توجد تنبيهات جديدة منذ تفعيل الربط</td></tr>')+
@@ -2063,7 +2063,12 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
-      if (action === "dynamic-toggle" && S.dynamicKind === "payments") {
+      if (action === "telegram-test") {
+        if(!confirm("هل أضفت بيانات البوت ومعرّف المحادثة داخل أسرار Supabase؟ سيتم وضع إشعار واحد للتجربة."))return;
+        await A.call("staff.telegram.test");
+        toast("تم وضع رسالة الاختبار في قائمة الإرسال. تظهر النتيجة خلال دقيقة إذا كان البوت متصلًا.");
+        await telegramAlerts();
+      } else if (action === "dynamic-toggle" && S.dynamicKind === "payments") {
         const rows=[...(S.settings.config.payment_methods||[])], index=Number(b.dataset.index);
         if(!Number.isInteger(index)||!rows[index])throw new Error("طريقة الدفع غير موجودة");
         rows[index]={...rows[index],enabled:rows[index].enabled===false};
