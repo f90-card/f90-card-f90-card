@@ -343,7 +343,26 @@ async function allCatalogRows(table: "products" | "f90_product_internal") {
   }
   throw new AppError("F90_LIMIT", 503, "الكتالوج كبير جدًا؛ راجع الخدمات المنشورة");
 }
+// Public-only, short-lived in-memory cache for each warm edge isolate.
+// It is never used to decide prices or authorize purchases: quote/order RPCs
+// continue querying the live database. Collapse concurrent cold reads too.
+let cachedPublicCatalog: any = null;
+let cachedPublicCatalogUntil = 0;
+let pendingPublicCatalog: Promise<any> | null = null;
 async function publicCatalog() {
+  if (cachedPublicCatalog && Date.now() < cachedPublicCatalogUntil)
+    return cachedPublicCatalog;
+  if (pendingPublicCatalog) return pendingPublicCatalog;
+  pendingPublicCatalog = (async () => {
+    const result = await buildPublicCatalog();
+    cachedPublicCatalog = result;
+    cachedPublicCatalogUntil = Date.now() + 12000;
+    return result;
+  })();
+  try { return await pendingPublicCatalog; }
+  finally { pendingPublicCatalog = null; }
+}
+async function buildPublicCatalog() {
   const rows = await Promise.all([
     db.from("site_settings").select("*").eq("id", 1).single(),
     db.from("categories").select("*").eq("is_active", true).order("sort_order"),
