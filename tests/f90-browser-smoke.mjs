@@ -28,16 +28,17 @@ try {
      const start=Date.now();
      try {
        const response=await page.goto(ROOT+hash,{waitUntil:"domcontentloaded",timeout:25000});
-       await page.waitForFunction(()=>document.querySelector("#mainContent")?.children?.length>0,{timeout:16000});
+       await page.waitForFunction(()=>document.querySelector("#mainContent")?.children?.length>0,null,{timeout:16000});
        await page.waitForTimeout(1200);
        const geometry=await page.evaluate(()=>({
          width:window.innerWidth,scrollWidth:document.documentElement.scrollWidth,
          height:document.documentElement.scrollHeight,
          title:document.title,
          visible:!!document.querySelector("#mainContent")?.textContent?.trim(),
+         loading:!!document.querySelector("#mainContent")?.textContent?.includes("جارٍ تجهيز عالمك الرقمي"),
        }));
        const overflow=geometry.scrollWidth>geometry.width+20;
-       const valid=(response?.status()===200)&&geometry.visible&&!overflow&&!jsErrors.length;
+       const valid=(response?.status()===200)&&geometry.visible&&!geometry.loading&&!overflow&&!jsErrors.length;
        results.push({view:view.name,route:hash,valid,status:response?.status(),
          ms:Date.now()-start,overflow,geometry,errors:jsErrors.slice(0,3)});
        if(hash==="#/")await page.screenshot({path:"artifacts/f90-smoke/"+view.name+"-home.png",fullPage:true});
