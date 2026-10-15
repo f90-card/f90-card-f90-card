@@ -683,15 +683,8 @@
       );
       const summaryTotal = $("f90CheckoutTopTotal");
       const summaryBalance = $("f90CheckoutTopBalance");
-      const summaryRemaining = $("f90CheckoutTopRemaining");
       if (summaryTotal) summaryTotal.textContent = displayMoney(quote.total_usd,true);
       if (summaryBalance) summaryBalance.textContent = S.me ? displayMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
-      if (summaryRemaining) {
-        summaryRemaining.textContent = S.me
-          ? displayMoney(Number(S.me.wallet?.balance_usd || 0) - Number(quote.total_usd),true)
-          : "بعد تسجيل الدخول";
-        summaryRemaining.classList.toggle("f90-insufficient", !!S.me && Number(S.me.wallet?.balance_usd || 0) < Number(quote.total_usd));
-      }
       $("discountHint").textContent =
         Number(quote.discount_usd) > 0
           ? "الخصم المطبق: " + displayMoney(quote.discount_usd,true)
@@ -701,17 +694,15 @@
       const insufficient =
         S.me && Number(S.me.wallet?.balance_usd) < Number(quote.total_usd);
       $("walletHint").innerHTML = insufficient
-        ? `<span class="notice error">رصيدك لا يكفي. <a href="#/deposit">أضف رصيدًا</a> وانتظر اعتماد الإيداع.</span>`
-        : S.me
-          ? `<div class="f90-wallet-preview"><span>الرصيد الحالي: <b>${e(displayMoney(S.me.wallet.balance_usd,true))}</b></span><span>الرصيد المتوقع بعد الشراء: <b>${e(displayMoney(Number(S.me.wallet.balance_usd)-Number(quote.total_usd),true))}</b></span></div>`
-          : "سجّل الدخول للشراء من محفظتك.";
+        ? '<span class="f90-visa-shortfall">الرصيد غير كافٍ · <a href="#/deposit">إضافة رصيد</a></span>'
+        : "";
     } catch (err) {
       if (!f.isConnected || seq !== S.quoteSeq) return;
       S.quote = null;
       $("priceBoard")?.removeAttribute("aria-busy");
       $("checkoutTotal").textContent="السعر غير متاح";
       if ($("f90CheckoutTopTotal")) $("f90CheckoutTopTotal").textContent = "السعر غير متاح";
-      if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "بانتظار التسعير";
+      if ($("walletHint")) $("walletHint").textContent = "";
       $("quoteError").textContent = message(err);
       $("buyButton").disabled = true;
     }
@@ -747,12 +738,45 @@
             required: true,
           },
         ];
-    const productHtml = `<div class="breadcrumb f90-purchase-hidden"><a href="#/">الرئيسية</a>${cat ? `<span>‹</span><a href="${href("category", cat.slug)}">${e(cat.name)}</a>` : ""}<span>‹</span>${e(p.name)}</div><div class="product-page f90-purchase-compact"><div class="product-art ${disabled ? "refilling" : ""}">${image(p.image_url, p.name)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}</div><section class="product-info"><div class="eyebrow f90-purchase-hidden">${e(cat?.name || "خدمات أف تسعين")}</div><h1>${e(p.name)} <span class="f90-fulfillment-badge">${c.fulfillment === "automatic" ? "آلي" : "يدوي"}</span></h1><div class="badges f90-purchase-hidden"><span class="badge">${disabled ? "الخدمة متوقفة مؤقتًا" : I(c.fulfillment === "automatic" ? "link" : "user") + (c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ يدوي")}</span>${!disabled && c.delivery_time ? `<span class="badge">${I("clock")}${e(c.delivery_time)}</span>` : ""}</div>${disabled ? '<p class="product-description">هذه الخدمة متوقفة مؤقتًا إلى حين تهيئة تنفيذها.</p>' : p.description ? `<p class="product-description">${e(p.description)}</p>` : ""}<div class="f90-compact-actions"><button type="button" class="f90-favorite-icon ${S.favorites.includes(p.id) ? "is-saved" : ""}" aria-pressed="${S.favorites.includes(p.id)}" data-action="favorite" data-id="${p.id}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button></div><div class="price-board f90-purchase-hidden" id="priceBoard">${priceBoard(C.previewPrice(p, c.quantity_min || 1))}</div>
- <form id="checkoutForm" data-product="${p.id}"><div class="f90-checkout-summary"><div><span>قيمة المنتج</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div><div><span>رصيد محفظتك</span><strong id="f90CheckoutTopBalance">${S.me ? e(displayMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div><div><span>الرصيد بعد الشراء</span><strong id="f90CheckoutTopRemaining">بانتظار التسعير</strong></div><div class="f90-checkout-mode f90-purchase-hidden">${I(c.fulfillment === "automatic" ? "link" : "clock")}<span>${c.fulfillment === "automatic" ? "تنفيذ آلي" : "تنفيذ بحسب معالجة الطلب"}${c.delivery_time ? " · " + e(c.delivery_time) : ""}</span></div></div><div class="f90-checkout-safety-note f90-purchase-hidden">تأكد من رقم الحساب والكمية قبل إتمام الشراء. لا تشارك كلمة مرورك أو رمز التحقق.</div>${quantity ? field("quantity", e(c.quantity_label_ar || "الكمية المطلوبة"), "number", c.quantity_min || 1, `min="${Number(c.quantity_min) || 1}" max="${Number(c.quantity_max) || 1000000000}" step="${Number(c.quantity_step) || 1}" required`) : '<input type="hidden" name="quantity" value="1">'}${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>بيانات محفوظة من دفتر العملاء</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}${fields.map((f) => field("customer_" + f.id, e(f.label_ar || f.id), ["email", "number", "textarea", "url"].includes(f.type) ? f.type : "text", "", `${f.required ? "required" : ""} maxlength="1000" placeholder="${e(f.placeholder_ar || "")}"`)).join("")}<p id="discountHint" class="muted small f90-purchase-hidden"></p><div class="checkout-total f90-purchase-hidden"><span>الإجمالي</span><strong id="checkoutTotal">—</strong></div><p id="quoteError" class="inline-error"></p><button class="button full" id="buyButton" type="submit" disabled>${I("wallet")}${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</button><p id="walletHint" class="muted small f90-purchase-hidden"></p></form></section></div>`;
+    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";
+    const productHtml = `<div class="product-page f90-visa-purchase" dir="rtl">
+      <img class="f90-visa-watermark" src="${e(officialLogo)}" alt="" aria-hidden="true" loading="lazy">
+      <div class="f90-visa-card-header">
+        <img class="f90-visa-logo" src="${e(officialLogo)}" alt="F90 CARD" loading="lazy">
+        ${inline ? '<button type="button" class="f90-visa-close" data-action="close-quick-product" aria-label="إغلاق كرت الشراء">×</button>' : '<a href="#/" class="f90-visa-close" aria-label="العودة إلى المتجر">×</a>'}
+      </div>
+      <div class="f90-visa-product">
+        <div class="product-art">${image(p.image_url,p.name)}</div>
+        <div class="product-info">
+          <h1>${e(p.name)}</h1>
+          <p class="f90-visa-subtitle">${e(cat?.name || "خدمات أف تسعين كارد")}</p>
+          <span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "تنفيذ مباشر" : "تنفيذ حسب الخدمة"}</span>
+        </div>
+        <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
+      </div>
+      <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(C.previewPrice(p,c.quantity_min||1))}</div>
+      <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
+        <div class="f90-checkout-summary">
+          <div class="f90-visa-price"><span>التكلفة</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div>
+          <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(displayMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
+        </div>
+        ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
+        ${fields.map((f)=>field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","","${f.required ? "required" : ""} maxlength=\"1000\" placeholder=\"${e(f.placeholder_ar||"")}\"")).join("")}
+        ${quantity ? field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,`min="${Number(c.quantity_min)||1}" max="${Number(c.quantity_max)||1000000000}" step="${Number(c.quantity_step)||1}" required`) : '<input type="hidden" name="quantity" value="1">'}
+        <p id="discountHint" class="f90-visa-discount"></p>
+        <p class="f90-visa-note">تأكد من صحة بيانات الحساب قبل إتمام الطلب.</p>
+        <p id="quoteError" class="inline-error" role="status"></p>
+        <strong id="checkoutTotal" hidden>—</strong>
+        <div class="f90-visa-footer">
+          <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
+          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled>${I("wallet")}<span>${S.me ? "تأكيد الشراء" : "سجّل الدخول للشراء"}</span></button>
+        </div>
+      </form>
+    </div>`;
     if (inline) {
       const panel = $("quickProductPanel");
       if (!panel) return;
-      panel.innerHTML = `<div class="f90-quick-product-toolbar"><strong>${disabled ? "متوقف مؤقتًا" : "تفاصيل الخدمة"} · ${e(p.name)}</strong><button type="button" class="button secondary small" data-action="close-quick-product">إغلاق</button></div>` + productHtml;
+      panel.innerHTML = productHtml;
       panel.hidden = false;
       $("quickProductBackdrop").hidden = false;
       panel.querySelector('[data-action="close-quick-product"]')?.focus();
