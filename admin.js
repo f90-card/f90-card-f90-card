@@ -36,7 +36,7 @@
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
-    ["users", "إدارة المستخدمين", "user", ["manager"]],
+    ["users", "العملاء والأرصدة", "user", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
@@ -60,7 +60,7 @@
     deposits: "طلبات الإيداع",
     verification: "توثيق الهوية",
     ledger: "السجل المالي",
-    users: "إدارة المستخدمين",
+    users: "العملاء والأرصدة",
     audit: "سجل الإدارة",
   };
   const library = [
@@ -316,7 +316,7 @@
           : kind === "verification"
             ? "صور خاصة، والتوثيق شرط للإيداع والشراء ويُراجع يدويًا."
             : kind === "users"
-              ? "ابحث بالبريد أو معرّف العميل، ثم اضبط حالة الحساب وصلاحياته."
+              ? "ابحث عن العميل، وأدر الرصيد والخصم والسجل والصلاحيات من شاشة واحدة."
               : kind === "ledger"
                 ? "حركات الرصيد الفعلية بالدولار، للقراءة والتدقيق فقط."
                 : "سجل العمليات والمتابعات.",
@@ -821,7 +821,7 @@
           : "يمكنك تعديل العنصر أو إخفاؤه أو تكراره وترتيبه.",
         `<button class="button" data-action="dynamic-new">${I("plus")}إضافة</button>`,
       ) +
-      `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row" draggable="true" data-dynamic-index="${n}"><span class="catalog-drag-handle" aria-hidden="true">⠿</span>${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions"><button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
+      `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row" draggable="true" data-dynamic-index="${n}"><span class="catalog-drag-handle" aria-hidden="true">⠿</span>${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions">${kind === "payments" ? `<button type="button" class="button secondary small" data-action="dynamic-toggle" data-index="${n}">${r.enabled === false ? "تفعيل" : "إيقاف"}</button>` : ""}<button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
   }
   function editDynamic(kind, item = null, index = -1) {
     if (kind === "coupons") throw new Error("إدارة الكوبونات متوقفة");
@@ -839,19 +839,11 @@
           d.name_ar || "",
           "required",
         ) +
-        field(
-          "destination",
-          "رقم الحساب أو عنوان التحويل <small>اختياري</small>",
-          "text",
-          d.destination || "",
-        ) +
-        field(
-          "details_ar",
-          "تفاصيل التحويل والتعليمات",
-          "textarea",
-          d.details_ar || "",
-          "required",
-        );
+        field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
+        field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
+        field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
+        (d.barcode_url ? '<div class="f90-barcode-preview">'+image(d.barcode_url,"باركود طريقة الدفع","editor-preview")+'</div>' : '') +
+        '<p class="muted small">اكتب رقم الحساب وتعليمات التحويل في الوصف. تفعيل الطريقة بالأعلى، والصورة الرئيسية بمحرر الصور المجاور.</p>';
     if (kind === "promotions")
       body +=
         field(
@@ -925,9 +917,9 @@
         c.default_theme || "dark",
       )}${select(
         "currency",
-        "عملة العرض الافتراضية",
-        [["USD", "دولار أمريكي"]],
-        "USD",
+        "عملة العرض الافتراضية لجميع العملاء",
+        S.rates.filter(r => r.is_enabled && Number(r.per_usd) > 0).map(r => [r.currency, r.name_ar]),
+        d.currency || "USD",
       )}${select(
         "logo_fit",
         "طريقة عرض الشعار",
@@ -1318,6 +1310,7 @@
         name_ar: d.name_ar,
         destination: d.destination,
         details_ar: d.details_ar,
+        barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
     if (kind === "promotions")
@@ -1383,7 +1376,7 @@
         logo_url: await selectedImage(form),
         primary_color: d.primary_color,
         announcement: d.announcement,
-        currency: "USD",
+        currency: d.currency,
         config: {
           ...c,
           whatsapp: d.whatsapp,
@@ -1833,7 +1826,14 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
-      if (action === "review-order-request") {
+      if (action === "dynamic-toggle" && S.dynamicKind === "payments") {
+        const rows=[...(S.settings.config.payment_methods||[])], index=Number(b.dataset.index);
+        if(!Number.isInteger(index)||!rows[index])throw new Error("طريقة الدفع غير موجودة");
+        rows[index]={...rows[index],enabled:rows[index].enabled===false};
+        await configSave({payment_methods:rows});
+        publicListPage("payments");
+        toast(rows[index].enabled?"تم تفعيل طريقة الدفع":"تم إيقاف طريقة الدفع");
+      } else if (action === "review-order-request") {
         S.reviewRequestId = b.dataset.id;
         modal("قرار طلب العميل", `<form id="orderRequestReviewForm">${select("status", "القرار", [["approved", "موافقة على المراجعة"], ["rejected", "رفض الطلب"]], "approved")}${field("note", "السبب والنتيجة للعميل", "textarea", "", 'required minlength="3" maxlength="2000"')}<p class="muted small">هذا القرار لا يلغي الطلب ولا يعيد الرصيد تلقائيًا. راجع حالة التنفيذ لدى المورّد أولًا.</p><button class="button" type="submit">حفظ القرار</button></form>`);
       } else if (action === "request-order") {
