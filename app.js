@@ -1244,7 +1244,7 @@
               .filter((r) => r.is_enabled && r.per_usd)
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
-          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع 2٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
+          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع ${e(Number(m.deposit_fee_percent ?? 2))}٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
     if(!m && S.settings.config?.special_services?.show_salary !== false){
       const tile='<a href="#/special/salary" class="f90-special-deposit-link">'+
@@ -2048,11 +2048,13 @@
         return;
       }
       const gross = amount / perUsd;
-      const fee = Math.round(gross * 0.02 * 1000000) / 1000000;
+      const configured = Number(S.selectedMethod?.deposit_fee_percent ?? 2);
+      const pct = Number.isFinite(configured) ? Math.max(0,Math.min(50,configured)) : 2;
+      const fee = Math.round(gross * pct / 100 * 1000000) / 1000000;
       const net = gross - fee;
-      estimate.innerHTML = '<strong>صافي مبلغ الإيداع المتوقع بعد عمولة 2٪</strong>' +
+      estimate.innerHTML = '<strong>صافي مبلغ الإيداع المتوقع بعد عمولة ' + e(pct) + '٪</strong>' +
         '<div class="f90-deposit-net-amount">' + e(displayMoney(net,true)) + '</div>' +
-        '<div class="f90-deposit-net-detail"><span>قبل العمولة: ' + e(displayMoney(gross,true)) + '</span><span>عمولة الإيداع 2٪: −' + e(displayMoney(fee,true)) + '</span></div>' +
+        '<div class="f90-deposit-net-detail"><span>قبل العمولة: ' + e(displayMoney(gross,true)) + '</span><span>عمولة الإيداع ' + e(pct) + '٪: −' + e(displayMoney(fee,true)) + '</span></div>' +
         '<small>يُحسم الصافي النهائي وفق سعر الصرف المحفوظ عند تقديم الطلب، ويُضاف إلى المحفظة بعد موافقة الإدارة.</small>';
     }
   });
