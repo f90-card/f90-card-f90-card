@@ -66,24 +66,29 @@ test("Admin audio player and GIF background settings are present", () => {
   assert.match(api,/f90-audio/);
   assert.match(app,/F90MediaPlayer/);
 });
-test("F90 radio uploads are private and supported video is audio-only", () => {
+test("Visitors see only edge volume controls; managers own radio sources", () => {
   const radio=read("f90-media-player.js"), css=read("f90-radio.css");
   const live=read("supabase/functions/f90-platform/index.ts");
   assert.match(admin, /A\.upload\(file,"f90-radio","tracks"\)/);
+  assert.match(admin, /staff\.radio\.save/);
+  assert.match(admin, /staff\.radio\.status/);
+  assert.match(admin, /radioYoutubeForm/);
   assert.match(api, /const radio = bucket === "f90-radio"/);
-  assert.match(api, /url: radio \? ""/);
-  assert.match(api, /action === "media.ticket"/);
-  assert.match(live, /action === "media.ticket"/);
-  assert.match(live, /createSignedUrl\(path, 3600\)/);
-  assert.match(live, /private_track/);
-  assert.match(live, /audio_url: m\.path \? ""/);
-  assert.match(radio, /media\.loop=true/);
-  assert.match(radio, /"video"/);
-  assert.match(radio, /private_track/);
-  assert.match(radio, /f90-radio-playback/);
+  assert.match(api, /action === "media\.state"/);
+  assert.match(live, /action === "media\.ticket"/);
+  assert.match(live, /action === "media\.state"/);
+  assert.match(live, /createSignedUrl\(path,\s*3600\)/);
+  assert.match(live, /f90_radio_sources/);
+  assert.match(live, /requireRole\(a,\s*"manager"\)/);
+  assert.match(radio, /el\.loop=true/);
+  assert.match(radio, /f90-radio-volume/);
+  assert.match(radio, /f90-radio-orb/);
+  assert.match(radio, /media\.state/);
   assert.doesNotMatch(radio, /youtube-nocookie|<iframe/);
   assert.match(css, /\.f90-radio-hidden-media/);
+  assert.match(css, /\.f90-radio-popup/);
   assert.match(mainHtml, /f90-radio\.css/);
+  assert.doesNotMatch(app, /\["music","ميوزك أف تسعين","headphones"\]/);
 });
 
 test("Administration has its own install manifest", () => {
@@ -107,7 +112,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-radio-uploads1/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-manager-radio2/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
