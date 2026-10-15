@@ -369,3 +369,80 @@
  .f90-visa-purchase .f90-visa-price{gap:7px}
  .f90-visa-purchase #checkoutForm .f90-visa-price strong{font-size:clamp(15px,4.4vw,21px)!important;white-space:normal}
 }
+
+
+/* Compact keyboard-safe checkout. Portal is a direct body child so the shop
+   footer and tab bar can never overlap the dialog. Only active during purchase. */
+body.f90-checkout-open{overflow:hidden!important;overscroll-behavior:none}
+body.f90-checkout-open #footer,
+body.f90-checkout-open #mobileDock,
+body.f90-checkout-open .f90-seo-directory-link,
+body.f90-checkout-open #f90MediaDock{display:none!important}
+body.f90-checkout-open #quickProductBackdrop:not([hidden]){
+  position:fixed!important;inset:0!important;z-index:3000!important;
+  background:rgba(4,4,9,.86)!important;
+  backdrop-filter:blur(2px)!important;-webkit-backdrop-filter:blur(2px)!important;
+}
+body.f90-checkout-open #quickProductPanel:not([hidden]){
+  position:fixed!important;
+  top:var(--f90-checkout-center,50%)!important;
+  left:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:3001!important;
+  display:block!important;
+  width:min(352px,calc(100vw - 24px))!important;
+  max-height:calc(var(--f90-checkout-height,100dvh) - 16px)!important;
+  min-height:0!important;
+  margin:0!important;padding:2px!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#d6a248 #1a0d12;
+  contain:layout style;
+}
+body.f90-checkout-open #modalRoot .modal-backdrop{z-index:4000!important}
+body.f90-checkout-open #quickProductPanel .f90-visa-purchase{
+  padding:10px 11px 11px!important;
+  gap:6px!important;
+  border-radius:18px!important;
+  box-shadow:0 0 0 1px #9e4619,0 0 12px #ffca6973,0 16px 28px #0009!important;
+}
+body.f90-checkout-open .f90-visa-card-header{height:34px!important}
+body.f90-checkout-open .f90-visa-logo{height:33px!important;max-width:140px!important}
+body.f90-checkout-open .f90-visa-close{height:29px!important;width:29px!important;font-size:20px!important}
+body.f90-checkout-open .f90-visa-product{
+  grid-template-columns:46px minmax(0,1fr) 26px!important;
+  min-height:46px!important;gap:7px!important;
+}
+body.f90-checkout-open .f90-visa-product .product-art{
+  width:46px!important;height:46px!important;max-height:46px!important;
+}
+body.f90-checkout-open .product-info h1{font-size:14px!important;line-height:1.3!important}
+body.f90-checkout-open .f90-visa-subtitle{font-size:10px!important}
+body.f90-checkout-open .f90-visa-statuses{gap:4px!important;margin-top:1px!important}
+body.f90-checkout-open #checkoutForm{gap:6px!important}
+body.f90-checkout-open #checkoutForm>.f90-checkout-summary{
+  padding:7px 9px!important;min-height:48px!important;border-radius:11px!important;
+}
+body.f90-checkout-open .f90-visa-price .f90-visa-coins{flex-basis:20px!important}
+body.f90-checkout-open .f90-visa-coins svg{height:20px!important;width:20px!important}
+body.f90-checkout-open #checkoutForm .f90-visa-price strong{font-size:17px!important}
+body.f90-checkout-open .f90-visa-inputrow{grid-template-columns:34px minmax(0,1fr)!important;gap:6px!important}
+body.f90-checkout-open .f90-visa-inputicon{width:34px!important;height:37px!important;border-radius:9px!important}
+body.f90-checkout-open .f90-visa-inputicon svg{height:19px!important;width:19px!important}
+body.f90-checkout-open #checkoutForm .field>span{font-size:11px!important}
+body.f90-checkout-open #checkoutForm input:not([type="hidden"]),
+body.f90-checkout-open #checkoutForm select,
+body.f90-checkout-open #checkoutForm textarea{
+  min-height:37px!important;padding:7px 10px!important;
+  font-size:16px!important;border-radius:9px!important;
+}
+body.f90-checkout-open #checkoutForm .f90-visa-note{padding:5px 7px!important;font-size:10px!important}
+body.f90-checkout-open #checkoutForm #buyButton.f90-visa-buy{min-height:42px!important;height:42px!important;font-size:14px!important}
+body.f90-checkout-open .f90-visa-buy-arrow{height:26px!important;width:26px!important;font-size:21px!important}
+@media(max-height:580px){
+  body.f90-checkout-open #quickProductPanel .f90-visa-purchase{padding:8px 10px!important;gap:5px!important}
+  body.f90-checkout-open .f90-visa-card-header{height:30px!important}
+  body.f90-checkout-open .f90-visa-logo{height:29px!important}
+  body.f90-checkout-open .f90-visa-product{min-height:40px!important}
+  body.f90-checkout-open #checkoutForm>.f90-checkout-summary{min-height:44px!important}
+}
