@@ -1,7 +1,7 @@
 /* Independent F90 text, links, image and branding editors with pre-upload previews. */
 (function(){
 "use strict";
-const e=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;":"&quot;","'":"&#39;"}[c]));
+const e=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const input=(name,label,value,type="text",attr="")=>'<label class="field"><span>'+label+'</span><input name="'+name+'" type="'+type+'" value="'+e(value??"")+'" '+attr+'></label>';
 const multi=(name,label,value)=>'<label class="field"><span>'+label+'</span><textarea name="'+name+'" rows="3" maxlength="4000">'+e(value??"")+'</textarea></label>';
 const box=(id,label,url,category="banners")=>'<div class="f90-media-editor-row"><strong>'+label+'</strong>'+
