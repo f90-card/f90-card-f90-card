@@ -549,8 +549,11 @@
     return f90CategoryById.get(id);
   }
   function categoryTile(c) {
+    const specialRoutes={"money-transfer":"transfer","account-sales":"account","design-services":"design","complete-website":"website"};
+    const specialRoute=specialRoutes[c.slug];
+    const categoryLink=specialRoute ? "#/special/"+specialRoute : href("category",c.slug||c.id);
     const disabled = categoryIsUnavailable(c);
-    return `<a class="image-tile f90-category-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("category", c.slug || c.id)}"`} data-search="${e(window.F90CatalogSearch?.keys(c.name) || c.name)}" aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
+    return `<a class="image-tile f90-category-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${categoryLink}"`} data-search="${e(window.F90CatalogSearch?.keys(c.name) || c.name)}" aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
   function productTile(p, pack = false, inline = false) {
     const disabled = C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id));
