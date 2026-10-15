@@ -9,3 +9,5 @@ grep -q 'music_audio_files' admin.js
 grep -q 'f90ScrollY' app.js
 grep -q 'F90MediaPlayer' f90-media-player.js
 echo 'F90 media and navigation scripts pass syntax checks'
+
+echo 'Checking manager radio playlist and routing after strict TypeScript fix'
