@@ -860,8 +860,8 @@ async function staff(a: Actor, b: any) {
       bubble:m.bubble||{},
       has_media:!!r.media_path||!!m.playlist?.length,has_direct:!!r.direct_audio_url,
       has_youtube:!!r.youtube_url,mode:r.mode||"audio",
-      playlist:Array.isArray(m.playlist)?m.playlist:[],
-      source_mode:m.source_mode==="link"?"link":"file",
+      playlist:Array.isArray(m.playlist)&&m.playlist.length?m.playlist:(r.media_path?[{path:r.media_path,title:"المقطع الحالي"}]:[]),
+      source_mode:m.source_mode==="link"?"link":m.source_mode==="file"?"file":r.direct_audio_url?"link":"file",
       selected_index:Number(m.selected_index||0),start_seconds:Number(m.start_seconds||0),
       direct_audio_url:r.direct_audio_url||"",
       youtube_url:r.youtube_url||"",updated_at:r.updated_at};
@@ -903,7 +903,7 @@ async function staff(a: Actor, b: any) {
     }
     const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
     const previous=settings.config?.music||{};
-    const playlistInput=b.playlist===undefined?(Array.isArray(previous.playlist)?previous.playlist:[]):b.playlist;
+    const playlistInput=b.playlist===undefined?(Array.isArray(previous.playlist)&&previous.playlist.length?previous.playlist:(current.media_path?[{path:current.media_path,title:"المقطع الحالي"}]:[])):b.playlist;
     if(!Array.isArray(playlistInput)||playlistInput.length>40)
       throw new AppError("F90_FIELDS",400,"الألبوم يسمح بحد أقصى 40 ملفًا صوتيًا");
     const playlist=playlistInput.map((item:any)=>{
