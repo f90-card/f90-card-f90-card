@@ -414,7 +414,7 @@
     S.count = r.count;
     main.innerHTML = head("التجار ومفاتيح API",
       "حسابات التجار الحقيقية ومفاتيحها ومحافظها. امنح صلاحية التاجر من صفحة المستخدمين بعد التوثيق.",
-      '<a class="button secondary small" href="#/users">إدارة المستخدمين</a><a class="button secondary small" href="./index.html#/developers">صفحة التاجر</a>') +
+      '<a class="button secondary small" href="#/users">إدارة المستخدمين</a><a class="button secondary small" href="#/traders">إدارة التوكنات</a>') +
       (r.items.length ? `<div class="table-wrap"><table><thead><tr><th>التاجر</th><th>البريد</th><th>التوثيق والحالة</th><th>المحفظة</th><th>مفاتيح نشطة</th><th>الإدارة</th></tr></thead><tbody>${r.items.map((u) =>
         `<tr><td>${customer(u)}</td><td>${e(u.email)}</td><td>${u.is_verified ? "موثّق" : "غير موثّق"} · ${status(u.account_status)}</td><td>${e(C.money(u.balance_usd))}</td><td>${e(u.active_keys)}</td><td><button class="button secondary small" data-action="find-user" data-id="${e(u.id)}">إدارة الحساب والمفاتيح</button></td></tr>`).join("")}</tbody></table></div>${pagination()}`
         : empty("لا توجد حسابات تاجر حاليًا"));
@@ -1527,10 +1527,10 @@
   function integrationCenter() {
     main.innerHTML=head("مركز الربط والبروتوكولات","استيراد من الموردين وتصدير خدمات F90 إلى التجار هما عمليتان منفصلتان.")+
       `<div class="f90-admin-center-grid">
-       <section class="panel"><h2>01 · استيراد خدمات المورد</h2><p>تدعم البنية موصلات موردين معروفة مثل Yassen وOmega وSMM. يجب مراجعة الصيغ والأسعار والعملات قبل تشغيل الخدمات. التعرف التلقائي على جميع بروتوكولات العالم غير مضمون.</p><a class="button" href="#/providers">إدارة الموردين وفحص الاتصال</a></section>
+       <section class="panel"><h2>01 · استيراد خدمات المورد</h2><p>المورّد التشغيلي الحالي هو ياسين كارد. يمكن إضافة موصلات جديدة لاحقًا بعد الفحص، دون لمس المنتجات الحالية أو إعادة استيرادها تلقائيًا.</p><a class="button" href="#/providers">إدارة الموردين وفحص الاتصال</a></section>
        <section class="panel"><h2>02 · تصدير F90 للتجار</h2><p>التاجر الموثّق ينشئ توكن بصلاحيات ورصيد خاصين ويتابع استخدام المفتاح. لا يظهر السر بعد إصدار المفتاح للمرة الأولى.</p><a class="button" href="#/traders">إدارة التجار والتوكنات</a></section>
        <section class="panel"><h2>03 · Send to developer</h2><p>دليل كامل بالإنجليزية وشرح بالعربي وملفات OpenAPI وPostman. لا ترسل مفتاح التوكن إلى المبرمج داخل المحادثات العامة.</p><a class="button secondary" href="./docs/F90_MERCHANT_API_EN.md" download>Download Merchant API</a><a class="button secondary" href="./docs/F90_PROVIDER_PROTOCOL_EN.md" download>Download Provider Protocol</a></section>
-       <section class="panel"><h2>04 · IP / Webhook status</h2><p>تقييد IP للطلبات الواردة وإرسال Webhook للتجار غير مفعّلين بعد. تُعرض هذه الحالة بوضوح حتى لا يعتمد أحد على حماية غير موجودة.</p><a class="button secondary" href="./index.html#/api-guide">صفحة دليل الربط العامة</a></section>
+       <section class="panel"><h2>04 · IP / Webhook status</h2><p>تقييد IP للطلبات الواردة وإرسال Webhook للتجار غير مفعّلين بعد. تُعرض هذه الحالة بوضوح حتى لا يعتمد أحد على حماية غير موجودة.</p><a class="button secondary" href="#/traders">إدارة صلاحيات التجار</a></section>
        </div>`;
   }
   function designCenter(){
