@@ -22,14 +22,20 @@ try {
    const page=await context.newPage();
    let jsErrors=[];
    page.on("pageerror",err=>jsErrors.push(err.message));
+   const firstResponse=await page.goto(ROOT,{waitUntil:"domcontentloaded",timeout:25000});
+   const baseStatus=firstResponse?.status();
    for (const hash of routes) {
      jsErrors=[];
      const label=hash==="#/"?"home":hash.replaceAll(/[#/]+/g,"-").replace(/^-|-$/g,"");
      const start=Date.now();
      try {
        const response=await page.goto(ROOT+hash,{waitUntil:"domcontentloaded",timeout:25000});
-       await page.waitForFunction(()=>document.querySelector("#mainContent")?.children?.length>0,null,{timeout:16000});
-       await page.waitForTimeout(1200);
+       await page.waitForFunction(()=>{
+         const main=document.querySelector("#mainContent");
+         return main?.children?.length>0 &&
+           !main?.textContent?.includes("جارٍ تجهيز عالمك الرقمي");
+       },null,{timeout:18000});
+       await page.waitForTimeout(250);
        const geometry=await page.evaluate(()=>({
          width:window.innerWidth,scrollWidth:document.documentElement.scrollWidth,
          height:document.documentElement.scrollHeight,
@@ -38,8 +44,12 @@ try {
          loading:!!document.querySelector("#mainContent")?.textContent?.includes("جارٍ تجهيز عالمك الرقمي"),
        }));
        const overflow=geometry.scrollWidth>geometry.width+20;
-       const valid=(response?.status()===200)&&geometry.visible&&!geometry.loading&&!overflow&&!jsErrors.length;
-       results.push({view:view.name,route:hash,valid,status:response?.status(),
+       // Hash-router navigation is a same-document change. Chromium correctly
+       // returns null for these navigations; the initial HTTP response is
+       // authoritative, while each route still must finish rendering cleanly.
+       const status=response?.status() ?? baseStatus;
+       const valid=(status===200)&&geometry.visible&&!geometry.loading&&!overflow&&!jsErrors.length;
+       results.push({view:view.name,route:hash,valid,status,
          ms:Date.now()-start,overflow,geometry,errors:jsErrors.slice(0,3)});
        if(hash==="#/")await page.screenshot({path:"artifacts/f90-smoke/"+view.name+"-home.png",fullPage:true});
      } catch(err) {
