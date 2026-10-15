@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-const d=window.F90Special?.defaults||{};
+const d={salary_usd_per_100k:10,salary_fee_percent:0,transfer_fee_percent:2,transfer_eta_min_minutes:5,transfer_eta_max_minutes:2880,website_price_usd:500,account_price_usd:0,transfer_methods:["شام كاش","أورنج موني","كليك","بنك فلسطين","USDT","بنك زراعت تركيا","ويش موني"]};
 const imageFields=[
  ["transfer","تحويل الأموال","قسم تحويل الأموال"],
  ["salary","سحب رواتب Xena","داخل صفحة طرق الإيداع"],
