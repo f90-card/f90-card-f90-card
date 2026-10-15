@@ -10,7 +10,7 @@ let retryTimer=null,retryMs=3000,stallTimer=null,refreshing=false;
 const clamp=(x,lo,hi,otherwise=lo)=>{const n=Number(x);return Number.isFinite(n)?Math.min(hi,Math.max(lo,n)):otherwise;};
 function url(value){try{const parsed=new URL(String(value||""),location.href);return parsed.protocol==="https:"?parsed.href:"";}catch{return "";}}
 function volume(){
- try{const value=localStorage.getItem(VOLUME_KEY);return value===null?clamp(state.volume,0,1,.02):clamp(value,0,1,.02);}catch{return clamp(state.volume,0,1,.02);}
+ try{const value=localStorage.getItem(VOLUME_KEY);return value===null ? .02 : clamp(value,0,1,.02);}catch{return .02;}
 }
 function hint(message){if(note)note.textContent=message||"";}
 function setVolume(v){try{localStorage.setItem(VOLUME_KEY,String(v));}catch{}}
