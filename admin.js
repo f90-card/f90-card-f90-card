@@ -1793,78 +1793,132 @@
     const settings=S.settings?.config?.music||{};
     const radio=await A.call("staff.radio.status");
     const youtube=f90YouTubeId(radio.youtube_url||"");
-    main.innerHTML=head("الراديو الخاص بالمتجر","أنت وحدك تتحكم بتشغيل البث ومصدره. الزوار يرون فقاعة شفافة للتحكم بالصوت فقط.")+
-      '<section class="panel"><h2>البث العام</h2><form id="mediaCenterForm">'+
-      check("music_enabled","تشغيل الراديو لكل زوار الموقع",radio.enabled===true)+
-      '<p class="muted small">إيقاف هذا الخيار يوقف الصوت عند الزوار عند تحديث حالة البث. الضغط على الفقاعة أول مرة قد يكون ضروريًا للسماح بالصوت بسبب قيود المتصفح.</p>'+
-      select("music_source_mode","مصدر صوت الراديو",[
-        ["file","ملف صوت أو فيديو أرفعه من هاتفي"],
-        ["link","رابط مباشر لبث صوتي HTTPS"]
-      ],radio.has_direct?"link":"file")+
-      field("music_audio_file","رفع ملف صوت أو فيديو MP3 / M4A / MP4 / WebM","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,video/mp4,video/webm"')+
-      '<p class="muted small">'+(radio.has_media?"هناك ملف خاص محفوظ حاليًا. يمكنك رفع ملف بديل.":"لم يتم اختيار ملف خاص حاليًا.")+' الحد الأقصى للملف: 40 ميجابايت.</p>'+
-      field("music_direct_url","رابط بث صوت مباشر (وليس صفحة يوتيوب)","url",radio.direct_audio_url||"",'placeholder="https://example.com/radio.mp3"')+
-      '<label class="field"><span>مستوى الصوت الافتراضي</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(radio.volume??settings.volume??0.35)+'" aria-label="مستوى الصوت الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(radio.volume??settings.volume??0.35)*100)+'%</output></label>'+
-      '<div class="f90-custom-bg-check"><h3>فقاعة الصوت على الهاتف والكمبيوتر</h3>'+
-      '<p class="muted small">هذه الأيقونة هي الشيء الوحيد الذي يراه الزائر. لا تسمح له بتغيير المصدر أو إيقاف البث العام.</p>'+
-      field("bubble_icon_url","رابط صورة أيقونة الراديو (HTTPS)","url",radio.bubble?.icon_url||"",'placeholder="https://example.com/icon.png"')+
-      field("bubble_icon_file","أو رفع صورة أيقونة من الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
-      select("bubble_side","جانب الشاشة",[['right','اليمين'],['left','اليسار']],radio.bubble?.side||'right')+
-      field("bubble_vertical","الموقع من أعلى الشاشة بالنسبة المئوية","number",radio.bubble?.vertical??62,'min="12" max="88" step="1"')+
-      field("bubble_size_mobile","حجم الأيقونة على الهاتف (بكسل)","number",radio.bubble?.size_mobile??44,'min="32" max="88" step="1"')+
-      field("bubble_size_desktop","حجم الأيقونة على الكمبيوتر (بكسل)","number",radio.bubble?.size_desktop??50,'min="32" max="100" step="1"')+
-      field("bubble_opacity","شفافية خلفية الفقاعة","number",radio.bubble?.opacity??0.7,'min="0.35" max="1" step="0.05"')+'</div>'+
-      '<button class="button" type="submit">حفظ إعدادات الراديو وتطبيقها</button></form></section>'+
-      '<section class="panel"><h2>رابط YouTube للإدارة فقط</h2>'+
-      '<p class="muted small">يمكنك إضافة رابط YouTube ومعاينته هنا فقط. لا نستخدم YouTube لبث الصوت في خلفية مخفية، لأن هذا غير مسموح به في سياسات المشغّل. للبث المخفي ارفع الفيديو من هاتفك أو استخدم رابط بث صوت مباشر مرخّص.</p>'+
+    const playlist=Array.isArray(radio.playlist)?radio.playlist:[];
+    const trackRows=playlist.map((track,i)=>
+      '<div class="f90-radio-track-row" data-radio-path="'+e(track.path)+'">'+
+        '<div class="f90-radio-track-index">'+(i+1)+'</div>'+
+        '<label class="f90-radio-active-choice" title="المقطع الذي يبدأ عند دخول الزائر"><input type="radio" name="radio_selected_track" '+(i===Number(radio.selected_index||0)?'checked':'')+' aria-label="ابدأ بهذا المقطع"> البداية</label>'+
+        '<input type="text" class="f90-radio-track-name" value="'+e(track.title||'مقطع صوتي')+'" maxlength="90" placeholder="اسم المقطع" aria-label="اسم المقطع">'+
+        '<div class="f90-radio-track-actions"><button type="button" class="button secondary" data-radio-action="up" aria-label="تحريك المقطع إلى أعلى">↑</button>'+
+        '<button type="button" class="button secondary" data-radio-action="down" aria-label="تحريك المقطع إلى أسفل">↓</button>'+
+        '<button type="button" class="button secondary" data-radio-action="preview" aria-label="معاينة المقطع">استماع</button>'+
+        '<button type="button" class="button secondary" data-radio-action="remove" aria-label="حذف المقطع من الألبوم">حذف</button></div>'+
+      '</div>').join("");
+    main.innerHTML=head("راديو وألبومات أف تسعين","إدارة مقاطع الراديو من الهاتف أو الكمبيوتر. المقطع يبدأ من المكان الذي تحدده أنت فقط.")+
+      '<section class="panel f90-radio-manager"><form id="mediaCenterForm">'+
+      check("music_enabled","تشغيل راديو المتجر لكل الزوار",radio.enabled===true)+
+      '<p class="muted small">قد يحتاج المستمع للمس الشعار مرة واحدة للسماح بتشغيل الصوت حسب سياسة المتصفح. يستطيع الزائر التحكم بمستوى الصوت فقط.</p>'+
+      select("music_source_mode","مصدر الراديو",[["file","ألبوم الملفات المرفوعة"],["link","رابط بث مباشر HTTPS"]],radio.source_mode||"file")+
+      '<div class="f90-radio-album"><h3>ألبوم الملفات الصوتية</h3>'+
+      '<p class="muted small">اختر عدة ملفات من هاتفك دفعة واحدة. سيتم تشغيل الملفات بالترتيب وإعادتها من البداية بعد آخر مقطع. كل ملف حتى 40 ميجابايت، والألبوم حتى 40 ملفًا. ارفع موادًا لديك حق استخدامها.</p>'+
+      field("music_audio_files","إضافة ملفات متعددة من الجهاز","file","",'multiple accept=".mp3,.m4a,.aac,.wav,.ogg,.mp4,.webm,audio/*,video/mp4,video/webm"')+
+      '<div id="f90RadioTracks" class="f90-radio-track-list">'+(trackRows||'<p class="muted" id="f90EmptyAlbum">لم تضف مقاطع للألبوم بعد</p>')+'</div>'+
+      '<div class="f90-radio-current-controls"><label class="field"><span>بداية التشغيل الافتراضية بالثواني</span><input type="number" name="music_start_seconds" min="0" max="86400" step="1" value="'+e(radio.start_seconds??0)+'"></label>'+
+      '<p class="muted small">حدد المقطع من علامة البداية ثم اكتب الثانية التي يبدأ منها للزائر. يمكنك معاينة المقطع وتقديمه أو إرجاعه قبل الحفظ.</p>'+
+      '<div class="f90-radio-preview-controls"><button type="button" class="button secondary" id="f90RadioSeekBack">−10 ثوانٍ</button>'+
+      '<button type="button" class="button secondary" id="f90RadioSeekForward">+10 ثوانٍ</button>'+
+      '<button type="button" class="button secondary" id="f90RadioSetStart">اعتماد موضع المعاينة كبداية</button></div>'+
+      '<audio id="f90RadioAdminPreview" controls preload="none" aria-label="معاينة المقطع الصوتي في الإدارة" style="width:100%;display:none"></audio></div></div>'+
+      field("music_direct_url","رابط صوت مباشر HTTPS","url",radio.direct_audio_url||"",'placeholder="https://example.com/radio.mp3"')+
+      '<label class="field"><span>مستوى الصوت الافتراضي للزائر الجديد</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(radio.volume??settings.volume??0.35)+'" aria-label="مستوى الصوت الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(radio.volume??settings.volume??0.35)*100)+'%</output></label>'+
+      '<div class="f90-custom-bg-check"><h3>فقاعة الراديو على الهاتف والكمبيوتر</h3>'+
+      '<p class="muted small">فقاعة صغيرة ثابتة بشعار أف تسعين تسمح للزائر بضبط الصوت</p>'+
+      field("bubble_icon_url","رابط صورة بديلة (اختياري)","url",radio.bubble?.icon_url||"",'placeholder="https://example.com/icon.png"')+
+      field("bubble_icon_file","أو رفع صورة للفقاعة","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      select("bubble_side","جانب الفقاعة",[['right','اليمين'],['left','اليسار']],radio.bubble?.side||'right')+
+      field("bubble_vertical","الموضع من أعلى الشاشة (%)","number",radio.bubble?.vertical??76,'min="12" max="88" step="1"')+
+      field("bubble_size_mobile","حجم الفقاعة على الهاتف","number",radio.bubble?.size_mobile??49,'min="32" max="88" step="1"')+
+      field("bubble_size_desktop","حجم الفقاعة على الكمبيوتر","number",radio.bubble?.size_desktop??54,'min="32" max="100" step="1"')+
+      field("bubble_opacity","شفافية الفقاعة","number",radio.bubble?.opacity??0.85,'min="0.35" max="1" step="0.05"')+'</div>'+
+      '<button class="button full" type="submit">حفظ الألبوم وتطبيق التشغيل على الزوار</button></form></section>'+
+      '<section class="panel"><h2>معاينة YouTube للإدارة فقط</h2>'+
+      '<p class="muted small">رابط YouTube يعمل للمعاينة فقط، ولا يتم بثه داخل مشغل خلفية مخفي.</p>'+
       '<form id="radioYoutubeForm">'+
-      field("music_youtube_url","رابط فيديو YouTube للمعاينة في لوحة الإدارة","url",radio.youtube_url||"",'placeholder="https://www.youtube.com/watch?v=..."')+
-      '<button class="button secondary" type="submit">حفظ رابط يوتيوب للإدارة</button></form>'+
-      (youtube?'<iframe title="معاينة فيديو YouTube للإدارة فقط" loading="lazy" style="display:block;width:min(100%,560px);aspect-ratio:16/9;border:0;margin-top:12px" allow="encrypted-media;picture-in-picture" src="https://www.youtube-nocookie.com/embed/'+e(youtube)+'"></iframe>':"")+'</section>';
+      field("music_youtube_url","رابط فيديو YouTube","url",radio.youtube_url||"",'placeholder="https://www.youtube.com/watch?v=..."')+
+      '<button class="button secondary" type="submit">حفظ رابط يوتيوب</button></form>'+
+      (youtube?'<iframe title="معاينة YouTube للإدارة" loading="lazy" style="width:min(100%,560px);aspect-ratio:16/9;border:0;margin-top:12px" src="https://www.youtube-nocookie.com/embed/'+e(youtube)+'" allow="encrypted-media;picture-in-picture"></iframe>':'')+'</section>';
     const ctl=$("musicVolumeControl");
-    if(ctl)ctl.addEventListener("input",()=>{$("musicVolumeValue").textContent=Math.round(Number(ctl.value)*100)+"%";});
+    ctl?.addEventListener("input",()=>{$("musicVolumeValue").textContent=Math.round(Number(ctl.value)*100)+"%";});
+    const list=$("f90RadioTracks"),preview=$("f90RadioAdminPreview");
+    list?.addEventListener("click",async(ev)=>{
+      const button=ev.target.closest("button[data-radio-action]");if(!button)return;
+      ev.preventDefault();
+      const row=button.closest(".f90-radio-track-row");if(!row)return;
+      const action=button.dataset.radioAction;
+      if(action==="remove"){row.remove();preview.pause();preview.style.display="none";}
+      if(action==="up"&&row.previousElementSibling?.classList.contains("f90-radio-track-row"))row.previousElementSibling.before(row);
+      if(action==="down"&&row.nextElementSibling?.classList.contains("f90-radio-track-row"))row.nextElementSibling.after(row);
+      if(action==="preview"){
+        const index=[...list.querySelectorAll(".f90-radio-track-row")].indexOf(row);
+        const serverIndex=playlist.findIndex(track=>track.path===row.dataset.radioPath);
+        if(serverIndex<0)return;
+        try{
+          button.disabled=true;
+          const ticket=await A.call("staff.radio.preview",{index:serverIndex});
+          preview.src=ticket.url;preview.style.display="block";preview.load();
+          try{await preview.play();}catch{}
+        }catch(error){toast(message(error));}finally{button.disabled=false;}
+      }
+      list.querySelectorAll(".f90-radio-track-row").forEach((r,i)=>{r.querySelector(".f90-radio-track-index").textContent=String(i+1);});
+    });
+    $("f90RadioSeekBack")?.addEventListener("click",()=>{if(preview.src)preview.currentTime=Math.max(0,(preview.currentTime||0)-10);});
+    $("f90RadioSeekForward")?.addEventListener("click",()=>{if(preview.src)preview.currentTime=Math.min(Number.isFinite(preview.duration)?preview.duration:86400,(preview.currentTime||0)+10);});
+    $("f90RadioSetStart")?.addEventListener("click",()=>{if(preview.src){
+      const start=main.querySelector("[name=music_start_seconds]");
+      if(start)start.value=String(Math.floor(preview.currentTime||0));
+      toast("تم تحديد نقطة البداية. احفظ الإعدادات لتطبيقها على الزوار");
+    }});
   }
   async function saveMediaCenter(form,d){
     const mode=d.music_source_mode==="link"?"link":"file";
-    const file=form.elements.music_audio_file.files?.[0];
+    const files=[...(form.elements.music_audio_files?.files||[])];
     const iconFile=form.elements.bubble_icon_file?.files?.[0];
     const iconUrl=iconFile?.size
       ? (await A.upload(iconFile,"f90-images","branding")).url
       : String(d.bubble_icon_url||"").trim();
-    const numberIn=(value,min,max,fallback)=>{
-      const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
-    };
-    const changes={enabled:form.elements.music_enabled.checked,
-      volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),
+    const numberIn=(v,min,max,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
+    const album=[...form.querySelectorAll("#f90RadioTracks .f90-radio-track-row")].map(row=>({
+      path:row.dataset.radioPath,
+      title:String(row.querySelector(".f90-radio-track-name")?.value||"مقطع صوتي").trim().slice(0,90)||"مقطع صوتي",
+      selected:!!row.querySelector("[name=radio_selected_track]")?.checked
+    }));
+    if(album.length+files.length>40)throw new Error("الحد الأقصى للألبوم 40 مقطعًا");
+    if(files.some(file=>!file.size||file.size>41943040))throw new Error("كل ملف يجب أن يكون صالحًا ولا يتجاوز 40 ميجابايت");
+    for(const file of files){
+      const uploaded=await A.upload(file,"f90-radio","tracks");
+      album.push({path:uploaded.path,title:String(file.name||"").replace(/\.[^.]+$/,"").slice(0,90)||"مقطع صوتي",selected:false});
+    }
+    const selectedIndex=Math.max(0,album.findIndex(a=>a.selected));
+    const changes={
+      enabled:!!form.elements.music_enabled.checked,
+      source_mode:mode,
+      playlist:album.map(({path,title})=>({path,title})),
+      selected_index:selectedIndex,
+      start_seconds:numberIn(d.music_start_seconds,0,86400,0),
+      volume:numberIn(d.music_volume,0,1,.35),
       bubble:{
         icon_url:iconUrl,
         side:d.bubble_side==="left"?"left":"right",
-        vertical:numberIn(d.bubble_vertical,12,88,62),
-        size_mobile:numberIn(d.bubble_size_mobile,32,88,44),
-        size_desktop:numberIn(d.bubble_size_desktop,32,100,50),
-        opacity:numberIn(d.bubble_opacity,0.35,1,0.7)
-      }};
-    if(mode==="file"){
-      if(file?.size){
-        const upload=await A.upload(file,"f90-radio","tracks");
-        changes.media_path=upload.path;
-        changes.direct_audio_url="";
-      }else{
-        // A previously uploaded file stays selected unless the manager switches source.
-        const prior=await A.call("staff.radio.status");
-        if(!prior.has_media && changes.enabled)throw new Error("ارفع ملف صوت أو فيديو من الهاتف أولًا");
-        changes.direct_audio_url="";
+        vertical:numberIn(d.bubble_vertical,12,88,76),
+        size_mobile:numberIn(d.bubble_size_mobile,32,88,49),
+        size_desktop:numberIn(d.bubble_size_desktop,32,100,54),
+        opacity:numberIn(d.bubble_opacity,.35,1,.85)
       }
+    };
+    if(mode==="link"){
+      const link=String(d.music_direct_url||"").trim();
+      if((changes.enabled||link)&&(!/^https:\/\//i.test(link)||/(?:youtube\.com|youtu\.be|googlevideo\.com)/i.test(link)))
+        throw new Error("استخدم رابط بث صوت مباشر HTTPS وليس صفحة YouTube");
+      changes.direct_audio_url=link;
     }else{
-      const url=String(d.music_direct_url||"").trim();
-      if((changes.enabled || url) && (!/^https:\/\//i.test(url) || /(?:youtube\.com|youtube-nocookie\.com|youtu\.be|googlevideo\.com)/i.test(url)))
-        throw new Error("أدخل رابطًا مباشرًا لبث صوت مرخّص HTTPS، وليس رابط صفحة YouTube");
-      changes.media_path="";
-      changes.direct_audio_url=url;
+      changes.direct_audio_url="";
+      if(album.length===0&&changes.enabled)throw new Error("ارفع مقطعًا صوتيًا واحدًا على الأقل لتفعيل الألبوم");
+      // Keep the legacy single-track field aligned with the first active album item.
+      changes.media_path=album[selectedIndex]?.path||"";
     }
     await A.call("staff.radio.save",changes);
     await refreshSettings();await mediaCenter();
-    toast(changes.enabled?"الراديو مفعّل وسيُطبّق على الزوار":"تم إيقاف الراديو للزوار");
+    toast(changes.enabled?"تم حفظ ألبوم الراديو وتحديث بث المتجر":"تم حفظ الألبوم والراديو متوقف");
   }
   async function saveRadioYoutube(form,d){
     const url=String(d.music_youtube_url||"").trim();
