@@ -701,6 +701,9 @@
       location.hash = href("product", c.presentation.direct_product_id);
       return;
     }
+    if(["money-transfer","account-sales","design-services","complete-website"].includes(c.slug) &&
+      !S.categories.some(x=>x.parent_id===c.id) && !S.products.some(x=>x.category_id===c.id) &&
+      window.F90Special?.category(c.slug,S.settings)) return;
     const parents = [];
     let parent = c;
     const visited = new Set();
@@ -1436,7 +1439,7 @@
     closeModal();
     toggleDrawer(false);
     const raw = (location.hash || "#/welcome").replace(/^#\/?/, "");
-    let [page, id] = raw.split("/");
+    let [page, id, serviceChoice] = raw.split("/");
     try {
       id = id ? decodeURIComponent(id) : "";
     } catch {
@@ -1535,7 +1538,7 @@
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
-      else if (page === "special") window.F90Special?.render(id,S.settings,S.me);
+      else if (page === "special") window.F90Special?.render(id,S.settings,S.me,serviceChoice ? decodeURIComponent(serviceChoice) : "");
       else if (["orders", "deposits", "history"].includes(page))
         await history(page);
       else if (page === "order") await order(id);
