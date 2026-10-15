@@ -66,6 +66,26 @@ test("Admin audio player and GIF background settings are present", () => {
   assert.match(api,/f90-audio/);
   assert.match(app,/F90MediaPlayer/);
 });
+test("F90 radio uploads are private and supported video is audio-only", () => {
+  const radio=read("f90-media-player.js"), css=read("f90-radio.css");
+  const live=read("supabase/functions/f90-platform/index.ts");
+  assert.match(admin, /A\.upload\(file,"f90-radio","tracks"\)/);
+  assert.match(api, /const radio = bucket === "f90-radio"/);
+  assert.match(api, /url: radio \? ""/);
+  assert.match(api, /action === "media.ticket"/);
+  assert.match(live, /action === "media.ticket"/);
+  assert.match(live, /createSignedUrl\(path, 3600\)/);
+  assert.match(live, /private_track/);
+  assert.match(live, /audio_url: m\.path \? ""/);
+  assert.match(radio, /media\.loop=true/);
+  assert.match(radio, /"video"/);
+  assert.match(radio, /private_track/);
+  assert.match(radio, /f90-radio-playback/);
+  assert.doesNotMatch(radio, /youtube-nocookie|<iframe/);
+  assert.match(css, /\.f90-radio-hidden-media/);
+  assert.match(mainHtml, /f90-radio\.css/);
+});
+
 test("Administration has its own install manifest", () => {
   const manifest=JSON.parse(read("admin.webmanifest"));
   assert.match(manifest.start_url,/admin\.html/);
@@ -87,7 +107,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-telegram-autodiscover1/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-radio-uploads1/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
