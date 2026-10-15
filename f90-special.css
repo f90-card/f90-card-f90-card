@@ -89,3 +89,14 @@
 #adminNav .f90-admin-group-links{display:grid;gap:3px;padding:7px 0}
 #adminNav .f90-admin-group-links>a{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:12px;border-radius:10px;text-decoration:none}
 #adminNav .f90-admin-group-links>a.active{background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--accent);font-weight:850}
+
+/* Four independent manager content editors with local preview before saving. */
+.f90-media-editor-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:8px 15px;border-top:1px solid var(--line);padding:16px 0;align-items:center}
+.f90-media-editor-row>strong{grid-column:1/-1}
+.f90-media-editor-preview{grid-row:span 2;border-radius:13px;overflow:hidden;border:1px solid var(--line);width:100%}
+.f90-media-editor-preview img{display:block;aspect-ratio:3/1;object-fit:cover;width:100%;background:var(--surface2)}
+.f90-media-editor-row label{min-width:0}
+.f90-social-edit-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;border:1px solid var(--line);border-radius:15px;margin:10px 0;padding:12px}
+.f90-social-edit-row .field{min-width:0}
+.f90-social-edit-row label:last-child{display:flex;align-items:center;gap:6px}
+@media(max-width:700px){.f90-media-editor-row,.f90-social-edit-row{grid-template-columns:1fr}.f90-media-editor-preview{grid-row:auto}}
