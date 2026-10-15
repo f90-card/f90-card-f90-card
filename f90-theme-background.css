@@ -21,3 +21,31 @@ body:has(#f90ThemeBackdrop) #mainContent,body:has(#f90ThemeBackdrop) .site-foote
 @media(max-width:680px){#f90ThemeBackdrop .f90-theme-watermark{width:min(82vw,var(--f90-wm-size,360px));top:45%}.f90-backdrop-design-preview{gap:8px}.f90-backdrop-design-tile{min-height:90px}}
 @media(prefers-reduced-motion:reduce){#f90ThemeBackdrop .f90-theme-watermark,#f90ThemeBackdrop .f90-theme-watermark-glow{animation:none!important;will-change:auto!important}}
 @media(prefers-reduced-data:reduce){#f90ThemeBackdrop .f90-theme-watermark-glow{display:none}}
+
+
+/* Adjustable F90 theme brightness. Change only background/surface color
+   variables and decorative wallpaper, never text/icons/images or hit targets. */
+:root[data-theme="dark"]{
+  --f90-original-bg:#090b10;
+  --f90-original-surface:#12151d;
+  --f90-original-surface2:#191e28;
+  --f90-original-line:#292e3a;
+  --bg:color-mix(in srgb,var(--f90-original-bg) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --surface:color-mix(in srgb,var(--f90-original-surface) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --surface2:color-mix(in srgb,var(--f90-original-surface2) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --line:color-mix(in srgb,var(--f90-original-line) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+}
+:root[data-theme="cream"]{
+  --f90-original-bg:#ded9d1;
+  --f90-original-surface:#eee8df;
+  --f90-original-surface2:#e2dcd3;
+  --f90-original-line:#c4bbae;
+  --bg:color-mix(in srgb,var(--f90-original-bg) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --surface:color-mix(in srgb,var(--f90-original-surface) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --surface2:color-mix(in srgb,var(--f90-original-surface2) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+  --line:color-mix(in srgb,var(--f90-original-line) var(--f90-base-percent,100%),var(--f90-tone-color,#fff) var(--f90-tint-percent,0%));
+}
+.f90-brightness-control{display:grid;gap:8px;margin:13px 0 19px}
+.f90-brightness-control>span{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.f90-brightness-control output{font-variant-numeric:tabular-nums;font-weight:800;color:var(--accent)}
+.f90-brightness-control input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer;min-height:30px}
