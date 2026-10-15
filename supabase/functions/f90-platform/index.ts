@@ -400,7 +400,8 @@ async function publicCatalog() {
         music: (() => {
           const m = check(rows[0]).config?.music || {};
           // Never publish the path of an administrator's private upload.
-          return {enabled:m.enabled===true,volume:Number(m.volume??0.35),loop:true};
+          return {enabled:m.enabled===true,volume:Number(m.volume??0.35),loop:true,
+            bubble:m.bubble||{}};
         })(),
       },
     },
@@ -820,6 +821,7 @@ async function staff(a: Actor, b: any) {
     ]);
     const m=check(row).config?.music||{}, r=check(src);
     return {enabled:m.enabled===true,volume:Number(m.volume??0.35),
+      bubble:m.bubble||{},
       has_media:!!r.media_path,has_direct:!!r.direct_audio_url,
       has_youtube:!!r.youtube_url,mode:r.mode||"audio",
       direct_audio_url:r.direct_audio_url||"",
@@ -857,7 +859,26 @@ async function staff(a: Actor, b: any) {
     check(await db.from("f90_radio_sources").update({media_path:p,
       direct_audio_url:direct,youtube_url:youtube,mode,updated_at:revision}).eq("id",1).select("id").single());
     const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
-    const config={...settings.config,music:{enabled,volume,loop:true}};
+    const currentBubble=settings.config?.music?.bubble||{};
+    const incoming=b.bubble&&typeof b.bubble==="object"&&!Array.isArray(b.bubble)?b.bubble:{};
+    const side=["left","right"].includes(incoming.side)?incoming.side:(currentBubble.side==="left"?"left":"right");
+    const bounded=(v:any,minimum:number,maximum:number,fallback:number)=>{
+      const n=Number(v);return Number.isFinite(n)?Math.max(minimum,Math.min(maximum,n)):fallback;
+    };
+    const icon=typeof incoming.icon_url==="string"?incoming.icon_url.trim().slice(0,1500):String(currentBubble.icon_url||"");
+    if(icon){
+      try{const u=new URL(icon);if(u.protocol!=="https:"||u.username||u.password)throw new Error("bad icon");}
+      catch{throw new AppError("F90_FIELDS",400,"رابط أيقونة الراديو يجب أن يكون HTTPS صالحًا");}
+    }
+    const bubble={
+      side,
+      vertical:bounded(incoming.vertical??currentBubble.vertical,12,88,62),
+      size_mobile:bounded(incoming.size_mobile??currentBubble.size_mobile,32,88,44),
+      size_desktop:bounded(incoming.size_desktop??currentBubble.size_desktop,32,100,50),
+      icon_url:icon,
+      opacity:bounded(incoming.opacity??currentBubble.opacity,0.35,1,0.7)
+    };
+    const config={...settings.config,music:{enabled,volume,loop:true,bubble}};
     check(await db.from("site_settings").update({config}).eq("id",1).select("id").single());
     await auditSafe(a.id,"radio.configure","radio",{enabled,mode,has_media:!!p,has_direct:!!direct});
     return {saved:true,enabled,revision};
@@ -1503,7 +1524,8 @@ async function staff(a: Actor, b: any) {
     delete c.name_en;
     // Never permit manager-only media paths to leak through the public settings API.
     if(c.music){
-      c.music={enabled:c.music.enabled===true,volume:Number(c.music.volume??0.35),loop:true};
+      c.music={enabled:c.music.enabled===true,volume:Number(c.music.volume??0.35),loop:true,
+        bubble: (current.config?.music?.bubble)||{}};
     }
     // Only public configuration belongs in this row. Reject accidental credential fields.
     if (
@@ -2033,7 +2055,8 @@ Deno.serve(async (req: Request) => {
       ]);
       const m=check(settings).config?.music||{},r=check(source);
       return out({enabled:m.enabled===true&&!!(r.media_path||r.direct_audio_url),
-        mode:r.mode==="video"?"video":"audio",revision:r.updated_at||""});
+        mode:r.mode==="video"?"video":"audio",revision:r.updated_at||"",
+        bubble:m.bubble||{} });
     }
     if (action === "media.ticket") {
       // The selected private track is resolved server-side, never from a
