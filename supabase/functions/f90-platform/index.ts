@@ -834,7 +834,7 @@ async function staff(a: Actor, b: any) {
     const direct=b.direct_audio_url===undefined?current.direct_audio_url:text(b.direct_audio_url,1500);
     const youtube=b.youtube_url===undefined?current.youtube_url:text(b.youtube_url,1500);
     const mode=p?(/\.(mp4|webm)$/i.test(p)?"video":"audio"):"audio";
-    if(p && !/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(p))
+    if(p && !/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/.test(p))
       throw new AppError("F90_FIELDS",400,"مسار ملف الراديو غير مدعوم");
     const acceptable=(value:string)=>{
       if(!value)return true;
@@ -2067,7 +2067,7 @@ Deno.serve(async (req: Request) => {
       if(music.enabled!==true)throw new AppError("F90_NOT_FOUND",404,"الراديو متوقف من الإدارة");
       if(selected.media_path){
         const path=selected.media_path;
-        if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(path))
+        if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/.test(path))
           throw new AppError("F90_NOT_FOUND",404,"مصدر الراديو غير متاح");
         const ticket=check(await db.storage.from("f90-radio").createSignedUrl(path,3600));
         return out({url:ticket.signedUrl,mode:selected.mode==="video"?"video":"audio"});
