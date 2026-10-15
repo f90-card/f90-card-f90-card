@@ -134,7 +134,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-manager-radio2/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-theme-editor1/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
