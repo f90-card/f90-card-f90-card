@@ -31,6 +31,46 @@ test("API key pages are trader-only in client router", () => {
   assert.match(app,/page === "api-guide"/);
   assert.match(app,/page === "developers"/);
 });
+test("Top 100 are real products/categories, paged and searchable",()=>{
+  const popular=read("f90-popular-100.css");
+  assert.match(app,/function f90TrendingItems\(\)/);
+  assert.match(app,/return output\.slice\(0,100\)/);
+  assert.match(app,/S\.products/);
+  assert.match(app,/C\.unavailable\(p\)/);
+  assert.match(app,/function initF90Popular\(\)/);
+  assert.match(app,/limit=12/);
+  assert.match(app,/limit\+=18/);
+  assert.match(app,/f90PopularSearch/);
+  assert.match(app,/f90PopularSection\(\)/);
+  assert.match(popular,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(mainHtml,/f90-popular-100\.css/);
+});
+test("Price UI shows only server quotes, one-digit cost, no decimal wallet, and compact limits",()=>{
+  const skin=read("f90-checkout-redesign.css");
+  assert.match(app,/function f90CheckoutMoney\(usd, balance = false\)/);
+  assert.match(app,/maximumFractionDigits:balance\?0:1/);
+  assert.match(app,/Math\.trunc\(value\)/);
+  assert.match(app,/function f90ShortLimit\(value\)/);
+  assert.match(app,/\+"M"/);
+  assert.match(app,/f90-quantity-limits/);
+  assert.match(app,/price\.textContent=f90CheckoutMoney\(quote\.total_usd\)/);
+  assert.doesNotMatch(app.slice(app.indexOf('if (ev.target.closest("#checkoutForm") && ev.target.name === "quantity")'),app.indexOf('if (ev.target.closest("#depositForm"))')),/≈|تقديري/);
+  assert.match(app,/await A\.call\("quote"/);
+  assert.match(skin,/:root\[data-theme="cream"\]/);
+  assert.match(skin,/:root\[data-theme="dark"\]/);
+  assert.match(skin,/animation:none!important/);
+});
+test("Images are not duplicated and navigation always resets page scroll",()=>{
+  const image=app.slice(app.indexOf('const image = (src, alt'),app.indexOf('const field ='));
+  const tile=app.slice(app.indexOf('function f90TileArt('),app.indexOf('const f90SeenTiles'));
+  assert.match(image,/width="256" height="256"/);
+  assert.match(image,/decoding="async"/);
+  assert.doesNotMatch(tile,/f90-flip-back/);
+  assert.match(app,/f90ScrollTopNow\(\);S\.offset=0/);
+  assert.match(app,/window\.addEventListener\("hashchange"/);
+  assert.match(mainHtml,/rel="preconnect"/);
+  assert.match(mainHtml,/f90-checkout-redesign\.css/);
+});
 test("Checkout price sync ignores account typing and blocks until latest server quote", () => {
   const inputStart=app.indexOf('if (ev.target.closest("#checkoutForm") && ev.target.name === "quantity")');
   assert.ok(inputStart>=0, "quantity-only event handler");
@@ -38,8 +78,8 @@ test("Checkout price sync ignores account typing and blocks until latest server 
   const handler=app.slice(inputStart,inputEnd);
   assert.match(handler,/S\.quote=null/);
   assert.match(handler,/\+\+S\.quoteSeq/);
-  assert.match(handler,/setTimeout\(\(\)=>quoteProduct\(p\),120\)/);
-  assert.match(handler,/تقديري/);
+  assert.match(handler,/setTimeout\(\(\)=>quoteProduct\(p\),85\)/);
+  assert.doesNotMatch(handler,/تقديري|estimated|≈/);
   assert.match(handler,/qty<Number\(p\.commerce\?\.quantity_min/);
   assert.doesNotMatch(handler,/350\)/);
   assert.match(app,/form\.dataset\.pricePending === "1"/);
@@ -65,7 +105,7 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-keyboard-checkout3/);
+  assert.match(mainHtml,/app\.js\?v=20261015-top100-checkout5/);
   assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-keyboard-checkout3/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
@@ -100,7 +140,7 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/\? 2500 : 400/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
-  assert.match(mainHtml,/app\.js\?v=20261015-keyboard-checkout3/);
+  assert.match(mainHtml,/app\.js\?v=20261015-top100-checkout5/);
   assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
   assert.match(app,/await A\.call\("quote", \{/);
@@ -301,7 +341,7 @@ test("Storefront startup uses browser History instead of its order-history rende
 });
 
 test("Route scroll restoration is back-aware and Telegram settings are restricted to managers", () => {
-  assert.match(app,/f90ScrollPositions/);
+  assert.match(app,/function f90ScrollTopNow\(\)/);
   assert.match(app,/history\.scrollRestoration="manual"/);
   assert.match(admin,/telegramAlertsForm/);
   assert.match(admin,/staff\.telegram\.test/);
