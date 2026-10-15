@@ -7,7 +7,7 @@
     // Public catalog/health are safe, anonymous, read-only calls.
     // Send them as CORS-simple requests: this avoids an OPTIONS preflight
     // that can succeed at the edge while the browser's POST never follows.
-    const publicRead = action === "catalog" || action === "health";
+    const publicRead = action === "catalog" || action === "health" || action === "media.ticket";
     if ((!client && !publicRead) || !endpoint) {
       const error = new Error("تعذّر اتصال المتجر بالخادم. أعد المحاولة بعد التأكد من الاتصال بالإنترنت.");
       error.code = "F90_SDK_UNAVAILABLE";
