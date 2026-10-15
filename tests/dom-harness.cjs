@@ -240,6 +240,8 @@ async function harness(file = "index.html", options = {}) {
     TextEncoder,
     structuredClone,
     scrollTo: () => {},
+    requestAnimationFrame: (callback) => schedule(callback, 0),
+    cancelAnimationFrame: stopTimer,
     console,
     setTimeout: schedule,
     clearTimeout: stopTimer,
