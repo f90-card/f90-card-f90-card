@@ -504,6 +504,7 @@
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  <section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>
+ ${c.promo_video?.enabled && C.safeUrl(c.promo_video?.url) ? `<section class="f90-iphone-ad" aria-label="إعلان فيديو F90 CARD"><div class="f90-iphone-ad-copy"><span class="eyebrow">F90 CARD · إعلان المتجر</span><h2>${e(c.promo_video.title_ar || "عالم شحن الألعاب والتطبيقات")}</h2><p>شاهد إعلان متجر أف تسعين كارد بدون صوت داخل هاتف ثلاثي الأبعاد.</p></div><div class="f90-iphone-scene"><div class="f90-iphone-shell"><div class="f90-iphone-screen"><div class="f90-iphone-island" aria-hidden="true"></div><video class="f90-iphone-video" muted playsinline loop preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate" ${C.safeUrl(c.promo_video.poster_url)?`poster="${e(C.safeUrl(c.promo_video.poster_url))}"`:""}><source src="${e(C.safeUrl(c.promo_video.url))}" type="${/\\.webm(?:[?#]|$)/i.test(c.promo_video.url)?"video/webm":"video/mp4"}"></video></div><span class="f90-iphone-side" aria-hidden="true"></span></div></div></section>` : ""}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -524,6 +525,20 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
+    const promoVideo=main.querySelector(".f90-iphone-video");
+    if(promoVideo){
+      promoVideo.muted=true;
+      promoVideo.volume=0;
+      if(typeof IntersectionObserver==="function"){
+        const obs=new IntersectionObserver(entries=>{
+          entries.forEach(entry=>{
+            if(entry.isIntersecting && document.visibilityState==="visible")promoVideo.play().catch(()=>{});
+            else promoVideo.pause();
+          });
+        },{threshold:0.45});
+        obs.observe(promoVideo);
+      }
+    }
     const promoEl=$("promotionBar");
     const heroElForTicker=main.querySelector(".f90-swipe-hero");
     if(promoEl&&heroElForTicker)heroElForTicker.insertAdjacentElement("afterend",promoEl);
@@ -942,16 +957,14 @@
       main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") + `<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>`;
       return;
     }
-    const methods = (S.settings.config.payment_methods || []).filter(
-      (m) => m.enabled,
-    );
-    S.selectedMethod = methods.find((m) => m.id === methodId) || null;
+    const methods = (S.settings.config.payment_methods || []);
+    S.selectedMethod = methods.find((m) => m.id === methodId && m.enabled) || null;
     S.depositKey = C.key();
     const m = S.selectedMethod;
     main.innerHTML = `${pageHead("أضف رصيدًا لعالمك", "اختر طريقة الإيداع، وأرسل إيصالك للمراجعة", `<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>`)}<div class="deposit-steps"><span><b>١</b>اختر الطريقة</span><span><b>٢</b>حوّل وارفع الإيصال</span><span><b>٣</b>اعتماد الإدارة</span></div>${
       !m
         ? methods.length
-          ? `<div class="method-grid">${methods.map((x) => `<a class="method-tile" href="${href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url, x.name_ar)}<strong>${e(x.name_ar)}</strong><small>اختر طريقة الإيداع</small></a>`).join("")}</div>`
+          ? `<div class="method-grid">${methods.map(x=>x.enabled ? `<a class="method-tile f90-method-active" href="${href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>إيداع متاح الآن</small></a>` : `<div class="method-tile f90-method-unavailable" aria-disabled="true">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>غير متاح حاليًا</small></div>`).join("")}</div>`
           : empty(
               "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
               "wallet",
