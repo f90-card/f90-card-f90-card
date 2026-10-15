@@ -353,7 +353,7 @@
       ["", "الرئيسية", "grid"],
       ["orders", "طلباتي", "clock"],
       ["search", "بحث", "search"],
-    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./assets/icons/icon-192.png") || "./assets/icons/icon-192.png")}" alt="" loading="lazy">` : I(icon)}<span>${label}</span></a>`).join("");
+    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : page === "profile" ? `<span class="f90-profile-dock-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" width="42" height="42"></span>` : I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
       `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav>${Object.entries(
         {
@@ -2264,17 +2264,38 @@
     });
     $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
   });
-  // Every route, including browser Back/Forward, starts at the top without
-  // the previous page's scroll offset or delayed smooth-scroll animation.
+  // Preserve the previous view when users use browser Back/Forward, while
+  // opening new sections at the top. Each history entry carries its scroll offset.
   if(window.history && "scrollRestoration" in window.history)
     window.history.scrollRestoration="manual";
+  let f90RouteGeneration=0, f90BrowserTraversal=false;
   function f90ScrollTopNow(){
     const root=document.documentElement;
     root.classList.add("f90-route-jump");
-    window.scrollTo(0,0);
+    window.scrollTo({top:0,left:0,behavior:"instant"});
     root.scrollTop=0;
     document.body.scrollTop=0;
   }
+  function f90RememberLocation(){
+    try{
+      window.history.replaceState({...window.history.state,
+        f90ScrollY:Math.max(0,window.scrollY||document.documentElement.scrollTop||0),
+        f90RouteHash:location.hash||"#/"}, "",location.href);
+    }catch{}
+  }
+  // Record the current page *before* a link changes the hash.
+  document.addEventListener("click",ev=>{
+    const link=ev.target.closest?.('a[href^="#/"]');
+    if(!link||ev.defaultPrevented||ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey)return;
+    f90RememberLocation();
+    const target=link.getAttribute("href");
+    if(target===(location.hash||"#/")){
+      ev.preventDefault();
+      if(!document.querySelector(".modal")&&!document.querySelector(".drawer:not([hidden])"))void route();
+    }
+  },{capture:true});
+  window.addEventListener("pagehide",f90RememberLocation);
+  window.addEventListener("popstate",()=>{f90BrowserTraversal=true;});
   document.addEventListener("click",ev=>{
     const link=ev.target.closest?.('a[href^="#"]:not([href^="#/"])');
     if(!link)return;
@@ -2284,12 +2305,23 @@
     target.scrollIntoView({behavior:"smooth",block:"start"});
   },{capture:true});
   window.addEventListener("hashchange",async()=>{
-    const url=location.href;
-    f90ScrollTopNow();S.offset=0;
+    const current=location.href, generation=++f90RouteGeneration;
+    const previouslySaved=window.history.state?.f90ScrollY;
+    const restore=f90BrowserTraversal&&typeof previouslySaved==="number"&&Number.isFinite(previouslySaved)
+      ?Math.max(0,previouslySaved):0;
+    f90BrowserTraversal=false;
+    f90ScrollTopNow();
+    S.offset=0;
     try{await route();}
     finally{
-      if(url===location.href)f90ScrollTopNow();
-      requestAnimationFrame(()=>document.documentElement.classList.remove("f90-route-jump"));
+      if(generation===f90RouteGeneration && current===location.href){
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if(current===location.href){
+            window.scrollTo({top:restore,left:0,behavior:"instant"});
+            document.documentElement.classList.remove("f90-route-jump");
+          }
+        }));
+      }
     }
   });
   window.addEventListener("beforeinstallprompt", (ev) => {
