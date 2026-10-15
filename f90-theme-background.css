@@ -1,0 +1,23 @@
+/* F90 CARD signature background, layered below page content and above the base theme. */
+#f90ThemeBackdrop{position:fixed!important;inset:0!important;overflow:hidden;z-index:0!important;pointer-events:none!important;user-select:none!important;contain:layout style paint}
+#f90ThemeBackdrop .f90-theme-photo,#f90ThemeBackdrop .f90-theme-shade{position:absolute;inset:0;pointer-events:none}
+#f90ThemeBackdrop .f90-theme-photo{background-size:cover;background-repeat:no-repeat;transition:opacity .4s ease}
+#f90ThemeBackdrop .f90-theme-shade{transition:background-color .3s ease}
+#f90ThemeBackdrop .f90-theme-watermark{position:absolute;top:48%;left:50%;display:grid;place-items:center;width:min(78vw,var(--f90-wm-size,360px));aspect-ratio:1;opacity:var(--f90-wm-opacity,.13);transform:translate3d(-50%,-50%,0);animation:f90-watermark-drift var(--f90-wm-duration,35s) ease-in-out infinite alternate;will-change:transform;filter:drop-shadow(0 0 27px rgba(238,37,78,.2))}
+#f90ThemeBackdrop .f90-theme-watermark[hidden]{display:none}
+#f90ThemeBackdrop .f90-theme-watermark img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 20px rgba(240,48,86,.43))}
+#f90ThemeBackdrop .f90-theme-watermark-glow{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,rgba(246,42,84,.14),transparent 71%);filter:blur(28px);animation:f90-watermark-breathe 9s ease-in-out infinite alternate}
+#f90ThemeBackdrop[data-theme="cream"] .f90-theme-watermark{filter:drop-shadow(0 0 15px rgba(123,28,65,.14))}
+#f90ThemeBackdrop[data-theme="cream"] .f90-theme-watermark img{filter:grayscale(.25) drop-shadow(0 0 14px rgba(128,22,59,.15))}
+@keyframes f90-watermark-drift{from{transform:translate3d(-51%,-49%,0) rotate(-5deg) scale(.97)}to{transform:translate3d(-49%,-51%,0) rotate(5deg) scale(1.035)}}
+@keyframes f90-watermark-breathe{from{opacity:.35;transform:scale(.9)}to{opacity:.85;transform:scale(1.12)}}
+/* Never cover the actual storefront, checkout, navigation or popups. */
+body:has(#f90ThemeBackdrop) #mainContent,body:has(#f90ThemeBackdrop) .site-footer,body:has(#f90ThemeBackdrop) .f90-seo-directory-link{position:relative;z-index:1}
+.f90-backdrop-design-preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-block:12px}
+.f90-backdrop-design-tile{position:relative;min-height:100px;border:1px solid var(--line);border-radius:16px;padding:13px;overflow:hidden;background:var(--surface2)}
+.f90-backdrop-design-tile strong{position:relative;z-index:1;display:block;font-size:13px;text-shadow:0 1px 7px #0006}
+.f90-backdrop-design-tile small{position:relative;z-index:1;display:block;font-size:11px;opacity:.8}
+.f90-backdrop-design-tile img{position:absolute;width:60px;height:60px;object-fit:contain;left:12px;bottom:8px;opacity:.25;pointer-events:none}
+@media(max-width:680px){#f90ThemeBackdrop .f90-theme-watermark{width:min(82vw,var(--f90-wm-size,360px));top:45%}.f90-backdrop-design-preview{gap:8px}.f90-backdrop-design-tile{min-height:90px}}
+@media(prefers-reduced-motion:reduce){#f90ThemeBackdrop .f90-theme-watermark,#f90ThemeBackdrop .f90-theme-watermark-glow{animation:none!important;will-change:auto!important}}
+@media(prefers-reduced-data:reduce){#f90ThemeBackdrop .f90-theme-watermark-glow{display:none}}
