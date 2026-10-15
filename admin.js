@@ -1652,7 +1652,7 @@
       const draw=()=>{
         if(tile.dataset.previewBlob){URL.revokeObjectURL(tile.dataset.previewBlob);delete tile.dataset.previewBlob;}
         let url=C.safeUrl(urlField.value);
-        if(picture.files?.[0] && /^image\\/(?:png|jpeg|webp|gif)$/.test(picture.files[0].type)){
+        if(picture.files?.[0] && ["image/png","image/jpeg","image/webp","image/gif"].includes(picture.files[0].type)){
           url=URL.createObjectURL(picture.files[0]);tile.dataset.previewBlob=url;
         }
         const level=Math.max(0,Math.min(.85,Number(shade.value)||0));
