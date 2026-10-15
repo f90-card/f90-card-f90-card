@@ -200,7 +200,9 @@ test("Welcome information page is restored and owner-only home phone media stays
   assert.match(app,/F90WelcomeScene\.homePhone/);
   assert.match(phone,/promo_video/);
   assert.match(phone,/source data-src/);
-  assert.match(phone,/wa\.me/);
+  assert.match(phone,/const target=safe\(p\.link_url\)/);
+  assert.match(phone,/safe\(laptop\.link_url\)/);
+  assert.doesNotMatch(phone,/\|\|contact/);
   assert.doesNotMatch(phone,/id="authForm"/);
   assert.match(admin,/promo_video_image_file/);
 });
