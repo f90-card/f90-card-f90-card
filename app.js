@@ -693,6 +693,11 @@
       main.innerHTML = empty("القسم غير موجود");
       return;
     }
+    if(c.slug?.startsWith("transfer-") &&
+      S.categories.some(parent=>parent.id===c.parent_id && parent.slug==="money-transfer")){
+      location.hash="#/special/transfer/"+encodeURIComponent(c.slug.slice("transfer-".length));
+      return;
+    }
     if (categoryIsUnavailable(c)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     if (
       c.presentation?.routing === "direct" &&
