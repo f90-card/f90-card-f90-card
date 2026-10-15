@@ -2923,7 +2923,9 @@
     S.offset = 0;
     S.filter = "";
     S.search = "";
-    if (S.me && !S.me.needs_mfa) route();
+    if (S.me && !S.me.needs_mfa) route().catch(err => {
+      main.innerHTML = head("تعذّر عرض الصفحة") + `<div class="notice error">${e(errorMessage(err))}</div><button class="button" data-action="reload">إعادة المحاولة</button>`;
+    });
   });
   async function boot() {
     try {
@@ -2959,7 +2961,8 @@
     } catch (err) {
       main.innerHTML =
         head("تعذّر الاتصال") +
-        `<div class="notice error">${e(errorMessage(err))}</div><a class="button secondary" href="./index.html#/auth">العودة لتسجيل الدخول</a>`;
+        `<div class="notice error">${e(errorMessage(err))}</div><div class="actions"><button class="button" id="f90AdminBootRetry" type="button">إعادة محاولة الاتصال</button><a class="button secondary" href="./index.html#/auth">العودة لتسجيل الدخول</a></div>`;
+      $("f90AdminBootRetry")?.addEventListener("click", () => boot());
     }
   }
   boot();
