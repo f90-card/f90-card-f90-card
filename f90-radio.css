@@ -17,3 +17,6 @@
 @keyframes f90-radio-pulse{50%{box-shadow:inset 0 0 0 1px #ff45635a,0 0 19px #fd214a77}}
 @media(max-width:440px){.f90-radio-dock{left:8px;right:8px;bottom:max(7px,env(safe-area-inset-bottom));padding:9px 11px;gap:9px}.f90-radio-mark{flex-basis:34px;height:34px;font-size:20px}.f90-radio-info{min-width:103px}.f90-radio-info strong{font-size:12px}.f90-radio-control{flex-basis:39px;height:39px}.f90-radio-volume{flex-basis:100%;padding-inline:8px}.f90-radio-volume input{max-width:none}}
 @media(prefers-reduced-motion:reduce){.f90-radio-dock.is-playing .f90-radio-mark{animation:none}}
+
+body.f90-radio-on{padding-bottom:110px}
+@media(max-width:440px){body.f90-radio-on{padding-bottom:155px}}
