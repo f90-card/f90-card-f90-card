@@ -73,3 +73,19 @@
 .admin-body .f90-admin-center-grid>a:hover{border-color:var(--accent)}
 @media(max-width:650px){.f90-profile-brand-watermark{width:65px;height:65px;top:8px;left:8px}.admin-body .admin-main{min-width:0;max-width:100%}.admin-body .f90-admin-center-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){#f90LogoSky{display:none!important}.f90-iphone-shell{animation:none!important}}
+
+/* Performance: skip painting off-screen catalog cards without removing or reordering them. */
+@supports (content-visibility:auto) {
+  .main-content .image-grid > .image-tile,
+  .main-content .image-grid > .category-tile,
+  .main-content .image-grid > .product-tile,
+  .main-content .records > .record {
+    content-visibility:auto;
+    contain-intrinsic-size:auto 230px;
+  }
+}
+@media(max-width:650px) {
+  #f90LogoSky {display:none!important}
+  #drawer.drawer {backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .f90-iphone-shell {animation-duration:18s}
+}
