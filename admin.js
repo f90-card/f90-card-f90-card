@@ -1584,11 +1584,27 @@
       field("promo_video_poster","صورة ثابتة قبل التشغيل (اختياري)","url",c.promo_video?.poster_url||"")+
       field("promo_video_poster_file","رفع صورة ثابتة","file","",'accept="image/png,image/jpeg,image/webp"')+
       '</div>'+
-      '<div class="f90-custom-bg-check"><h3>خلفية موقع ثابتة أو متحركة GIF</h3>'+
-      check("site_background_enabled","إظهار خلفية الموقع",c.site_background?.enabled===true)+
-      field("site_background_url","رابط الصورة","url",c.site_background?.url||"")+
-      field("site_background_file","رفع صورة PNG أو JPG أو GIF","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
-      field("site_background_dim","درجة تعتيم الخلفية","number",c.site_background?.dim??0.48,'min="0" max="0.9" step="0.05"')+'</div>'+
+      '<div class="f90-custom-bg-check"><h3>خلفيات الثيمين بشكل مستقل</h3>'+
+      '<p class="muted small">يمكنك تغيير صورة أو GIF لكل ثيم دون التأثير على الآخر. الشعار المتحرك الأصلي يبقى خلف المحتوى ويمكن التحكم بحركته وشفافيته.</p>'+
+      '<div class="f90-backdrop-design-preview">'+
+      '<div class="f90-backdrop-design-tile" id="f90PreviewDark" style="background-color:#11121b;color:white"><strong>الثيم الأسود والأحمر</strong><small>معاينة الخلفية</small></div>'+
+      '<div class="f90-backdrop-design-tile" id="f90PreviewCream" style="background-color:#e6dfd5;color:#302431"><strong>الثيم الحليبي</strong><small>معاينة الخلفية</small></div></div>'+
+      '<h4>خلفية الثيم الداكن</h4>'+
+      check("background_dark_enabled","تفعيل صورة خلفية الثيم الداكن",c.site_background?.themes?.dark?.enabled??c.site_background?.enabled??false)+
+      field("background_dark_url","رابط خلفية الثيم الداكن","url",c.site_background?.themes?.dark?.url??c.site_background?.url??"")+
+      field("background_dark_file","رفع PNG أو JPG أو WebP أو GIF للثيم الداكن","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      field("background_dark_dim","تعتيم خلفية الثيم الداكن (0 إلى 0.85)","number",c.site_background?.themes?.dark?.dim??c.site_background?.dim??0.48,'min="0" max="0.85" step="0.05"')+
+      '<h4>خلفية الثيم الحليبي</h4>'+
+      check("background_cream_enabled","تفعيل صورة خلفية الثيم الحليبي",c.site_background?.themes?.cream?.enabled??c.site_background?.enabled??false)+
+      field("background_cream_url","رابط خلفية الثيم الحليبي","url",c.site_background?.themes?.cream?.url??c.site_background?.url??"")+
+      field("background_cream_file","رفع PNG أو JPG أو WebP أو GIF للثيم الحليبي","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      field("background_cream_dim","تعتيم خلفية الثيم الحليبي (0 إلى 0.85)","number",c.site_background?.themes?.cream?.dim??0.28,'min="0" max="0.85" step="0.05"')+
+      '<h4>الشعار الرسمي المتحرك بالخلفية</h4>'+
+      check("background_logo_enabled","إظهار الشعار المتحرك وراء الموقع",c.site_background?.logo?.enabled!==false)+
+      field("background_logo_opacity","شفافية الشعار (0.03 إلى 0.35)","number",c.site_background?.logo?.opacity??0.13,'min="0.03" max="0.35" step="0.01"')+
+      field("background_logo_size","حجم الشعار بالبكسل","number",c.site_background?.logo?.size??360,'min="160" max="660" step="10"')+
+      field("background_logo_speed","مدة دورة الحركة بالثواني","number",c.site_background?.logo?.speed??35,'min="12" max="90" step="1"')+
+      '<p class="muted small">لن تُستخدم أي صورة شعار بديلة؛ الحركة تُطبّق على الشعار الحالي الرسمي. يستجيب التصميم للشاشات الصغيرة ولخيار تقليل الحركة.</p></div>'+
       '<div class="f90-custom-bg-check"><h3>صور تثبيت التطبيقات</h3>'+
       field("install_art_url","صورة صفحة تثبيت تطبيق المتجر","url",c.install_art_url||"")+
       field("install_art_file","رفع صورة لصفحة تثبيت المتجر","file","",'accept="image/png,image/jpeg,image/webp"')+
@@ -1660,12 +1676,24 @@
     const videoPoster=posterFile?.size?(await A.upload(posterFile,"f90-images","branding")).url:String(d.promo_video_poster||"").trim();
     if(form.elements.promo_video_enabled.checked && d.promo_video_mode==="video" && !videoUrl)throw new Error("ارفع الفيديو قبل التفعيل");
     if(form.elements.promo_video_enabled.checked && d.promo_video_mode==="image" && !phoneImageUrl)throw new Error("ارفع صورة شاشة الهاتف قبل التفعيل");
-    const bgFile=form.elements.site_background_file.files?.[0],
+    const darkFile=form.elements.background_dark_file.files?.[0],
+      creamFile=form.elements.background_cream_file.files?.[0],
       artFile=form.elements.install_art_file.files?.[0],
       storeAppFile=form.elements.store_app_icon_file.files?.[0],
       adminFile=form.elements.admin_app_icon_file.files?.[0];
-    const bgUrl=bgFile?.size?(await A.upload(bgFile,"f90-images","backgrounds")).url:String(d.site_background_url||"").trim();
-    if(form.elements.site_background_enabled.checked && !bgUrl)throw new Error("اختر صورة للخلفية");
+    const darkUrl=darkFile?.size?(await A.upload(darkFile,"f90-images","backgrounds")).url:String(d.background_dark_url||"").trim();
+    const creamUrl=creamFile?.size?(await A.upload(creamFile,"f90-images","backgrounds")).url:String(d.background_cream_url||"").trim();
+    if(form.elements.background_dark_enabled.checked && !C.safeUrl(darkUrl))throw new Error("ارفع أو اختر صورة صالحة للثيم الداكن");
+    if(form.elements.background_cream_enabled.checked && !C.safeUrl(creamUrl))throw new Error("ارفع أو اختر صورة صالحة للثيم الحليبي");
+    const bound=(value,lo,hi,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):fallback;};
+    const backgroundThemes={
+      dark:{enabled:form.elements.background_dark_enabled.checked,url:darkUrl,dim:bound(d.background_dark_dim,0,0.85,0.48)},
+      cream:{enabled:form.elements.background_cream_enabled.checked,url:creamUrl,dim:bound(d.background_cream_dim,0,0.85,0.28)}
+    };
+    const backgroundLogo={enabled:form.elements.background_logo_enabled.checked,
+      opacity:bound(d.background_logo_opacity,0.03,0.35,0.13),
+      size:bound(d.background_logo_size,160,660,360),
+      speed:bound(d.background_logo_speed,12,90,35)};
     const artUrl=artFile?.size?(await A.upload(artFile,"f90-images","branding")).url:String(d.install_art_url||"").trim();
     const storeAppIcons=storeAppFile?.size?await uploadAppInstallIcons(storeAppFile,"app-icons"):null;
     const adminAppIcons=adminFile?.size?await uploadAppInstallIcons(adminFile,"admin-icons"):null;
@@ -1681,7 +1709,7 @@
       title_ar:String(d.promo_video_title||"").trim().slice(0,120),
       display_text:String(d.promo_video_display_text||"").trim().slice(0,130),
       messages:[d.promo_video_message_1,d.promo_video_message_2,d.promo_video_message_3].map(x=>String(x||"").trim().slice(0,150))},
-      site_background:{...c.site_background,enabled:form.elements.site_background_enabled.checked,url:bgUrl,dim:Number(d.site_background_dim??0.48)},
+      site_background:{...c.site_background,themes:backgroundThemes,logo:backgroundLogo},
       install_art_url:artUrl,
       app_icon_url:storeAppIcons?.[512]||c.app_icon_url,
       app_icon_192_url:storeAppIcons?.[192]||c.app_icon_192_url,
