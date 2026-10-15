@@ -13,8 +13,31 @@ with sync_playwright() as p:
  assert page.locator("#mobileDock").count()==1
  assert page.locator('.f90-profile-dock-emblem img').count()==1,"Profile bubble logo missing"
  assert page.locator("#mainContent").count()==1
+ fixed_before=page.evaluate("""() => {
+   const ids=["f90ThemeBackdrop","f90MediaDock","mobileDock"];
+   return Object.fromEntries(ids.map(id=>{
+     const el=document.getElementById(id);
+     if(!el || getComputedStyle(el).display==="none")return [id,null];
+     const b=el.getBoundingClientRect();
+     return [id,{top:b.top,bottom:b.bottom,left:b.left}];
+   }));
+ }""")
  page.evaluate("window.scrollTo({top:760,behavior:'instant'})")
  page.wait_for_timeout(200)
+ fixed_after=page.evaluate("""() => {
+   const ids=["f90ThemeBackdrop","f90MediaDock","mobileDock"];
+   return Object.fromEntries(ids.map(id=>{
+     const el=document.getElementById(id);
+     if(!el || getComputedStyle(el).display==="none")return [id,null];
+     const b=el.getBoundingClientRect();
+     return [id,{top:b.top,bottom:b.bottom,left:b.left}];
+   }));
+ }""")
+ for name in fixed_before:
+   a=fixed_before[name];b=fixed_after[name]
+   if a is not None and b is not None:
+     assert abs(a["top"]-b["top"])<5,(name,"moved vertically",a,b)
+     assert abs(a["left"]-b["left"])<5,(name,"moved horizontally",a,b)
  before=page.evaluate("window.scrollY")
  assert before>=240,("Homepage not scrollable",before)
  page.evaluate("""() => {
@@ -32,5 +55,5 @@ with sync_playwright() as p:
  assert page.evaluate("location.hash==='#/'"),"Back did not return home"
  assert abs(returned-before)<180,("Back scroll did not restore",before,returned)
  page.screenshot(path="/tmp/f90-navigation-postfix.png")
- print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5]},ensure_ascii=False))
+ print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5],"floating_before":fixed_before,"floating_after":fixed_after},ensure_ascii=False))
  browser.close()
