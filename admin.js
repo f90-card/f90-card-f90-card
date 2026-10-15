@@ -46,6 +46,7 @@
     ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
     ["infrastructure", "الخوادم والمراقبة", "chart", ["manager"]],
     ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
+    ["media-center", "مركز الموسيقى واليوتيوب", "music", ["manager"]],
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
@@ -1548,12 +1549,27 @@
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
       '<div class="f90-design-video-fields"><h3>إعلان فيديو بتصميم هاتف ثلاثي الأبعاد</h3><p class="muted small">ارفع فيديو MP4/WebM حتى ٢٠ ميجابايت. يعرض بلا صوت، ويتوقف خارج الشاشة. عند تعطيله يختفي القسم بالكامل.</p>'+
       check("promo_video_enabled","إظهار إعلان الفيديو في الصفحة الرئيسية",c.promo_video?.enabled===true)+
-      field("promo_video_title","عنوان إعلان الفيديو","text",c.promo_video?.title_ar||"عالم F90 CARD",'maxlength="120"')+
+      select("promo_video_mode","طريقة العرض داخل الهاتف",[["text","نص داخل الهاتف"],["video","فيديو صامت"]],c.promo_video?.mode||"text")+
+      field("promo_video_title","عنوان إعلان الهاتف","text",c.promo_video?.title_ar||"F90 CARD",'maxlength="120"')+
+      field("promo_video_display_text","النص المتوهج داخل الشاشة","textarea",c.promo_video?.display_text||"F90 CARD",'maxlength="130"')+
+      field("promo_video_message_1","النص المتحرك رقم 1","text",c.promo_video?.messages?.[0]||"أولوياتنا إسعادك وراحتك معنا",'maxlength="150"')+
+      field("promo_video_message_2","النص المتحرك رقم 2","text",c.promo_video?.messages?.[1]||"خدماتك الرقمية بخطوات أسهل",'maxlength="150"')+
+      field("promo_video_message_3","النص المتحرك رقم 3","text",c.promo_video?.messages?.[2]||"أف تسعين كارد دائمًا بالقرب منك",'maxlength="150"')+
       field("promo_video_url","رابط ملف الفيديو","url",c.promo_video?.url||"",'placeholder="https://..."')+
       field("promo_video_file","رفع فيديو إعلاني جديد","file","",'accept="video/mp4,video/webm"')+
       field("promo_video_poster","صورة ثابتة قبل التشغيل (اختياري)","url",c.promo_video?.poster_url||"")+
       field("promo_video_poster_file","رفع صورة ثابتة","file","",'accept="image/png,image/jpeg,image/webp"')+
       '</div>'+
+      '<div class="f90-custom-bg-check"><h3>خلفية موقع ثابتة أو متحركة GIF</h3>'+
+      check("site_background_enabled","إظهار خلفية الموقع",c.site_background?.enabled===true)+
+      field("site_background_url","رابط الصورة","url",c.site_background?.url||"")+
+      field("site_background_file","رفع صورة PNG أو JPG أو GIF","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      field("site_background_dim","درجة تعتيم الخلفية","number",c.site_background?.dim??0.48,'min="0" max="0.9" step="0.05"')+'</div>'+
+      '<div class="f90-custom-bg-check"><h3>صور تثبيت التطبيقات</h3>'+
+      field("install_art_url","صورة صفحة تثبيت تطبيق المتجر","url",c.install_art_url||"")+
+      field("install_art_file","رفع صورة لصفحة تثبيت المتجر","file","",'accept="image/png,image/jpeg,image/webp"')+
+      field("admin_app_icon_url","أيقونة تثبيت تطبيق الإدارة","url",c.admin_app_icon_url||"")+
+      field("admin_app_icon_file","رفع أيقونة الإدارة","file","",'accept="image/png,image/jpeg,image/webp"')+'</div>'+
       '<div class="f90-design-visibility"><h3>إظهار وإخفاء عناصر الواجهة</h3>'+
       check("show_banners","إظهار بانرات الصفحة الرئيسية",c.show_banners!==false)+
       check("show_intro","إظهار بانر التعريف",c.show_intro!==false)+
@@ -1575,7 +1591,8 @@
          ["الشريط المتحرك","النصوص وصور الإعلانات وروابط الضغط","promotions"],
          ["العملات","العملة الافتراضية وأسعار الصرف","rates"],
          ["مستويات VIP","المستويات والخصومات من 1 إلى 15","vip"],
-         ["الخوادم والمراقبة","اتصال الخادم والموردين والتنبيهات","infrastructure"]
+         ["الخوادم والمراقبة","اتصال الخادم والموردين والتنبيهات","infrastructure"],
+         ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
   }
   async function saveVisualDesign(form,d){
@@ -1588,14 +1605,27 @@
     const posterFile=form.elements.promo_video_poster_file?.files?.[0];
     const videoUrl=videoFile?.size?(await A.upload(videoFile,"f90-videos","promo")).url:String(d.promo_video_url||"").trim();
     const videoPoster=posterFile?.size?(await A.upload(posterFile,"f90-images","branding")).url:String(d.promo_video_poster||"").trim();
-    if(form.elements.promo_video_enabled.checked && !videoUrl)throw new Error("ارفع الفيديو أو أضف رابط فيديو قبل التفعيل");
+    if(form.elements.promo_video_enabled.checked && d.promo_video_mode==="video" && !videoUrl)throw new Error("ارفع الفيديو قبل التفعيل");
+    const bgFile=form.elements.site_background_file.files?.[0],
+      artFile=form.elements.install_art_file.files?.[0],
+      adminFile=form.elements.admin_app_icon_file.files?.[0];
+    const bgUrl=bgFile?.size?(await A.upload(bgFile,"f90-images","backgrounds")).url:String(d.site_background_url||"").trim();
+    if(form.elements.site_background_enabled.checked && !bgUrl)throw new Error("اختر صورة للخلفية");
+    const artUrl=artFile?.size?(await A.upload(artFile,"f90-images","branding")).url:String(d.install_art_url||"").trim();
+    const adminIconUrl=adminFile?.size?(await A.upload(adminFile,"f90-images","branding")).url:String(d.admin_app_icon_url||"").trim();
     const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1000),config:{...c,
       welcome:{...c.welcome,title_ar:rawTitle,subtitle_ar:String(d.welcome_subtitle||"").trim().slice(0,350),image_url:welcomeUrl},
       hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
       show_banners:form.elements.show_banners.checked,
       show_intro:form.elements.show_intro.checked,
       show_ticker:form.elements.show_ticker.checked,
-      promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,url:videoUrl,poster_url:videoPoster,title_ar:String(d.promo_video_title||"").trim().slice(0,120)},
+      promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,
+      mode:d.promo_video_mode,url:videoUrl,poster_url:videoPoster,
+      title_ar:String(d.promo_video_title||"").trim().slice(0,120),
+      display_text:String(d.promo_video_display_text||"").trim().slice(0,130),
+      messages:[d.promo_video_message_1,d.promo_video_message_2,d.promo_video_message_3].map(x=>String(x||"").trim().slice(0,150))},
+      site_background:{...c.site_background,enabled:form.elements.site_background_enabled.checked,url:bgUrl,dim:Number(d.site_background_dim??0.48)},
+      install_art_url:artUrl,admin_app_icon_url:adminIconUrl,
       edge_glow_color:d.edge_glow_color,edge_glow_enabled:form.elements.edge_glow_enabled.checked}};
     await A.call("settings.save",{data:updated});
     await refreshSettings(); brand(); designCenter(); toast("تم حفظ التصميم والنصوص بنجاح");
