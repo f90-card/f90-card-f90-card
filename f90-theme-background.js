@@ -27,10 +27,22 @@ function render(){
  const name=themeName==="cream"?"cream":"dark";
  const site=currentConfig.site_background||{};
  const selected=site.themes?.[name] || (!site.themes ? site : {});
+ // Independent global background/surface lightness for each theme. No whole-page
+ // CSS filter: checkout text, product images and accessibility remain untouched.
+ const brightness=clamp(selected?.brightness,50,150,100);
+ const increase=brightness>=100;
+ const intensity=increase
+   ? (brightness-100)*(name==="dark"?.34:.4)
+   : (100-brightness)*(name==="dark"?.42:.3);
+ const mix=clamp(intensity,0,25,0);
+ document.documentElement.style.setProperty("--f90-tone-color",increase?"#ffffff":"#000000");
+ document.documentElement.style.setProperty("--f90-base-percent",(100-mix).toFixed(2)+"%");
+ document.documentElement.style.setProperty("--f90-tint-percent",mix.toFixed(2)+"%");
  const bg=safeUrl(selected?.enabled?selected.url:"");
  const dim=clamp(selected?.dim,0,.85,name==="cream"?.28:.48);
  photo.style.backgroundImage=bg?"url("+JSON.stringify(bg)+")":"none";
  photo.style.opacity=bg?"1":"0";
+ photo.style.filter="brightness("+(brightness/100).toFixed(2)+")";
  photo.style.backgroundPosition="center center";
  shade.style.backgroundColor=name==="cream"?"rgba(246,240,235,"+dim+")":"rgba(8,10,16,"+dim+")";
  shade.hidden=!bg;
