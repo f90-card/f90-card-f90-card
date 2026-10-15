@@ -1742,12 +1742,12 @@
       }else{
         // A previously uploaded file stays selected unless the manager switches source.
         const prior=await A.call("staff.radio.status");
-        if(!prior.has_media)throw new Error("ارفع ملف صوت أو فيديو من الهاتف أولًا");
+        if(!prior.has_media && changes.enabled)throw new Error("ارفع ملف صوت أو فيديو من الهاتف أولًا");
         changes.direct_audio_url="";
       }
     }else{
       const url=String(d.music_direct_url||"").trim();
-      if(!/^https:\/\//i.test(url) || /(?:youtube\.com|youtu\.be)/i.test(url))
+      if((changes.enabled || url) && (!/^https:\/\//i.test(url) || /(?:youtube\.com|youtu\.be)/i.test(url)))
         throw new Error("أدخل رابطًا مباشرًا لبث صوت مرخّص HTTPS، وليس رابط صفحة YouTube");
       changes.media_path="";
       changes.direct_audio_url=url;
