@@ -78,6 +78,15 @@ test("Catalog and supplier availability speedups preserve safe server quote chec
   assert.match(edge,/await rpc\("f90_quote"/);
   assert.match(app,/idempotency_key: reference/);
 });
+test("Public catalog edge caching cannot cache a checkout quote",()=>{
+  const edge=read("supabase/functions/f90-platform/index.ts");
+  assert.match(edge,/cachedPublicCatalogUntil = Date\.now\(\) \+ 12000/);
+  assert.match(edge,/if \(pendingPublicCatalog\) return pendingPublicCatalog/);
+  assert.match(edge,/async function buildPublicCatalog\(\)/);
+  const quoteBlock=edge.slice(edge.indexOf('if (action === "quote") {'),edge.indexOf('if (action === "quote") {')+1250);
+  assert.match(quoteBlock,/await rpc\("f90_quote"/);
+  assert.doesNotMatch(quoteBlock,/cachedPublicCatalog/);
+});
 test("Mobile performance optimizations never bypass financial validation", () => {
   const atmosphere=read("f90-atmosphere-v2.css");
   const ambient=read("f90-ambient.css");
