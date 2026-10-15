@@ -2133,6 +2133,15 @@
           const latest = await A.call("catalog");
           if (!Array.isArray(latest?.news)) return;
           S.news = latest.news;
+          const previousRates = JSON.stringify(S.rates.map(r => [r.currency,r.per_usd,r.is_enabled,r.name_ar]));
+          const incomingRates = JSON.stringify((latest.rates||[]).map(r => [r.currency,r.per_usd,r.is_enabled,r.name_ar]));
+          const oldDefaultCurrency = S.settings?.currency;
+          if (Array.isArray(latest.rates)) S.rates = latest.rates;
+          if (latest.settings) S.settings = latest.settings;
+          const validCurrency = S.rates.some(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd)>0);
+          if (!S.currencyPreference || !validCurrency)
+            S.currency = S.settings.currency || "USD";
+          const displayCurrencyChanged = previousRates !== incomingRates || oldDefaultCurrency !== S.settings.currency || !validCurrency;
           // Keep refreshed availability in memory; do not interrupt an open purchase.
           const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("modalRoot")?.children.length;
           if (!buying && Array.isArray(latest.products) && Array.isArray(latest.categories)) {
@@ -2154,6 +2163,12 @@
               await route();
               window.scrollTo({ top: oldScroll, behavior: "instant" });
             }
+          }
+          if (displayCurrencyChanged && !buying && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+            const oldScroll = window.scrollY;
+            chrome();
+            await route();
+            window.scrollTo({ top: oldScroll, behavior: "instant" });
           }
           updateStoreBell();
         } catch {
