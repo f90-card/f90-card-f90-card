@@ -2131,7 +2131,7 @@ Deno.serve(async (req: Request) => {
         selected_index:Math.min(Math.max(0,Number(m.selected_index||0)),Math.max(0,list.length-1)),
         start_seconds:Number(m.start_seconds||0),
         volume:Number(m.volume??0.35),
-        tracks:list.map((x:any)=>({title:text(x.title,90),mode:/\.(mp4|webm)$/i.test(x.path)?"video":"audio"})),
+        tracks:(linkMode?[]:list).map((x:any)=>({title:text(x.title,90),mode:/\.(mp4|webm)$/i.test(x.path)?"video":"audio"})),
         bubble:m.bubble||{} });
     }
     if (action === "media.ticket") {
