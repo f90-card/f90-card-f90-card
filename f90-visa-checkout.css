@@ -353,3 +353,19 @@
   .f90-quick-backdrop:not([hidden]){backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
   .f90-visa-purchase::after{animation:none}
 }
+
+/* Exact placement in the approved RTL card: small wallet right, gold price left. */
+.f90-visa-purchase #checkoutForm>.f90-checkout-summary{flex-direction:row-reverse!important}
+.f90-visa-purchase .f90-visa-inputrow{direction:ltr;order:1}
+.f90-visa-purchase .f90-visa-inputrow>.field{direction:rtl}
+.f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy{
+ direction:ltr;padding-left:14px!important;padding-right:52px!important;
+}
+.f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy>span:not(.f90-visa-buy-arrow){direction:rtl}
+.f90-visa-purchase .f90-visa-buy-arrow{right:10px;left:auto}
+@media(max-width:480px){
+ .f90-visa-purchase .f90-visa-price .f90-visa-coins{flex-basis:22px}
+ .f90-visa-purchase .f90-visa-coins svg{width:22px;height:22px}
+ .f90-visa-purchase .f90-visa-price{gap:7px}
+ .f90-visa-purchase #checkoutForm .f90-visa-price strong{font-size:clamp(15px,4.4vw,21px)!important;white-space:normal}
+}
