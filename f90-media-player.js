@@ -65,8 +65,9 @@ async function start(force=false){
  if(!enabled||!media||busy||!desire)return;
  busy=true;
  try{
-   await setSource(force);
+   if(force || !source) await setSource(force);
    if(!desire)return;
+   // When the source was prefetched, play() runs inside the tap itself.
    await media.play();
    setNotice("");
  }catch(err){
