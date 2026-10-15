@@ -218,3 +218,33 @@
 #f90SupplierPriceForm .field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 #f90SupplierPriceForm button{min-height:43px;margin-top:10px}
 @media(max-width:600px){.f90-pricing-item{grid-template-columns:1fr;gap:4px}}
+
+/* Uploaded section banners display in full, without cropped edges. */
+#mainContent img.category-art,#mainContent .f90-special-section-banner,
+#mainContent .f90-special-banner img{
+ width:100%;height:auto!important;max-height:none!important;aspect-ratio:1029/345!important;
+ object-fit:contain!important;object-position:center center;background:var(--surface2);
+ border-radius:14px;display:block}
+.f90-maintenance-screen{box-sizing:border-box;display:grid!important;place-items:center!important;
+ width:100%;max-width:100%;min-height:min(100dvh,920px);padding:clamp(16px,4vw,40px) 12px!important}
+.f90-maintenance-content{width:min(100%,650px);margin:auto!important;text-align:center!important;
+ display:flex;flex-direction:column;align-items:center;gap:10px;box-sizing:border-box}
+.f90-maintenance-logo{display:block!important;object-fit:contain!important;
+ width:min(38vw,165px)!important;height:min(38vw,165px)!important;margin:0 auto!important}
+.f90-maintenance-content h1{font-size:clamp(19px,5vw,36px);line-height:1.45;margin:0}
+.f90-maintenance-content p{max-width:48ch;margin:0 auto;overflow-wrap:anywhere;line-height:1.75}
+.f90-maintenance-countdown{width:100%;max-width:480px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(4px,2vw,12px)}
+.f90-maintenance-countdown>div{min-width:0;padding:clamp(6px,2vw,13px);box-sizing:border-box}
+.f90-maintenance-countdown strong{font-size:clamp(15px,5vw,32px)}
+.f90-currency-welcome-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;max-height:min(54dvh,410px);overflow:auto;padding:3px}
+.f90-currency-option{background:var(--surface2);color:var(--text);border:1px solid var(--line);
+ border-radius:11px;padding:10px 6px;font-size:12px;min-height:50px;cursor:pointer}
+.f90-currency-option small{display:block;direction:ltr;font-size:10px;color:var(--muted)}
+.f90-currency-option.is-recommended{border-color:var(--accent);box-shadow:0 0 9px color-mix(in srgb,var(--accent) 24%,transparent)}
+.f90-home-phone-shell>.f90-home-phone-mark{position:absolute;right:50%;transform:translateX(50%);
+ bottom:1%;width:24%;max-width:50px;max-height:14%;pointer-events:none;opacity:.85;
+ filter:drop-shadow(0 0 4px #b22546)}
+.f90-home-phone-link:not([href]),.f90-home-laptop-link:not([href]){cursor:default;pointer-events:none}
+@media(max-width:390px){.f90-currency-welcome-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .f90-maintenance-screen{padding:12px 6px!important}}
