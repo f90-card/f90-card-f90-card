@@ -104,3 +104,45 @@ test("untrusted catalog text is displayed without executable markup", async () =
   );
   h.cleanup();
 });
+
+
+test("premium card shows a server-quoted total and remaining wallet before the final action", async () => {
+  const h = await harness("index.html", { hash: "#/product/coins", balance: 20 });
+  try {
+    const card = h.document.querySelector(".f90-premium-checkout");
+    assert.ok(card, "premium checkout card is present");
+    assert.ok(card.querySelector('[name="customer_account_id"]'));
+    assert.ok(card.querySelector('[name="quantity"]'));
+    const summary = card.querySelector(".f90-premium-summary");
+    assert.ok(summary);
+    assert.match(summary.textContent, /السعر النهائي/);
+    assert.match(summary.textContent, /رصيدك الحالي/);
+    assert.match(summary.textContent, /رصيدك بعد الشراء/);
+    assert.match(h.document.getElementById("f90CheckoutTopRemaining").textContent, /15/);
+    assert.ok(h.calls.some((call) => call.action === "quote"));
+    const form = h.document.getElementById("checkoutForm");
+    const buy = h.document.getElementById("buyButton");
+    assert.equal(form.lastElementChild.contains(buy), true, "confirm button ends the purchase card");
+    assert.equal(h.calls.some((call) => call.action === "checkout"), false, "viewing must never buy");
+  } finally {
+    h.cleanup();
+  }
+});
+
+test("install card has selectable native platform icons and device-specific instructions", async () => {
+  const h = await harness("index.html", { hash: "#/install", guest: true });
+  try {
+    const panel = h.document.querySelector(".f90-install-premium");
+    assert.ok(panel, "install card is rendered for guests");
+    const systems = [...panel.querySelectorAll(".f90-install-platform")];
+    assert.deepEqual(systems.map((x) => x.dataset.platform), ["ios", "android", "windows"]);
+    for (const option of systems) assert.ok(option.querySelector("svg"), "real platform icon is shown");
+    const android = panel.querySelector('[data-platform="android"]');
+    android.dispatchEvent(new h.window.Event("click", { bubbles: true }));
+    assert.equal(android.getAttribute("aria-pressed"), "true");
+    assert.match(panel.querySelector("#f90InstallGuide").textContent, /Chrome|Android/);
+    assert.ok(panel.lastElementChild.matches("#f90InstallAction"), "no content below install action");
+  } finally {
+    h.cleanup();
+  }
+});

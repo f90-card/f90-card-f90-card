@@ -197,6 +197,11 @@ async function harness(file = "index.html", options = {}) {
     },
   };
   const storage = new Map();
+  // Browsers always supply history; LinkeDOM does not. Reproduce scroll state safely.
+  const history = { state: null, scrollRestoration: "auto",
+    replaceState(state) { this.state = state; },
+    pushState(state) { this.state = state; } };
+
   const timers = new Set();
   const nativeTimeout = globalThis.setTimeout;
   const nativeInterval = globalThis.setInterval;
@@ -205,11 +210,15 @@ async function harness(file = "index.html", options = {}) {
   const schedule = (callback, delay, ...args) => {
     const id = nativeTimeout(() => { timers.delete(id); callback(...args); }, delay);
     timers.add(id);
+    // Short boot/quote timers must remain live until their test resolves.
+    // Long scheduling timers must not keep Node waiting for minutes.
+    if (Number(delay) > 1000) id.unref?.();
     return id;
   };
   const repeat = (callback, delay, ...args) => {
     const id = nativeInterval(callback, delay, ...args);
     timers.add(id);
+    id.unref?.();
     return id;
   };
   const stopTimer = (id) => { nativeClearTimeout(id); nativeClearInterval(id); timers.delete(id); };
@@ -231,6 +240,7 @@ async function harness(file = "index.html", options = {}) {
       staff: async () => {},
     },
     location,
+    history,
     localStorage: {
       getItem: (k) => storage.get(k) || null,
       setItem: (k, v) => storage.set(k, v),
