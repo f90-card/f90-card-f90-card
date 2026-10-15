@@ -129,7 +129,7 @@ test("Radio controls are manager only, with configurable icon and mobile layout"
   assert.match(radio,/function applyBubble\(value\)/);
   assert.match(radio,/f90-radio-custom-icon/);
   assert.match(radio,/media\.state/);
-  assert.doesNotMatch(radio,/media\.pause\(\)/);
+  assert.doesNotMatch(radio,/id="f90RadioPause"|id="f90RadioNext"|id="f90RadioStop"/);
   assert.match(css,/f90-radio-mobile-size/);
   assert.match(css,/data-side="left"/);
   assert.match(edge,/currentBubble/);
