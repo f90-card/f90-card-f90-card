@@ -2929,10 +2929,14 @@
   });
   async function boot() {
     try {
-      await refreshSettings();
-      const sessionResult=await Promise.race([
-        A.client.auth.getSession(),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error("F90_AUTH_TIMEOUT")),9000))
+      // Load the public catalog and restore the session concurrently to
+      // avoid 13s + 9s sequential waits on slow mobile connections.
+      const [,sessionResult]=await Promise.all([
+        refreshSettings(),
+        Promise.race([
+          A.client.auth.getSession(),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error("F90_AUTH_TIMEOUT")),9000))
+        ])
       ]);
       const session=sessionResult?.data?.session || null;
       if (!session) {
