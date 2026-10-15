@@ -118,7 +118,7 @@ function createMedia(mode){
    if(state.enabled){try{el.currentTime=0;}catch{} void begin();}
  });
  // Pre-fetch before the user taps, to preserve user activation for play().
- void prepareSource().then(()=>{if(state.enabled && (lastInteraction||started))void begin();});
+ void prepareSource().then(()=>{if(state.enabled)void begin();});
 }
 function apply(next){
  ensure();
