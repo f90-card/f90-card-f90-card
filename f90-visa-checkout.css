@@ -264,3 +264,92 @@
 @media(max-height:650px){.f90-quick-product:not([hidden]){max-height:calc(100dvh - 16px)}}
 @keyframes f90-visa-aura{from{opacity:.55}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.f90-visa-purchase::after{animation:none}}
+
+
+/* Matches the approved visual: broad gold rim, compact portrait purchase card. */
+.f90-quick-product:not([hidden]){width:min(384px,calc(100vw - 20px));}
+.f90-visa-purchase{
+  background:
+    linear-gradient(140deg,#07070b 0%,#13070c 36%,#2b0912 72%,#09080b 100%)!important;
+  box-shadow:0 0 0 1px #9e4619,0 0 17px #ffcc7691,0 0 36px #ae351f34,0 26px 64px #000a!important;
+}
+.f90-visa-purchase .f90-visa-card-header{height:57px}
+.f90-visa-purchase .f90-visa-logo{height:55px;max-width:182px;filter:drop-shadow(0 2px 4px #cd8c2d7a)}
+.f90-visa-purchase .f90-visa-product{grid-template-columns:62px minmax(0,1fr) 28px;min-height:68px;gap:10px}
+.f90-visa-purchase .f90-visa-product .product-art{height:62px!important;width:62px!important;max-height:62px!important}
+.f90-visa-purchase .product-info h1{font-size:18px!important}
+.f90-visa-purchase .f90-visa-subtitle{font-size:12px;color:#a9a7b4}
+.f90-visa-purchase .f90-visa-statuses{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
+.f90-visa-purchase .f90-visa-available{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border:1px solid #eac051aa;border-radius:99px;color:#f1c762;background:#f6ab1f12;font-size:10px;white-space:nowrap}
+.f90-visa-purchase .f90-visa-available span{font-size:8px}
+.f90-visa-purchase .f90-visa-status{font-size:10px;color:#36e9c8;border-color:#30a98eaa;background:#16bba014}
+.f90-visa-purchase #checkoutForm>.f90-checkout-summary{
+  min-height:64px;
+  padding:10px 12px!important;
+  border-color:#e7b65d!important;
+  background:linear-gradient(110deg,#412009a8,#120f15fa 64%,#28131afe)!important;
+  box-shadow:0 0 9px #e9ab4b2a,inset 0 0 11px #b6681a10;
+}
+.f90-visa-purchase .f90-visa-price{display:flex;flex-direction:row;gap:11px;align-items:center}
+.f90-visa-purchase .f90-visa-price-copy{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.f90-visa-purchase .f90-visa-price .f90-visa-coins{display:grid;place-items:center;flex:0 0 26px;color:#ffe09a}
+.f90-visa-purchase .f90-visa-coins svg{width:26px;height:26px;filter:drop-shadow(0 0 5px #ffb5436a)}
+.f90-visa-purchase #checkoutForm .f90-visa-price strong{font-size:clamp(19px,5vw,24px)!important;white-space:nowrap}
+.f90-visa-purchase .f90-visa-balance{flex:0 1 34%}
+.f90-visa-purchase #checkoutForm .f90-visa-balance strong{font-size:10px!important;color:#afb2be!important}
+.f90-visa-purchase .f90-visa-inputrow{display:grid;grid-template-columns:43px minmax(0,1fr);align-items:end;column-gap:9px;min-width:0}
+.f90-visa-purchase .f90-visa-inputrow>.field{min-width:0;display:flex;flex-direction:column;gap:5px;margin:0!important;max-width:100%}
+.f90-visa-purchase .f90-visa-inputicon{
+  display:grid;place-items:center;
+  height:43px;width:43px;margin-bottom:0;
+  border:1px solid #cf374b;border-radius:13px;
+  color:#f3bb69;background:linear-gradient(140deg,#3b0b15,#1d0911);
+  box-shadow:inset 0 0 9px #bf182d32,0 0 9px #dd2f4c29;
+}
+.f90-visa-purchase .f90-visa-inputicon svg{height:23px;width:23px}
+.f90-visa-purchase #checkoutForm input:not([type="hidden"]),
+.f90-visa-purchase #checkoutForm select{
+  min-height:43px!important;border-radius:12px!important;
+  background:linear-gradient(120deg,#0c1019,#12131e)!important;
+  border-color:#65525bbd!important;
+}
+.f90-visa-purchase #checkoutForm .f90-visa-note{
+  padding:9px 8px;font-size:11px;color:#ff6c79;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  background:linear-gradient(90deg,#47091290,#200912ad);
+  border:1px solid #b7243e;border-radius:11px;
+}
+.f90-visa-purchase .f90-visa-warn-icon{display:grid;place-items:center;width:17px;height:17px;border:2px solid currentColor;border-radius:50%;font-weight:900}
+.f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy{
+  position:relative;
+  height:55px!important;min-height:55px!important;
+  background:linear-gradient(155deg,#f6b442 0%,#9c480c 33%,#71310b 62%,#e6a849 94%,#fff0b5 100%)!important;
+  color:#fff3c8!important;
+  text-shadow:0 1px 4px #291004!important;
+  border:2px solid #ffedba!important;
+  border-radius:14px!important;
+  font-size:17px!important;
+  box-shadow:inset 0 2px #fff4b78c,inset 0 -2px #ac5019,0 0 17px #ffb94d8e!important;
+  gap:12px;
+}
+.f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy>svg{width:25px;height:25px}
+.f90-visa-purchase .f90-visa-buy-arrow{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:33px;height:33px;
+  border:1px solid #ffe1a6;border-radius:50%;
+  background:#7f330e91;color:#fff4ca;font-size:28px;font-weight:600;
+}
+@media(max-width:480px){
+ .f90-visa-purchase .f90-visa-product{grid-template-columns:54px minmax(0,1fr) 28px;gap:8px;min-height:58px}
+ .f90-visa-purchase .f90-visa-product .product-art{height:54px!important;width:54px!important}
+ .f90-visa-purchase .f90-visa-card-header{height:45px}
+ .f90-visa-purchase .f90-visa-logo{height:45px}
+ .f90-visa-purchase .product-info h1{font-size:16px!important}
+ .f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy{height:50px!important;min-height:50px!important;font-size:15px!important}
+ .f90-visa-purchase .f90-visa-buy-arrow{width:30px;height:30px}
+}
+@media(max-width:600px) and (prefers-reduced-motion:no-preference){
+  /* Keep blur/shadows modest on entry-level mobile GPUs; avoid frame drops. */
+  .f90-quick-backdrop:not([hidden]){backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .f90-visa-purchase::after{animation:none}
+}
