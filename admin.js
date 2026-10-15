@@ -1594,11 +1594,18 @@
       '<div class="f90-backdrop-design-preview">'+
       '<div class="f90-backdrop-design-tile" id="f90PreviewDark" style="background-color:#11121b;color:white"><strong>الثيم الأسود والأحمر</strong><small>معاينة الخلفية</small></div>'+
       '<div class="f90-backdrop-design-tile" id="f90PreviewCream" style="background-color:#e6dfd5;color:#302431"><strong>الثيم الحليبي</strong><small>معاينة الخلفية</small></div></div>'+
+      '<h4>إضاءة الثيم الداكن والخلفية</h4>'+
+      '<p class="muted small">سطوع 100٪ هو الوضع الأصلي. زيادة السطوع تُفتح ألوان خلفية الموقع والبطاقات، وخفضه يُعمّقها مع الحفاظ على وضوح النصوص.</p>'+
+      '<label class="field f90-brightness-control"><span>سطوع الثيم الأسود والأحمر: <output id="brightnessDarkValue">'+e(c.site_background?.themes?.dark?.brightness??100)+'%</output></span>'+
+      '<input type="range" name="brightness_dark" id="brightnessDarkSlider" min="50" max="150" step="1" value="'+e(c.site_background?.themes?.dark?.brightness??100)+'" aria-label="سطوع الثيم الداكن"></label>'+
       '<h4>خلفية الثيم الداكن</h4>'+
       check("background_dark_enabled","تفعيل صورة خلفية الثيم الداكن",c.site_background?.themes?.dark?.enabled??c.site_background?.enabled??false)+
       field("background_dark_url","رابط خلفية الثيم الداكن","url",c.site_background?.themes?.dark?.url??c.site_background?.url??"")+
       field("background_dark_file","رفع PNG أو JPG أو WebP أو GIF للثيم الداكن","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
       field("background_dark_dim","تعتيم خلفية الثيم الداكن (0 إلى 0.85)","number",c.site_background?.themes?.dark?.dim??c.site_background?.dim??0.48,'min="0" max="0.85" step="0.05"')+
+      '<h4>إضاءة الثيم الحليبي والخلفية</h4>'+
+      '<label class="field f90-brightness-control"><span>سطوع الثيم الحليبي: <output id="brightnessCreamValue">'+e(c.site_background?.themes?.cream?.brightness??100)+'%</output></span>'+
+      '<input type="range" name="brightness_cream" id="brightnessCreamSlider" min="50" max="150" step="1" value="'+e(c.site_background?.themes?.cream?.brightness??100)+'" aria-label="سطوع الثيم الحليبي"></label>'+
       '<h4>خلفية الثيم الحليبي</h4>'+
       check("background_cream_enabled","تفعيل صورة خلفية الثيم الحليبي",c.site_background?.themes?.cream?.enabled??c.site_background?.enabled??false)+
       field("background_cream_url","رابط خلفية الثيم الحليبي","url",c.site_background?.themes?.cream?.url??c.site_background?.url??"")+
@@ -1654,6 +1661,8 @@
       const urlField=form.elements["background_"+kind+"_url"];
       const shade=form.elements["background_"+kind+"_dim"];
       const enabled=form.elements["background_"+kind+"_enabled"];
+      const bright=form.elements["brightness_"+kind];
+      const brightOutput=$("brightness"+(kind==="dark"?"Dark":"Cream")+"Value");
       const draw=()=>{
         if(tile.dataset.previewBlob){URL.revokeObjectURL(tile.dataset.previewBlob);delete tile.dataset.previewBlob;}
         let url=C.safeUrl(urlField.value);
@@ -1665,11 +1674,13 @@
         const fallback=kind==="cream"?"#e6dfd5":"#11121b";
         tile.style.backgroundImage=enabled.checked&&url?"linear-gradient("+veil+","+veil+"),url("+JSON.stringify(url)+")":"none";
         tile.style.backgroundColor=fallback;
+        tile.style.filter="brightness("+(Math.max(50,Math.min(150,Number(bright?.value??100)))/100)+")";
+        if(brightOutput)brightOutput.textContent=String(Math.max(50,Math.min(150,Number(bright?.value??100))))+"%";
         tile.style.backgroundSize="cover";
         tile.style.backgroundPosition="center";
       };
-      for(const el of [picture,urlField,shade,enabled]){
-        if(el)el.addEventListener(el===shade?"input":"change",draw);
+      for(const el of [picture,urlField,shade,enabled,bright]){
+        if(el)el.addEventListener((el===shade||el===bright)?"input":"change",draw);
       }
       draw();
     }
@@ -1729,8 +1740,8 @@
     if(form.elements.background_cream_enabled.checked && !C.safeUrl(creamUrl))throw new Error("ارفع أو اختر صورة صالحة للثيم الحليبي");
     const bound=(value,lo,hi,fallback)=>{const n=Number(value);return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):fallback;};
     const backgroundThemes={
-      dark:{enabled:form.elements.background_dark_enabled.checked,url:darkUrl,dim:bound(d.background_dark_dim,0,0.85,0.48)},
-      cream:{enabled:form.elements.background_cream_enabled.checked,url:creamUrl,dim:bound(d.background_cream_dim,0,0.85,0.28)}
+      dark:{enabled:form.elements.background_dark_enabled.checked,url:darkUrl,dim:bound(d.background_dark_dim,0,0.85,0.48),brightness:bound(d.brightness_dark,50,150,100)},
+      cream:{enabled:form.elements.background_cream_enabled.checked,url:creamUrl,dim:bound(d.background_cream_dim,0,0.85,0.28),brightness:bound(d.brightness_cream,50,150,100)}
     };
     const backgroundLogo={enabled:form.elements.background_logo_enabled.checked,
       opacity:bound(d.background_logo_opacity,0.03,0.35,0.13),
