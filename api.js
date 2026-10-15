@@ -28,7 +28,7 @@
     if (session) headers.Authorization = "Bearer " + session.access_token;
     let response;
     try {
-      const isReadOnly=["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const isReadOnly=["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       // A bounded wait prevents indefinite spinners. Mutating calls remain ambiguous on timeout.
       const timeout=isReadOnly?13000:45000;
       const controller=timeout?new AbortController():null;
@@ -41,7 +41,7 @@
       }finally{if(timeoutId)clearTimeout(timeoutId);}
     } catch(err) {
       // Read-only timeouts are safe to retry. Never assume a paid operation failed.
-      const isReadOnly=["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const isReadOnly=["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       const failure=new Error(isReadOnly?"تأخر اتصال الخادم. حاول إعادة تحميل المتجر.":"انقطع الاتصال قبل تأكيد نتيجة العملية");
       failure.code=isReadOnly?"F90_NETWORK_TIMEOUT":"F90_NETWORK_UNKNOWN";
       failure.uncertain=!isReadOnly;
@@ -66,7 +66,7 @@
     if (!body || typeof body !== "object" || !Object.prototype.hasOwnProperty.call(body, "data")) {
       const err = new Error("رد الخادم غير مكتمل. أعد المحاولة بعد التحقق من حالة الخدمة.");
       err.code = "F90_BAD_RESPONSE";
-      err.uncertain = !["catalog","health","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      err.uncertain = !["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       throw err;
     }
     return body.data;
@@ -87,7 +87,7 @@
       ...(video || radio ? ["video/mp4","video/webm"] : []),
       ...(audio || radio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4"] : []),
     ];
-    if (!types.includes(file.type)) throw new Error(video ? "صيغة الفيديو غير مدعومة" : audio ? "صيغة الملف الصوتي غير مدعومة" : "اختر صورة بصيغة مدعومة");
+    if (!types.includes(file.type)) throw new Error(radio ? "يرجى رفع ملف صوت أو فيديو بالصيغة المدعومة" : video ? "صيغة الفيديو غير مدعومة" : audio ? "صيغة الملف الصوتي غير مدعومة" : "اختر صورة بصيغة مدعومة");
     const {
       data: { user },
     } = await client.auth.getUser();
@@ -111,7 +111,7 @@
       .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
     if (error)
-      throw new Error(video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
+      throw new Error(radio ? "تعذّر رفع الراديو إلى المساحة الخاصة. تحقق من صلاحية المدير وحجم الملف." : video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
     return {
       path,
       url: radio ? "" : client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
