@@ -8,7 +8,7 @@ function bootIncomplete(){
   if(!root)return false;
   const text=(root.textContent||"").trim();
   return (root.querySelector(".loading")&&(/جارٍ تجهيز عالمك الرقمي|جارٍ تحميل|جارٍ تجهيز/.test(text)))
-    || /تعذّر تحميل المتجر|الاتصال بالمتجر تأخر|تعذّر إكمال تحميل الصفحة|جارٍ استعادة الاتصال بالخادم/.test(text);
+    || /تعذّر تحميل المتجر|تعذّر بدء تشغيل المتجر|الاتصال بالمتجر تأخر|تعذّر إكمال تحميل الصفحة|جارٍ استعادة الاتصال بالخادم/.test(text);
 }
 function image(url,name){const img=document.createElement("img");const link=String(url||"");if(/^https:\/\//i.test(link)&&link.length<1600){img.src=link;img.loading="lazy";img.decoding="async";img.alt=name||"";}else{img.alt="صورة الخدمة";img.hidden=true;}return img;}
 function render(data){
