@@ -1,0 +1,27 @@
+{
+  "id": "./admin.html",
+  "name": "F90 CARD | لوحة الإدارة",
+  "short_name": "F90 ADMIN",
+  "description": "لوحة إدارة متجر أف تسعين كارد",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./admin.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b10",
+  "theme_color": "#751835",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
