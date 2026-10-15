@@ -65,8 +65,8 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-faststore1/);
-  assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-gold-match2/);
+  assert.match(mainHtml,/app\.js\?v=20261015-keyboard-checkout3/);
+  assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-keyboard-checkout3/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
   const edge=read("supabase/functions/f90-platform/index.ts");
@@ -100,13 +100,39 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/\? 2500 : 400/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
-  assert.match(mainHtml,/app\.js\?v=20261015-faststore1/);
+  assert.match(mainHtml,/app\.js\?v=20261015-keyboard-checkout3/);
   assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
   assert.match(app,/await A\.call\("quote", \{/);
   assert.match(app,/idempotency_key: reference/);
 });
 
+test("Mobile keyboard checkout occupies visual viewport and hides footer without touching payments",()=>{
+  const css=read("f90-visa-checkout.css");
+  assert.match(app,/document\.body\.append\(backdrop,panel\)/);
+  assert.match(app,/checkoutPortalHome = panel\.parentElement/);
+  assert.match(app,/checkoutPortalHome\.appendChild\(panel\)/);
+  assert.match(app,/visualViewport\?\.addEventListener\("resize"/);
+  assert.match(app,/--f90-checkout-height/);
+  assert.match(app,/--f90-checkout-center/);
+  assert.match(app,/document\.body\.classList\.add\("f90-checkout-open"\)/);
+  assert.match(app,/document\.body\.classList\.remove\("f90-checkout-open"\)/);
+  assert.match(css,/body\.f90-checkout-open #footer/);
+  assert.match(css,/body\.f90-checkout-open #mobileDock/);
+  assert.match(css,/body\.f90-checkout-open #quickProductPanel:not\(\[hidden\]\)/);
+  assert.match(css,/max-height:calc\(var\(--f90-checkout-height,100dvh\) - 16px\)!important/);
+  assert.match(css,/font-size:16px!important/);
+  assert.match(app,/idempotency_key: reference/);
+});
+test("Safe 45s warm catalog only caches public data and revalidates before another checkout",()=>{
+  assert.match(app,/publicCatalogCacheKey="f90-public-catalog-fast-v1"/);
+  assert.match(app,/Date\.now\(\)-record\.saved>45000/);
+  assert.match(app,/const networkCatalog=A\.call\("catalog"\)/);
+  assert.match(app,/networkCatalog\.then\(fresh=>/);
+  assert.match(app,/document\.getElementById\("checkoutForm"\)/);
+  assert.doesNotMatch(app.slice(app.indexOf('function saveWarmCatalog('),app.indexOf('async function boot()')),/S\.me|wallet_balance|access_token/);
+  assert.match(app,/await A\.call\("quote"/);
+});
 test("Gold purchase card is compact and shows only final cost plus small current balance", () => {
   const visa=read("f90-visa-checkout.css");
   const purchase=app.slice(app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";'),app.indexOf('    if (inline) {',app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";')));
