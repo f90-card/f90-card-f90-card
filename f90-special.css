@@ -145,3 +145,15 @@
  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 50%,transparent);
 }
 .f90-transfer-methods button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Existing category pages keep their own names/images; no duplicate homepage category tiles. */
+.f90-special-section{max-width:1150px;margin:0 auto 22px}
+.f90-special-category-tools{display:flex;justify-content:flex-end;margin:2px 0 8px}
+.f90-special-category-tools .button{font-size:20px;min-height:34px;min-width:38px;padding:2px 7px;border-radius:10px}
+.f90-special-section-banner{display:block;width:100%;height:clamp(125px,25vw,285px);object-fit:cover;border-radius:18px;border:1px solid var(--line)}
+.f90-special-section-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:12px auto 0}
+.f90-special-section-option{display:flex;align-items:center;gap:12px;padding:14px;min-height:62px;text-decoration:none;border:1px solid var(--line);border-radius:15px;color:var(--text);background:var(--surface);box-shadow:0 7px 22px #0002}
+.f90-special-section-option strong{font-size:13px;line-height:1.5;flex:1;min-width:0;overflow-wrap:anywhere}
+.f90-special-option-number{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:10px;background:color-mix(in srgb,var(--accent) 15%,var(--surface2));color:var(--accent);font-size:11px;font-variant-numeric:tabular-nums;font-weight:800}
+.f90-special-section-option:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:520px){.f90-special-section-options{grid-template-columns:1fr;gap:8px}.f90-special-section-option{min-height:55px;padding:11px}.f90-special-section-banner{border-radius:12px}}
