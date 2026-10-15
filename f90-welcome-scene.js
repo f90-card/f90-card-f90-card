@@ -19,7 +19,12 @@ return '<section class="f90-minimal-welcome" aria-label="مرحباً بك في 
 '<img class="f90-welcome-phone-logo" src="'+e(siteLogo)+'" alt="شعار أف تسعين كارد">'+
 phoneVideo+
 '<div class="f90-welcome-auth-overlay"><span>F90 CARD</span>'+
-(auth?'<strong>مرحبًا بعودتك</strong><a href="#/profile">فتح حسابي</a>':'<strong>الدخول إلى حسابك</strong><a href="#/auth">تسجيل الدخول الحقيقي</a>')+
+(auth?'<strong>مرحبًا بعودتك</strong><a href="#/profile">فتح حسابي</a>':
+'<form id="authForm" class="f90-phone-login-form" data-mode="login" autocomplete="on">'+
+'<label class="sr-only" for="f90PhoneLoginEmail">البريد الإلكتروني</label><input id="f90PhoneLoginEmail" type="email" name="email" required autocomplete="email" placeholder="البريد الإلكتروني" dir="ltr" maxlength="254">'+
+'<label class="sr-only" for="f90PhoneLoginPassword">كلمة المرور</label><input id="f90PhoneLoginPassword" type="password" name="password" required autocomplete="current-password" placeholder="كلمة المرور" dir="ltr">'+
+'<p id="authError" class="f90-phone-login-error" aria-live="polite"></p><button type="submit">تسجيل الدخول</button>'+ 
+'<a href="#/auth">إنشاء حساب / نسيت كلمة المرور؟</a></form>')+
 '</div></div><div class="f90-welcome-camera-decor" aria-hidden="true"><i></i><i></i><i></i></div></div></div></div></section>';
 }
 window.F90WelcomeScene={scene};
