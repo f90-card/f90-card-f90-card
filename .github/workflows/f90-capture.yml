@@ -1,0 +1,33 @@
+name: Capture real F90 store interface
+on:
+  push:
+    branches: [main]
+    paths: ['marketing/capture_store.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install browser
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Capture the live store interface
+        run: python marketing/capture_store.py
+      - name: Publish screenshot for visual QA
+        run: |
+          git config user.name 'F90 Campaign Bot'
+          git config user.email 'f90-campaign-bot@users.noreply.github.com'
+          git pull --rebase origin main
+          git add marketing/screenshots/*.png
+          if ! git diff --staged --quiet; then
+            git commit -m 'marketing: capture actual store mobile homepage'
+            git push
+          fi
