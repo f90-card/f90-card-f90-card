@@ -46,17 +46,18 @@
     return body.data;
   }
   async function upload(file, bucket, folder) {
-    if (!file || file.size > 5242880)
-      throw new Error("اختر صورة لا تتجاوز ٥ ميجابايت");
+    const video = bucket === "f90-videos";
+    if (!file || file.size > (video ? 20971520 : 5242880))
+      throw new Error(video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
     const types = [
       "image/jpeg",
       "image/png",
       "image/webp",
       ...(bucket === "f90-images" || bucket === "f90-avatars"
-        ? ["image/gif"]
-        : []),
+        ? ["image/gif"] : []),
+      ...(video ? ["video/mp4","video/webm"] : []),
     ];
-    if (!types.includes(file.type)) throw new Error("اختر صورة بصيغة مدعومة");
+    if (!types.includes(file.type)) throw new Error(video ? "صيغة الفيديو غير مدعومة" : "اختر صورة بصيغة مدعومة");
     const {
       data: { user },
     } = await client.auth.getUser();
@@ -66,9 +67,11 @@
       "image/png": "png",
       "image/webp": "webp",
       "image/gif": "gif",
+      "video/mp4": "mp4",
+      "video/webm": "webm",
     }[file.type];
     const path =
-      (bucket === "f90-images" ? folder || "catalog" : user.id) +
+      (bucket === "f90-images" || bucket === "f90-videos" ? folder || "catalog" : user.id) +
       "/" +
       crypto.randomUUID() +
       "." +
@@ -77,7 +80,7 @@
       .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
     if (error)
-      throw new Error("تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
+      throw new Error(video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
     return {
       path,
       url: client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
