@@ -2,20 +2,20 @@
 -- Historical basis: pre-change Yassen margin 10%, ILS retailer conversion 3.365 per USD, site USD.
 -- Do not edit previous orders, deposits, ledger entries, payment-method fees, images, categories or user preferences.
 DO $$
-DECLARE provider_id uuid; n int; touched int;
+DECLARE v_provider_id uuid; n int; touched int;
 BEGIN
- SELECT id INTO provider_id FROM public.f90_providers
+ SELECT id INTO v_provider_id FROM public.f90_providers
   WHERE adapter='yassen' AND config->>'archived_at' IS NULL
   AND config->>'pricing_revision'='f90_20261016' FOR UPDATE;
- IF provider_id IS NULL THEN RAISE EXCEPTION 'F90_PRICE_RESTORE_PROVIDER_CHANGED'; END IF;
+ IF v_provider_id IS NULL THEN RAISE EXCEPTION 'F90_PRICE_RESTORE_PROVIDER_CHANGED'; END IF;
  SELECT count(*) INTO n
  FROM public.f90_product_internal i JOIN public.products p ON p.id=i.product_id
- WHERE i.provider_id=provider_id AND i.auto_margin
+ WHERE i.provider_id=v_provider_id AND i.auto_margin
    AND p.commerce->>'supplier_fx_migrated'='20261016';
  IF n<>574 THEN RAISE EXCEPTION 'F90_PRICE_RESTORE_COUNT_MISMATCH %',n; END IF;
  IF EXISTS(
    SELECT 1 FROM public.f90_product_internal i JOIN public.products p ON p.id=i.product_id
-   WHERE i.provider_id=provider_id AND i.auto_margin
+   WHERE i.provider_id=v_provider_id AND i.auto_margin
      AND p.commerce->>'supplier_fx_migrated'='20261016'
      AND (p.updated_at > '2026-10-15 22:31:00+00'::timestamptz OR
        p.price<>round(i.cost_usd*1.13,2))
@@ -24,7 +24,7 @@ BEGIN
  UPDATE public.f90_product_internal i
  SET cost_usd=round(i.cost_usd*3.20/3.365,6)
  FROM public.products p
- WHERE p.id=i.product_id AND i.provider_id=provider_id AND i.auto_margin
+ WHERE p.id=i.product_id AND i.provider_id=v_provider_id AND i.auto_margin
  AND p.commerce->>'supplier_fx_migrated'='20261016' AND i.cost_usd>0;
  GET DIAGNOSTICS touched=ROW_COUNT;
  IF touched<>n THEN RAISE EXCEPTION 'F90_PRICE_RESTORE_MISSING_COST'; END IF;
@@ -34,13 +34,13 @@ BEGIN
  commerce=jsonb_set(coalesce(p.commerce,'{}'::jsonb),'{prices,USD}',
      to_jsonb(round(i.cost_usd*1.10,6)),true)-'supplier_fx_migrated'
  FROM public.f90_product_internal i
- WHERE i.product_id=p.id AND i.provider_id=provider_id AND i.auto_margin
+ WHERE i.product_id=p.id AND i.provider_id=v_provider_id AND i.auto_margin
    AND p.commerce->>'supplier_fx_migrated'='20261016';
 
  UPDATE public.f90_providers SET margin_percent=10,
   config=config-'supplier_ils_per_usd'-'supplier_commission_percent'
        -'previous_supplier_ils_per_usd'-'pricing_revision'
- WHERE id=provider_id;
+ WHERE id=v_provider_id;
 
  UPDATE public.f90_rates SET per_usd=3.365, is_enabled=true WHERE currency='ILS';
  UPDATE public.site_settings SET currency='USD',
