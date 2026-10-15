@@ -510,6 +510,19 @@
     main.innerHTML = window.F90WelcomeScene.scene(S.settings.config,S.me,S.settings.logo_url);
     syncWelcomePhoneVideo();
   }
+  function musicPage(){
+    const music=S.settings.config?.music||{},status=window.F90MediaPlayer?.status();
+    if(!music.enabled){
+      main.innerHTML=pageHead("ميوزك أف تسعين كارد","المشغل متوقف حاليًا من إدارة المتجر.");
+      return;
+    }
+    main.innerHTML=pageHead("ميوزك أف تسعين كارد","تشغيل الوسائط داخل موقع F90 CARD دون مغادرة صفحة المتجر.")+
+      '<section class="panel f90-media-info"><h2>مشغّل الوسائط</h2>'+
+      (music.mode==="youtube"
+        ? '<p>يظهر فيديو يوتيوب في المشغل المثبّت. اضغط تشغيل داخل الفيديو. المصدر الرسمي يبقى ظاهرًا ويلتزم بقيود المنصة.</p>'
+        : '<p>اضغط زر تشغيل الموسيقى داخل المشغل المثبّت. يمكنه متابعة التشغيل أثناء التنقل بين أقسام المتجر إذا سمح متصفحك.</p>')+
+      '<p>الحالة: '+e(status?.playing?"قيد التشغيل":"بانتظار التشغيل")+'</p><p class="muted small">يستطيع مدير المتجر تغيير المصدر أو إيقافه من مركز الموسيقى والوسائط في لوحة الإدارة.</p></section>';
+  }
   function home() {
     const c = S.settings.config,
       slides = S.banners.filter((b) => C.visibleSchedule(b.presentation || {})),
@@ -1258,6 +1271,7 @@
         }
       }
       else if (page === "quran") window.F90Quran?.render(main);
+      else if (page === "music") musicPage();
       else if (page === "category") category(id);
       else if (page === "product") product(id);
       else if (page === "auth") auth();
