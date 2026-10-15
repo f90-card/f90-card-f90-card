@@ -484,12 +484,29 @@
     });
   });
   f90CardObserver.observe(main, { childList: true, subtree: true });
+  // Cache the original availability result only during a page render.
+  const f90CategoryAvailability = new Map();
+  const f90CategoryById = new Map();
+  function categoryIsUnavailable(cat) {
+    if (!cat?.id) return false;
+    if (f90CategoryAvailability.has(cat.id)) return f90CategoryAvailability.get(cat.id);
+    const disabled=C.categoryUnavailable(cat,S.categories,S.products);
+    f90CategoryAvailability.set(cat.id,disabled);
+    return disabled;
+  }
+  function findCategory(id){
+    if(!f90CategoryById.has(id)){
+      const cat=S.categories.find(c=>c.id===id);
+      if(cat)f90CategoryById.set(id,cat);
+    }
+    return f90CategoryById.get(id);
+  }
   function categoryTile(c) {
-    const disabled = C.categoryUnavailable(c, S.categories, S.products);
+    const disabled = categoryIsUnavailable(c);
     return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("category", c.slug || c.id)}"`} aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
   function productTile(p, pack = false, inline = false) {
-    const disabled = C.unavailable(p) || C.categoryUnavailable(S.categories.find((c) => c.id === p.category_id) || {}, S.categories, S.products);
+    const disabled = C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id));
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
       return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(C.previewPrice(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
@@ -622,7 +639,7 @@
       main.innerHTML = empty("القسم غير موجود");
       return;
     }
-    if (C.categoryUnavailable(c, S.categories, S.products)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
+    if (categoryIsUnavailable(c)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     if (
       c.presentation?.routing === "direct" &&
       c.presentation.direct_product_id
@@ -723,7 +740,7 @@
     const c = p.commerce || {},
       cat = S.categories.find((x) => x.id === p.category_id),
       quantity = c.type === "quantity",
-      disabled = C.unavailable(p) || (cat && C.categoryUnavailable(cat, S.categories, S.products));
+      disabled = C.unavailable(p) || (cat && categoryIsUnavailable(cat));
     if (disabled) { if (!inline) main.innerHTML = pageHead(p.name) + `<div class="f90-closed-service">${f90RefillArt(p.image_url,p.name)}<h2>قيد التعبئة</h2><p>الخدمة غير متاحة مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     S.quote = null;
     S.quoteSeq = 0;
@@ -1234,6 +1251,9 @@
     clearInterval(maintenanceTimer);
     document.body.classList.remove("f90-in-maintenance");
     clearTimeout(quoteTimer);
+    f90CategoryAvailability.clear();
+    f90CategoryById.clear();
+    closeQuickProduct();
     closeModal();
     toggleDrawer(false);
     const raw = (location.hash || "#/welcome").replace(/^#\/?/, "");
