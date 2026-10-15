@@ -138,7 +138,7 @@
     if (officialLogo && logoSky.dataset.logo !== officialLogo) {
       logoSky.dataset.logo = officialLogo;
       logoSky.replaceChildren();
-      for (let n = 0; n < 24; n++) {
+      for (let n = 0; n < 6; n++) {
         const ghost = document.createElement("img");
         ghost.src = officialLogo;
         ghost.alt = "";
@@ -241,6 +241,8 @@
       ? e(displayMoney(me.wallet?.balance_usd,true))
       : me ? "الرصيد يحتاج تحديث" : "سجّل الدخول لعرض الرصيد";
     $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-card-top"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="F90 CARD"><span>F90 DIGITAL WALLET</span></div><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><small class="f90-drawer-wallet-copy">© F90 CARD · محفظة رقمية داخل المتجر</small><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
+    const drawerPreferences=document.querySelector("#drawer .drawer-preferences");
+    if(drawerPreferences)document.querySelector("#drawerProfile .f90-drawer-wallet-card")?.insertAdjacentElement("afterend",drawerPreferences);
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
@@ -412,7 +414,7 @@
   function promotions() {
     promoTimers.forEach(clearTimeout);
     promoTimers = [];
-    const rows=(S.settings.config.promotions||[]).filter(x=>x.enabled&&C.visibleSchedule(x));
+    const rows=(S.settings.config.show_ticker===false?[]:(S.settings.config.promotions||[]).filter(x=>x.enabled&&C.visibleSchedule(x)));
     const el=$("promotionBar");
     el.hidden=!rows.length;
     if(!rows.length){el.replaceChildren();return;}
@@ -502,8 +504,8 @@
           : null;
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
-    main.innerHTML = `${c.show_intro === false && !hero ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
- <section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>
+    main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
+ ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled && C.safeUrl(c.promo_video?.url) ? `<section class="f90-iphone-ad" aria-label="إعلان فيديو F90 CARD"><div class="f90-iphone-ad-copy"><span class="eyebrow">F90 CARD · إعلان المتجر</span><h2>${e(c.promo_video.title_ar || "عالم شحن الألعاب والتطبيقات")}</h2><p>شاهد إعلان متجر أف تسعين كارد بدون صوت داخل هاتف ثلاثي الأبعاد.</p></div><div class="f90-iphone-scene"><div class="f90-iphone-shell"><div class="f90-iphone-screen"><div class="f90-iphone-island" aria-hidden="true"></div><video class="f90-iphone-video" muted playsinline loop preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate" ${C.safeUrl(c.promo_video.poster_url)?`poster="${e(C.safeUrl(c.promo_video.poster_url))}"`:""}><source src="${e(C.safeUrl(c.promo_video.url))}" type="${/\\.webm(?:[?#]|$)/i.test(c.promo_video.url)?"video/webm":"video/mp4"}"></video></div><span class="f90-iphone-side" aria-hidden="true"></span></div></div></section>` : ""}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -543,7 +545,7 @@
     const heroElForTicker=main.querySelector(".f90-swipe-hero");
     if(promoEl&&heroElForTicker)heroElForTicker.insertAdjacentElement("afterend",promoEl);
     clearInterval(bannerTimer);
-    if (slides.length > 1) {
+    if (slides.length > 1 && c.show_banners!==false) {
       const advance=(direction=1)=>{
         const section=main.querySelector(".f90-swipe-hero");
         if(!section)return;
