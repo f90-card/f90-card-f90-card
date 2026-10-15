@@ -749,27 +749,27 @@
         <div class="product-art">${image(p.image_url,p.name)}</div>
         <div class="product-info">
           <h1>${e(p.name)}</h1>
-          <p class="f90-visa-subtitle">${e(cat?.name || "خدمات أف تسعين كارد")}</p>
-          <span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "تنفيذ مباشر" : "تنفيذ حسب الخدمة"}</span>
+          <p class="f90-visa-subtitle">شحن آمن وفوري</p>
+          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "تنفيذ مباشر" : "حسب معالجة الطلب"}</span><span class="f90-visa-available"><span aria-hidden="true">●</span> متاح الآن</span></div>
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
       <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(C.previewPrice(p,c.quantity_min||1))}</div>
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         <div class="f90-checkout-summary">
-          <div class="f90-visa-price"><span>التكلفة</span><strong id="f90CheckoutTopTotal">جارٍ حساب السعر…</strong></div>
+          <div class="f90-visa-price"><span class="f90-visa-coins" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span><span class="f90-visa-price-copy"><span>سعر التكلفة</span><strong id="f90CheckoutTopTotal" aria-live="polite">جارٍ حساب السعر…</strong></span></div>
           <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(displayMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
         </div>
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
-        ${fields.map((f)=>field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')).join("")}
-        ${quantity ? field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required') : '<input type="hidden" name="quantity" value="1">'}
+        ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
+        ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         <p id="discountHint" class="f90-visa-discount"></p>
-        <p class="f90-visa-note">تأكد من صحة بيانات الحساب قبل إتمام الطلب.</p>
+        <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
         <p id="quoteError" class="inline-error" role="status"></p>
         <strong id="checkoutTotal" hidden>—</strong>
         <div class="f90-visa-footer">
           <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
-          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled>${I("wallet")}<span>${S.me ? "تأكيد الشراء" : "سجّل الدخول للشراء"}</span></button>
+          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "تأكيد الشراء" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
         </div>
       </form>
     </div>`;
