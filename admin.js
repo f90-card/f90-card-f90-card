@@ -61,7 +61,7 @@
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
     ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
-    ["media-center", "مركز الموسيقى واليوتيوب", "music", ["manager"]],
+    ["media-center", "راديو المتجر", "music", ["manager"]],
     ["telegram-alerts", "تنبيهات تلجرام", "send", ["manager"]],
     ["policies", "المعلومات والسياسات", "doc", ["manager"]],
     ["settings", "الهوية والإعدادات", "edit", ["manager"]],
@@ -1703,43 +1703,66 @@
       return /^[a-zA-Z0-9_-]{11}$/.test(id||"")?id:"";
     }catch{return "";}
   }
-  function mediaCenter(){
-    const music=S.settings?.config?.music||{};
-    const privateTrack=typeof music.path==="string" && music.path.startsWith("tracks/");
-    const legacyTrack=!privateTrack && !!music.audio_url;
-    main.innerHTML=head("راديو أف تسعين","رفع الصوت أو الفيديو للإدارة فقط، وتشغيلهما كصوت متواصل في المتجر دون عرض الفيديو.")+
-      '<section class="panel"><h2>إدارة البث الصوتي</h2><form id="mediaCenterForm">'+
-      check("music_enabled","تفعيل الراديو الثابت للزوار",music.enabled===true)+
-      '<p class="muted small">ارفع MP3 أو OGG أو WAV أو M4A، ويمكنك رفع MP4 أو WebM ليتحول إلى صوت فقط عند التشغيل. الحد الأقصى 40 ميجابايت. ملفات الرفع الجديدة خاصة ولا تظهر ضمن ملفات المتجر العامة.</p>'+
-      field("music_audio_file","رفع مقطع صوتي أو فيديو للراديو","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,video/mp4,video/webm"')+
-      '<p class="notice">'+(privateTrack?"ملف خاص محفوظ وجاهز للتشغيل.":
-        legacyTrack?"المصدر القديم ملف عام. ارفع الملف مرة أخرى هنا لحفظه في المساحة الخاصة.":
-        "لم يُرفع أي مقطع خاص بعد. اختر ملفًا ثم احفظ لتشغيل الراديو.")+'</p>'+
-      '<label class="field"><span>مستوى الصوت الافتراضي</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(music.volume??0.35)+'" aria-label="مستوى صوت الراديو الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(music.volume??0.35)*100)+'%</output></label>'+
-      '<p class="muted small">يستمر الراديو أثناء التنقل بين الصفحات ويكرر المقطع حتى يضغط الزائر إيقاف. يحتفظ المتصفح بمستوى الصوت والإيقاف. بعض المتصفحات تتطلب أول ضغطة لتشغيل الصوت؛ لا يمكن تجاوز هذا القيد. مصدر YouTube لا يعمل بصوت مخفي حفاظًا على ضوابط المنصة.</p>'+
-      '<button class="button" type="submit">حفظ وتشغيل الراديو</button></form></section>';
+  async function mediaCenter(){
+    const settings=S.settings?.config?.music||{};
+    const radio=await A.call("staff.radio.status");
+    const youtube=f90YouTubeId(radio.youtube_url||"");
+    main.innerHTML=head("الراديو الخاص بالمتجر","أنت وحدك تتحكم بتشغيل البث ومصدره. الزوار يرون فقاعة شفافة للتحكم بالصوت فقط.")+
+      '<section class="panel"><h2>البث العام</h2><form id="mediaCenterForm">'+
+      check("music_enabled","تشغيل الراديو لكل زوار الموقع",radio.enabled===true)+
+      '<p class="muted small">إيقاف هذا الخيار يوقف الصوت عند الزوار عند تحديث حالة البث. الضغط على الفقاعة أول مرة قد يكون ضروريًا للسماح بالصوت بسبب قيود المتصفح.</p>'+
+      select("music_source_mode","مصدر صوت الراديو",[
+        ["file","ملف صوت أو فيديو أرفعه من هاتفي"],
+        ["link","رابط مباشر لبث صوتي HTTPS"]
+      ],radio.has_direct?"link":"file")+
+      field("music_audio_file","رفع ملف صوت أو فيديو MP3 / M4A / MP4 / WebM","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,video/mp4,video/webm"')+
+      '<p class="muted small">'+(radio.has_media?"هناك ملف خاص محفوظ حاليًا. يمكنك رفع ملف بديل.":"لم يتم اختيار ملف خاص حاليًا.")+' الحد الأقصى للملف: 40 ميجابايت.</p>'+
+      field("music_direct_url","رابط بث صوت مباشر (وليس صفحة يوتيوب)","url",radio.direct_audio_url||"",'placeholder="https://example.com/radio.mp3"')+
+      '<label class="field"><span>مستوى الصوت الافتراضي</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(radio.volume??settings.volume??0.35)+'" aria-label="مستوى الصوت الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(radio.volume??settings.volume??0.35)*100)+'%</output></label>'+
+      '<button class="button" type="submit">حفظ إعدادات الراديو وتطبيقها</button></form></section>'+
+      '<section class="panel"><h2>رابط YouTube للإدارة فقط</h2>'+
+      '<p class="muted small">يمكنك إضافة رابط YouTube ومعاينته هنا فقط. لا نستخدم YouTube لبث الصوت في خلفية مخفية، لأن هذا غير مسموح به في سياسات المشغّل. للبث المخفي ارفع الفيديو من هاتفك أو استخدم رابط بث صوت مباشر مرخّص.</p>'+
+      '<form id="radioYoutubeForm">'+
+      field("music_youtube_url","رابط فيديو YouTube للمعاينة في لوحة الإدارة","url",radio.youtube_url||"",'placeholder="https://www.youtube.com/watch?v=..."')+
+      '<button class="button secondary" type="submit">حفظ رابط يوتيوب للإدارة</button></form>'+
+      (youtube?'<iframe title="معاينة فيديو YouTube للإدارة فقط" loading="lazy" style="display:block;width:min(100%,560px);aspect-ratio:16/9;border:0;margin-top:12px" allow="encrypted-media;picture-in-picture" src="https://www.youtube-nocookie.com/embed/'+e(youtube)+'"></iframe>':"")+'</section>';
     const ctl=$("musicVolumeControl");
     if(ctl)ctl.addEventListener("input",()=>{$("musicVolumeValue").textContent=Math.round(Number(ctl.value)*100)+"%";});
   }
   async function saveMediaCenter(form,d){
-    const c=S.settings.config||{},music=c.music||{},file=form.elements.music_audio_file.files?.[0];
-    let path=typeof music.path==="string"&&music.path.startsWith("tracks/")?music.path:"";
-    let mode=music.mode==="video"?"video":"audio";
-    let legacyUrl=String(music.audio_url||"");
-    if(file?.size){
-      const uploaded=await A.upload(file,"f90-radio","tracks");
-      path=uploaded.path;
-      legacyUrl="";
-      mode=file.type.startsWith("video/")?"video":"audio";
+    const mode=d.music_source_mode==="link"?"link":"file";
+    const file=form.elements.music_audio_file.files?.[0];
+    const changes={enabled:form.elements.music_enabled.checked,
+      volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35)))};
+    if(mode==="file"){
+      if(file?.size){
+        const upload=await A.upload(file,"f90-radio","tracks");
+        changes.media_path=upload.path;
+        changes.direct_audio_url="";
+      }else{
+        // A previously uploaded file stays selected unless the manager switches source.
+        const prior=await A.call("staff.radio.status");
+        if(!prior.has_media)throw new Error("ارفع ملف صوت أو فيديو من الهاتف أولًا");
+        changes.direct_audio_url="";
+      }
+    }else{
+      const url=String(d.music_direct_url||"").trim();
+      if(!/^https:\/\//i.test(url) || /(?:youtube\.com|youtu\.be)/i.test(url))
+        throw new Error("أدخل رابطًا مباشرًا لبث صوت مرخّص HTTPS، وليس رابط صفحة YouTube");
+      changes.media_path="";
+      changes.direct_audio_url=url;
     }
-    if(form.elements.music_enabled.checked && !path && !legacyUrl)
-      throw new Error("ارفع ملف الصوت أو الفيديو قبل تفعيل البث");
-    const next={...S.settings,config:{...c,music:{...music,
-      enabled:form.elements.music_enabled.checked,mode,path,audio_url:legacyUrl,
-      youtube_url:"",volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),loop:true}}};
-    await A.call("settings.save",{data:next});
-    await refreshSettings();mediaCenter();
-    toast("تم حفظ الراديو ومصدر التشغيل الخاص بنجاح");
+    await A.call("staff.radio.save",changes);
+    await refreshSettings();await mediaCenter();
+    toast(changes.enabled?"الراديو مفعّل وسيُطبّق على الزوار":"تم إيقاف الراديو للزوار");
+  }
+  async function saveRadioYoutube(form,d){
+    const url=String(d.music_youtube_url||"").trim();
+    if(url && !f90YouTubeId(url))throw new Error("رابط YouTube غير صالح");
+    await A.call("staff.radio.save",{youtube_url:url,
+      enabled:S.settings?.config?.music?.enabled===true,
+      volume:Number(S.settings?.config?.music?.volume??0.35)});
+    await mediaCenter();toast("تم حفظ رابط YouTube للمعاينة داخل الإدارة فقط");
   }
   async function telegramAlerts(){
     const prefs=S.settings.config?.telegram_alerts||{};
@@ -1857,7 +1880,7 @@
       else if (page === "infrastructure") await infrastructurePage();
       else if (page === "integration") integrationCenter();
       else if (page === "design-center") designCenter();
-      else if (page === "media-center") mediaCenter();
+      else if (page === "media-center") await mediaCenter();
       else if (page === "telegram-alerts") await telegramAlerts();
       else if (page === "traders") await traders();
     } catch (err) {
@@ -1886,6 +1909,7 @@
     if (form.id === "settingsForm") return saveSettings(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);
+    if (form.id === "radioYoutubeForm") return saveRadioYoutube(form,d);
     if (form.id === "telegramAlertsForm") return saveTelegramAlerts(form);
     if (form.id === "telegramConnectForm") return saveTelegramConnection(form);
     if (form.id === "searchUsers") {
