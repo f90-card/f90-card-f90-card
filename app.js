@@ -1494,7 +1494,7 @@
     try {
       if (
         S.settings.config.maintenance?.enabled &&
-        !["manager", "designer", "admin"].includes(S.me?.role) &&
+        !["manager", "admin"].includes(S.me?.role) &&
         !["auth", "security", "support"].includes(page)
       ) {
         const maintenance = S.settings.config.maintenance;
