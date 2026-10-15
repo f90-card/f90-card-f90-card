@@ -53,6 +53,7 @@ const errors: Record<string, [number, string]> = {
   F90_PRICE_MISSING: [409, "سعر الخدمة لم يجهّز بعد"],
   F90_INSUFFICIENT_BALANCE: [402, "رصيد محفظتك غير كافٍ. أضف رصيدًا أولًا"],
   F90_PRICE_CHANGED: [409, "تغيّر السعر. راجع الإجمالي وأكد الشراء مجددًا"],
+  F90_BALANCE_CHANGED: [409, "تغيّر رصيد العميل أثناء مراجعة العملية. افتح الحساب مجددًا قبل إضافة أو خصم رصيد."],
   F90_ACCOUNT_ID: [400, "أدخل معرّف حسابك"],
   F90_FIELDS: [400, "أكمل بيانات الطلب المطلوبة"],
   F90_IDEMPOTENCY_CONFLICT: [409, "مرجع العملية مستخدم ببيانات مختلفة"],
@@ -191,6 +192,14 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
       }))
     )
       throw new AppError("F90_LIMIT");
+    if (api.allow_all_ips === false) {
+      // IP restrictions are supplementary to a secret API token and require
+      // a trusted IP header from the platform gateway. If absent, fail closed.
+      const clientIP = req.headers.get("cf-connecting-ip")?.trim() || "";
+      // Fail closed without a gateway-supplied client IP; reject spoofable x-real-ip fallback.
+      if (!clientIP || !Array.isArray(api.allowed_ips) || !api.allowed_ips.includes(clientIP))
+        throw new AppError("F90_FORBIDDEN",403,"Request IP is not on this token's allowlist");
+    }
     userId = api.user_id;
   } else {
     token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -228,7 +237,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
   ]);
   const profile = check(p),
     role = check(r).role;
-  if (profile.account_status !== "active" || (api && role !== "trader"))
+  if (profile.account_status !== "active" || (api && (role !== "trader" || !profile.is_verified)))
     throw new AppError("F90_FORBIDDEN");
   if (
     !api &&
@@ -273,8 +282,16 @@ function keySettings(b: any, current: any = {}) {
   const requests_per_minute = integer(
     b.requests_per_minute ?? current.requests_per_minute ?? 60, 10, 120);
   const inputExpiry = b.expires_at;
+  const allow_all_ips = b.allow_all_ips === undefined ? (current.allow_all_ips !== false) : !!b.allow_all_ips;
+  const rawIps = b.allowed_ips === undefined ? (current.allowed_ips || []) : b.allowed_ips;
+  if (!Array.isArray(rawIps) || rawIps.length>20 || rawIps.some((ip: any) =>
+      typeof ip!=="string" || ip.length>55 ||
+      !(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ip) && ip.split(".").every((n: string) => +n<=255) || /^[a-fA-F0-9:]+$/.test(ip) && ip.includes(":"))))
+    throw new AppError("F90_FIELDS",400,"Use up to 20 valid IPv4 or IPv6 addresses");
+  const allowed_ips=[...new Set(rawIps.map((ip: string)=>ip.trim()))];
+  if (!allow_all_ips && !allowed_ips.length) throw new AppError("F90_FIELDS",400,"At least one allowed IP is required");
   if (inputExpiry === undefined)
-    return { name, scopes, requests_per_minute, expires_at: current.expires_at || null };
+    return { name, scopes, requests_per_minute, allow_all_ips,allowed_ips,expires_at: current.expires_at || null };
   let expires_at: string | null = null;
   if (inputExpiry) {
     const raw = String(inputExpiry);
@@ -287,7 +304,7 @@ function keySettings(b: any, current: any = {}) {
       throw new AppError("F90_FIELDS", 400, "حدّد تاريخ انتهاء مستقبليًا ضمن سنة");
     expires_at = date.toISOString();
   }
-  return { name, scopes, requests_per_minute, expires_at };
+  return { name, scopes, requests_per_minute, expires_at,allow_all_ips,allowed_ips };
 }
 async function assertProviderAvailable(productId: string) {
   const link = check(await db.from("f90_product_internal")
@@ -376,7 +393,20 @@ async function publicCatalog() {
     return !!c && (!c.parent_id || visible(c.parent_id, seen));
   };
   return {
-    settings: check(rows[0]),
+    settings: {
+      ...check(rows[0]),
+      config: {
+        ...check(rows[0]).config,
+        music: (() => {
+          const m = check(rows[0]).config?.music || {};
+          // Never publish the path of an administrator's private upload.
+          return { enabled: m.enabled === true, mode: m.mode === "video" ? "video" : "audio",
+            private_track: typeof m.path === "string" && m.path.startsWith("tracks/"),
+            audio_url: m.path ? "" : (m.audio_url || ""),
+            volume: Number(m.volume ?? 0.35), loop: true };
+        })(),
+      },
+    },
     categories: categories
       .filter((c: any) => allowedCategoryIds.has(c.id) && visible(c.id))
       .map((c: any) =>
@@ -422,7 +452,7 @@ async function summary(a: Actor) {
       ? db
           .from("f90_api_keys")
           .select(
-            "id,name,token_prefix,scopes,is_active,created_at,expires_at,last_used_at,requests_per_minute",
+            "id,name,token_prefix,scopes,is_active,created_at,expires_at,last_used_at,requests_per_minute,allow_all_ips,allowed_ips",
           )
           .eq("user_id", a.id)
           .order("created_at", { ascending: false })
@@ -1082,7 +1112,7 @@ async function staff(a: Actor, b: any) {
         count: result.count,
       };
     }
-    const ids = [...new Set(items.map((p: any) => p.user_id).filter(Boolean))];
+    const ids = [...new Set(items.flatMap((p: any) => [p.user_id,p.actor_id,p.reviewed_by]).filter(Boolean))];
     const profiles = ids.length
       ? check(
           await db
@@ -1095,6 +1125,8 @@ async function staff(a: Actor, b: any) {
       items: items.map((p: any) => ({
         ...p,
         customer: profiles.find((u: any) => u.id === p.user_id),
+        actor: profiles.find((u: any) => u.id === p.actor_id),
+        reviewer: profiles.find((u: any) => u.id === p.reviewed_by),
       })),
       count: result.count,
     };
@@ -1104,7 +1136,7 @@ async function staff(a: Actor, b: any) {
     return check(
       await db
         .from("f90_api_keys")
-        .select("id,name,token_prefix,scopes,requests_per_minute,is_active,created_at,expires_at,last_used_at")
+        .select("id,name,token_prefix,scopes,requests_per_minute,is_active,created_at,expires_at,last_used_at,allow_all_ips,allowed_ips")
         .eq("user_id", uuid(b.user_id))
         .order("created_at", { ascending: false }),
     );
@@ -1199,6 +1231,147 @@ async function staff(a: Actor, b: any) {
       p_refund: b.refund == null ? null : num(b.refund),
     });
   }
+  if (action === "staff.telegram.discover") {
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    requireRole(a,"manager");
+    const bot=text(b.bot_token,180);
+    if(!/^[0-9]{6,}:[A-Za-z0-9_-]{20,}$/.test(bot))
+      throw new AppError("F90_FIELDS",400,"أدخل رمز بوت تلجرام الصحيح أولًا");
+    let response:Response;
+    try {
+      response=await fetch("https://api.telegram.org/bot"+bot+"/getUpdates?limit=30&timeout=0",{
+        signal:AbortSignal.timeout(10000)
+      });
+    } catch {throw new AppError("F90_FIELDS",503,"تعذر الاتصال بتلجرام لاكتشاف المحادثات");}
+    const data=await response.json().catch(()=>null);
+    if(!response.ok||data?.ok!==true)
+      throw new AppError("F90_FIELDS",400,"لم يستجب بوت تلجرام؛ تأكد من التوكن ووقف أي Webhook قديم");
+    const chats=new Map<string,any>();
+    for(const update of data.result||[]){
+      const c=update?.message?.chat || update?.my_chat_member?.chat || update?.channel_post?.chat ||
+        update?.callback_query?.message?.chat;
+      if(c?.id!=null){
+        const id=String(c.id);
+        if(/^-?[0-9]{4,}$/.test(id))
+          chats.set(id,{id,type:String(c.type||"private").slice(0,35),
+            name:String(c.title||c.first_name||c.username||"محادثة تلجرام").slice(0,90)});
+      }
+    }
+    return {chats:Array.from(chats.values()).slice(0,12)};
+  }
+  if (action === "staff.telegram.connect") {
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    requireRole(a,"manager");
+    const bot=text(b.bot_token,180),chat=text(b.chat_id,40);
+    if(!/^[0-9]{6,}:[A-Za-z0-9_-]{20,}$/.test(bot)||! /^-?[0-9]{4,}$/.test(chat))
+      throw new AppError("F90_FIELDS",400,"أدخل توكن بوت تلجرام ومعرّف المحادثة بصيغة صحيحة");
+    let response:Response;
+    try{
+      response=await fetch("https://api.telegram.org/bot"+bot+"/getChat",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({chat_id:chat}),signal:AbortSignal.timeout(10000)
+      });
+    }catch{
+      throw new AppError("F90_FIELDS",503,"تعذّر الاتصال بتلجرام للتحقق من البوت، حاول لاحقًا");
+    }
+    const verification=await response.json().catch(()=>null);
+    if(!response.ok||verification?.ok!==true)
+      throw new AppError("F90_FIELDS",400,"تعذّر التحقق من المحادثة. افتح بوت تلجرام وأرسل /start ثم تأكد من Chat ID");
+    return rpc("f90_telegram_configure",{p_actor:a.id,p_bot_token:bot,p_chat_id:chat});
+  }
+  if (action === "staff.telegram.test") {
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    requireRole(a,"manager");
+    const configured=check(await db.rpc("f90_telegram_credentials"));
+    if(!configured?.token || !configured?.chat || !configured?.dispatch)
+      throw new AppError("F90_FIELDS",409,"اربط بوت تلجرام أولًا قبل إرسال تجربة");
+    const result=check(await db.from("f90_telegram_alerts").insert({
+      event_key:"test:"+crypto.randomUUID(),event_type:"test",
+      payload:{created_at:new Date().toISOString()}
+    }).select("id").single());
+    await auditSafe(a.id,"telegram.test",String(result.id),{kind:"delivery_check"});
+    return {queued:true,id:result.id};
+  }
+  if (action === "staff.telegram") {
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    requireRole(a,"manager");
+    const q=await db.from("f90_telegram_alerts")
+      .select("id,event_type,status,created_at,last_error,attempt_count")
+      .order("created_at",{ascending:false}).limit(25);
+    if(q.error)throw q.error;
+    const pending=(q.data||[]).filter((x:any)=>["pending","failed","sending"].includes(x.status)).length;
+    const credentials=check(await db.rpc("f90_telegram_credentials"));
+    const configured=!!(credentials?.token && credentials?.chat && credentials?.dispatch);
+    return {status:configured?"configured":"configuration_required",configured,
+      recent:q.data||[],pending_recent:pending,
+      info:"Bot credentials are encrypted in Supabase Vault and are never returned to browsers."};
+  }
+  if (action === "staff.runtime") {
+    requireRole(a, "manager");
+    const started = performance.now();
+    const checks = await Promise.allSettled([
+      db.from("f90_orders").select("id",{count:"exact",head:true}).in("status",["queued","submitting","processing","review"]),
+      db.from("f90_deposits").select("id",{count:"exact",head:true}).eq("status","pending"),
+      db.from("f90_notification_outbox").select("id",{count:"exact",head:true}).eq("status","pending")
+    ]);
+    const countAt = (i: number) => checks[i].status==="fulfilled" && !(checks[i].value as any).error
+      ? (checks[i].value as any).count : null;
+    return {
+      collected_at:new Date().toISOString(),
+      database:checks.every(x=>x.status==="fulfilled" && !(x.value as any).error)?"connected":"partial",
+      sample_latency_ms:Math.round(performance.now()-started),
+      active_orders:countAt(0),
+      pending_deposits:countAt(1),
+      pending_outbox:countAt(2),
+      runtime:{
+        platform:"Supabase Edge Functions",
+        api_version:3,
+        financial_base_currency:"USD",
+        endpoint_configured:!!Deno.env.get("SUPABASE_URL"),
+        server_credentials_configured:!!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+      },
+      note:"يتم عرض حالة إعداد المتغيرات فقط، ولا يتم كشف قيم مفاتيح التشغيل."
+    };
+  }
+  if (action === "staff.finance") {
+    requireRole(a, "manager");
+    const userId = uuid(b.id);
+    const [wallet, discount, rows, profile] = await Promise.all([
+      db.from("f90_wallets").select("balance_usd").eq("user_id", userId).single(),
+      db.from("f90_user_discounts").select("extra_discount_percent").eq("user_id", userId).maybeSingle(),
+      db.from("f90_wallet_ledger").select("id,amount_usd,balance_after,kind,description,created_at,actor_id,reference_id")
+        .eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
+      db.from("profiles").select("id,display_name,customer_id,email").eq("id",userId).single(),
+    ]);
+    return {
+      profile: check(profile),
+      balance_usd: check(wallet).balance_usd,
+      extra_discount_percent: check(discount)?.extra_discount_percent ?? 0,
+      ledger: check(rows),
+    };
+  }
+  if (action === "staff.discount") {
+    requireRole(a, "manager");
+    return rpc("f90_set_user_discount", {
+      p_actor: a.id,
+      p_user: uuid(b.id),
+      p_percent: num(b.percent, 0, 50),
+    });
+  }
+  if (action === "staff.adjust") {
+    requireRole(a, "manager");
+    const amount = Number(b.amount_usd);
+    if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100000)
+      throw new AppError("F90_AMOUNT");
+    return rpc("f90_finance_adjust", {
+      p_actor: a.id,
+      p_user: uuid(b.id),
+      p_amount: amount,
+      p_note: text(b.note, 500),
+      p_request: uuid(b.request_id),
+      p_expected: num(b.expected_balance,0,1e12),
+    });
+  }
   if (action === "staff.user") {
     requireRole(a, "manager");
     if (b.role && !roleNames.includes(b.role)) throw new AppError("F90_FIELDS");
@@ -1207,7 +1380,7 @@ async function staff(a: Actor, b: any) {
       p_user: uuid(b.id),
       p_role: b.role || null,
       p_status: b.status || null,
-      p_vip: b.vip ? integer(b.vip, 1, 7) : null,
+      p_vip: b.vip ? integer(b.vip, 1, 15) : null,
       p_clear_vip: !!b.clear_vip,
     });
   }
@@ -1298,6 +1471,7 @@ async function staff(a: Actor, b: any) {
         id: text(m.id, 100) || crypto.randomUUID(),
         name_ar: text(m.name_ar, 150),
         image_url: text(m.image_url, 2000),
+        barcode_url: text(m.barcode_url, 2000),
         details_ar: text(m.details_ar, 8000),
         enabled: !!m.enabled,
       }));
@@ -1313,7 +1487,7 @@ async function staff(a: Actor, b: any) {
         : current.primary_color,
       announcement: text(d.announcement, 1000),
       contact_email: text(d.contact_email, 200),
-      currency: text(d.currency || "USD", 8),
+      currency: (await (async () => { const c = text(d.currency || current.currency || "USD", 8).toUpperCase(); const r = check(await db.from("f90_rates").select("currency,is_enabled,per_usd").eq("currency",c).maybeSingle()); if(!r || !r.is_enabled || Number(r.per_usd)<=0) throw new AppError("F90_RATE_MISSING"); return c; })()),
       config: { ...current.config, ...c, version: 3 },
     };
     return check(
@@ -1340,13 +1514,13 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "staff.vip") {
     requireRole(a, "manager");
-    const level = integer(b.level, 1, 7);
+    const level = integer(b.level, 1, 15);
     return check(
       await db
         .from("f90_vip_tiers")
         .update({
           minimum_spend: level === 1 ? 0 : num(b.minimum_spend),
-          discount_percent: level === 1 ? 0 : num(b.discount_percent, 0, 2),
+          discount_percent: level === 1 ? 0 : num(b.discount_percent, 0, 3),
         })
         .eq("level", level)
         .select()
@@ -1801,6 +1975,17 @@ Deno.serve(async (req: Request) => {
         throw new AppError("F90_AUTH");
       return out(action === "worker" ? await work() : await smmCatalogFetch());
     }
+    if (action === "media.ticket") {
+      // The selected private track is resolved server-side, never from a
+      // caller-supplied bucket or path. Only currently enabled radio can stream.
+      const row = check(await db.from("site_settings").select("config").eq("id", 1).single());
+      const music = row.config?.music || {};
+      const path = typeof music.path === "string" ? music.path : "";
+      if (music.enabled !== true || !/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(path))
+        throw new AppError("F90_NOT_FOUND", 404, "الراديو غير مفعّل أو لم يُرفع مصدر خاص");
+      const ticket = check(await db.storage.from("f90-radio").createSignedUrl(path, 3600));
+      return out({ url: ticket.signedUrl, mode: music.mode === "video" ? "video" : "audio" });
+    }
     if (action === "catalog" || action === "health")
       return out(
         action === "health"
@@ -2189,24 +2374,19 @@ Deno.serve(async (req: Request) => {
         .eq("user_id", owner)
         .eq("is_active", true);
       if (count.error) throw count.error;
-      if ((count.count || 0) >= 10)
-        throw new AppError("F90_FIELDS", 400, "الحد الأقصى عشرة مفاتيح نشطة");
+      if ((count.count || 0) >= 1 && !b.replace_existing)
+        throw new AppError("F90_FIELDS",409,"One active token per trader. Rotate or revoke the current token.");
       const random = crypto.getRandomValues(new Uint8Array(32));
       const token =
         "f90_live_" +
         [...random].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const key = check(
-        await db
-          .from("f90_api_keys")
-          .insert({
-            user_id: owner,
-            ...settings,
-            token_hash: await hash(token),
-            token_prefix: token.slice(0, 16) + "…" + token.slice(-4),
-          })
-          .select("id,name,token_prefix,scopes,requests_per_minute,expires_at")
-          .single(),
-      );
+      const key = (await rpc("f90_rotate_merchant_key",{
+        p_actor:a.id,p_owner:owner,p_name:settings.name,p_hash:await hash(token),
+        p_prefix:token.slice(0,16)+"…"+token.slice(-4),
+        p_scopes:settings.scopes,p_rpm:settings.requests_per_minute,
+        p_expiry:settings.expires_at,p_allow_all:settings.allow_all_ips,
+        p_allowed_ips:settings.allowed_ips
+      })) as any;
       await auditSafe(a.id, "key.create", key.id,
         { owner, scopes: settings.scopes,
           requests_per_minute: settings.requests_per_minute });
@@ -2217,7 +2397,7 @@ Deno.serve(async (req: Request) => {
       requireRole(a, "trader", "manager");
       const id = uuid(b.id);
       const current = check(await db.from("f90_api_keys")
-        .select("id,user_id,name,scopes,requests_per_minute,expires_at,is_active")
+        .select("id,user_id,name,scopes,requests_per_minute,expires_at,is_active,allow_all_ips,allowed_ips")
         .eq("id", id).single());
       if (a.role !== "manager" && current.user_id !== a.id)
         throw new AppError("F90_FORBIDDEN");
@@ -2225,7 +2405,7 @@ Deno.serve(async (req: Request) => {
       const settings = keySettings(b, current);
       const saved = check(await db.from("f90_api_keys")
         .update(settings).eq("id", id)
-        .select("id,name,token_prefix,scopes,requests_per_minute,expires_at,is_active,last_used_at")
+        .select("id,name,token_prefix,scopes,requests_per_minute,expires_at,is_active,last_used_at,allow_all_ips,allowed_ips")
         .single());
       await auditSafe(a.id, "key.update", id,
         { scopes: settings.scopes,
@@ -2246,6 +2426,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "key.revoke") {
       if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      requireRole(a, "trader", "manager");
       let q = db
         .from("f90_api_keys")
         .update({ is_active: false })
