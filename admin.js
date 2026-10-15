@@ -63,6 +63,11 @@
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
     ["design-center", "التحكم المرئي في الموقع", "edit", ["manager"]],
+    ["content-text", "تعديل النصوص", "edit", ["manager"]],
+    ["content-images", "إدارة الصور", "grid", ["manager"]],
+    ["content-links", "التحكم بالروابط", "link", ["manager"]],
+    ["content-backgrounds", "خلفيات الثيمات", "grid", ["manager"]],
+    ["content-branding", "الشعار وأيقونة التطبيق", "edit", ["manager"]],
     ["media-center", "راديو المتجر", "music", ["manager"]],
     ["telegram-alerts", "تنبيهات تلجرام", "send", ["manager"]],
     ["policies", "المعلومات والسياسات", "doc", ["manager"]],
@@ -172,7 +177,7 @@
       ["العملاء والتجار",["users","traders","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["payments","rates","vip","special-settings"]],
-      ["المظهر والمحتوى",["design-center","promotions","notifications","policies","settings"]],
+      ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
       ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
     ];
     const link=item=>'<a href="#/'+item[0]+'" class="'+(S.active===item[0]?'active':'')+'">'+I(item[2])+item[1]+'</a>';
@@ -2073,6 +2078,7 @@
         publicListPage(page);
       else if (page === "settings") await settings();
       else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
+      else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
       else if (page === "vip") vip();
       else if (page === "policies") policies();
