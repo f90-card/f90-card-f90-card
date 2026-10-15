@@ -98,3 +98,23 @@ test("financial operations reuse atomic existing salary and wallet debit RPCs",(
  assert.match(guard,/grant execute on function public\.f90_submit_transfer.*to authenticated/);
  assert.match(guard,/f90_special_nonfinancial_only/);
 });
+
+test("existing transfer subcategories open their exact payment form, and website uses wallet checkout",()=>{
+ const app=read("app.js"),special=read("f90-special.js");
+ assert.match(app,/c\.slug\?\.startsWith\("transfer-"\)/);
+ assert.match(app,/encodeURIComponent\(c\.slug\.slice\("transfer-"\.length\)\)/);
+ assert.match(app,/window\.F90Special\?\.render\(id,S\.settings,S\.me,serviceChoice/);
+ assert.match(special,/selected===x\.id/);
+ assert.match(special,/#\/product\/f90-full-website-500/);
+ assert.match(special,/f90_submit_transfer/);
+ assert.match(special,/f90_submit_salary/);
+ assert.doesNotMatch(special,/<\/button><\/form>\+'\s*'<p class="f90-special-footnote"/);
+});
+test("special home keeps five independent ads instead of duplicate category tiles",()=>{
+ const ui=read("f90-special.js");
+ const home=ui.slice(ui.indexOf("function home(settings){"),ui.indexOf("function category(slug,settings){"));
+ assert.match(home,/f90-special-ad-strip/);
+ assert.doesNotMatch(home,/f90-special-tiles/);
+ assert.match(home,/images\[id\]/);
+ assert.match(read("f90-special.css"),/f90-home-devices/);
+});
