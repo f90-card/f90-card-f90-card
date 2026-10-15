@@ -136,6 +136,16 @@
       C.safeUrl(c.admin_app_icon_url || c.app_icon_url || S.settings.logo_url) || "./f90-logo.png";
     const installApple=$("adminAppleIcon");
     if(installApple)installApple.href=C.safeUrl(c.admin_app_icon_url || c.app_icon_url) || "./assets/icons/icon-192.png";
+    const manifestLink=document.querySelector('link[rel="manifest"]');
+    if(manifestLink && location.hostname.endsWith("github.io")){
+      const dynamicIcons=c.admin_app_icon_192_url&&c.admin_app_icon_512_url;
+      const rev=encodeURIComponent(String(c.admin_app_icon_512_url||"").split("/").pop());
+      const desired=dynamicIcons
+        ? window.F90_CONFIG.SUPABASE_URL+"/functions/v1/f90-install-manifest?app=admin&rev="+rev
+        : new URL("./admin.webmanifest",location.href).href;
+      if(dynamicIcons)manifestLink.setAttribute("crossorigin","anonymous");
+      if(manifestLink.href!==desired)manifestLink.href=desired;
+    }
     $("adminBrand").innerHTML = image(
       S.settings.logo_url || "./f90-logo.png",
       "أف تسعين كارد",
