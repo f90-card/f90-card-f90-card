@@ -65,7 +65,7 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-gold-match2/);
+  assert.match(mainHtml,/app\.js\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-gold-match2/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
