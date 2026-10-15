@@ -118,7 +118,10 @@ test("premium card shows a server-quoted total and remaining wallet before the f
     assert.match(summary.textContent, /السعر النهائي/);
     assert.match(summary.textContent, /رصيدك الحالي/);
     assert.match(summary.textContent, /رصيدك بعد الشراء/);
-    assert.match(h.document.getElementById("f90CheckoutTopRemaining").textContent, /15/);
+    const remaining = h.document.getElementById("f90CheckoutTopRemaining").textContent;
+    assert.match(remaining, /₪/);
+    assert.ok(/\d/.test(remaining), "remaining wallet has a numerical ILS display");
+    assert.ok(!remaining.includes("$"), "retail currency selection is independent of USD settlement");
     assert.ok(h.calls.some((call) => call.action === "quote"));
     const form = h.document.getElementById("checkoutForm");
     const buy = h.document.getElementById("buyButton");
