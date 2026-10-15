@@ -44,7 +44,7 @@ function ensure(){
  });
 }
 async function ticket(){
- if(config.path){
+ if(config.private_track){
    if(!window.F90API?.call)throw new Error("الاتصال بالصوت غير متاح الآن");
    const result=await window.F90API.call("media.ticket");
    if(!result?.url)throw new Error("لم يتوفر رابط صوت صالح");
@@ -107,9 +107,9 @@ function prepare(){
 function sync(settings){
  const music=settings?.music||{};
  const next={enabled:music.enabled===true,mode:music.mode==="video"?"video":"audio",
- path:typeof music.path==="string"?music.path:"",audio_url:music.audio_url||"",
+ private_track:music.private_track===true||Boolean(music.path),audio_url:music.audio_url||"",
  volume:clamp(music.volume,0.35)};
- const sig=JSON.stringify({enabled:next.enabled,mode:next.mode,path:next.path,audio_url:next.audio_url});
+ const sig=JSON.stringify({enabled:next.enabled,mode:next.mode,private_track:next.private_track,audio_url:next.audio_url});
  if(sig===signature)return;
  const wasPlaying=!!media&&!media.paused;
  signature=sig;config=next;enabled=next.enabled;
