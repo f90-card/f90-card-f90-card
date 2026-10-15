@@ -87,7 +87,7 @@ function prepare(){
  media.preload="auto";media.loop=true;media.controls=false;media.autoplay=false;
  if(type==="video"){media.playsInline=true;media.disablePictureInPicture=true;media.setAttribute("playsinline","");}
  media.setAttribute("aria-hidden","true");
- media.volume=clamp(get(volumePreference),clamp(config.volume,0.35));
+ media.volume=get(volumePreference)===null?clamp(config.volume,0.35):clamp(get(volumePreference),0.35);
  slider.value=String(Math.round(media.volume*100));
  dock.querySelector("#f90RadioPercent").textContent=slider.value+"%";
  dock.appendChild(media);
@@ -113,7 +113,7 @@ function sync(settings){
  if(sig===signature)return;
  const wasPlaying=!!media&&!media.paused;
  signature=sig;config=next;enabled=next.enabled;
- if(get(preference)!=="pause") desire=wasPlaying||get(preference)==="play";
+ if(get(preference)!=="pause") desire=true;
  else desire=false;
  teardown();prepare();
 }
