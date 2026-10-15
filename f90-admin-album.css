@@ -1,0 +1,25 @@
+/* F90 CARD manager-only album player */
+.f90-radio-manager{max-width:100%;overflow:hidden}
+.f90-radio-manager form{display:grid;gap:14px}
+.f90-radio-album{display:grid;gap:12px;border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));background:color-mix(in srgb,var(--accent) 5%,var(--surface));border-radius:22px;padding:18px;min-width:0}
+.f90-radio-album h3{margin:0;font-size:17px}
+.f90-radio-track-list{display:flex;flex-direction:column;gap:10px;max-height:620px;overflow:auto}
+.f90-radio-track-row{display:grid;grid-template-columns:30px 84px minmax(150px,1fr) auto;gap:8px;align-items:center;min-width:0;padding:10px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));background:var(--surface);border-radius:16px}
+.f90-radio-track-index{font-weight:850;text-align:center;color:var(--accent);font-variant-numeric:tabular-nums}
+.f90-radio-active-choice{display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap}
+.f90-radio-track-name{width:100%;min-width:0;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit}
+.f90-radio-track-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.f90-radio-track-actions .button{min-height:36px;font-size:12px;padding:5px 9px}
+.f90-radio-current-controls{border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px;background:var(--surface)}
+.f90-radio-preview-controls{display:flex;flex-wrap:wrap;gap:8px}
+.f90-radio-preview-controls button{min-height:40px}
+.f90-radio-manager input[type="file"]{max-width:100%}
+@media(max-width:760px){
+ .f90-radio-album{padding:12px}
+ .f90-radio-track-row{grid-template-columns:25px minmax(0,1fr);gap:7px}
+ .f90-radio-track-index{grid-column:1}
+ .f90-radio-active-choice{grid-column:2;justify-self:start}
+ .f90-radio-track-name{grid-column:1/-1}
+ .f90-radio-track-actions{grid-column:1/-1;justify-content:stretch}
+ .f90-radio-track-actions .button{flex:1}
+}
