@@ -1630,6 +1630,47 @@
     await A.call("settings.save",{data:updated});
     await refreshSettings(); brand(); designCenter(); toast("تم حفظ التصميم والنصوص بنجاح");
   }
+  function f90YouTubeId(url){
+    try{
+      const u=new URL(String(url||""));
+      const h=u.hostname.toLowerCase();
+      const id=(h==="youtu.be" ? u.pathname.slice(1)
+        : ["youtube.com","www.youtube.com","m.youtube.com","www.youtube-nocookie.com"].includes(h)
+          ? u.searchParams.get("v") || u.pathname.split("/").filter(Boolean).at(-1) : "");
+      return /^[a-zA-Z0-9_-]{11}$/.test(id||"")?id:"";
+    }catch{return "";}
+  }
+  function mediaCenter(){
+    const music=S.settings?.config?.music||{},youtube=f90YouTubeId(music.youtube_url);
+    main.innerHTML=head("مركز الموسيقى والوسائط","تحميل وتشغيل الموسيقى في المتجر من ملف صوتي، أو عرض فيديو يوتيوب من مشغله المرئي. التحكم للإدارة فقط.")+
+      '<section class="panel"><h2>إعدادات المشغّل</h2><form id="mediaCenterForm">'+
+      check("music_enabled","تفعيل مشغل F90 CARD للزوار",music.enabled===true)+
+      select("music_mode","مصدر الوسائط",[["audio","ملف صوتي من المتجر"],["youtube","مشغل YouTube المرئي"]],music.mode||"audio")+
+      field("music_audio_url","رابط ملف MP3 / OGG / WAV","url",music.audio_url||"")+
+      field("music_audio_file","رفع ملف صوتي حتى 12 ميجابايت","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4"')+
+      field("music_youtube_url","رابط فيديو يوتيوب","url",music.youtube_url||"")+
+      field("music_volume","مستوى صوت الملفات من 0 إلى 1","number",music.volume??0.35,'min="0" max="1" step="0.05"')+
+      check("music_loop","تكرار تشغيل الملف الصوتي",music.loop!==false)+
+      '<div class="notice">تشغيل صوت في الخلفية يتطلب موافقة الزائر وقد تمنع المتصفحات التشغيل التلقائي. مقاطع يوتيوب تظهر داخل مشغل مرئي، ولن نخفي المصدر أو نتجاوز قيود المنصة.</div>'+
+      '<button class="button" type="submit">حفظ إعدادات الوسائط</button></form></section>'+
+      '<section class="panel"><h2>معاينة المصدر الحالي</h2>'+
+      (music.mode==="youtube"&&youtube?'<iframe title="معاينة YouTube" loading="lazy" style="width:min(100%,560px);aspect-ratio:16/9;border:0" allow="encrypted-media;picture-in-picture" src="https://www.youtube-nocookie.com/embed/'+e(youtube)+'"></iframe>'
+        : music.audio_url?'<audio controls preload="none" src="'+e(C.safeUrl(music.audio_url))+'"></audio>':'<p class="muted">لم يُحدّد مصدر صوتي بعد.</p>')+
+      '</section>';
+  }
+  async function saveMediaCenter(form,d){
+    const c=S.settings.config||{},music=c.music||{},file=form.elements.music_audio_file.files?.[0];
+    const audioUrl=file?.size?(await A.upload(file,"f90-audio","tracks")).url:String(d.music_audio_url||"").trim();
+    const youtube=String(d.music_youtube_url||"").trim();
+    if(form.elements.music_enabled.checked && d.music_mode==="audio" && !audioUrl)throw new Error("ارفع ملف الصوت قبل التفعيل");
+    if(form.elements.music_enabled.checked && d.music_mode==="youtube" && !f90YouTubeId(youtube))throw new Error("ضع رابط فيديو يوتيوب صالحًا");
+    const next={...S.settings,config:{...c,music:{...music,
+      enabled:form.elements.music_enabled.checked,mode:d.music_mode,audio_url:audioUrl,
+      youtube_url:youtube,volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),
+      loop:form.elements.music_loop.checked}}};
+    await A.call("settings.save",{data:next});
+    await refreshSettings();mediaCenter();toast("تم حفظ مصدر الموسيقى وحالة تشغيله");
+  }
   async function route() {
     S.token++;
     closeModal();
@@ -1674,6 +1715,7 @@
       else if (page === "infrastructure") await infrastructurePage();
       else if (page === "integration") integrationCenter();
       else if (page === "design-center") designCenter();
+      else if (page === "media-center") mediaCenter();
       else if (page === "traders") await traders();
     } catch (err) {
       main.innerHTML =
@@ -1700,6 +1742,7 @@
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
+    if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);
     if (form.id === "searchUsers") {
       S.search = d.search;
       S.offset = 0;
