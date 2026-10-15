@@ -1655,7 +1655,7 @@
         closeModal();
         await refreshMe();
         developers();
-        toast("حُفظت إعدادات المفتاح");
+        toast("API token settings saved");
         return;
       }
       const key = await A.call("key.create", values);
@@ -1952,15 +1952,27 @@
         const k = S.me?.keys?.find((item) => item.id === button.dataset.id);
         if (!k) throw new Error("المفتاح غير موجود");
         S.editKey = k;
-        modal("إعدادات المفتاح", `<form id="keySettingsForm">${field("name", "اسم المفتاح", "text", k.name, 'required maxlength="100"')}<div class="actions"><label><input type="checkbox" name="scope_catalog" ${k.scopes.includes("catalog") ? "checked" : ""}> الأقسام والخدمات</label><label><input type="checkbox" name="scope_balance" ${k.scopes.includes("balance") ? "checked" : ""}> الرصيد</label><label><input type="checkbox" name="scope_orders" ${k.scopes.includes("orders") ? "checked" : ""}> الطلبات</label></div>${field("requests_per_minute", "حد الطلبات في الدقيقة (10–120)", "number", k.requests_per_minute, 'min="10" max="120" required')}${field("expires_at", "تاريخ الانتهاء (اختياري، خلال سنة)", "date", k.expires_at?.slice(0, 10) || "")}<button class="button" type="submit">حفظ الإعدادات</button></form>`);
+        modal("API TOKEN Settings", `<form id="keySettingsForm" class="f90-api-token-form" dir="ltr">
+          ${field("name","Token label","text",k.name,'required maxlength="100"')}
+          <fieldset><legend>Permissions</legend>
+          <label><input type="checkbox" name="scope_catalog" ${k.scopes.includes("catalog")?"checked":""}> Catalog</label>
+          <label><input type="checkbox" name="scope_balance" ${k.scopes.includes("balance")?"checked":""}> Wallet balance</label>
+          <label><input type="checkbox" name="scope_orders" ${k.scopes.includes("orders")?"checked":""}> Create and track orders</label></fieldset>
+          ${field("requests_per_minute","Requests per minute (10–120)","number",k.requests_per_minute,'min="10" max="120" required')}
+          ${field("expires_at","Expiration date (optional)","date",k.expires_at?.slice(0,10)||"")}
+          <label class="f90-api-allowall"><input type="checkbox" name="allow_all_ips" ${k.allow_all_ips!==false?"checked":""}> Allow all IP addresses (testing only)</label>
+          <p class="f90-api-warning">Turn this off after development if your server has a known trusted IP.</p>
+          ${field("allowed_ips","Allowed IP addresses (one per line)","textarea",(k.allowed_ips||[]).join("\n"),'rows="3" placeholder="203.0.113.10"')}
+          <button class="button" type="submit">Save API token settings</button></form>`);
       } else if (action === "key-logs") {
         const logs = await A.call("key.logs", { id: button.dataset.id });
-        modal("استخدام المفتاح", `<div class="records">${logs.map((x) => `<article class="record"><strong>${e(x.action)}</strong><span>${e(x.http_status)} · ${e(C.date(x.created_at))}</span></article>`).join("") || empty("لا استخدام مسجّل بعد")}</div>`);
+        modal("API token usage", `<div class="records" dir="ltr">${logs.map((x) => `<article class="record"><strong>${e(x.action)}</strong><span>HTTP ${e(x.http_status)} · ${e(new Date(x.created_at).toLocaleString("en-US"))}</span></article>`).join("") || "<p>No usage recorded yet.</p>"}</div>`);
       } else if (action === "key-revoke") {
+        if(!window.confirm("Revoke this API token? Your connected integration will stop working immediately."))return;
         await A.call("key.revoke", { id: button.dataset.id });
         await refreshMe();
         developers();
-        toast("أُلغي المفتاح");
+        toast("API token revoked");
       } else if (action === "report-csv") {
         const kind = S.reportKind === "orders" ? "orders" : S.reportKind === "deposits" ? "deposits" : "ledger";
         let offset = 0, count = Infinity;
