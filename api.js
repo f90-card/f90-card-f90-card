@@ -47,8 +47,9 @@
   }
   async function upload(file, bucket, folder) {
     const video = bucket === "f90-videos";
-    if (!file || file.size > (video ? 20971520 : 5242880))
-      throw new Error(video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
+    const audio = bucket === "f90-audio";
+    if (!file || file.size > (video ? 20971520 : audio ? 12582912 : 5242880))
+      throw new Error(video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : audio ? "اختر ملف صوت MP3 أو OGG أو WAV حتى 12 ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
     const types = [
       "image/jpeg",
       "image/png",
@@ -56,8 +57,9 @@
       ...(bucket === "f90-images" || bucket === "f90-avatars"
         ? ["image/gif"] : []),
       ...(video ? ["video/mp4","video/webm"] : []),
+      ...(audio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4"] : []),
     ];
-    if (!types.includes(file.type)) throw new Error(video ? "صيغة الفيديو غير مدعومة" : "اختر صورة بصيغة مدعومة");
+    if (!types.includes(file.type)) throw new Error(video ? "صيغة الفيديو غير مدعومة" : audio ? "صيغة الملف الصوتي غير مدعومة" : "اختر صورة بصيغة مدعومة");
     const {
       data: { user },
     } = await client.auth.getUser();
@@ -69,9 +71,10 @@
       "image/gif": "gif",
       "video/mp4": "mp4",
       "video/webm": "webm",
+      "audio/mpeg":"mp3", "audio/ogg":"ogg", "audio/wav":"wav","audio/mp4":"m4a",
     }[file.type];
     const path =
-      (bucket === "f90-images" || bucket === "f90-videos" ? folder || "catalog" : user.id) +
+      (bucket === "f90-images" || bucket === "f90-videos" || bucket === "f90-audio" ? folder || "catalog" : user.id) +
       "/" +
       crypto.randomUUID() +
       "." +
@@ -80,7 +83,7 @@
       .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
     if (error)
-      throw new Error(video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
+      throw new Error(video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
     return {
       path,
       url: client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
