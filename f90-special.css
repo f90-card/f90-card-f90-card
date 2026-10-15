@@ -79,3 +79,13 @@
  .f90-special-quote strong{font-size:14px}
 }
 @media(prefers-reduced-motion:reduce){.f90-special-ad img{transition:none}}
+
+/* Ordered, collapsible administration navigation. */
+#adminNav .f90-admin-group{display:block;min-width:0;border-bottom:1px solid var(--line);padding:5px 0}
+#adminNav .f90-admin-group>summary{cursor:pointer;font-weight:800;list-style:none;padding:11px 13px;border-radius:11px;font-size:13px;color:var(--text);background:color-mix(in srgb,var(--surface2) 72%,transparent)}
+#adminNav .f90-admin-group>summary::-webkit-details-marker{display:none}
+#adminNav .f90-admin-group>summary:before{content:"▾";margin-inline-end:9px;color:var(--accent)}
+#adminNav .f90-admin-group:not([open])>summary:before{content:"▸"}
+#adminNav .f90-admin-group-links{display:grid;gap:3px;padding:7px 0}
+#adminNav .f90-admin-group-links>a{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:12px;border-radius:10px;text-decoration:none}
+#adminNav .f90-admin-group-links>a.active{background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--accent);font-weight:850}
