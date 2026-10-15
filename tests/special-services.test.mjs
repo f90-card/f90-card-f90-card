@@ -61,3 +61,20 @@ test("paired laptop and phone preserve user-controlled display sizing",()=>{
  assert.match(scene,/f90-home-laptop-video/);
  assert.match(read("f90-experience-upgrade.css"),/f90-home-phone-island\{display:none!important\}/);
 });
+
+// Separate DOM tests ensure the new route actually renders rather than leaving a spinner.
+test("salary and transfer pages render on the existing storefront router",async()=>{
+ const { harness }=await import("./dom-harness.cjs");
+ const salary=await harness("index.html",{hash:"#/special/salary",verified:true});
+ try{
+  const content=salary.document.getElementById("mainContent").textContent;
+  assert.match(content,/Xena Live/);
+  assert.match(content,/100,000/);
+  assert.ok(salary.document.getElementById("f90SpecialForm"));
+ }finally{salary.cleanup();}
+ const transfer=await harness("index.html",{hash:"#/special/transfer",verified:true});
+ try{
+  assert.ok(transfer.document.getElementById("f90SpecialForm"));
+  assert.match(transfer.document.getElementById("mainContent").textContent,/تحويل الأموال/);
+ }finally{transfer.cleanup();}
+});
