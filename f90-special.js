@@ -31,10 +31,15 @@ const links=[
 let visibleConfig=defaults;
 function home(settings){
  const c=conf(settings);
- const cards=links.filter(([k])=>c["show_"+k]!==false).map(([k,title,desc])=>'<a href="#/special/'+k+'" class="f90-special-tile"><img loading="lazy" src="'+images[k]+'" alt="'+esc(title)+'"><span><strong>'+title+'</strong><small>'+desc+'</small></span></a>').join("");
- const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
- return '<section class="f90-special-home"><h2>خدمات F90 CARD الإضافية</h2><div class="f90-special-tiles">'+cards+'</div>'+
- '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+ads.map(([id,title])=>'<a href="#/'+(id==="salary"?"special/salary":"special/"+id)+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+'</div></section>';
+ const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],
+   ["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
+ const items=ads.filter(([kind])=>c["show_"+kind]!==false);
+ if(!items.length)return "";
+ return '<section class="f90-special-home"><h2>إعلانات خدمات F90 CARD</h2>'+
+ '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+
+ items.map(([id,title])=>'<a href="#/special/'+id+'" class="f90-special-ad">'+
+ '<img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
+ '</div></section>';
 }
 function moneyPanel(gross,fee,net,feePercent,label){
  return '<div class="f90-special-estimate" role="status" aria-live="polite">'+
