@@ -1238,7 +1238,7 @@
     if(!m && S.settings.config?.special_services?.show_salary !== false){
       const tile='<a href="#/special/salary" class="f90-special-deposit-link">'+
         '<img src="./assets/f90-new/banner-salary.webp" alt="Xena Live سحب رواتب">'+
-        '<span><strong>سحب رواتب Xena Live</strong><small>100,000 كوينز = 10 دولار قبل الرسوم · بعد مراجعة الإدارة</small></span></a>';
+        '<span><strong>سحب رواتب Xena Live</strong><small>100,000 كوينز = '+e(S.settings.config?.special_services?.salary_usd_per_100k ?? 10)+' دولار قبل الرسوم · بعد مراجعة الإدارة</small></span></a>';
       (main.querySelector(".method-grid") || main).insertAdjacentHTML("beforeend",tile);
     }
   }
