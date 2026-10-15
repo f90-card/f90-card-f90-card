@@ -31,20 +31,6 @@ test("API key pages are trader-only in client router", () => {
   assert.match(app,/page === "api-guide"/);
   assert.match(app,/page === "developers"/);
 });
-test("Top 100 are real products/categories, paged and searchable",()=>{
-  const popular=read("f90-popular-100.css");
-  assert.match(app,/function f90TrendingItems\(\)/);
-  assert.match(app,/return output\.slice\(0,100\)/);
-  assert.match(app,/S\.products/);
-  assert.match(app,/C\.unavailable\(p\)/);
-  assert.match(app,/function initF90Popular\(\)/);
-  assert.match(app,/limit=12/);
-  assert.match(app,/limit\+=18/);
-  assert.match(app,/f90PopularSearch/);
-  assert.match(app,/f90PopularSection\(\)/);
-  assert.match(popular,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(mainHtml,/f90-popular-100\.css/);
-});
 test("Price UI shows only server quotes, one-digit cost, no decimal wallet, and compact limits",()=>{
   const skin=read("f90-checkout-redesign.css");
   assert.match(app,/function f90CheckoutMoney\(usd, balance = false\)/);
@@ -105,7 +91,7 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-top100-checkout5/);
+  assert.match(mainHtml,/app\.js\?v=20261015-no-top100-1/);
   assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-keyboard-checkout3/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
@@ -140,7 +126,7 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/\? 2500 : 400/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
-  assert.match(mainHtml,/app\.js\?v=20261015-top100-checkout5/);
+  assert.match(mainHtml,/app\.js\?v=20261015-no-top100-1/);
   assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
   assert.match(app,/await A\.call\("quote", \{/);
