@@ -7,7 +7,7 @@
     // Public catalog/health are safe, anonymous, read-only calls.
     // Send them as CORS-simple requests: this avoids an OPTIONS preflight
     // that can succeed at the edge while the browser's POST never follows.
-    const publicRead = action === "catalog" || action === "health" || action === "media.ticket";
+    const publicRead = action === "catalog" || action === "health" || action === "media.ticket" || action === "media.state";
     if ((!client && !publicRead) || !endpoint) {
       const error = new Error("تعذّر اتصال المتجر بالخادم. أعد المحاولة بعد التأكد من الاتصال بالإنترنت.");
       error.code = "F90_SDK_UNAVAILABLE";
@@ -28,7 +28,7 @@
     if (session) headers.Authorization = "Bearer " + session.access_token;
     let response;
     try {
-      const isReadOnly=["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const isReadOnly=["catalog","health","media.ticket","media.state","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       // A bounded wait prevents indefinite spinners. Mutating calls remain ambiguous on timeout.
       const timeout=isReadOnly?13000:45000;
       const controller=timeout?new AbortController():null;
@@ -41,7 +41,7 @@
       }finally{if(timeoutId)clearTimeout(timeoutId);}
     } catch(err) {
       // Read-only timeouts are safe to retry. Never assume a paid operation failed.
-      const isReadOnly=["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      const isReadOnly=["catalog","health","media.ticket","media.state","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       const failure=new Error(isReadOnly?"تأخر اتصال الخادم. حاول إعادة تحميل المتجر.":"انقطع الاتصال قبل تأكيد نتيجة العملية");
       failure.code=isReadOnly?"F90_NETWORK_TIMEOUT":"F90_NETWORK_UNKNOWN";
       failure.uncertain=!isReadOnly;
@@ -66,7 +66,7 @@
     if (!body || typeof body !== "object" || !Object.prototype.hasOwnProperty.call(body, "data")) {
       const err = new Error("رد الخادم غير مكتمل. أعد المحاولة بعد التحقق من حالة الخدمة.");
       err.code = "F90_BAD_RESPONSE";
-      err.uncertain = !["catalog","health","media.ticket","me","history","status","categories","services","service","balance","quote","news"].includes(action);
+      err.uncertain = !["catalog","health","media.ticket","media.state","me","history","status","categories","services","service","balance","quote","news"].includes(action);
       throw err;
     }
     return body.data;
