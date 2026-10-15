@@ -8,11 +8,12 @@ test("bulk editor supports filtered selection and explicit confirmation", () => 
   assert.match(admin, /const chosen = selectedBulkProducts\(\)/);
   assert.match(admin, /modal\("تأكيد تعديل "/);
 });
-test("each product modification uses authenticated catalog.save", () => {
-  assert.match(admin, /await A\.call\("catalog\.save", \{ kind: "product", id, data \}\)/);
-  assert.match(admin, /const data = \{ \.\.\.row \}/);
-  assert.match(admin, /if \(pending\.mode === "hide"\) data\.is_active = false/);
-  assert.match(admin, /if \(pending\.mode === "move"\) data\.category_id = pending\.categoryId/);
-  assert.match(admin, /if \(!S\.categories\.some\(\(c\) => c\.id === target\)\)/);
+test("bulk product edits call authenticated server operations without local direct table writes", () => {
+  assert.match(admin, /async function runBulkProducts\(pending, status\)/);
+  assert.match(admin, /\["show", "hide", "move", "image", "delete", "fulfillment"\]/);
+  assert.match(admin, /pending\.mode === "move" \? pending\.categoryId : null/);
+  assert.match(admin, /A\.call\("catalog\.bulk_products", \{ ids: pending\.ids, mode: pending\.mode, value \}\)/);
+  assert.match(admin, /A\.call\("catalog\.bulk_fulfillment", \{ ids: pending\.ids, mode: pending\.fulfillment \}\)/);
+  assert.doesNotMatch(admin.slice(admin.indexOf("async function runBulkProducts"), admin.indexOf("function libraryButtons")), /\.from\("products"\)\.update\(/);
 });
 test("bulk tools are responsive", () => assert.match(css, /\.f90-bulk-bar/));
