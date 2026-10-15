@@ -1594,12 +1594,12 @@
       field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
       field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1000" rows="2"`)+
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
-      '<div class="f90-design-video-fields"><h3>إعلان هاتف خمري في الصفحة الرئيسية فقط</h3><p class="muted small">تُعرض الصورة أو الفيديو الذي ترفعه بنفسك داخل الهاتف. لا أزرار أو كتابة مفروضة داخل الشاشة. الضغط في أي موضع على الهاتف يفتح خدمة العملاء في واتساب. إخفاء الإعلان يُخفي الهاتف بالكامل.</p>'+
+      '<div class="f90-design-video-fields"><h3>إعلان هاتف خمري في الصفحة الرئيسية فقط</h3><p class="muted small">تُعرض الصورة أو الفيديو الذي ترفعه بنفسك داخل الهاتف. لا أزرار أو كتابة مفروضة داخل الشاشة. لن يُفتح أي رابط تلقائيًا؛ يمكنك تحديد رابط اختياري. إخفاء الإعلان يُخفي الهاتف بالكامل.</p>'+
       check("promo_video_enabled","إظهار إعلان الفيديو في الصفحة الرئيسية",c.promo_video?.enabled===true)+
       select("promo_video_mode","المحتوى داخل الهاتف",[["video","فيديو صامت"],["image","صورة ثابتة أو GIF"]],c.promo_video?.mode==="image"?"image":c.promo_video?.url?"video":"image")+
       field("promo_video_image_url","رابط صورة شاشة الهاتف","url",c.promo_video?.image_url||"")+
       field("promo_video_image_file","رفع صورة أو GIF لشاشة الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
-      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = واتساب المتجر)"')+
+      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = بدون رابط)"')+
       field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","range",c.promo_video?.phone_size??178,'min="1" max="480" step="1"')+
       field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","range",c.promo_video?.phone_size_mobile??153,'min="1" max="360" step="1"')+
       '<h4>إعلان اللابتوب بجانب الهاتف</h4>'+ 
