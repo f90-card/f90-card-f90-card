@@ -474,16 +474,40 @@
       }
     }
   }, { threshold: 0.15 }) : null;
-  const f90CardObserver = new MutationObserver(() => {
-    document.querySelectorAll(".f90-flip-tile:not([data-f90-observed])").forEach((el) => {
-      el.dataset.f90Observed = "1";
-      const name = el.getAttribute("href") || el.getAttribute("aria-label") || "";
-      el.dataset.f90FlipId = name;
-      if (f90FlipObserver) f90FlipObserver.observe(el);
-      else if (!f90SeenTiles.has(name)) { f90SeenTiles.add(name); el.classList.add("f90-flip-play"); }
+  // Collect only newly inserted tile nodes. A global query on every subtree
+  // mutation was repeatedly walking the entire catalog on mobile devices.
+  const f90PendingTiles = new Set();
+  let f90TileScheduled = false;
+  function f90ObserveTiles(root) {
+    if (!(root instanceof Element)) return;
+    if (root.matches(".f90-flip-tile:not([data-f90-observed])"))
+      f90PendingTiles.add(root);
+    root.querySelectorAll(".f90-flip-tile:not([data-f90-observed])")
+      .forEach(el => f90PendingTiles.add(el));
+    if (f90TileScheduled || !f90PendingTiles.size) return;
+    f90TileScheduled = true;
+    requestAnimationFrame(() => {
+      f90TileScheduled = false;
+      for (const el of f90PendingTiles) {
+        if (!el.isConnected || el.hasAttribute("data-f90-observed")) continue;
+        el.dataset.f90Observed = "1";
+        const name = el.getAttribute("href") || el.getAttribute("aria-label") || "";
+        el.dataset.f90FlipId = name;
+        if (f90FlipObserver) f90FlipObserver.observe(el);
+        else if (!f90SeenTiles.has(name)) {
+          f90SeenTiles.add(name);
+          el.classList.add("f90-flip-play");
+        }
+      }
+      f90PendingTiles.clear();
     });
+  }
+  const f90CardObserver = new MutationObserver(records => {
+    for (const record of records)
+      for (const node of record.addedNodes) f90ObserveTiles(node);
   });
   f90CardObserver.observe(main, { childList: true, subtree: true });
+  f90ObserveTiles(main);
   // Cache the original availability result only during a page render.
   const f90CategoryAvailability = new Map();
   const f90CategoryById = new Map();
@@ -2266,7 +2290,9 @@
       const recoveryPending=Symbol("auth-recovery-pending");
       const accountResult=await Promise.race([
         accountRequest,
-        new Promise(resolve=>setTimeout(()=>resolve(recoveryPending),2500))
+        new Promise(resolve=>setTimeout(()=>resolve(recoveryPending),
+          ["profile","wallet","orders","history","deposits","verification","developers","admin"].includes((location.hash||"#/").split("/")[1]||"")
+            ? 2500 : 400))
       ]);
       if(accountResult===recoveryPending){
         S.walletStale=true;
@@ -2296,8 +2322,12 @@
       bootRetryAttempts = 0;
       // Receive new supplier price/status news while the store remains open.
       // This is a read-only poll; never modify checkout quotes or local catalog mid-purchase.
+      let catalogRefreshBusy = false;
       setInterval(async () => {
-        if (document.visibilityState === "hidden") return;
+        if (document.visibilityState === "hidden" || catalogRefreshBusy ||
+            document.getElementById("checkoutForm") ||
+            document.getElementById("depositForm")) return;
+        catalogRefreshBusy = true;
         try {
           const latest = await A.call("catalog");
           if (!Array.isArray(latest?.news)) return;
@@ -2342,8 +2372,10 @@
           updateStoreBell();
         } catch {
           // Keep previous news and continue normal browsing if offline.
+        } finally {
+          catalogRefreshBusy = false;
         }
-      }, 120000);
+      }, 360000);
       const channel = String(S.settings.config?.whatsapp_channel_url || "").trim();
       const channelValid = /^https:\/\/whatsapp\.com\/channel\/[a-zA-Z0-9]+\/?(?:\?.*)?$/.test(channel);
       const channelKey = "f90-channel-invite:" + channel;
