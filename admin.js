@@ -1567,8 +1567,10 @@
       '<div class="f90-custom-bg-check"><h3>صور تثبيت التطبيقات</h3>'+
       field("install_art_url","صورة صفحة تثبيت تطبيق المتجر","url",c.install_art_url||"")+
       field("install_art_file","رفع صورة لصفحة تثبيت المتجر","file","",'accept="image/png,image/jpeg,image/webp"')+
+      field("store_app_icon_file","رفع الشعار الذي يظهر عند تثبيت تطبيق المتجر (192 و512 تلقائيًا)","file","",'accept="image/png,image/jpeg,image/webp"')+
       field("admin_app_icon_url","أيقونة تثبيت تطبيق الإدارة","url",c.admin_app_icon_url||"")+
-      field("admin_app_icon_file","رفع أيقونة الإدارة","file","",'accept="image/png,image/jpeg,image/webp"')+'</div>'+
+      field("admin_app_icon_file","رفع أيقونة الإدارة (192 و512 تلقائيًا)","file","",'accept="image/png,image/jpeg,image/webp"')+
+      '<p class="muted small">ارفع صورة مربعة بدقة 512×512 بكسل أو أعلى. نظام التثبيت يستخدم صور PNG بالحجمين. صورة صفحة التثبيت مستقلة عن أيقونة التطبيق الفعلية.</p>'+'</div>'+
       '<div class="f90-design-visibility"><h3>إظهار وإخفاء عناصر الواجهة</h3>'+
       check("show_banners","إظهار بانرات الصفحة الرئيسية",c.show_banners!==false)+
       check("show_intro","إظهار بانر التعريف",c.show_intro!==false)+
@@ -1593,6 +1595,30 @@
          ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
   }
+  async function uploadAppInstallIcons(file,folder){
+    if(!file || !["image/png","image/jpeg","image/webp"].includes(file.type))
+      throw new Error("اختر صورة PNG أو JPG أو WebP للشعار");
+    if(typeof createImageBitmap!=="function")throw new Error("المتصفح لا يدعم معالجة أيقونات التثبيت. افتح لوحة الإدارة عبر Chrome أو Safari محدث.");
+    const bitmap=await createImageBitmap(file);
+    try{
+      if(bitmap.width<192 || bitmap.height<192)throw new Error("يجب أن تكون الصورة 192×192 بكسل على الأقل");
+      const urls={};
+      for(const px of [192,512]){
+        const canvas=document.createElement("canvas");
+        canvas.width=px;canvas.height=px;
+        const ctx=canvas.getContext("2d");
+        if(!ctx)throw new Error("تعذّر تجهيز أيقونة التطبيق");
+        ctx.fillStyle="#090b10";ctx.fillRect(0,0,px,px);
+        const scale=Math.min(px/bitmap.width,px/bitmap.height);
+        const dw=bitmap.width*scale,dh=bitmap.height*scale;
+        ctx.drawImage(bitmap,(px-dw)/2,(px-dh)/2,dw,dh);
+        const blob=await new Promise((resolve,reject)=>canvas.toBlob(v=>v?resolve(v):reject(new Error("تعذّر إنشاء PNG")),"image/png"));
+        const img=new File([blob],"f90-icon-"+px+".png",{type:"image/png"});
+        urls[px]=(await A.upload(img,"f90-images",folder)).url;
+      }
+      return urls;
+    }finally{bitmap.close?.();}
+  }
   async function saveVisualDesign(form,d){
     const prior=S.settings,c=prior.config||{},rawTitle="مرحبًا بك في كازية أف تسعين كارد";
     const heroFile=form.elements.hero_file.files?.[0];
@@ -1604,11 +1630,14 @@
     if(form.elements.promo_video_enabled.checked && d.promo_video_mode==="video" && !videoUrl)throw new Error("ارفع الفيديو قبل التفعيل");
     const bgFile=form.elements.site_background_file.files?.[0],
       artFile=form.elements.install_art_file.files?.[0],
+      storeAppFile=form.elements.store_app_icon_file.files?.[0],
       adminFile=form.elements.admin_app_icon_file.files?.[0];
     const bgUrl=bgFile?.size?(await A.upload(bgFile,"f90-images","backgrounds")).url:String(d.site_background_url||"").trim();
     if(form.elements.site_background_enabled.checked && !bgUrl)throw new Error("اختر صورة للخلفية");
     const artUrl=artFile?.size?(await A.upload(artFile,"f90-images","branding")).url:String(d.install_art_url||"").trim();
-    const adminIconUrl=adminFile?.size?(await A.upload(adminFile,"f90-images","branding")).url:String(d.admin_app_icon_url||"").trim();
+    const storeAppIcons=storeAppFile?.size?await uploadAppInstallIcons(storeAppFile,"app-icons"):null;
+    const adminAppIcons=adminFile?.size?await uploadAppInstallIcons(adminFile,"admin-icons"):null;
+    const adminIconUrl=adminAppIcons?.[512]||String(d.admin_app_icon_url||"").trim();
     const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1000),config:{...c,
       welcome:{...c.welcome,title_ar:rawTitle},
       hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
@@ -1621,7 +1650,13 @@
       display_text:String(d.promo_video_display_text||"").trim().slice(0,130),
       messages:[d.promo_video_message_1,d.promo_video_message_2,d.promo_video_message_3].map(x=>String(x||"").trim().slice(0,150))},
       site_background:{...c.site_background,enabled:form.elements.site_background_enabled.checked,url:bgUrl,dim:Number(d.site_background_dim??0.48)},
-      install_art_url:artUrl,admin_app_icon_url:adminIconUrl,
+      install_art_url:artUrl,
+      app_icon_url:storeAppIcons?.[512]||c.app_icon_url,
+      app_icon_192_url:storeAppIcons?.[192]||c.app_icon_192_url,
+      app_icon_512_url:storeAppIcons?.[512]||c.app_icon_512_url,
+      admin_app_icon_url:adminIconUrl,
+      admin_app_icon_192_url:adminAppIcons?.[192]||c.admin_app_icon_192_url,
+      admin_app_icon_512_url:adminAppIcons?.[512]||c.admin_app_icon_512_url,
       edge_glow_color:d.edge_glow_color,edge_glow_enabled:form.elements.edge_glow_enabled.checked}};
     await A.call("settings.save",{data:updated});
     await refreshSettings(); brand(); designCenter(); toast("تم حفظ التصميم والنصوص بنجاح");
