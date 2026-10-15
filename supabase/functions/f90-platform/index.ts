@@ -409,11 +409,24 @@ async function buildPublicCatalog() {
       (product?.commerce?.fulfillment === "automatic" &&
         (provider.adapter === "omega" || provider.config?.automatic_orders_enabled !== true)));
   }).map((entry: any) => entry.product_id));
+  // A single category lookup instead of repeated linear scans for every
+  // product and its ancestors. Cache results only inside this catalog build.
+  const visibilityMemo = new Map<string,boolean>();
   const visible = (id: string, seen = new Set<string>()): boolean => {
+    if (visibilityMemo.has(id)) return visibilityMemo.get(id)!;
     if (seen.has(id)) return false;
     seen.add(id);
-    const c = categories.find((x: any) => x.id === id);
-    return !!c && (!c.parent_id || visible(c.parent_id, seen));
+    const item: any = categoriesById.get(id);
+    const allowed = !!item && (!item.parent_id || visible(item.parent_id,seen));
+    visibilityMemo.set(id,allowed);
+    seen.delete(id);
+    return allowed;
+  };
+  const refillMemo = new Map<string,boolean>();
+  const isCategoryRefilling = (id: string): boolean => {
+    if (!id) return false;
+    if (!refillMemo.has(id)) refillMemo.set(id,parentRefilling(id,categories));
+    return refillMemo.get(id)!;
   };
   return {
     settings: {
@@ -431,7 +444,7 @@ async function buildPublicCatalog() {
     categories: categories
       .filter((c: any) => allowedCategoryIds.has(c.id) && visible(c.id))
       .map((c: any) =>
-        parentRefilling(c.id, categories)
+        isCategoryRefilling(c.id)
           ? {
               ...c,
               presentation: { ...c.presentation, availability: "refilling" },
@@ -441,7 +454,7 @@ async function buildPublicCatalog() {
     products: products
       .filter((p: any) => yassenProductIds.has(p.id) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
-        parentRefilling(p.category_id, categories) || pausedProductIds.has(p.id)
+        isCategoryRefilling(p.category_id) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
           : p,
       ),
