@@ -853,7 +853,7 @@ async function staff(a: Actor, b: any) {
     const enabled=b.enabled===true;
     if(enabled&&!p&&!direct)throw new AppError("F90_FIELDS",400,"ارفع ملفًا أو أدخل رابط بث صوت مباشر قبل التفعيل. لا يمكن بث YouTube مخفيًا.");
     const volume=Math.max(0,Math.min(1,Number(b.volume??0.35)||0));
-    const revision=new Date().toISOString();
+    const revision=p!==current.media_path||direct!==current.direct_audio_url ? new Date().toISOString() : current.updated_at;
     check(await db.from("f90_radio_sources").update({media_path:p,
       direct_audio_url:direct,youtube_url:youtube,mode,updated_at:revision}).eq("id",1).select("id").single());
     const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
