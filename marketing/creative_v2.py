@@ -100,7 +100,7 @@ def p5():
     im=base((247,244,240),(220,219,216));d=ImageDraw.Draw(im)
     d.polygon([(0,0),(1080,0),(1080,478),(0,670)],fill='#111421')
     logo(im,540,145,350)
-    t(im,'كيف تبدأ مع F90 CARD',540,391,44)
+    t(im,'طريقة الطلب من متجرنا',540,391,44)
     image_card(im,SCREEN,(55,510,455,1175),'#1c2637',rad=28)
     for n,(title,y) in enumerate([('تصفح الأقسام',604),('اختر الخدمة',798),('تابع طلبك',992)],1):
         d.rounded_rectangle((510,y,1020,y+160),radius=25,fill='#ffffff',outline='#c8c4c0',width=3)
