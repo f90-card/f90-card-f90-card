@@ -19,7 +19,7 @@ function ensure(){
  bubble.setAttribute("aria-label","مستوى صوت المتجر");
  bubble.innerHTML='<button type="button" class="f90-radio-orb" id="f90RadioOrb" aria-label="فتح التحكم بالصوت" aria-expanded="false" aria-controls="f90RadioPopup">'+
  '<svg width="23" height="23" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>'+
- '</button><div class="f90-radio-popup" id="f90RadioPopup" hidden>'+
+ '<img class="f90-radio-custom-icon" id="f90RadioIcon" alt="" hidden></button><div class="f90-radio-popup" id="f90RadioPopup" hidden>'+
  '<label for="f90RadioVolume">الصوت <output id="f90RadioPercent">35%</output></label>'+
  '<input type="range" id="f90RadioVolume" min="0" max="100" value="35" aria-label="مستوى صوت المتجر">'+
  '<small class="f90-radio-hint" id="f90RadioHint" role="status"></small></div>';
@@ -120,6 +120,25 @@ function createMedia(mode){
  // Pre-fetch before the user taps, to preserve user activation for play().
  void prepareSource().then(()=>{if(state.enabled)void begin();});
 }
+function applyBubble(value){
+ ensure();
+ const o=value&&typeof value==="object"?value:{};
+ const side=o.side==="left"?"left":"right";
+ const bounded=(v,min,max,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;};
+ bubble.dataset.side=side;
+ bubble.style.setProperty("--f90-radio-top",bounded(o.vertical,12,88,62)+"%");
+ bubble.style.setProperty("--f90-radio-mobile-size",bounded(o.size_mobile,32,88,44)+"px");
+ bubble.style.setProperty("--f90-radio-desktop-size",bounded(o.size_desktop,32,100,50)+"px");
+ bubble.style.setProperty("--f90-radio-opacity",String(bounded(o.opacity,.35,1,.7)));
+ const url=safeUrl(o.icon_url);
+ const icon=bubble.querySelector("#f90RadioIcon");
+ const original=bubble.querySelector("#f90RadioOrb svg");
+ if(icon){
+   icon.hidden=!url;
+   if(url && icon.src!==url)icon.src=url;
+   if(original)original.hidden=!!url;
+ }
+}
 function apply(next){
  ensure();
  const enabled=next?.enabled===true;
@@ -127,6 +146,7 @@ function apply(next){
  const revision=String(next?.revision||"");
  const changed=enabled!==state.enabled || mode!==state.mode || revision!==state.revision;
  state={enabled,mode,revision};
+ applyBubble(next?.bubble);
  bubble.hidden=!enabled;
  document.body.classList.toggle("f90-radio-on",enabled);
  if(!enabled){destroy();panel.hidden=true;return;}
@@ -144,7 +164,7 @@ async function refresh(){
 function sync(settings){
  // Catalog state gives a quick first paint; the tiny status endpoint is authoritative.
  const m=settings?.music||{};
- if(m.enabled===true && !state.enabled)apply({enabled:true,mode:m.mode||"audio",revision:""});
+ if(m.enabled===true && !state.enabled)apply({enabled:true,mode:"audio",revision:"",bubble:m.bubble||{}});
  void refresh();
 }
 function status(){return {enabled:state.enabled,playing:!!media&&!media.paused,mode:state.mode};}
