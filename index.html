@@ -84,13 +84,12 @@
     </script>
     <script src="./config.js?v=20261015-stability1" defer></script>
     <script src="./store-core.js" defer></script>
-    <script src="./api.js?v=20261015-stability1" defer></script>
+    <script src="./api.js?v=20261015-public-cors2" defer></script>
     <script src="./reports.js?v=20261013-12" defer></script>
     <script src="./f90-quran.js?v=20261014-13" defer></script>
     <script src="./f90-merchant-v2.js?v=2" defer></script>
     <script src="./f90-welcome-scene.js?v=4" defer></script>
     <script src="./f90-media-player.js?v=2" defer></script>
-    <script src="./f90-startup-rescue.js?v=2" defer></script>
     <script src="./app.js?v=20261015-emergency3" defer></script>
     <link rel="stylesheet" href="./f90-merchant-hub.css?v=1" />
     <link rel="stylesheet" href="./f90-experience-v3.css?v=2" />
@@ -191,17 +190,6 @@
     </nav>
     <div class="toast" id="toast" role="status" hidden></div>
     <div id="modalRoot"></div>
-    <script>
-      // Emergency browsing is explicitly read-only; never retry financial requests.
-      (function () {
-        setTimeout(function () {
-          if (document.documentElement.dataset.f90Ready === "1") return;
-          if (window.F90StartupRescue?.bootIncomplete()) {
-            window.F90StartupRescue.show().catch(function () {});
-          }
-        }, 15000);
-      })();
-    </script>
   </body>
 </html>
 
