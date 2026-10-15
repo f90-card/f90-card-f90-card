@@ -56,6 +56,65 @@ try {
        results.push({view:view.name,route:hash,valid:false,error:String(err).slice(0,450)});
      }
    }
+   // Read-only checkout geometry: no login, no submit, no wallet operations.
+   // Use currently published categories so tests do not depend on one product ID.
+   if (view.mobile && view.width <= 393) {
+     try {
+       await page.goto(ROOT+"#/",{waitUntil:"domcontentloaded",timeout:25000});
+       await page.waitForSelector("#mainContent",{timeout:15000});
+       await page.waitForTimeout(400);
+       const initial=await page.locator('#mainContent a[href^="#/category/"]').evaluateAll(
+         links=>[...new Set(links.map(a=>a.getAttribute("href")))].slice(0,12)
+       );
+       const queue=[...initial],seen=new Set();
+       let found=false;
+       while(queue.length && seen.size<16 && !found){
+         const dest=queue.shift();
+         if(!dest||seen.has(dest))continue;
+         seen.add(dest);
+         await page.goto(ROOT+dest,{waitUntil:"domcontentloaded",timeout:20000});
+         await page.waitForTimeout(300);
+         const products=page.locator('#mainContent [data-action="quick-product"]');
+         if(await products.count()){
+           await products.first().click();
+           found=true;
+           await page.waitForSelector('body.f90-checkout-open #quickProductPanel:not([hidden])',{timeout:5000});
+           await page.setViewportSize({width:view.width,height:425});
+           const field=page.locator('#quickProductPanel input[name^="customer_"]').first();
+           if(await field.count())await field.focus();
+           await page.waitForTimeout(250);
+           const geometry=await page.evaluate(()=>{
+             const card=document.querySelector("#quickProductPanel");
+             const v=window.visualViewport;
+             const top=v?.offsetTop||0,height=v?.height||window.innerHeight;
+             const b=card.getBoundingClientRect();
+             const hidden=n=>getComputedStyle(document.querySelector(n)).display==="none";
+             return {portal:card.parentElement===document.body,
+               footerHidden:hidden("#footer"),dockHidden:hidden("#mobileDock"),
+               cardWithinView:b.top>=top-10&&b.bottom<=top+height+10,
+               panelHeight:b.height,viewHeight:height};
+           });
+           const valid=geometry.portal&&geometry.footerHidden&&
+             geometry.dockHidden&&geometry.cardWithinView;
+           results.push({view:view.name,route:"checkout-with-keyboard",
+             valid,geometry});
+           await page.screenshot({path:"artifacts/f90-smoke/"+view.name+"-checkout-keyboard.png"});
+           await page.locator('#quickProductPanel [data-action="close-quick-product"]').first().click();
+           if(await page.locator("body.f90-checkout-open").count())
+             results.push({view:view.name,route:"checkout-close",valid:false,error:"Checkout did not close"});
+         } else {
+           const children=await page.locator('#mainContent a[href^="#/category/"]').evaluateAll(
+             links=>[...new Set(links.map(a=>a.getAttribute("href")))].slice(0,10)
+           );
+           queue.push(...children);
+         }
+       }
+     } catch(err) {
+       results.push({view:view.name,route:"checkout-with-keyboard",valid:false,error:String(err).slice(0,450)});
+     } finally {
+       await page.setViewportSize({width:view.width,height:view.height});
+     }
+   }
    // The admin entry should not expose management functionality to a visitor.
    try {
      await page.goto(ROOT+"admin.html",{waitUntil:"domcontentloaded",timeout:25000});
