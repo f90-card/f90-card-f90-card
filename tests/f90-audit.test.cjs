@@ -275,7 +275,9 @@ test("Visitors see only edge volume controls; managers own radio sources", () =>
   assert.match(live, /createSignedUrl\(path,\s*3600\)/);
   assert.match(live, /f90_radio_sources/);
   assert.match(live, /requireRole\(a,\s*"manager"\)/);
-  assert.match(radio, /el\.loop=true/);
+  assert.match(radio, /el\.loop=false/);
+  assert.match(radio, /el\.addEventListener\("ended",async\(\)=>/);
+  assert.match(radio, /\(trackIndex\+1\)%state\.tracks\.length/);
   assert.match(radio, /f90-radio-volume/);
   assert.match(radio, /f90-radio-orb/);
   assert.match(radio, /media\.state/);
