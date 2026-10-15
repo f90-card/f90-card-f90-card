@@ -1,0 +1,18 @@
+/* F90 branded account bubble keeps bottom navigation visible across pages */
+.f90-mobile-dock{overflow:visible!important;isolation:isolate}
+.f90-mobile-dock a[data-dock-page="profile"]{position:relative!important;isolation:isolate;padding-top:25px!important;overflow:visible!important}
+.f90-mobile-dock a[data-dock-page="profile"]>.f90-profile-dock-emblem{
+ position:absolute!important;inset-inline-start:50%!important;transform:translateX(50%)!important;bottom:30px!important;
+ width:54px!important;height:54px!important;display:grid!important;place-items:center!important;
+ padding:4px!important;border:2px solid rgba(255,67,108,.8);border-radius:50%;
+ background:radial-gradient(circle at 30% 20%,rgba(252,102,140,.25),rgba(12,17,26,.97));
+ box-shadow:0 2px 18px rgba(232,37,89,.28),0 8px 24px #0008;
+}
+.f90-profile-dock-emblem img{display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 0 4px #f34b7b5a)}
+.f90-mobile-dock a[data-dock-page="profile"].active>.f90-profile-dock-emblem{border-color:#ff285d;box-shadow:0 0 0 3px rgba(245,42,93,.16),0 0 20px rgba(255,40,98,.45)}
+.f90-mobile-dock a[data-dock-page="profile"]>span:last-child{position:relative;margin-top:21px;font-size:11px!important}
+:root[data-theme="cream"] .f90-profile-dock-emblem{background:linear-gradient(145deg,#fff,#f9e4eb)!important;border-color:#d75e86!important;box-shadow:0 0 15px #ba376639!important}
+:root.f90-route-jump{scroll-behavior:auto!important}
+:root.f90-route-jump *, :root.f90-route-jump *::before, :root.f90-route-jump *::after {scroll-behavior:auto!important}
+@media(min-width:880px){.f90-mobile-dock a[data-dock-page="profile"]>.f90-profile-dock-emblem{width:48px!important;height:48px!important}}
+@media(prefers-reduced-motion:reduce){.f90-profile-dock-emblem{transition:none!important}}
