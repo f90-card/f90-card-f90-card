@@ -91,7 +91,7 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
-  assert.match(mainHtml,/app\.js\?v=20261015-no-top100-1/);
+  assert.match(mainHtml,/app\.js\?v=20261015-search-cards-1/);
   assert.match(mainHtml,/f90-visa-checkout\.css\?v=20261015-keyboard-checkout3/);
 });
 test("Catalog and supplier availability speedups preserve safe server quote checks",()=>{
@@ -126,7 +126,7 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/\? 2500 : 400/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
-  assert.match(mainHtml,/app\.js\?v=20261015-no-top100-1/);
+  assert.match(mainHtml,/app\.js\?v=20261015-search-cards-1/);
   assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
   assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
   assert.match(app,/await A\.call\("quote", \{/);
