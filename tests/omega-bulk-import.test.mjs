@@ -63,9 +63,9 @@ test("bulk import preserves supplier names, deduplicates IDs and flags uncertain
   assert.equal(result.imported, 1);
   assert.equal(result.needsReview, 1);
 });
-test("bulk import cannot run for unrelated supplier", async () => {
+test("bulk import cannot run for an unsupported supplier adapter", async () => {
   const h = harness([{ id: 1, name: "A", rate: 1 }], async () => []);
-  await assert.rejects(h.importAllProviderDrafts({ adapter: "smm" }, {}), /مخصص لأوميغا/);
+  await assert.rejects(h.importAllProviderDrafts({ adapter: "unsupported" }, {}), /الاستيراد الشامل/);
 });
 
 test("Omega classifier prioritizes gift-card products over generic game categories", () => {
