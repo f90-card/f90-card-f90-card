@@ -100,3 +100,36 @@
 .f90-social-edit-row .field{min-width:0}
 .f90-social-edit-row label:last-child{display:flex;align-items:center;gap:6px}
 @media(max-width:700px){.f90-media-editor-row,.f90-social-edit-row{grid-template-columns:1fr}.f90-media-editor-preview{grid-row:auto}}
+
+/* iPhone 18 Pro Max burgundy-inspired metal frame, actual store media remains unobstructed. */
+.f90-home-devices .f90-home-phone-shell{
+  box-sizing:border-box;border-radius:clamp(5px,calc(var(--f90-phone-size,178px)*.19),39px);
+  border:2px solid #b06680;
+  background:linear-gradient(120deg,#3c0c20,#c35b79 5%,#632038 13%,#260e1a 35%,#621c33 64%,#d89aab 94%,#401120);
+  box-shadow:inset 0 1px 2px #fff8,inset 0 -1px 4px #200910,0 0 0 1px #341321,0 16px 32px #0005;
+  padding:clamp(1px,.45vw,7px);
+}
+.f90-home-devices .f90-home-phone-screen{
+  box-sizing:border-box;border:1px solid #1c1319;border-radius:inherit;
+}
+.f90-home-devices .f90-home-phone-mark{
+  display:block;position:absolute;right:5%;bottom:4%;width:clamp(12px,22%,42px);max-height:15%;
+  height:auto;object-fit:contain;opacity:.75;pointer-events:none;z-index:2;
+  filter:drop-shadow(0 1px 2px #000a);
+}
+.f90-home-devices .f90-home-laptop-shell{filter:drop-shadow(0 16px 19px #0005);transform:rotateY(-4deg)}
+.f90-home-devices .f90-home-laptop-display{
+  box-sizing:border-box;border:5px solid #26282e;border-bottom:9px solid #292b31;
+  border-radius:12px 12px 4px 4px;box-shadow:inset 0 1px 2px #fff2,0 0 0 1px #899099;
+  background:#0a0b0f;
+}
+.f90-home-devices .f90-home-laptop-base{
+  box-shadow:0 2px 2px #0005,0 6px 10px #0004;
+  background:linear-gradient(180deg,#f7f7fa 0%,#acb1b9 36%,#595e67 72%,#252a32 100%);
+}
+.f90-home-devices{gap:clamp(5px,2.4vw,22px);width:min(100%,800px);margin:8px auto 12px}
+@media(max-width:600px){
+  .f90-home-devices{gap:6px;padding:6px 3px}
+  .f90-home-devices .f90-home-phone-shell{border-width:1px;padding:clamp(1px,1vw,4px)}
+  .f90-home-devices .f90-home-laptop-display{border-width:3px;border-bottom-width:5px}
+}
