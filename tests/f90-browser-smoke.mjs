@@ -9,7 +9,7 @@ const profiles = [
  { name:"tablet-768",width:768,height:1024,mobile:true },
  { name:"desktop-1440",width:1440,height:900,mobile:false },
 ];
-const routes = ["#/","#/welcome","#/vip","#/support","#/policy/about","#/auth"];
+const routes = ["#/","#/welcome","#/vip","#/support","#/policy/about","#/policy/privacy","#/policy/terms","#/policy/purchase","#/policy/deposits","#/policy/usage","#/policy/resellers","#/search","#/favorites","#/notifications","#/install","#/quran","#/auth","#/wallet","#/deposit","#/orders","#/history","#/verification","#/security"];
 await fs.mkdir("artifacts/f90-smoke",{recursive:true});
 const browser = await chromium.launch({headless:true});
 const results=[];
