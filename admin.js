@@ -1704,35 +1704,42 @@
     }catch{return "";}
   }
   function mediaCenter(){
-    const music=S.settings?.config?.music||{},youtube=f90YouTubeId(music.youtube_url);
-    main.innerHTML=head("مركز الموسيقى والوسائط","تحميل وتشغيل الموسيقى في المتجر من ملف صوتي، أو عرض فيديو يوتيوب من مشغله المرئي. التحكم للإدارة فقط.")+
-      '<section class="panel"><h2>إعدادات المشغّل</h2><form id="mediaCenterForm">'+
-      check("music_enabled","تفعيل مشغل F90 CARD للزوار",music.enabled===true)+
-      select("music_mode","مصدر الوسائط",[["audio","ملف صوتي من المتجر"],["youtube","مشغل YouTube المرئي"]],music.mode||"audio")+
-      field("music_audio_url","رابط ملف MP3 / OGG / WAV","url",music.audio_url||"")+
-      field("music_audio_file","رفع ملف صوتي حتى 12 ميجابايت","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4"')+
-      field("music_youtube_url","رابط فيديو يوتيوب","url",music.youtube_url||"")+
-      field("music_volume","مستوى صوت الملفات من 0 إلى 1","number",music.volume??0.35,'min="0" max="1" step="0.05"')+
-      check("music_loop","تكرار تشغيل الملف الصوتي",music.loop!==false)+
-      '<div class="notice">تشغيل صوت في الخلفية يتطلب موافقة الزائر وقد تمنع المتصفحات التشغيل التلقائي. مقاطع يوتيوب تظهر داخل مشغل مرئي، ولن نخفي المصدر أو نتجاوز قيود المنصة.</div>'+
-      '<button class="button" type="submit">حفظ إعدادات الوسائط</button></form></section>'+
-      '<section class="panel"><h2>معاينة المصدر الحالي</h2>'+
-      (music.mode==="youtube"&&youtube?'<iframe title="معاينة YouTube" loading="lazy" style="width:min(100%,560px);aspect-ratio:16/9;border:0" allow="encrypted-media;picture-in-picture" src="https://www.youtube-nocookie.com/embed/'+e(youtube)+'"></iframe>'
-        : music.audio_url?'<audio controls preload="none" src="'+e(C.safeUrl(music.audio_url))+'"></audio>':'<p class="muted">لم يُحدّد مصدر صوتي بعد.</p>')+
-      '</section>';
+    const music=S.settings?.config?.music||{};
+    const privateTrack=typeof music.path==="string" && music.path.startsWith("tracks/");
+    const legacyTrack=!privateTrack && !!music.audio_url;
+    main.innerHTML=head("راديو أف تسعين","رفع الصوت أو الفيديو للإدارة فقط، وتشغيلهما كصوت متواصل في المتجر دون عرض الفيديو.")+
+      '<section class="panel"><h2>إدارة البث الصوتي</h2><form id="mediaCenterForm">'+
+      check("music_enabled","تفعيل الراديو الثابت للزوار",music.enabled===true)+
+      '<p class="muted small">ارفع MP3 أو OGG أو WAV أو M4A، ويمكنك رفع MP4 أو WebM ليتحول إلى صوت فقط عند التشغيل. الحد الأقصى 40 ميجابايت. ملفات الرفع الجديدة خاصة ولا تظهر ضمن ملفات المتجر العامة.</p>'+
+      field("music_audio_file","رفع مقطع صوتي أو فيديو للراديو","file","",'accept="audio/mpeg,audio/ogg,audio/wav,audio/mp4,video/mp4,video/webm"')+
+      '<p class="notice">'+(privateTrack?"ملف خاص محفوظ وجاهز للتشغيل.":
+        legacyTrack?"المصدر القديم ملف عام. ارفع الملف مرة أخرى هنا لحفظه في المساحة الخاصة.":
+        "لم يُرفع أي مقطع خاص بعد. اختر ملفًا ثم احفظ لتشغيل الراديو.")+'</p>'+
+      '<label class="field"><span>مستوى الصوت الافتراضي</span><input type="range" name="music_volume" id="musicVolumeControl" min="0" max="1" step="0.01" value="'+e(music.volume??0.35)+'" aria-label="مستوى صوت الراديو الافتراضي"><output id="musicVolumeValue">'+Math.round(Number(music.volume??0.35)*100)+'%</output></label>'+
+      '<p class="muted small">يستمر الراديو أثناء التنقل بين الصفحات ويكرر المقطع حتى يضغط الزائر إيقاف. يحتفظ المتصفح بمستوى الصوت والإيقاف. بعض المتصفحات تتطلب أول ضغطة لتشغيل الصوت؛ لا يمكن تجاوز هذا القيد. مصدر YouTube لا يعمل بصوت مخفي حفاظًا على ضوابط المنصة.</p>'+
+      '<button class="button" type="submit">حفظ وتشغيل الراديو</button></form></section>';
+    const ctl=$("musicVolumeControl");
+    if(ctl)ctl.addEventListener("input",()=>{$("musicVolumeValue").textContent=Math.round(Number(ctl.value)*100)+"%";});
   }
   async function saveMediaCenter(form,d){
     const c=S.settings.config||{},music=c.music||{},file=form.elements.music_audio_file.files?.[0];
-    const audioUrl=file?.size?(await A.upload(file,"f90-audio","tracks")).url:String(d.music_audio_url||"").trim();
-    const youtube=String(d.music_youtube_url||"").trim();
-    if(form.elements.music_enabled.checked && d.music_mode==="audio" && !audioUrl)throw new Error("ارفع ملف الصوت قبل التفعيل");
-    if(form.elements.music_enabled.checked && d.music_mode==="youtube" && !f90YouTubeId(youtube))throw new Error("ضع رابط فيديو يوتيوب صالحًا");
+    let path=typeof music.path==="string"&&music.path.startsWith("tracks/")?music.path:"";
+    let mode=music.mode==="video"?"video":"audio";
+    let legacyUrl=String(music.audio_url||"");
+    if(file?.size){
+      const uploaded=await A.upload(file,"f90-radio","tracks");
+      path=uploaded.path;
+      legacyUrl="";
+      mode=file.type.startsWith("video/")?"video":"audio";
+    }
+    if(form.elements.music_enabled.checked && !path && !legacyUrl)
+      throw new Error("ارفع ملف الصوت أو الفيديو قبل تفعيل البث");
     const next={...S.settings,config:{...c,music:{...music,
-      enabled:form.elements.music_enabled.checked,mode:d.music_mode,audio_url:audioUrl,
-      youtube_url:youtube,volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),
-      loop:form.elements.music_loop.checked}}};
+      enabled:form.elements.music_enabled.checked,mode,path,audio_url:legacyUrl,
+      youtube_url:"",volume:Math.max(0,Math.min(1,Number(d.music_volume??0.35))),loop:true}}};
     await A.call("settings.save",{data:next});
-    await refreshSettings();mediaCenter();toast("تم حفظ مصدر الموسيقى وحالة تشغيله");
+    await refreshSettings();mediaCenter();
+    toast("تم حفظ الراديو ومصدر التشغيل الخاص بنجاح");
   }
   async function telegramAlerts(){
     const prefs=S.settings.config?.telegram_alerts||{};
