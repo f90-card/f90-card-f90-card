@@ -21,3 +21,14 @@ body::after{background-image:linear-gradient(120deg,transparent 48%,var(--f90-am
 @media(max-width:700px){body::before{opacity:.55}body::after{opacity:.12}.main-content::before{width:230px;height:230px;filter:blur(26px);opacity:.25}}
 @media(prefers-reduced-motion:reduce){body::before,body::after,.main-content::before{animation:none!important;will-change:auto!important}}
 @media(prefers-reduced-data:reduce){body::after{display:none}}
+
+
+/* The separately configured F90 watermark remains animated; ornamental
+   full-viewport layers stay still on narrow screens to avoid frame drops. */
+@media(max-width:760px){
+  body::before,body::after,.main-content::before{
+    animation:none!important;
+    will-change:auto!important;
+  }
+  .main-content::before{filter:none!important;opacity:.12!important}
+}
