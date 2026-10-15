@@ -352,12 +352,13 @@
         "المبلغ الأصلي",
         "الرصيد بالدولار",
         "الحالة",
+        "راجعه",
         "المراجعة",
       ];
       rows = r.items
         .map(
           (d) =>
-            `<tr><td>${customer(d.customer)}<small class="muted">${e(C.date(d.created_at))}</small></td><td>${e(d.method_name)}</td><td>${e(C.money(d.amount, d.currency, true))}</td><td>${e(C.money(d.usd_amount, "USD", true))}<br><small class="muted">صرف ${e(d.rate_snapshot)}</small></td><td>${status(d.status)}</td><td><button class="button secondary small" data-action="detail-deposit" data-id="${d.id}">الإيصال والمراجعة</button></td></tr>`,
+            `<tr><td>${customer(d.customer)}<small class="muted">${e(C.date(d.created_at))}</small></td><td>${e(d.method_name)}</td><td>${e(C.money(d.amount, d.currency, true))}</td><td>${e(C.money(d.usd_amount, "USD", true))}<br><small class="muted">صرف ${e(d.rate_snapshot)}</small></td><td>${status(d.status)}</td><td>${e(d.reviewer?.display_name || (d.reviewed_by ? d.reviewed_by.slice(0,8) : "بانتظار المراجعة"))}</td><td><button class="button secondary small" data-action="detail-deposit" data-id="${d.id}">الإيصال والمراجعة</button></td></tr>`,
         )
         .join("");
     } else if (kind === "verification") {
@@ -366,12 +367,13 @@
         "نوع المستند",
         "تاريخ التقديم",
         "الحالة",
+        "راجعه",
         "المراجعة",
       ];
       rows = r.items
         .map(
           (v) =>
-            `<tr><td>${customer(v.customer)}</td><td>${v.document_type === "id" ? "هوية" : "جواز سفر"}</td><td>${e(C.date(v.created_at))}</td><td>${status(v.status)}</td><td><button class="button secondary small" data-action="detail-verification" data-id="${v.id}">عرض المستندات</button></td></tr>`,
+            `<tr><td>${customer(v.customer)}</td><td>${v.document_type === "id" ? "هوية" : "جواز سفر"}</td><td>${e(C.date(v.created_at))}</td><td>${status(v.status)}</td><td>${e(v.reviewer?.display_name || (v.reviewed_by ? v.reviewed_by.slice(0,8) : "بانتظار المراجعة"))}</td><td><button class="button secondary small" data-action="detail-verification" data-id="${v.id}">عرض المستندات</button></td></tr>`,
         )
         .join("");
     } else if (kind === "users") {
@@ -383,19 +385,19 @@
         )
         .join("");
     } else if (kind === "ledger") {
-      columns = ["التاريخ", "العميل", "الحركة", "المبلغ", "الرصيد قبل / بعد", "المرجع", "البيان"];
+      columns = ["التاريخ", "العميل", "الحركة", "المبلغ", "الرصيد قبل / بعد", "المرجع", "البيان", "المسؤول"];
       rows = r.items.map((x) => {
         const amount = Number(x.amount_usd || 0);
         const before = ledgerBalanceBefore(x);
         const label = { deposit: "إيداع", purchase: "شراء", refund: "استرداد", adjustment: "تسوية" }[x.kind] || x.kind;
-        return `<tr><td>${e(C.date(x.created_at))}</td><td>${customer(x.customer)}</td><td>${e(label)}</td><td class="${amount >= 0 ? "ledger-plus" : "ledger-minus"}">${e(C.money(amount))}</td><td>${e(C.money(before))}<br><strong>${e(C.money(x.balance_after))}</strong></td><td><small>${e(x.reference_id || x.id)}</small></td><td>${e(x.description || "—")}</td></tr>`;
+        return `<tr><td>${e(C.date(x.created_at))}</td><td>${customer(x.customer)}</td><td>${e(label)}</td><td class="${amount >= 0 ? "ledger-plus" : "ledger-minus"}">${e(C.money(amount))}</td><td>${e(C.money(before))}<br><strong>${e(C.money(x.balance_after))}</strong></td><td><small>${e(x.reference_id || x.id)}</small></td><td>${e(x.description || "—")}</td><td>${e(x.actor?.display_name || (x.actor_id ? x.actor_id.slice(0,8) : "النظام"))}</td></tr>`;
       }).join("");
     } else {
       columns = ["التاريخ", "العملية", "العنصر", "المنفّذ"];
       rows = r.items
         .map(
           (x) =>
-            `<tr><td>${e(C.date(x.created_at))}</td><td>${e(auditName(x.action))}</td><td><small>${e(x.target_id || "—")}</small></td><td><small>${e(x.actor_id || "النظام الآلي")}</small></td></tr>`,
+            `<tr><td>${e(C.date(x.created_at))}</td><td>${e(auditName(x.action))}</td><td><small>${e(x.target_id || "—")}</small></td><td><small>${e(x.actor?.display_name || x.actor?.email || x.actor_id || "النظام الآلي")}</small></td></tr>`
         )
         .join("");
     }
@@ -1483,11 +1485,12 @@
       value => ({ok:true,value,latency:performance.now()-started}),
       error => ({ok:false,error,latency:performance.now()-started})
     );
-    const [healthResult, suppliers] = await Promise.all([
+    const [healthResult, suppliers, runtime] = await Promise.all([
       healthCheck, A.call("staff.providers").then(
         value=>({status:"fulfilled",value}),
         reason=>({status:"rejected",reason})
-      )
+      ),
+      A.call("staff.runtime").then(value=>({status:"fulfilled",value}),reason=>({status:"rejected",reason}))
     ]);
     const health = healthResult.ok ? {status:"fulfilled",value:healthResult.value} : {status:"rejected",reason:healthResult.error};
     const latency = Math.max(0,Math.round(healthResult.latency));
@@ -1505,6 +1508,15 @@
          ["Providers","${e(running.length)}","مورّدون مفعّلون"],
          ["Sync Alerts","${e(stale.length+errored.length)}","مزامنة متأخرة أو فيها خطأ"]
         ].map(([n,v,d])=>`<div class="panel f90-monitor-stat"><small>${n}</small><strong>${v}</strong><span>${d}</span></div>`).join("")}</div>
+        <section class="panel"><h2>المتغيرات التشغيلية وحالة قوائم الانتظار</h2>
+        ${runtime.status==="fulfilled" ? `<div class="metric-grid">
+          <div class="panel"><small>قاعدة البيانات</small><strong>${e(runtime.value.database==="connected"?"متصلة":"تحتاج مراجعة")}</strong></div>
+          <div class="panel"><small>طلبات جارية/مراجعة</small><strong>${e(runtime.value.active_orders??"غير متاح")}</strong></div>
+          <div class="panel"><small>إيداعات بانتظار المراجعة</small><strong>${e(runtime.value.pending_deposits??"غير متاح")}</strong></div>
+          <div class="panel"><small>إشعارات قيد الانتظار</small><strong>${e(runtime.value.pending_outbox??"غير متاح")}</strong></div>
+        </div><p class="muted small">آخر فحص: ${e(C.date(runtime.value.collected_at))} · مدة استعلامات المراقبة ${e(runtime.value.sample_latency_ms)} ms · الخادم: ${e(runtime.value.runtime.platform)} · العملة المالية الأساسية: USD</p>
+        <div class="f90-runtime-status"><span>SUPABASE_URL: ${runtime.value.runtime.endpoint_configured?"مهيأ":"غير مهيأ"}</span><span>بيانات اتصال الخادم: ${runtime.value.runtime.server_credentials_configured?"مهيأة":"غير مهيأة"}</span></div><p class="muted small">هذه مؤشرات التشغيل الفعلية فقط. قيم الأسرار والتوكنات لا تُعرض داخل الموقع.</p>` : '<p class="notice warning">تعذّر استرجاع متغيرات الحالة. راجع الاتصال أو الصلاحيات.</p>'}
+        </section>
         <section class="panel"><h2>نتائج اتصال الموردين</h2><p class="muted">عرض حي للحالة المحفوظة؛ هذا الفحص لا ينفذ طلبات شراء.</p>
         ${suppliers.status==="rejected" ? '<p class="notice error">تعذّر قراءة الموردين؛ تحقق من الصلاحيات والاتصال.</p>' : ""}
         <div class="f90-monitor-list">${list.map(p=>`<article><strong>${e(p.name)}</strong><span>${p.is_enabled?"مفعّل":"موقوف"} · ${e(p.adapter)} · ${e(p.currency)}</span><span>آخر مزامنة ناجحة: ${e(p.config?.sync_last_success ? C.date(p.config.sync_last_success) : "غير مسجّلة")}</span>${p.config?.sync_error ? `<small class="f90-monitor-fault">${e(String(p.config.sync_error).slice(0,240))}</small>` : ""}</article>`).join("")||'<p class="muted">لا توجد مصادر خدمة.</p>'}</div>
