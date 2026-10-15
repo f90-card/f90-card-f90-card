@@ -234,6 +234,10 @@
     $("headerWallet").innerHTML =
       I("wallet") +
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(displayMoney(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
+    // Preserve preference controls (and their event listeners) across drawer rebuilds.
+    const preservedPreferences=document.querySelector("#drawer .drawer-preferences");
+    if(preservedPreferences && preservedPreferences.parentElement?.id==="drawerProfile")
+      $("drawerProfile").insertAdjacentElement("afterend",preservedPreferences);
     $("drawerProfile").innerHTML =
       `<section class="f90-drawer-identity"><a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>${me ? `<button type="button" class="f90-drawer-session" data-action="logout">${I("logout")} تسجيل الخروج</button>` : `<a class="f90-drawer-session" href="#/auth">${I("user")} تسجيل الدخول</a>`}</section>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
