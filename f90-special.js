@@ -57,6 +57,7 @@ function render(kind,settings,user){
   transfer_eta_max_minutes:num(tr.eta_max_hours,48,1,48)*60
  };
  const d=kind||"transfer";
+ if(d==="website"){location.hash="#/product/f90-full-website-500";return;}
  const isVerified=!!user?.profile?.is_verified,isSigned=!!user;
  const salary=d==="salary",transfer=d==="transfer",account=d==="account",design=d==="design",website=d==="website";
  const methods=Array.isArray(tr.methods)?tr.methods.filter(x=>x?.enabled!==false):[];
