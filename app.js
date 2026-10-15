@@ -2166,7 +2166,7 @@
     syncInstallButtons();
   });
   window.matchMedia?.("(display-mode: standalone)")?.addEventListener?.("change",syncInstallButtons);
-    A.client.auth.onAuthStateChange((event) => {
+    A.client?.auth?.onAuthStateChange?.((event) => {
     if (event === "PASSWORD_RECOVERY")
       setTimeout(() => {
         location.hash = "#/reset";
