@@ -1,7 +1,7 @@
 /* F90 CARD: edge radio control. The administrator is the only broadcaster. */
 .f90-radio-bubble[hidden],.f90-radio-popup[hidden]{display:none!important}
-.f90-radio-bubble{position:fixed;z-index:500;right:max(8px,env(safe-area-inset-right));top:58%;transform:translateY(-50%);direction:rtl;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 16px);font-family:inherit}
-.f90-radio-orb{display:grid;place-items:center;width:49px;height:49px;min-width:49px;padding:0;background:rgba(25,19,33,.53);border:1px solid rgba(255,92,119,.55);border-radius:50%;color:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 5px 18px #06040c66,0 0 18px #e0184333;cursor:pointer;touch-action:manipulation;transition:background .2s,box-shadow .2s}
+.f90-radio-bubble{position:fixed;z-index:500;right:max(8px,env(safe-area-inset-right));top:var(--f90-radio-top,62%);transform:translateY(-50%);direction:rtl;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 16px);font-family:inherit}
+.f90-radio-orb{display:grid;place-items:center;width:var(--f90-radio-desktop-size,50px);height:var(--f90-radio-desktop-size,50px);min-width:var(--f90-radio-desktop-size,50px);padding:0;background:rgba(25,19,33,var(--f90-radio-opacity,.7));border:1px solid rgba(255,92,119,.55);border-radius:50%;color:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 5px 18px #06040c66,0 0 18px #e0184333;cursor:pointer;touch-action:manipulation;transition:background .2s,box-shadow .2s}
 .f90-radio-orb:hover,.f90-radio-orb[aria-expanded="true"]{background:rgba(125,20,49,.71);box-shadow:0 4px 18px #06040c88,0 0 22px #fa285766}
 .f90-radio-orb:focus-visible,.f90-radio-popup input:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .f90-radio-popup{position:absolute;right:59px;top:50%;transform:translateY(-50%);min-width:195px;max-width:min(65vw,235px);border:1px solid #ff517488;border-radius:16px;background:rgba(15,17,29,.87);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 11px 30px #000a;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:#fff}
@@ -13,3 +13,18 @@
 .f90-radio-hidden-media{position:fixed!important;top:-100px!important;left:-100px!important;opacity:0!important;width:1px!important;height:1px!important;pointer-events:none!important;overflow:hidden!important;clip-path:inset(50%)!important}
 @media(max-width:480px){.f90-radio-bubble{right:max(5px,env(safe-area-inset-right));top:64%}.f90-radio-orb{width:42px;height:42px;min-width:42px}.f90-radio-popup{right:49px;min-width:180px;padding:11px}}
 @media(prefers-reduced-motion:reduce){.f90-radio-orb{transition:none}}
+
+
+/* Configurable by the store manager. Flyout always opens inward. */
+.f90-radio-bubble[data-side="left"]{right:auto;left:max(8px,env(safe-area-inset-left));direction:ltr}
+.f90-radio-bubble[data-side="left"] .f90-radio-popup{right:auto;left:calc(var(--f90-radio-desktop-size,50px) + 9px)}
+.f90-radio-bubble[data-side="right"] .f90-radio-popup{right:calc(var(--f90-radio-desktop-size,50px) + 9px)}
+.f90-radio-custom-icon{display:block;max-width:78%;max-height:78%;width:78%;height:78%;object-fit:contain;border-radius:50%;pointer-events:none}
+.f90-radio-custom-icon[hidden],.f90-radio-orb svg[hidden]{display:none!important}
+.f90-radio-bubble .f90-radio-popup{direction:rtl;box-sizing:border-box}
+@media(max-width:480px){
+ .f90-radio-bubble{top:var(--f90-radio-top,62%)}
+ .f90-radio-orb{width:var(--f90-radio-mobile-size,44px);height:var(--f90-radio-mobile-size,44px);min-width:var(--f90-radio-mobile-size,44px)}
+ .f90-radio-bubble[data-side="left"] .f90-radio-popup{left:calc(var(--f90-radio-mobile-size,44px) + 7px)}
+ .f90-radio-bubble[data-side="right"] .f90-radio-popup{right:calc(var(--f90-radio-mobile-size,44px) + 7px)}
+}
