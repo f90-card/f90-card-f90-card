@@ -1,4 +1,4 @@
-const CACHE = "f90-static-v3-11";
+const CACHE = "f90-static-v3-12";
 const STATIC = [
   "./offline.html",
   "./styles.css",
@@ -54,6 +54,6 @@ self.addEventListener("fetch", (ev) => {
         if (r.ok) caches.open(CACHE).then((c) => c.put(req, r.clone()));
         return r;
       })
-      .catch(() => caches.match(req)),
+      .catch(() => caches.match(req, { ignoreSearch: true })),
   );
 });
