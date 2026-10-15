@@ -1983,7 +1983,7 @@
       main.innerHTML=head("تنبيهات تلجرام","حصل خطأ أثناء قراءة سجل الإرسال")+
         '<div class="notice error">'+e(String(error.message||error))+'</div>';return;
     }
-    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",test:"رسالة اختبار"};
+    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",user_new:"عميل جديد",order_manual:"طلب يدوي جديد",manual_request:"طلب خدمة يدوية",test:"رسالة اختبار"};
     const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة"};
     const recent=(result.recent||[]).map(x=>
       '<tr><td>'+e(labels[x.event_type]||x.event_type)+'</td><td>'+e(states[x.status]||x.status)+'</td>'+
@@ -1993,7 +1993,10 @@
       check("telegram_deposits","إشعار عن كل طلب إيداع جديد",prefs.deposits_enabled!==false)+
       check("telegram_verification","إشعار طلب توثيق جديد بدون إرسال وثائق الهوية",prefs.verification_enabled!==false)+
       check("telegram_order_reviews","طلبات اعتراض أو إلغاء تتطلب المراجعة",prefs.order_reviews_enabled!==false)+
-      '<p class="muted small">لن تُرسل تنبيهات لجميع المشتريات العادية أو رسائل تسويقية. تكرار نفس طلب الإيداع لا ينشئ إشعارًا جديدًا.</p>'+
+      check("telegram_new_users","مستخدم جديد (دون إرسال بيانات شخصية)",prefs.new_users_enabled!==false)+
+      check("telegram_manual_orders","الطلبات اليدوية الجديدة",prefs.manual_orders_enabled!==false)+
+      check("telegram_manual_requests","طلبات التصميم والحسابات والمواقع",prefs.manual_requests_enabled!==false)+
+      '<p class="muted small">لن تُرسل تنبيهات للمشتريات الآلية العادية أو معلومات سرية للعملاء. تكرار نفس طلب الإيداع لا ينشئ إشعارًا جديدًا.</p>'+
       '<button class="button" type="submit">حفظ أنواع التنبيهات</button></form></section>'+
       '<section class="panel"><h2>توصيل بوت تلجرام بأمان</h2>'+
       '<div class="notice '+(result.configured?'success':'warning')+'">'+
@@ -2044,7 +2047,10 @@
     const telegram_alerts={...c.telegram_alerts,
       deposits_enabled:form.elements.telegram_deposits.checked,
       verification_enabled:form.elements.telegram_verification.checked,
-      order_reviews_enabled:form.elements.telegram_order_reviews.checked};
+      order_reviews_enabled:form.elements.telegram_order_reviews.checked,
+      new_users_enabled:form.elements.telegram_new_users.checked,
+      manual_orders_enabled:form.elements.telegram_manual_orders.checked,
+      manual_requests_enabled:form.elements.telegram_manual_requests.checked};
     await A.call("settings.save",{data:{...S.settings,config:{...c,telegram_alerts}}});
     await refreshSettings();await telegramAlerts();toast("تم حفظ أنواع إشعارات تلجرام");
   }
