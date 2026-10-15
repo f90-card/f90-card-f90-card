@@ -203,3 +203,18 @@
  #footer .footer-bottom{padding:10px 0 0;gap:5px;font-size:10px}
 }
 @media(max-width:370px){#footer .footer-grid{gap:7px}}
+
+.f90-pricing-entries{display:grid;gap:9px;max-height:490px;overflow:auto;overscroll-behavior:contain;padding:7px 4px}
+.f90-pricing-item{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr);align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:9px 11px;min-width:0}
+.f90-pricing-item[hidden]{display:none!important}
+.f90-pricing-item>strong{font-size:12px;overflow-wrap:anywhere}
+.f90-pricing-item>small{font-size:10px;color:var(--muted)}
+.f90-margin-change{display:flex;flex-wrap:wrap;align-items:end;gap:9px}
+.f90-margin-change>.field{flex:1 1 115px;min-width:0}
+.f90-margin-change input{width:100%;min-height:40px}
+.f90-margin-change button{min-height:39px}
+.f90-margin-change [data-feedback]{flex-basis:100%;color:var(--accent);font-size:11px}
+.f90-pricing-filter{width:min(100%,320px);height:40px;padding:8px;margin:10px 0}
+#f90SupplierPriceForm .field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+#f90SupplierPriceForm button{min-height:43px;margin-top:10px}
+@media(max-width:600px){.f90-pricing-item{grid-template-columns:1fr;gap:4px}}
