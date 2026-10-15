@@ -110,6 +110,21 @@
   }
   function brand() {
     const c = S.settings.config || {};
+    const siteBg=C.safeUrl(c.site_background?.enabled ? c.site_background.url : "");
+    if(siteBg){
+      const dim=Math.max(0,Math.min(0.9,Number(c.site_background?.dim??0.48)));
+      document.body.style.backgroundImage='linear-gradient(rgba(8,8,13,'+dim+'),rgba(8,8,13,'+dim+')), url('+JSON.stringify(siteBg)+')';
+      document.body.style.backgroundSize="cover";
+      document.body.style.backgroundAttachment="fixed";
+      document.body.style.backgroundPosition="center";
+      document.body.style.backgroundRepeat="no-repeat";
+    }else{
+      document.body.style.backgroundImage="";
+      document.body.style.backgroundSize="";
+      document.body.style.backgroundAttachment="";
+      document.body.style.backgroundPosition="";
+    }
+    window.F90MediaPlayer?.sync(c);
     document.documentElement.style.setProperty("--f90-edge-color", /^#[0-9a-fA-F]{6}$/.test(c.edge_glow_color || "") ? c.edge_glow_color : "#ff2444");
     document.documentElement.style.setProperty("--f90-edge-duration", `${Math.max(4, Math.min(60, Number(c.edge_glow_speed) || 14))}s`);
     document.documentElement.style.setProperty("--f90-reveal-duration", `${Math.max(0.2, Math.min(3, Number(c.card_flip_speed) || 0.8))}s`);
@@ -253,6 +268,7 @@
       ["/", "الرئيسية", "grid"],
       ["welcome", "التعرّف على F90", "doc"],
       ["quran", "القرآن الكريم", "book"],
+      ...(c.music?.enabled?[["music","ميوزك أف تسعين","headphones"]]:[]),
       ["favorites", "المفضلة", "heart"],
       ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
@@ -473,32 +489,26 @@
       return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(C.previewPrice(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
     return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
+  function syncWelcomePhoneVideo() {
+    promoVideoObserver?.disconnect();
+    promoVideoObserver=null;
+    const phoneVideo=main.querySelector(".f90-welcome-screen-video");
+    if(!phoneVideo || typeof IntersectionObserver!=="function")return;
+    phoneVideo.muted=true;
+    promoVideoObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting && document.visibilityState==="visible"){
+          const source=phoneVideo.querySelector("source[data-src]");
+          if(source && !source.src){source.src=source.dataset.src;phoneVideo.load();}
+          phoneVideo.play().catch(()=>{});
+        }else phoneVideo.pause();
+      });
+    },{threshold:0.4});
+    promoVideoObserver.observe(phoneVideo);
+  }
   function welcome() {
-    const c=S.settings.config||{},w=c.welcome||{};
-    const methods=(c.payment_methods||[]).filter(m=>m.enabled);
-    const available=S.products.filter(p=>p.is_active&&!C.unavailable(p));
-    const heroArt=C.safeUrl(w.image_url||c.hero_image||"./assets/sections/hero.png");
-    const cards=[["grid","استكشف الأقسام","اختر من الألعاب والتطبيقات والخدمات المتاحة","#/"],["wallet","محفظة واضحة","اعرف رصيدك وتابع الإيداعات والحركات","#/wallet"],["clock","طلباتك خطوة بخطوة","راجع الحالة والتفاصيل من حسابك","#/orders"],["shield","شراء بمعلومات واضحة","تحقق من الخدمة والسعر قبل التأكيد","#/policy/purchase"]];
-    main.innerHTML=`<div class="f90-experience" dir="rtl">
-      <section class="f90-experience-hero" aria-labelledby="f90-experience-title"><div class="f90-welcome-lightmarks" aria-hidden="true"><i>F90</i><i>PLAY</i><i>LIVE</i><i>F90</i><i>CARD</i><i>EXPLORE</i></div>
-        <div class="f90-experience-orbit orbit-one" aria-hidden="true"></div><div class="f90-experience-orbit orbit-two" aria-hidden="true"></div>
-        <div class="f90-experience-copy"><span class="f90-experience-chip"><span class="f90-live-dot"></span> F90 CARD · أف تسعين كارد</span>
-        <p class="f90-experience-pretitle">وجهتك إلى عالم الخدمات الرقمية</p>
-        <h1 id="f90-experience-title">${e(w.title_ar || "عالمك الرقمي يبدأ هنا")} <span>F90 CARD.</span></h1>
-        <p class="f90-experience-description">${e(w.subtitle_ar||"الألعاب، شحن التطبيقات والخدمات الرقمية في تجربة عربية واحدة. تصفّح، اختر، وتابع كل طلب بوضوح.")}</p>
-        <div class="f90-experience-actions"><a class="button" href="#/">اكتشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/install">ثبّت التطبيق ${I("plus")}</a></div>
-        <div class="f90-experience-signals"><span>${I("shield")} حساب موثّق للشراء</span><span>${I("clock")} متابعة الطلبات</span><span>${I("wallet")} محفظة بالدولار</span></div><div class="f90-experience-real-stats" aria-label="مؤشرات فعلية من المتجر"><div><strong>${S.categories.filter(c=>c.is_active&&!c.parent_id).length}</strong><span>قسم رئيسي متاح</span></div><div><strong>${available.length}</strong><span>خدمة متاحة بالكتالوج</span></div><div><strong>${methods.length}</strong><span>طريقة إيداع مفعّلة</span></div></div></div>
-        <div class="f90-experience-visual"><div class="f90-experience-halo" aria-hidden="true"></div><div class="f90-experience-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="الشعار الرسمي لمتجر أف تسعين كارد" fetchpriority="high" decoding="async"><strong>F90 CARD</strong><span>PLAY · CONNECT · EXPLORE</span></div><div class="f90-experience-float float-a">${I("grid")} ألعاب وتطبيقات</div><div class="f90-experience-float float-b">${I("wallet")} خدمات رقمية</div></div>
-        <a class="f90-experience-scroll" href="#f90-experience-discover">اكتشف المزيد ↓</a>
-      </section>
-      <section class="f90-experience-featured-strip" aria-label="لماذا F90 CARD"><div><span aria-hidden="true">✦</span><strong>واجهة عربية مُخصصة</strong><small>كل الخدمات داخل متجر واحد</small></div><div><span aria-hidden="true">◇</span><strong>المحفظة والطلبات</strong><small>تسعير من الخادم وسجل واضح</small></div><div><span aria-hidden="true">◈</span><strong>التاجر والمبرمج</strong><small>دليل API ومفاتيح بتصريح الإدارة</small></div></section><section class="f90-experience-section" id="f90-experience-discover"><div class="f90-experience-section-heading"><span class="f90-experience-overline">تجربة صُمّمت لك</span><h2>كل ما تحتاجه. <em>في مكان واحد.</em></h2><p>اختصارات واضحة لخدمات فعلية داخل حسابك، بدون خطوات غير ضرورية.</p></div><div class="f90-experience-grid">${cards.map(([ic,t,d,link],i)=>`<a class="f90-experience-card" href="${link}"><span class="f90-experience-card-icon">${I(ic)}</span><span class="f90-experience-card-index">0${i+1}</span><h3>${t}</h3><p>${d}</p><span class="f90-experience-card-arrow">${I("arrow-left")}</span></a>`).join("")}</div></section>
-      <section class="f90-experience-section"><div class="f90-experience-section-heading"><span class="f90-experience-overline">مختارات من المتجر</span><h2>اكتشف <em>الخدمات المتاحة.</em></h2><p>الخدمات المعروضة مأخوذة من كتالوج المتجر الفعلي.</p></div><div class="f90-experience-products">${available.slice(0,8).map(p=>`<a class="f90-experience-product" href="${href("product",p.slug||p.id)}">${image(p.image_url,p.name)}</a>`).join("")||'<p class="muted">ستظهر الخدمات عند توفرها.</p>'}</div><div class="f90-experience-centered"><a class="button secondary" href="#/">عرض جميع الأقسام ${I("arrow-left")}</a></div></section>
-      <section class="f90-experience-journey"><div class="f90-experience-section-heading"><span class="f90-experience-overline">من البداية إلى المتابعة</span><h2>ثلاث خطوات <em>واضحة.</em></h2></div><div class="f90-experience-steps"><article><b>01</b><h3>أنشئ حسابك</h3><p>سجّل حسابًا ووثّقه قبل الإيداع والشراء.</p></article><article><b>02</b><h3>اختر خدمتك</h3><p>راجع بيانات الطلب والتكلفة قبل التأكيد.</p></article><article><b>03</b><h3>تابع التنفيذ</h3><p>راقب حالة طلبك وحركات رصيدك داخل حسابك.</p></article></div></section>
-      <section class="f90-experience-section"><div class="f90-experience-section-heading"><span class="f90-experience-overline">الدفع والمحفظة</span><h2>خيارات الإيداع <em>المفعّلة.</em></h2><p>طرق الدفع أدناه مأخوذة من إعدادات المتجر الحالية.</p></div>${methods.length?`<div class="f90-experience-methods">${methods.map(m=>`<div class="f90-experience-method">${image(m.image_url,m.name_ar)}<strong>${e(m.name_ar)}</strong></div>`).join("")}</div>`:'<p class="muted">لا توجد طرق إيداع مفعّلة حاليًا.</p>'}<p class="muted small">إضافة الرصيد تتم بعد مراجعة التحويل واعتماده من الإدارة.</p></section>
-      <section class="f90-experience-section f90-experience-questions"><div class="f90-experience-section-heading"><span class="f90-experience-overline">إجابات سريعة</span><h2>أسئلة <em>شائعة.</em></h2></div><div class="f90-experience-faq"><details><summary>كيف أبدأ باستخدام المتجر؟</summary><p>أنشئ حسابًا ثم وثّقه إذا أردت الإيداع والشراء، واختر الخدمة المناسبة من الأقسام.</p></details><details><summary>كيف أتابع طلباتي؟</summary><p>افتح صفحة طلباتي من القائمة أو من حسابك للاطلاع على حالة التنفيذ.</p></details><details><summary>متى يظهر الرصيد بعد الإيداع؟</summary><p>يظهر الرصيد بعد اعتماد طلب الإيداع من الإدارة. تابع حالته من سجل الإيداعات.</p></details><details><summary>ماذا لو كانت الخدمة قيد التعبئة؟</summary><p>الخدمة غير متاحة للطلب مؤقتًا، ويمكنك الرجوع لاحقًا لمعرفة حالة توفرها.</p></details></div></section>
-      <section class="f90-experience-end"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="lazy"><div><span class="f90-experience-overline">F90 CARD</span><h2>جاهز تبدأ رحلتك؟</h2><p>اكتشف الأقسام، أو تعرف أكثر على المتجر وخدماته.</p></div><div class="f90-experience-actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/policy/about">عن F90 CARD</a><a class="button secondary" href="#/api-guide">بوابة المبرمجين</a></div></section>
-      <nav class="f90-experience-legal" aria-label="معلومات المتجر"><a href="#/policy/privacy">الخصوصية</a><a href="#/policy/terms">الشروط</a><a href="#/policy/purchase">الشراء والاسترداد</a><a href="#/support">الدعم الفني</a></nav>
-    </div>`;
+    main.innerHTML = window.F90WelcomeScene.scene(S.settings.config,S.me,S.settings.logo_url);
+    syncWelcomePhoneVideo();
   }
   function home() {
     const c = S.settings.config,
@@ -510,8 +520,7 @@
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
- ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
- ${c.promo_video?.enabled && C.safeUrl(c.promo_video?.url) ? `<section class="f90-iphone-ad" aria-label="إعلان فيديو F90 CARD"><div class="f90-iphone-ad-copy"><span class="eyebrow">F90 CARD · إعلان المتجر</span><h2>${e(c.promo_video.title_ar || "عالم شحن الألعاب والتطبيقات")}</h2><p>شاهد إعلان متجر أف تسعين كارد بدون صوت داخل هاتف ثلاثي الأبعاد.</p></div><div class="f90-iphone-scene"><div class="f90-iphone-shell"><div class="f90-iphone-screen"><div class="f90-iphone-island" aria-hidden="true"></div><video class="f90-iphone-video" muted playsinline loop preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate" ${C.safeUrl(c.promo_video.poster_url)?`poster="${e(C.safeUrl(c.promo_video.poster_url))}"`:""}><source data-src="${e(C.safeUrl(c.promo_video.url))}" type="${/\\.webm(?:[?#]|$)/i.test(c.promo_video.url)?"video/webm":"video/mp4"}"></video></div><span class="f90-iphone-side" aria-hidden="true"></span></div></div></section>` : ""}
+ ${c.show_intro===false ? "" : window.F90WelcomeScene.scene(c,S.me,S.settings.logo_url)}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -532,29 +541,7 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
-    promoVideoObserver?.disconnect();
-    promoVideoObserver = null;
-    const promoVideo=main.querySelector(".f90-iphone-video");
-    if(promoVideo){
-      promoVideo.muted=true;
-      promoVideo.volume=0;
-      if(typeof IntersectionObserver==="function"){
-        promoVideoObserver=new IntersectionObserver(entries=>{
-          entries.forEach(entry=>{
-            if(entry.isIntersecting && document.visibilityState==="visible"){
-              const source=promoVideo.querySelector("source[data-src]");
-              if(source && !source.src){
-                source.src=source.dataset.src;
-                promoVideo.load();
-              }
-              promoVideo.play().catch(()=>{});
-            }
-            else promoVideo.pause();
-          });
-        },{threshold:0.45});
-        promoVideoObserver.observe(promoVideo);
-      }
-    }
+    syncWelcomePhoneVideo();
     const promoEl=$("promotionBar");
     const heroElForTicker=main.querySelector(".f90-swipe-hero");
     if(promoEl&&heroElForTicker)heroElForTicker.insertAdjacentElement("afterend",promoEl);
@@ -923,7 +910,7 @@
     if(state)state.hidden=!installed;
   }
   function installPage() {
-    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "تطبيق متجرك على الشاشة الرئيسية، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="./assets/icons/icon-192.png" alt="شعار تطبيق F90 Card" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت المتجر للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><p id="f90InstallState" class="f90-install-success" hidden>التطبيق مفتوح بوضع التثبيت على جهازك.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>◉ أندرويد</h3><p>اضغط زر التثبيت. إذا لم يُظهر المتصفح طلب التثبيت، افتح قائمة Chrome واختر «تثبيت التطبيق».</p></section><section><h3> آيفون وآيباد</h3><p>افتح المتجر عبر Safari، ثم اختر «مشاركة» و«إضافة إلى الشاشة الرئيسية». لا يسمح Safari بالتثبيت المباشر عبر زر الموقع.</p></section></div><p class="muted small">يتطلب التثبيت موافقتك. يتوفر زر التثبيت المباشر عندما يدعمه المتصفح.</p></section>`;
+    main.innerHTML = `${pageHead("تثبيت تطبيق F90 Card", "تطبيق متجرك على الشاشة الرئيسية، دون تنزيل ملفات من جهات خارجية.")}<section class="panel f90-install-page"><div class="f90-install-icon"><img src="${e(C.safeUrl(S.settings.config?.install_art_url || S.settings.config?.app_icon_url || "./assets/icons/icon-192.png") || "./assets/icons/icon-192.png")}" alt="صورة تثبيت تطبيق F90 CARD" width="104" height="104"></div><h2>أف تسعين كارد</h2><p class="muted">ثبّت المتجر للوصول بسرعة إلى المحفظة والطلبات والخدمات.</p><p id="f90InstallState" class="f90-install-success" hidden>التطبيق مفتوح بوضع التثبيت على جهازك.</p><button class="button" data-action="install">تثبيت التطبيق الآن</button><div class="f90-install-instructions"><section><h3>◉ أندرويد</h3><p>اضغط زر التثبيت. إذا لم يُظهر المتصفح طلب التثبيت، افتح قائمة Chrome واختر «تثبيت التطبيق».</p></section><section><h3> آيفون وآيباد</h3><p>افتح المتجر عبر Safari، ثم اختر «مشاركة» و«إضافة إلى الشاشة الرئيسية». لا يسمح Safari بالتثبيت المباشر عبر زر الموقع.</p></section></div><p class="muted small">يتطلب التثبيت موافقتك. يتوفر زر التثبيت المباشر عندما يدعمه المتصفح.</p></section>`;
     syncInstallButtons();
   }
   async function wallet() {
@@ -1144,40 +1131,17 @@
 
   function apiGuide() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
-    const endpoint=e(A.endpoint);
-    const code=JSON.stringify({action:"services"},null,2);
-    main.innerHTML=pageHead("دليل مطوري F90 CARD","توثيق عملي لربط خادم متجرك بخدمات التاجر.")+
-      '<div class="f90-merchant-hero-new"><div><span>F90 CARD · MERCHANT API</span><h2>دليل الربط الآمن</h2><p>كل استعلام يتم من خادم التاجر فقط. المفتاح شخصي ويمنع وضعه داخل تطبيقات أو مواقع عامة.</p><a class="button" href="#/developers">إدارة توكنات التاجر</a></div><img src="'+e(C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png")+'" alt="F90 CARD"></div>'+
-      '<div class="f90-merchant-guide-grid">'+
-      '<section class="panel"><h3>01 · نقطة الاتصال</h3><p>استخدم طلب POST آمنًا مع JSON والترويسة x-f90-key.</p><div class="key-token" dir="ltr">'+endpoint+'</div><pre dir="ltr">'+e('POST '+A.endpoint+'\\nContent-Type: application/json\\nx-f90-key: YOUR_SERVER_TOKEN\\n\\n'+code)+'</pre></section>'+
-      '<section class="panel"><h3>02 · خدمات وفئات المتجر</h3><p>تعرّف على الخدمات ورموزها وحدود الكميات والحقول المطلوبة قبل إرسال الطلب.</p><div class="f90-api-action-tags"><code>categories</code><code>services</code><code>service</code><code>balance</code></div><p>الرصيد المالي الأساسي بالدولار، وقد تختلف عملة عرض الأسعار داخل المتجر.</p></section>'+
-      '<section class="panel"><h3>03 · الطلبات وحالتها</h3><p>اقرأ بيانات المنتج، اعرض السعر ثم نفّذ الطلب بمفتاح تكرار فريد. تحقق من النتيجة قبل أي محاولة جديدة.</p><div class="f90-api-action-tags"><code>quote</code><code>checkout</code><code>add</code><code>status</code><code>history</code></div><p>لا تعِد الطلب إذا كانت النتيجة غير مؤكدة، واحتفظ بمعرّف العملية.</p></section>'+
-      '<section class="panel"><h3>04 · صلاحيات المفتاح</h3><p>صلاحيات catalog وbalance وorders منفصلة ويمكن التحكم بها من صفحة التاجر. سجل الاستخدام متاح من إعدادات التوكن.</p><p>Webhook وقائمة عناوين IP المسموحة غير مفعّلين حاليًا؛ لا تعتمد عليهما.</p></section></div>'+
-      '<section class="panel"><h2>ملفات الربط للمبرمج</h2><p>هذه الملفات مرجعية عامة ولا تتضمن توكن حسابك.</p><div class="actions"><a class="button secondary" href="./docs/api-ar.md" download>دليل عربي</a><a class="button secondary" href="./docs/F90_MERCHANT_API_EN.md" download>English API</a><a class="button secondary" href="./docs/openapi.json" download>OpenAPI</a><a class="button secondary" href="./docs/postman.json" download>Postman</a><a class="button secondary" href="./docs/reseller-example.mjs" download>مثال خادم</a></div></section>';
+    main.innerHTML=window.F90MerchantViews.docs(A.endpoint,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
   }
   function developers() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
-    if(S.settings.config?.merchant_api_enabled===false){
-      main.innerHTML=pageHead("حساب التاجر","ربط API موقوف من إدارة المتجر")+
-        '<section class="panel"><p>المفاتيح محفوظة لكنها غير متاحة للاستخدام حتى إعادة التفعيل.</p></section>';
+    const cfg=S.settings.config||{};
+    if(cfg.merchant_api_enabled===false){
+      main.innerHTML=pageHead("API token","Merchant access is temporarily disabled.");
       return;
     }
-    const logo=e(C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
-    const keys=S.me.keys||[];
-    main.innerHTML=pageHead("التاجر ومفاتيح API","واجهة خاصة بالتاجر المفعّل فقط، لإصدار المفاتيح وإدارتها.")+
-      '<section class="f90-merchant-hero-new"><div><span>F90 CARD · RESELLER</span><h2>مركز توكنات التاجر</h2><p>اربط متجرك بخدمات أف تسعين كارد باستخدام مفتاح مستقل ومقيد بالصلاحيات. قيمة الرصيد الظاهرة لا تمنح صلاحية شراء خارج المتجر.</p><div class="actions"><a class="button secondary" href="#/api-guide">دليل المبرمج</a><a class="button secondary" href="#/wallet">رصيد التاجر</a></div></div><img src="'+logo+'" alt="الشعار الرسمي لمتجر F90"></section>'+
-      '<section class="panel"><div class="section-head"><h2>إنشاء توكن API جديد</h2><span>يظهر المفتاح الكامل مرة واحدة</span></div>'+
-      (S.me.profile?.is_verified
-        ? '<form id="keyForm" class="f90-token-form">'+
-          field("name","اسم المفتاح","text","ربط متجري",'required maxlength="100"')+
-          '<div class="f90-api-scopes"><label><input name="scope_catalog" type="checkbox" checked> قراءة الفئات والخدمات</label><label><input name="scope_balance" type="checkbox" checked> قراءة الرصيد</label><label><input name="scope_orders" type="checkbox" checked> إنشاء الطلبات ومتابعتها</label></div>'+
-          field("requests_per_minute","حد الطلبات لكل دقيقة","number",60,'required min="10" max="120" step="1"')+
-          field("expires_at","تاريخ انتهاء التوكن (اختياري)","date")+
-          '<button class="button" type="submit">إنشاء توكن تاجر آمن</button></form>'
-        : '<div class="notice warning">يجب توثيق حساب التاجر قبل إصدار المفتاح. <a href="#/verification">ابدأ التوثيق</a></div>')+
-      '</section><section class="panel"><div class="section-head"><h2>المفاتيح الصادرة</h2><span>'+e(keys.length)+' مفاتيح</span></div>'+
-      (keys.length?'<div class="records">'+keys.map(k=>'<article class="record"><div class="record-main"><h3>'+e(k.name)+'</h3><p dir="ltr">'+e(k.token_prefix)+'••••••</p><p class="muted small">'+e((k.scopes||[]).join(" · "))+' · '+e(k.requests_per_minute)+' طلب/دقيقة · انتهاء '+e(k.expires_at?C.date(k.expires_at):"غير محدد")+'</p>'+status(k.is_active?"active":"suspended")+'</div><div class="actions"><button type="button" class="button secondary small" data-action="key-logs" data-id="'+e(k.id)+'">سجل الاستخدام</button>'+(k.is_active?'<button type="button" class="button secondary small" data-action="key-settings" data-id="'+e(k.id)+'">إعدادات المفتاح</button><button type="button" class="button ghost small" data-action="key-revoke" data-id="'+e(k.id)+'">إلغاء المفتاح</button>':"")+'</div></article>').join("")+'</div>':empty("لم تُنشئ توكنات API بعد","link"))+
-      '<p class="muted small">لا يمكن استخراج السر الأصلي لمفتاح قديم بعد إصداره. عند فقدانه أنشئ مفتاحًا جديدًا ثم ألغِ القديم.</p></section>';
+    main.innerHTML=window.F90MerchantViews.tokens((S.me.keys||[]).filter(k=>k.is_active),
+      S.me.profile?.is_verified,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png",A.endpoint);
   }
   async function mfaChallenge() {
     const { data, error } = await A.client.auth.mfa.listFactors();
@@ -1657,7 +1621,10 @@
     if (form.id === "keyForm" || form.id === "keySettingsForm") {
       const scopes = ["catalog", "balance", "orders"].filter((scope) => form.elements["scope_" + scope]?.checked);
       if (!scopes.length) throw new Error("اختر صلاحية واحدة على الأقل");
-      const values = { name: data.name, scopes, requests_per_minute: Number(data.requests_per_minute), expires_at: data.expires_at || null };
+      const values = {name:data.name,scopes,requests_per_minute:Number(data.requests_per_minute),
+        expires_at:data.expires_at||null,allow_all_ips:form.elements.allow_all_ips?.checked===true,
+        allowed_ips:String(form.elements.allowed_ips?.value||"").split(/[\\r\\n,]+/).map(x=>x.trim()).filter(Boolean),
+        replace_existing:!!S.me?.keys?.some(k=>k.is_active)};
       if (form.id === "keySettingsForm") {
         await A.call("key.update", { id: S.editKey.id, ...values });
         closeModal();
@@ -1670,8 +1637,8 @@
       await refreshMe();
       developers();
       modal(
-        "احفظ مفتاحك الآن",
-        `<p>يظهر المفتاح الكامل مرة واحدة. خزّنه على خادمك ولا تشاركه مع العملاء.</p><div class="key-token">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ المفتاح</button>`,
+        "SAVE YOUR API TOKEN",
+        `<p>Copy this token now. It is shown once. Store it on your backend only. If rotated, the previous token is immediately revoked.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">Copy API TOKEN</button>`,
       );
       return;
     }
