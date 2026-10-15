@@ -90,7 +90,8 @@
     <script src="./f90-merchant-v2.js?v=2" defer></script>
     <script src="./f90-welcome-scene.js?v=4" defer></script>
     <script src="./f90-media-player.js?v=2" defer></script>
-    <script src="./app.js?v=20261015-stability1" defer></script>
+    <script src="./f90-startup-rescue.js?v=1" defer></script>
+    <script src="./app.js?v=20261015-emergency2" defer></script>
     <link rel="stylesheet" href="./f90-merchant-hub.css?v=1" />
     <link rel="stylesheet" href="./f90-experience-v3.css?v=2" />
       <link rel="stylesheet" href="./f90-social.css?v=1" />
@@ -191,16 +192,14 @@
     <div class="toast" id="toast" role="status" hidden></div>
     <div id="modalRoot"></div>
     <script>
-      // Independent startup watchdog: never leave visitors stuck on the loading screen.
-      (function(){
-        var first=document.getElementById("mainContent");
-        setTimeout(function(){
-          if(!first || !first.querySelector(".loading")) return;
-          var text=first.textContent||"";
-          if(text.indexOf("جار")<0 || text.indexOf("عالمك الرقمي")<0)return;
-          first.innerHTML='<section class="panel" style="max-width:620px;margin:40px auto;text-align:center"><h2>الاتصال بالمتجر تأخر</h2><p>تعذّر إكمال تحميل الصفحة. تحقق من الاتصال، ثم اضغط إعادة المحاولة. لم تُنفّذ أي عملية مالية.</p><button class="button" id="f90EmergencyRetry">إعادة المحاولة</button></section>';
-          document.getElementById("f90EmergencyRetry")?.addEventListener("click",function(){location.reload();});
-        },16000);
+      // Emergency browsing is explicitly read-only; never retry financial requests.
+      (function () {
+        setTimeout(function () {
+          if (document.documentElement.dataset.f90Ready === "1") return;
+          if (window.F90StartupRescue?.bootIncomplete()) {
+            window.F90StartupRescue.show().catch(function () {});
+          }
+        }, 15000);
       })();
     </script>
   </body>
