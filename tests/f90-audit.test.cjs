@@ -113,6 +113,34 @@ test("Visitors see only edge volume controls; managers own radio sources", () =>
   assert.doesNotMatch(app, /\["music","ميوزك أف تسعين","headphones"\]/);
 });
 
+test("Radio controls are manager only, with configurable icon and mobile layout", () => {
+  const radio=read("f90-media-player.js");
+  const css=read("f90-radio.css");
+  const edge=read("supabase/functions/f90-platform/index.ts");
+  const phone=read("f90-welcome-scene.js");
+  assert.match(admin,/bubble_icon_url/);
+  assert.match(admin,/bubble_icon_file/);
+  assert.match(admin,/bubble_side/);
+  assert.match(admin,/bubble_size_mobile/);
+  assert.match(admin,/promo_video_link_url/);
+  assert.match(admin,/promo_phone_size_mobile/);
+  assert.match(admin,/promo_phone_x/);
+  assert.match(admin,/promo_phone_y/);
+  assert.match(radio,/function applyBubble\(value\)/);
+  assert.match(radio,/f90-radio-custom-icon/);
+  assert.match(radio,/media\.state/);
+  assert.doesNotMatch(radio,/media\.pause\(\)/);
+  assert.match(css,/f90-radio-mobile-size/);
+  assert.match(css,/data-side="left"/);
+  assert.match(edge,/currentBubble/);
+  assert.match(edge,/bubble:m\.bubble\|\|\{\}/);
+  assert.match(edge,/size_mobile/);
+  assert.match(phone,/p\.link_url/);
+  assert.match(phone,/f90-phone-size/);
+  assert.match(api,/radioMimeAliases/);
+  assert.match(api,/audio\/x-m4a/);
+});
+
 test("Administration has its own install manifest", () => {
   const manifest=JSON.parse(read("admin.webmanifest"));
   assert.match(manifest.start_url,/admin\.html/);
@@ -134,7 +162,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-theme-editor1/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-radio-mobile4/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
