@@ -14,7 +14,7 @@ function mockClient(fetchImpl) {
       },
     },
   };
-  vm.runInNewContext(source, { window, fetch: fetchImpl, crypto: {}, console });
+  vm.runInNewContext(source, { window, fetch: fetchImpl, crypto: {}, console, AbortController, setTimeout, clearTimeout });
   return window.F90API;
 }
 
