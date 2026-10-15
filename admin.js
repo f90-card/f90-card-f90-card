@@ -1,5 +1,14 @@
 (function () {
   "use strict";
+  if(!window.F90Core || !window.F90API?.client?.auth || !window.F90_CONFIG){
+    const target=document.getElementById("adminMain");
+    if(target){
+      target.innerHTML='<section class="panel" style="max-width:620px;margin:40px auto;text-align:center"><h1>تعذّر تشغيل لوحة الإدارة</h1><p>لم يتم تحميل الاتصال الآمن. حاول تحديث الصفحة، ولم تتغير بيانات المتجر.</p><button type="button" id="f90AdminReload" class="button">إعادة تحميل الإدارة</button></section>';
+      target.querySelector("#f90AdminReload")?.addEventListener("click",()=>location.reload());
+    }
+    console.error("F90 admin startup dependency unavailable");
+    return;
+  }
   const C = window.F90Core,
     A = window.F90API,
     e = C.escapeHTML,
@@ -2919,9 +2928,11 @@
   async function boot() {
     try {
       await refreshSettings();
-      const {
-        data: { session },
-      } = await A.client.auth.getSession();
+      const sessionResult=await Promise.race([
+        A.client.auth.getSession(),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error("F90_AUTH_TIMEOUT")),9000))
+      ]);
+      const session=sessionResult?.data?.session || null;
       if (!session) {
         $("adminNav").innerHTML = "";
         brand();
