@@ -550,14 +550,14 @@
   }
   function categoryTile(c) {
     const disabled = categoryIsUnavailable(c);
-    return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("category", c.slug || c.id)}"`} aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
+    return `<a class="image-tile f90-category-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("category", c.slug || c.id)}"`} data-search="${e(window.F90CatalogSearch?.keys(c.name) || c.name)}" aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
   function productTile(p, pack = false, inline = false) {
     const disabled = C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id));
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
-      return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(C.previewPrice(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
-    return `<a class="image-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e([p.name, ...(p.commerce?.search_aliases || [])].join(" "))}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
+      return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(C.previewPrice(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
+    return `<a class="image-tile f90-product-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function syncHomePhoneVideo() {
     promoVideoObserver?.disconnect();
@@ -1507,10 +1507,10 @@
       } else if (page === "search") {
         const searchInput = $("globalSearch");
         const q = String(id || searchInput?.value || "").trim().toLocaleLowerCase("ar");
-        const normalize = (value) => String(value || "").toLocaleLowerCase("ar").normalize("NFKC").replace(/[\u064b-\u065f\u0670]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه");
+        const normalize = window.F90CatalogSearch?.normalize || (value => String(value || "").toLocaleLowerCase("ar"));
         const term = normalize(q);
-        const matchedCategories = term ? S.categories.filter(c=>normalize(c.name+" "+(c.description||"")).includes(term)) : S.categories.filter(c=>!c.parent_id).slice(0,12);
-        const matchedProducts = term ? S.products.filter(p=>normalize(p.name+" "+(p.description||"")+" "+(p.commerce?.search_aliases||[]).join(" ")).includes(term)) : S.products.filter(p=>p.is_featured).slice(0,18);
+        const matchedCategories = term ? S.categories.filter(c=>window.F90CatalogSearch.matches(c.name,q,[c.description||""])) : S.categories.filter(c=>!c.parent_id).slice(0,12);
+        const matchedProducts = term ? S.products.filter(p=>window.F90CatalogSearch.matches(p.name,q,[p.description||"",...(p.commerce?.search_aliases||[])])) : S.products.filter(p=>p.is_featured).slice(0,18);
         main.innerHTML =
           pageHead("البحث في المتجر", q ? "نتائج البحث عن: " + e(q) : "ابحث عن الألعاب والتطبيقات والخدمات") +
           `<form id="f90SearchPageForm" class="f90-search-page-form" role="search"><label for="f90SearchPageInput">ابحث في جميع أقسام المتجر</label><div><input id="f90SearchPageInput" type="search" value="${e(q)}" placeholder="اسم لعبة أو تطبيق أو خدمة..." autocomplete="off" required><button class="button" type="submit">${I("search")} بحث</button></div></form>` +
@@ -2256,10 +2256,10 @@
   });
   main.addEventListener("input", (ev) => {
     if (ev.target?.id !== "categoryFilter") return;
-    const term = ev.target.value.trim().toLocaleLowerCase("ar");
+    const term = window.F90CatalogSearch?.normalize(ev.target.value) || ev.target.value.trim().toLocaleLowerCase("ar");
     let visible = 0;
     main.querySelectorAll(".image-grid .image-tile, .packs-grid .pack").forEach((tile) => {
-      tile.hidden = !!term && !(tile.dataset.search || tile.textContent || tile.getAttribute("aria-label") || "").toLocaleLowerCase("ar").includes(term);
+      tile.hidden = !!term && !term.split(" ").every(part => (tile.dataset.search || window.F90CatalogSearch?.normalize(tile.textContent) || "").includes(part));
       if (!tile.hidden) visible++;
     });
     $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
