@@ -78,6 +78,26 @@ test("Catalog and supplier availability speedups preserve safe server quote chec
   assert.match(edge,/await rpc\("f90_quote"/);
   assert.match(app,/idempotency_key: reference/);
 });
+test("Mobile performance optimizations never bypass financial validation", () => {
+  const atmosphere=read("f90-atmosphere-v2.css");
+  const ambient=read("f90-ambient.css");
+  assert.match(app,/function f90ObserveTiles\(root\)/);
+  assert.match(app,/const f90PendingTiles = new Set\(\)/);
+  assert.match(app,/requestAnimationFrame\(\(\) => \{/);
+  assert.doesNotMatch(app,/document\.querySelectorAll\("\.f90-flip-tile:not\(\[data-f90-observed\]\)"\)/);
+  assert.match(app,/catalogRefreshBusy = true/);
+  assert.match(app,/catalogRefreshBusy = false/);
+  assert.match(app,/\}, 360000\)/);
+  assert.match(app,/\? 2500 : 400/);
+  assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
+  assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
+  assert.match(mainHtml,/app\.js\?v=20261015-faststore1/);
+  assert.match(mainHtml,/f90-ambient\.css\?v=20261015-faststore1/);
+  assert.match(mainHtml,/f90-atmosphere-v2\.css\?v=20261015-faststore1/);
+  assert.match(app,/await A\.call\("quote", \{/);
+  assert.match(app,/idempotency_key: reference/);
+});
+
 test("Gold purchase card is compact and shows only final cost plus small current balance", () => {
   const visa=read("f90-visa-checkout.css");
   const purchase=app.slice(app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";'),app.indexOf('    if (inline) {',app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";')));
