@@ -29,7 +29,7 @@ with sync_playwright() as p:
  page.go_back(wait_until="domcontentloaded",timeout=12000)
  page.wait_for_timeout(1800)
  returned=page.evaluate("window.scrollY")
- assert location_same := page.evaluate("location.hash==='#/'"),"Back did not return home"
+ assert page.evaluate("location.hash==='#/'"),"Back did not return home"
  assert abs(returned-before)<180,("Back scroll did not restore",before,returned)
  page.screenshot(path="/tmp/f90-navigation-postfix.png")
  print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5]},ensure_ascii=False))
