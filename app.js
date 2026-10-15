@@ -2143,7 +2143,7 @@
             S.currency = S.settings.currency || "USD";
           const displayCurrencyChanged = previousRates !== incomingRates || oldDefaultCurrency !== S.settings.currency || !validCurrency;
           // Keep refreshed availability in memory; do not interrupt an open purchase.
-          const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("modalRoot")?.children.length;
+          const buying = !!document.getElementById("checkoutForm") || !!document.getElementById("depositForm") || !!document.getElementById("modalRoot")?.children.length;
           if (!buying && Array.isArray(latest.products) && Array.isArray(latest.categories)) {
             const snapshot = (products, categories) => JSON.stringify({
               products: products.map(p => [p.id,p.is_active,p.stock,p.price,p.currency,p.image_url,p.category_id,p.commerce?.availability]),
