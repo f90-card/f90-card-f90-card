@@ -9,9 +9,10 @@ const app = read("app.js");
 const adminApp = read("admin.js");
 const styles = read("styles.css");
 
-test("both themes exist with shared page features and CSS variables", () => {
-  assert.match(site, /value="dark"/);
-  assert.match(site, /value="cream"/);
+test("both live themes exist with a single storefront toggle and CSS variables", () => {
+  assert.match(site, /id="themeToggle"/);
+  assert.match(site, /data-theme="dark"/);
+  assert.match(app, /\["dark", "cream"\]\.includes\(v\)/);
   assert.match(styles, /:root\[data-theme="cream"\]/);
   for (const name of ["--bg", "--surface", "--text", "--accent"]) {
     assert.match(styles.slice(styles.indexOf(':root[data-theme="cream"]')), new RegExp(name + ":"));
@@ -23,10 +24,12 @@ test("admin has a working cream and dark toggle", () => {
   assert.match(adminApp, /applyAdminTheme\(document\.documentElement\.dataset\.theme/);
   assert.match(adminApp, /localStorage\.setItem\("f90-theme", selected\)/);
 });
-test("store and admin honor the same theme preference", () => {
+test("store and admin honor the same two-theme preference", () => {
   assert.match(app, /localStorage\.setItem\("f90-theme", v\)/);
-  for (const page of [site, admin])
-    assert.match(page, /\["dark", "cream", "melon"\]\.includes\(localStorage\.getItem\("f90-theme"\)\)/);
+  assert.match(adminApp, /localStorage\.setItem\("f90-theme", selected\)/);
+  for (const page of [site, admin]) {
+    assert.match(page, /\["dark", "cream"\]\.includes\(localStorage\.getItem\("f90-theme"\)\)/);
+  }
 });
 test("theme switching never sends financial or account requests", () => {
   const block = adminApp.slice(adminApp.indexOf("  function applyAdminTheme(value) {"),
@@ -35,20 +38,18 @@ test("theme switching never sends financial or account requests", () => {
   assert.doesNotMatch(block, /A\.call\(|fetch\(|signOut\(|\.update\(/);
 });
 
-test("third melon skin is selectable on storefront and in admin default settings", () => {
-  assert.match(site, /option value="melon"/);
-  assert.match(adminApp, /\["melon", "بطيخي سماوي متحرك"\]/);
-  assert.match(styles, /:root\[data-theme="melon"\]/);
-  assert.match(app, /\["dark", "cream", "melon"\]\.includes\(v\)/);
+test("retired third theme cannot interfere with the shared two-theme toggle", () => {
+  assert.match(site, /id="themeToggle"/);
+  assert.match(admin, /id="adminThemeToggle"/);
+  assert.doesNotMatch(site, /<option value="melon"/);
+  assert.match(app, /\["dark", "cream"\]\.includes\(v\)/);
+  assert.match(adminApp, /\["dark", "cream"\]\.includes\(value\)/);
 });
-test("F90 bot cannot send purchases and supports user dismissal", () => {
-  assert.match(site, /theme-effects\.js/);
+test("retired decorative bot is not injected into checkout or the storefront", () => {
+  assert.doesNotMatch(site, /<script[^>]*src="\.\/theme-effects\.js/);
   const bot = read("theme-effects.js");
-  assert.match(bot, /store\("f90-bot-hidden"/);
-  assert.match(site, /id="f90BotToggle"/);
-  assert.match(site, /id="f90EffectsLevel"/);
-  assert.match(bot, /prefers-reduced-motion/);
   assert.doesNotMatch(bot, /\bfetch\(|A\.call\(|checkout|paymentReference/);
+  assert.match(site, /id="themeToggle"/);
 });
 
 test("pinch zoom remains available and redundant back button is removed", () => {
@@ -63,20 +64,11 @@ test("weather is theme-specific, adjustable and respects reduced motion", () => 
   assert.match(styles, /prefers-reduced-motion:reduce/);
 });
 
-test("cinematic weather can switch modes without network or financial actions", () => {
-  const bot = read("theme-effects.js");
-  assert.match(site, /id="f90WeatherMode"/);
-  for (const mode of ["snow", "rain", "wind", "hearts", "mix"]) {
-    assert.match(site, new RegExp('value="' + mode + '"'));
-    assert.match(bot, new RegExp('\\b' + mode + ':|\\b' + mode + ' ='));
-  }
-  assert.match(bot, /lastWeatherKey/);
-  assert.match(bot, /f90-weather-mode/);
-  assert.match(styles, /data-weather-mode="snow"/);
-  assert.match(styles, /data-weather-mode="rain"/);
-  assert.match(styles, /data-weather-mode="wind"/);
-  assert.match(styles, /data-weather-mode="hearts"/);
-  assert.doesNotMatch(bot, /fetch\(|A\.call\(|\.submit\(/);
+test("retired weather chooser does not block the real storefront", () => {
+  assert.doesNotMatch(site, /id="f90WeatherMode"/);
+  assert.doesNotMatch(site, /<script[^>]*src="\.\/theme-effects\.js/);
+  assert.match(styles, /prefers-reduced-motion:\s*reduce/);
+  assert.match(site, /f90-startup-rescue\.js/);
 });
 
 test("mascot roams without interrupting modal dialogs or invoking purchase", () => {
@@ -117,19 +109,18 @@ test("category tiles open the existing product form in place without another rou
   assert.match(styles, /\.f90-quick-product/);
 });
 
-test("wallet checkout always reviews a server quote before spending", () => {
+test("wallet checkout rechecks the server quote and pending form before charging", () => {
   assert.match(app, /if \(!confirmed\) \{/);
+  assert.match(app, /modal\("مراجعة طلب الشراء"/);
   assert.match(app, /data-action="confirm-wallet-checkout"/);
-  assert.match(app, /f90-checkout-review/);
   assert.match(app, /pending\.quoteSeq !== S\.quoteSeq/);
   assert.match(app, /pending\.key !== S\.checkoutKey/);
   assert.match(app, /JSON\.stringify\(Object\.fromEntries\(new FormData\(pending\.form\)\)\) !== pending\.fingerprint/);
   assert.match(app, /await submit\(pending\.form, true\)/);
-  assert.match(styles, /\.f90-checkout-review/);
 });
 
 
-test("RTL header keeps profile in drawer and menu beside wallet", () => {
+test("RTL header keeps profile in drawer and the theme toggle in preferences", () => {
   const header = site.slice(site.indexOf('<header class="site-header">'), site.indexOf("</header>"));
   const brand = header.indexOf('id="headerBrand"');
   const wallet = header.indexOf('id="headerWallet"');
@@ -137,7 +128,7 @@ test("RTL header keeps profile in drawer and menu beside wallet", () => {
   assert.ok(brand >= 0 && wallet > brand && menu > wallet);
   assert.doesNotMatch(header, /id="headerUser"|id="themeButton"/);
   assert.match(site, /id="drawerProfile"/);
-  assert.match(site, /id="themeSelect"/);
+  assert.match(site, /id="themeToggle"/);
   assert.doesNotMatch(app, /\$\("headerUser"\)|\$\("themeButton"\)/);
 });
 
