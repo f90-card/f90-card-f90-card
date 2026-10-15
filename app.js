@@ -2237,6 +2237,7 @@
       theme(initialTheme);
       promotions();
       await route();
+      document.documentElement.dataset.f90Ready = "1";
       // Receive new supplier price/status news while the store remains open.
       // This is a read-only poll; never modify checkout quotes or local catalog mid-purchase.
       setInterval(async () => {
