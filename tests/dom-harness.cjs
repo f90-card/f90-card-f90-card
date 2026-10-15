@@ -311,6 +311,11 @@ async function harness(file = "index.html", options = {}) {
     },
   });
   const context = vm.createContext(window);
+  if (file==="index.html") vm.runInContext(fs.readFileSync(path.join(root,"f90-special.js"),"utf8"),context);
+  if (file==="admin.html") {
+    vm.runInContext(fs.readFileSync(path.join(root,"f90-special-admin.js"),"utf8"),context);
+    vm.runInContext(fs.readFileSync(path.join(root,"f90-content-admin.js"),"utf8"),context);
+  }
   vm.runInContext(
     fs.readFileSync(
       path.join(root, file === "admin.html" ? "admin.js" : "app.js"),

@@ -2,7 +2,7 @@
 "use strict";
 const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const safe=x=>{try{const u=new URL(String(x||""),location.href);return ["https:","http:"].includes(u.protocol)?u.href:"";}catch{return "";}};
-function homePhone(cfg){
+function homePhone(cfg,brandLogo){
   const c=cfg||{},p=c.promo_video||{};
   if(p.enabled!==true)return "";
   const mode=p.mode==="image"?"image":p.mode==="text"?"image":"video";
@@ -28,7 +28,7 @@ function homePhone(cfg){
     : '<img src="'+esc(laptopImage||still||'./f90-logo.png')+'" alt="إعلان أف تسعين كارد" loading="lazy">';
   return '<section class="f90-home-phone-ad f90-home-devices" style="'+esc(style)+'" aria-label="إعلانات الأجهزة">'+
   '<a class="f90-home-phone-link" href="'+esc(target)+'" target="_blank" rel="noopener noreferrer" aria-label="تواصل مع خدمة عملاء أف تسعين كارد عبر واتساب">'+
-  '<span class="f90-home-phone-shell"><span class="f90-home-phone-screen">'+media+'</span></span></a>'+
+  '<span class="f90-home-phone-shell"><span class="f90-home-phone-screen">'+media+'<img class="f90-home-phone-mark" src="'+esc(safe(brandLogo)||"./f90-logo.png")+'" alt="" aria-hidden="true" loading="lazy"></span></span></a>'+
   '<a class="f90-home-laptop-link" href="'+esc(safe(laptop.link_url)||target)+'" target="_blank" rel="noopener noreferrer" aria-label="إعلان الكمبيوتر المحمول"><span class="f90-home-laptop-shell"><span class="f90-home-laptop-display">'+laptopMedia+'</span><span class="f90-home-laptop-base"></span></span></a></section>';
 }
 window.F90WelcomeScene={homePhone};
