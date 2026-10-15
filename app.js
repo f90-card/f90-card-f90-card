@@ -1,5 +1,14 @@
 (function () {
   "use strict";
+  if(!window.F90Core || !window.F90API?.client?.auth || !window.F90_CONFIG){
+    const target=document.getElementById("mainContent");
+    if(target){
+      target.innerHTML='<section class="panel" style="margin:40px auto;max-width:650px;text-align:center"><h1>تعذّر بدء تشغيل المتجر</h1><p>تعذّر تحميل الاتصال الآمن. تحقق من الإنترنت ثم أعد المحاولة. لم يتم تنفيذ أي طلب أو خصم رصيد.</p><button type="button" id="f90BootReload" class="button">إعادة تحميل المتجر</button></section>';
+      target.querySelector("#f90BootReload")?.addEventListener("click",()=>location.reload());
+    }
+    console.error("F90 startup dependency unavailable");
+    return;
+  }
   const C = window.F90Core,
     A = window.F90API,
     e = C.escapeHTML,
@@ -2198,10 +2207,25 @@
       // Render authenticated navigation only after restoring the account.
       // Previously chrome() ran while S.me was still null, leaving the drawer
       // and wallet in guest mode even when a valid session existed.
-      const accountResult = await accountRequest;
-      if (accountResult instanceof Error) {
-        S.walletStale = true;
-        // Public catalog remains usable during temporary account/API outages.
+      // Public pages must render even if Supabase auth session recovery is delayed.
+      const recoveryPending=Symbol("auth-recovery-pending");
+      const accountResult=await Promise.race([
+        accountRequest,
+        new Promise(resolve=>setTimeout(()=>resolve(recoveryPending),2500))
+      ]);
+      if(accountResult===recoveryPending){
+        S.walletStale=true;
+        accountRequest.then(async(result)=>{
+          if(result instanceof Error)return;
+          try{
+            chrome();
+            const current=(location.hash||"#/").split("/")[1]||"";
+            if(["profile","wallet","orders","history","deposits","verification","developers"].includes(current))
+              await route();
+          }catch(err){console.warn("F90 deferred account refresh",err);}
+        }).catch(()=>{});
+      }else if(accountResult instanceof Error){
+        S.walletStale=true;
         console.warn("F90 account refresh pending");
       }
       chrome();
