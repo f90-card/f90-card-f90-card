@@ -34,7 +34,7 @@ function home(settings){
  const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
  return '<section class="f90-special-home" aria-label="إعلانات الخدمات">'+
  '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+ads.filter(([id])=>c["show_"+id]!==false).map(([id,title])=>
- '<a href="#/special/'+id+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
+ '<a href="'+(id==="website"?"#/product/f90-full-website-500":"#/special/"+id)+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
  '</div></section>';
 }
 function category(slug,settings){
