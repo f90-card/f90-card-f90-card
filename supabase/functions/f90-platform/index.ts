@@ -400,10 +400,7 @@ async function publicCatalog() {
         music: (() => {
           const m = check(rows[0]).config?.music || {};
           // Never publish the path of an administrator's private upload.
-          return { enabled: m.enabled === true, mode: m.mode === "video" ? "video" : "audio",
-            private_track: typeof m.path === "string" && m.path.startsWith("tracks/"),
-            audio_url: m.path ? "" : (m.audio_url || ""),
-            volume: Number(m.volume ?? 0.35), loop: true };
+          return {enabled:m.enabled===true,volume:Number(m.volume??0.35),loop:true};
         })(),
       },
     },
@@ -815,6 +812,56 @@ async function catalogSave(a: Actor, b: any) {
 }
 async function staff(a: Actor, b: any) {
   const action = b.action;
+  if (action === "staff.radio.status") {
+    requireRole(a, "manager");
+    const [row, src] = await Promise.all([
+      db.from("site_settings").select("config").eq("id",1).single(),
+      db.from("f90_radio_sources").select("media_path,mode,direct_audio_url,youtube_url,updated_at").eq("id",1).single()
+    ]);
+    const m=check(row).config?.music||{}, r=check(src);
+    return {enabled:m.enabled===true,volume:Number(m.volume??0.35),
+      has_media:!!r.media_path,has_direct:!!r.direct_audio_url,
+      has_youtube:!!r.youtube_url,mode:r.mode||"audio",
+      direct_audio_url:r.direct_audio_url||"",
+      youtube_url:r.youtube_url||"",updated_at:r.updated_at};
+  }
+  if (action === "staff.radio.save") {
+    requireRole(a,"manager");
+    const current=check(await db.from("f90_radio_sources").select("*").eq("id",1).single());
+    const p=b.media_path===undefined?current.media_path:text(b.media_path,400);
+    const direct=b.direct_audio_url===undefined?current.direct_audio_url:text(b.direct_audio_url,1500);
+    const youtube=b.youtube_url===undefined?current.youtube_url:text(b.youtube_url,1500);
+    const mode=p?(/\.(mp4|webm)$/i.test(p)?"video":"audio"):"audio";
+    if(p && !/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(p))
+      throw new AppError("F90_FIELDS",400,"مسار ملف الراديو غير مدعوم");
+    const acceptable=(value:string)=>{
+      if(!value)return true;
+      try{const u=new URL(value);
+        return u.protocol==="https:"&&!u.username&&!u.password&&
+          !/(^|\.)youtu(?:be)?\.com$/.test(u.hostname)&&
+          !/youtu\.be$/.test(u.hostname);
+      }catch{return false;}
+    };
+    if(!acceptable(direct))throw new AppError("F90_FIELDS",400,"أدخل رابط بث صوت مباشر HTTPS وليس رابط YouTube");
+    if(youtube){
+      try{const u=new URL(youtube);
+        if(u.protocol!=="https:"||
+        !["youtube.com","www.youtube.com","m.youtube.com","youtu.be","www.youtu.be","www.youtube-nocookie.com"].includes(u.hostname))
+          throw new Error("invalid");
+      }catch{throw new AppError("F90_FIELDS",400,"رابط YouTube غير صحيح");}
+    }
+    const enabled=b.enabled===true;
+    if(enabled&&!p&&!direct)throw new AppError("F90_FIELDS",400,"ارفع ملفًا أو أدخل رابط بث صوت مباشر قبل التفعيل. لا يمكن بث YouTube مخفيًا.");
+    const volume=Math.max(0,Math.min(1,Number(b.volume??0.35)||0));
+    const revision=new Date().toISOString();
+    check(await db.from("f90_radio_sources").update({media_path:p,
+      direct_audio_url:direct,youtube_url:youtube,mode,updated_at:revision}).eq("id",1).select("id").single());
+    const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
+    const config={...settings.config,music:{enabled,volume,loop:true}};
+    check(await db.from("site_settings").update({config}).eq("id",1).select("id").single());
+    await auditSafe(a.id,"radio.configure","radio",{enabled,mode,has_media:!!p,has_direct:!!direct});
+    return {saved:true,enabled,revision};
+  }
   if (action === "staff.alerts") {
     requireRole(a, "manager", "admin", "support");
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -1454,6 +1501,10 @@ async function staff(a: Actor, b: any) {
     );
     const c = d.config || {};
     delete c.name_en;
+    // Never permit manager-only media paths to leak through the public settings API.
+    if(c.music){
+      c.music={enabled:c.music.enabled===true,volume:Number(c.music.volume??0.35),loop:true};
+    }
     // Only public configuration belongs in this row. Reject accidental credential fields.
     if (
       /"(?:token|secret|api_key|password|service_role)"\s*:/i.test(
@@ -1975,16 +2026,32 @@ Deno.serve(async (req: Request) => {
         throw new AppError("F90_AUTH");
       return out(action === "worker" ? await work() : await smmCatalogFetch());
     }
+    if (action === "media.state") {
+      const [settings,source] = await Promise.all([
+        db.from("site_settings").select("config").eq("id",1).single(),
+        db.from("f90_radio_sources").select("media_path,direct_audio_url,mode,updated_at").eq("id",1).single()
+      ]);
+      const m=check(settings).config?.music||{},r=check(source);
+      return out({enabled:m.enabled===true&&!!(r.media_path||r.direct_audio_url),
+        mode:r.mode==="video"?"video":"audio",revision:r.updated_at||""});
+    }
     if (action === "media.ticket") {
       // The selected private track is resolved server-side, never from a
       // caller-supplied bucket or path. Only currently enabled radio can stream.
       const row = check(await db.from("site_settings").select("config").eq("id", 1).single());
       const music = row.config?.music || {};
-      const path = typeof music.path === "string" ? music.path : "";
-      if (music.enabled !== true || !/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(path))
-        throw new AppError("F90_NOT_FOUND", 404, "الراديو غير مفعّل أو لم يُرفع مصدر خاص");
-      const ticket = check(await db.storage.from("f90-radio").createSignedUrl(path, 3600));
-      return out({ url: ticket.signedUrl, mode: music.mode === "video" ? "video" : "audio" });
+      const selected=check(await db.from("f90_radio_sources").select("media_path,mode,direct_audio_url").eq("id",1).single());
+      if(music.enabled!==true)throw new AppError("F90_NOT_FOUND",404,"الراديو متوقف من الإدارة");
+      if(selected.media_path){
+        const path=selected.media_path;
+        if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|mp4|webm)$/.test(path))
+          throw new AppError("F90_NOT_FOUND",404,"مصدر الراديو غير متاح");
+        const ticket=check(await db.storage.from("f90-radio").createSignedUrl(path,3600));
+        return out({url:ticket.signedUrl,mode:selected.mode==="video"?"video":"audio"});
+      }
+      if(selected.direct_audio_url)
+        return out({url:selected.direct_audio_url,mode:"audio"});
+      throw new AppError("F90_NOT_FOUND",404,"لم يُحدّد مصدر للراديو");
     }
     if (action === "catalog" || action === "health")
       return out(
