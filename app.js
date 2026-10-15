@@ -591,7 +591,7 @@
     return [S.currency, ...S.rates.filter(r=>r.is_enabled&&r.currency!==S.currency).map(r=>r.currency)].slice(0,4)
       .map((code) => {
         const n = C.convert(total, code, S.rates);
-        return `<div class="${code === "USD" ? "usd" : ""}"><small>${S.rates.find(r=>r.currency===code)?.name_ar || C.currencyNames[code] || code}</small><strong>${n === null ? "لم يُحدد الصرف" : e(C.money(n, code))}</strong></div>`;
+        return `<div class="${code === S.currency ? "usd" : ""}"><small>${S.rates.find(r=>r.currency===code)?.name_ar || C.currencyNames[code] || code}</small><strong>${n === null ? "لم يُحدد الصرف" : e(C.money(n, code))}</strong></div>`;
       })
       .join("");
   }
