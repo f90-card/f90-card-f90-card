@@ -61,10 +61,32 @@ test("Real English API guide and single-token UI are available", () => {
 });
 test("Admin audio player and GIF background settings are present", () => {
   assert.match(admin,/mediaCenterForm/);
-  assert.match(admin,/site_background_file/);
+  assert.match(admin,/background_dark_file/);
+  assert.match(admin,/background_cream_file/);
+  assert.match(admin,/background_logo_enabled/);
+  assert.match(admin,/backgroundLogo/);
+  assert.match(admin,/backgroundThemes/);
   assert.match(admin,/music_audio_file/);
   assert.match(api,/f90-audio/);
   assert.match(app,/F90MediaPlayer/);
+});
+test("The official F90 watermark and theme backgrounds stay independent", () => {
+  const scene=read("f90-theme-background.js");
+  const style=read("f90-theme-background.css");
+  assert.match(mainHtml, /f90-theme-background\.js/);
+  assert.match(mainHtml, /f90-theme-background\.css/);
+  assert.match(app, /F90ThemeBackground\?\.sync\(c,S\.settings\.logo_url\)/);
+  assert.match(app, /F90ThemeBackground\?\.setTheme\(v\)/);
+  assert.match(scene, /site\.themes\?\.\[name\]/);
+  assert.match(scene, /logoSrc/);
+  assert.match(scene, /f90-logo\.png/);
+  assert.match(scene, /wm\.enabled!==false/);
+  assert.match(style, /f90-watermark-drift/);
+  assert.match(style, /prefers-reduced-motion:reduce/);
+  assert.match(admin, /background_dark_enabled/);
+  assert.match(admin, /background_cream_enabled/);
+  assert.match(admin, /f90PreviewCream/);
+  assert.match(admin, /f90PreviewDark/);
 });
 test("Visitors see only edge volume controls; managers own radio sources", () => {
   const radio=read("f90-media-player.js"), css=read("f90-radio.css");
