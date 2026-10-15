@@ -12,3 +12,5 @@ for infile in videos:
     rates=json.loads(check.stdout)['streams'][0]
     assert rates['avg_frame_rate']=='25/1',(outfile,rates)
     print(outfile.name,outfile.stat().st_size,rates,flush=True)
+
+# Refresh 25fps masters after live-app visual correction
