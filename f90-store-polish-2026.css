@@ -52,3 +52,24 @@
 .f90-design-video-fields .field{margin-block:8px}
 @media(max-width:700px){#drawer.drawer{backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}.f90-iphone-ad{grid-template-columns:1fr;text-align:center}.f90-iphone-scene{min-height:315px}.f90-iphone-shell{width:155px;height:305px;border-radius:29px}.f90-iphone-screen{border-radius:22px}.f90-merchant-guide-grid{grid-template-columns:1fr}.f90-merchant-hero-new{flex-direction:column;text-align:center}.f90-merchant-hero-new img{max-width:100px}}
 @media(prefers-reduced-motion:reduce){.f90-iphone-shell{animation:none;transform:none}.promotion .promotion-track{animation-duration:120s!important}.f90-method-active,.f90-drawer-quick-grid a{transition:none}}
+
+/* Additional VIP ranks, consistent with the stored 1–15 scale */
+.profile-cover.f90-vip-8,.vip-card.f90-vip-8{--vip-color:#e2a661;--vip-glow:#e2a66136}
+.profile-cover.f90-vip-9,.vip-card.f90-vip-9{--vip-color:#de8cbf;--vip-glow:#de8cbf37}
+.profile-cover.f90-vip-10,.vip-card.f90-vip-10{--vip-color:#eab75b;--vip-glow:#eab75b38}
+.profile-cover.f90-vip-11,.vip-card.f90-vip-11{--vip-color:#9ed0f9;--vip-glow:#9ed0f938}
+.profile-cover.f90-vip-12,.vip-card.f90-vip-12{--vip-color:#c8a5ff;--vip-glow:#c8a5ff38}
+.profile-cover.f90-vip-13,.vip-card.f90-vip-13{--vip-color:#f89db0;--vip-glow:#f89db038}
+.profile-cover.f90-vip-14,.vip-card.f90-vip-14{--vip-color:#8ce4d9;--vip-glow:#8ce4d940}
+.profile-cover.f90-vip-15,.vip-card.f90-vip-15{--vip-color:#ffe394;--vip-glow:#ffe39448}
+.f90-profile-brand-watermark{position:absolute!important;left:20px;top:16px;width:112px;height:93px;object-fit:contain;opacity:.19;filter:grayscale(.3);pointer-events:none}
+.f90-runtime-status{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.f90-runtime-status span{display:inline-block;border:1px solid var(--line);border-radius:10px;background:var(--surface2);padding:9px 12px;font-size:12px}
+.admin-body .metric-grid>.panel,.admin-body .panel{min-width:0}
+.admin-body .table-wrap{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
+.admin-body .table-wrap table{width:100%;border-collapse:collapse}
+.admin-body .admin-main .panel{box-shadow:0 9px 22px #0001}
+.admin-body .f90-admin-center-grid>a,.admin-body .f90-admin-center-grid>section{transition:border-color .15s}
+.admin-body .f90-admin-center-grid>a:hover{border-color:var(--accent)}
+@media(max-width:650px){.f90-profile-brand-watermark{width:65px;height:65px;top:8px;left:8px}.admin-body .admin-main{min-width:0;max-width:100%}.admin-body .f90-admin-center-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#f90LogoSky{display:none!important}.f90-iphone-shell{animation:none!important}}
