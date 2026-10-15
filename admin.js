@@ -1575,8 +1575,17 @@
       field("promo_video_image_url","رابط صورة شاشة الهاتف","url",c.promo_video?.image_url||"")+
       field("promo_video_image_file","رفع صورة أو GIF لشاشة الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
       field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = واتساب المتجر)"')+
-      field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","number",c.promo_video?.phone_size??178,'min="132" max="280" step="1"')+
-      field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","number",c.promo_video?.phone_size_mobile??153,'min="120" max="240" step="1"')+
+      field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","range",c.promo_video?.phone_size??178,'min="1" max="480" step="1"')+
+      field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","range",c.promo_video?.phone_size_mobile??153,'min="1" max="360" step="1"')+
+      '<h4>إعلان اللابتوب بجانب الهاتف</h4>'+ 
+      select("promo_laptop_mode","محتوى شاشة اللابتوب",[["image","صورة أو GIF"],["video","فيديو صامت"]],c.promo_video?.laptop?.mode||"image")+
+      field("promo_laptop_image_url","صورة شاشة اللابتوب","url",c.promo_video?.laptop?.image_url||"")+
+      field("promo_laptop_image_file","رفع صورة شاشة اللابتوب","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      field("promo_laptop_url","فيديو شاشة اللابتوب","url",c.promo_video?.laptop?.url||"")+
+      field("promo_laptop_file","رفع فيديو شاشة اللابتوب","file","",'accept="video/mp4,video/webm"')+
+      field("promo_laptop_link","رابط الضغط على اللابتوب","url",c.promo_video?.laptop?.link_url||"")+
+      field("promo_laptop_size","حجم اللابتوب في الكمبيوتر (بكسل)","range",c.promo_video?.laptop_size??320,'min="1" max="760" step="1"')+
+      field("promo_laptop_size_mobile","حجم اللابتوب في الجوال (بكسل)","range",c.promo_video?.laptop_size_mobile??220,'min="1" max="360" step="1"')+
       field("promo_phone_x","تحريك الهاتف أفقيًا (يمين أو يسار)","number",c.promo_video?.phone_x??0,'min="-110" max="110" step="1"')+
       field("promo_phone_y","تحريك الهاتف عموديًا (أعلى أو أسفل)","number",c.promo_video?.phone_y??0,'min="-90" max="90" step="1"')+
       field("promo_video_title","عنوان إعلان الهاتف","text",c.promo_video?.title_ar||"F90 CARD",'maxlength="120"')+
@@ -1718,6 +1727,10 @@
     const videoFile=form.elements.promo_video_file?.files?.[0];
     const posterFile=form.elements.promo_video_poster_file?.files?.[0];
     const phoneImageFile=form.elements.promo_video_image_file?.files?.[0];
+    const laptopImageFile=form.elements.promo_laptop_image_file?.files?.[0];
+    const laptopVideoFile=form.elements.promo_laptop_file?.files?.[0];
+    const laptopImageUrl=laptopImageFile?.size?(await A.upload(laptopImageFile,"f90-images","promo-laptop")).url:String(d.promo_laptop_image_url||"").trim();
+    const laptopVideoUrl=laptopVideoFile?.size?(await A.upload(laptopVideoFile,"f90-videos","promo-laptop")).url:String(d.promo_laptop_url||"").trim();
     const phoneImageUrl=phoneImageFile?.size?(await A.upload(phoneImageFile,"f90-images","promo-phone")).url:String(d.promo_video_image_url||"").trim();
     const phoneLink=String(d.promo_video_link_url||"").trim();
     if(phoneLink && (!C.safeUrl(phoneLink)||!/^https:\/\//i.test(phoneLink)))
@@ -1760,8 +1773,11 @@
       promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,
       mode:d.promo_video_mode,url:videoUrl,image_url:phoneImageUrl,poster_url:videoPoster,
       link_url:phoneLink,
-      phone_size:phoneBound(d.promo_phone_size,132,280,178),
-      phone_size_mobile:phoneBound(d.promo_phone_size_mobile,120,240,153),
+      phone_size:phoneBound(d.promo_phone_size,1,480,178),
+      phone_size_mobile:phoneBound(d.promo_phone_size_mobile,1,360,153),
+      laptop_size:phoneBound(d.promo_laptop_size,1,760,320),
+      laptop_size_mobile:phoneBound(d.promo_laptop_size_mobile,1,360,220),
+      laptop:{mode:d.promo_laptop_mode,url:laptopVideoUrl,image_url:laptopImageUrl,link_url:String(d.promo_laptop_link||"").trim()},
       phone_x:phoneBound(d.promo_phone_x,-110,110,0),
       phone_y:phoneBound(d.promo_phone_y,-90,90,0),
       title_ar:String(d.promo_video_title||"").trim().slice(0,120),
