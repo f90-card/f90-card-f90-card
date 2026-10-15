@@ -80,6 +80,7 @@ function teardown(){
 }
 function prepare(){
  ensure();dock.hidden=!enabled;
+ document.body.classList.toggle("f90-radio-on",enabled);
  if(!enabled){teardown();state();return;}
  const type=config.mode==="video"?"video":"audio";
  media=document.createElement(type);
