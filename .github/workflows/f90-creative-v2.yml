@@ -1,0 +1,34 @@
+name: F90 creative campaign v2
+on:
+  push:
+    paths:
+      - 'marketing/creative_v2.py'
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  posters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-core
+          pip install --quiet pillow qrcode
+      - name: Render six separate art directions using actual storefront and original logo
+        run: python marketing/creative_v2.py
+      - name: Save each output
+        run: |
+          git config user.name 'F90 Campaign Bot'
+          git config user.email 'f90-campaign-bot@users.noreply.github.com'
+          git add marketing/creative-v2/*.png
+          if ! git diff --staged --quiet; then
+            git commit -m "marketing: six unique F90 creative layouts"
+            git pull --rebase origin main
+            git push
+          fi
