@@ -619,149 +619,6 @@
   // One real category per game and one real top-up product per live app.
   // No fake services, no derived purchase prices, and only a small first batch
   // of images to preserve the storefront's mobile loading performance.
-  const f90TrendingGameNames=[
-    "ببجي اتوماتيك","ببجي موبايل يدوي","فري فاير","موبايل ليجندز",
-    "يلا لودو","جواكر","روبلكس","إف سي موبايل","كول أوف ديوتي",
-    "هونر أوف كينغز","8 بول بول كوينز","8 بول بول كاش","بلود سترايك",
-    "دلتا فورس","دلتا فورس غارينا","وايت آوت سرفايفل","فالورانت",
-    "أرينا بريك آوت","وي بلاي","لورد موبايل","كلاش اوف كلانس",
-    "ببجي تركي","ببجي موبايل اكواد عالمية","عضويات ببجي",
-    "ببجي نيو تسيت","ببجي لايت","وار روبوتس","زينلس زون زيرو",
-    "ليف أفتر","ستيت أوف سرفايفل","انتقام السلاطين",
-    "ملك أفالون","مملكة إنفينيتي","فارلايت","وير ويندز ميت",
-    "ميرج كينغدوم","الممالك الخالدة","آيدنتيتي فايف","أنداون",
-    "هيرو كلاش","بروجكت إنتروبي","عصر الأساطير","مو أوريجين 2"
-  ];
-  const f90TrendingAppNames=[
-    "اكزينا لايف","تيك توك","لايكي لايف","توب توب","بوبو لايف",
-    "سكاي شات","بوكـو","بوكو","بوتا لايف","عمار شات","إيمو شات",
-    "جاكو لايف","يلا","كواي","يوهو ستار","مانجو لايف",
-    "هاي بارتي","ميغو لايف","سوبر لايف","بارتي ستار","هاغو",
-    "يو بو","يوبو","بيجو لايف","بيست لايف","بيلا شات",
-    "هلا شات","هلا","هيا","هالو ستار","سويو","سول يو",
-    "سول ستار","فانسي لايف","كراش لايف","كوكو لايف",
-    "جاكو لايف","تاكا لايف","لايت شات","لاما شات",
-    "لاكي شات","بوبو شات","دريم شات","شباب شات",
-    "ميكو شات","فور شات","كرك شات","بينمو شات",
-    "زفة لايف","غني لايف","أزال لايف","ألو شات","أهلا شات",
-    "مانجو ستار","يا هلا شات","روح","روكا لايف","ليف كام",
-    "ميكسو","بارتي غو","بارتي هيرو","سوبر ميت","كيو لايف",
-    "يولا شات","بولي","لايكي","جيمي لايف","توك توك"
-  ];
-  const f90TrendingNormal = value => String(value||"").normalize("NFKC")
-    .replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه")
-    .replace(/[ـ\s\-\u064B-\u065F]/g,"").toLowerCase();
-  function f90TrendingItems(){
-    const actual=S.categories||[];
-    const byId=new Map(actual.map(cat=>[cat.id,cat]));
-    const roots=actual.filter(cat=>!cat.parent_id);
-    const gamesRoot=roots.find(cat=>/games|الالعاب|الألعاب/i.test(String(cat.slug)+" "+cat.name));
-    const appRoot=roots.find(cat=>/applications|شحن التطبيقات/i.test(String(cat.slug)+" "+cat.name));
-    const under=(cat,root)=>{
-      if(!root||!cat)return false;
-      let current=cat;
-      const seen=new Set();
-      while(current&&!seen.has(current.id)){
-        if(current.id===root.id)return true;
-        seen.add(current.id);current=byId.get(current.parent_id);
-      }
-      return false;
-    };
-    const firstImageByCategory=new Map();
-    const productsByCategory=new Map();
-    for(const p of S.products||[]){
-      if(!p.is_active||C.unavailable(p))continue;
-      if(!productsByCategory.has(p.category_id))productsByCategory.set(p.category_id,[]);
-      productsByCategory.get(p.category_id).push(p);
-      if(!firstImageByCategory.has(p.category_id)&&C.safeUrl(p.image_url))
-        firstImageByCategory.set(p.category_id,p.image_url);
-    }
-    const gameCandidates=actual.filter(cat=>
-      cat.id!==gamesRoot?.id && under(cat,gamesRoot) &&
-      productsByCategory.has(cat.id) && !categoryIsUnavailable(cat));
-    const appCandidates=(S.products||[]).filter(p=>
-      p.is_active&&!C.unavailable(p)&&under(byId.get(p.category_id),appRoot));
-    const gameRank=new Map(f90TrendingGameNames.map((n,i)=>[f90TrendingNormal(n),i]));
-    const appRank=new Map(f90TrendingAppNames.map((n,i)=>[f90TrendingNormal(n),i]));
-    const sortByPriority=(a,b,rank)=>(
-      (rank.get(f90TrendingNormal(a.name))??999)-
-      (rank.get(f90TrendingNormal(b.name))??999))||
-      a.name.localeCompare(b.name,"ar");
-    const games=gameCandidates.sort((a,b)=>sortByPriority(a,b,gameRank))
-      .map(cat=>({
-        id:"game-"+cat.id,name:cat.name,kind:"games",
-        image:cat.image_url||firstImageByCategory.get(cat.id)||"",
-        url:href("category",cat.slug||cat.id),product:null
-      }));
-    const apps=appCandidates.sort((a,b)=>sortByPriority(a,b,appRank))
-      .map(p=>({
-        id:"app-"+p.id,name:p.name,kind:"apps",image:p.image_url||"",
-        url:href("product",p.slug||p.id),product:p
-      }));
-    const output=[],seen=new Set();
-    function add(item){
-      const key=f90TrendingNormal(item.name);
-      if(!key||seen.has(key)||/غيرمسمى|يحتاجمراجعه/.test(key))return;
-      if(!item.image)return;
-      seen.add(key);output.push(item);
-    }
-    games.slice(0,40).forEach(add);
-    apps.forEach(item=>{if(output.length<100)add(item);});
-    games.slice(40).forEach(item=>{if(output.length<100)add(item);});
-    return output.slice(0,100);
-  }
-  function f90PopularTile(item){
-    const action=item.product?
-      ' data-action="quick-product" data-id="'+e(item.product.id)+'"':"";
-    return '<a class="f90-popular-tile" href="'+e(item.url)+'"'+action+
-      ' aria-label="'+e(item.name)+'">'+
-      image(item.image,item.name,"f90-popular-image")+
-      '<span class="f90-popular-name">'+e(item.name)+'</span>'+
-      '<small class="f90-popular-kind">'+(item.kind==="games"?"ألعاب":"تطبيقات")+'</small></a>';
-  }
-  function f90PopularSection(){
-    const items=f90TrendingItems();
-    if(!items.length)return "";
-    return '<section class="f90-popular" id="f90Popular" aria-label="أشهر ألعاب وتطبيقات الشحن">'+
-      '<header class="section-head"><div><h2>أشهر 100 لعبة وتطبيق للشحن</h2>'+
-      '<span>مختارات من الخدمات المتاحة في F90 CARD</span></div>'+
-      '<strong class="f90-popular-count">'+items.length+' خدمة</strong></header>'+
-      '<div class="f90-popular-toolbar"><div class="f90-popular-tabs" role="group" aria-label="تصنيف الخدمات">'+
-      '<button type="button" data-popular-kind="all" aria-pressed="true">الكل</button>'+
-      '<button type="button" data-popular-kind="games" aria-pressed="false">الألعاب</button>'+
-      '<button type="button" data-popular-kind="apps" aria-pressed="false">التطبيقات</button></div>'+
-      '<input type="search" id="f90PopularSearch" placeholder="ابحث عن لعبة أو تطبيق..." aria-label="البحث في الخدمات الشائعة" autocomplete="off"></div>'+
-      '<div class="f90-popular-grid" id="f90PopularGrid"></div>'+
-      '<button class="f90-popular-more" type="button" id="f90PopularMore" hidden>عرض المزيد من الخدمات</button>'+
-      '</section>';
-  }
-  function initF90Popular(){
-    const section=main.querySelector("#f90Popular");
-    if(!section)return;
-    const items=f90TrendingItems(),grid=section.querySelector("#f90PopularGrid");
-    const more=section.querySelector("#f90PopularMore");
-    const search=section.querySelector("#f90PopularSearch");
-    let kind="all",limit=12;
-    const render=()=>{
-      const term=f90TrendingNormal(search.value);
-      const filtered=items.filter(item=>(kind==="all"||item.kind===kind)&&
-        (!term||f90TrendingNormal(item.name).includes(term)));
-      grid.innerHTML=filtered.length?filtered.slice(0,limit).map(f90PopularTile).join(""):
-        '<p class="f90-popular-empty">لا توجد خدمة مطابقة للبحث.</p>';
-      more.hidden=filtered.length<=limit;
-      more.textContent="عرض المزيد ("+(filtered.length-Math.min(limit,filtered.length))+")";
-    };
-    search.addEventListener("input",()=>{limit=12;render()});
-    more.addEventListener("click",()=>{limit+=18;render()});
-    section.querySelectorAll("[data-popular-kind]").forEach(button=>
-      button.addEventListener("click",()=>{
-        kind=button.dataset.popularKind;limit=12;
-        section.querySelectorAll("[data-popular-kind]").forEach(b=>
-          b.setAttribute("aria-pressed",String(b===button)));
-        render();
-      }));
-    render();
-  }
   function home() {
     const c = S.settings.config,
       slides = S.banners.filter((b) => C.visibleSchedule(b.presentation || {})),
@@ -774,7 +631,6 @@
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
- ${f90PopularSection()}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -795,7 +651,6 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
-    initF90Popular();
     syncHomePhoneVideo();
     const promoEl=$("promotionBar");
     const heroElForTicker=main.querySelector(".f90-swipe-hero");
