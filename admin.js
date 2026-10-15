@@ -507,20 +507,31 @@
       $("identityImage").innerHTML =
         `<img class="receipt-preview" src="${e(r.signedUrl)}" alt="مستند هوية خاص">`;
   }
-  function detailUser(u) {
-    S.detail = u;
-    modal(
-      "إدارة حساب " + u.display_name,
-      `${customer(u)}<div class="notice"><p class="small">البريد: ${e(u.email)}<br>الرصيد: ${e(C.money(u.balance_usd))}<br>رقم الهاتف: ${e(u.phone_country || "")} ${e(u.phone || "غير مضاف")}</p></div><form id="userForm">${select("role", "الصلاحية", Object.entries(C.roles), u.role)}${select(
-        "status",
-        "حالة الحساب",
-        [
-          ["active", "تفعيل الحساب"],
-          ["suspended", "إيقاف مؤقت"],
-          ["banned", "حظر الحساب"],
-        ],
-        u.account_status,
-      )}${select("vip", "المستوى", [["", "تلقائي بحسب الإنفاق"], ...S.vip.map((t) => [t.level, "تخصيص المستوى " + t.level])], u.vip_override || "")}<button class="button full" type="submit">حفظ صلاحيات وحالة الحساب</button></form><div class="actions" style="margin-top:20px"><button class="button secondary small" data-action="reset-user">إرسال رابط استعادة كلمة المرور</button>${u.role === "trader" ? '<button class="button ghost small" data-action="create-trader-key">إنشاء مفتاح للتاجر</button><button class="button secondary small" data-action="trader-keys">المفاتيح النشطة والملغاة</button>' : ""}</div><p class="muted small" style="margin-top:15px">لا يمكن إزالة آخر مدير كامل الصلاحيات. حظر الحساب يمنع العمليات حتى لو احتفظ بجلسة قديمة.</p>`,
+  async function detailUser(u) {
+    if (!u?.id) throw new Error("حساب العميل غير موجود");
+    const data = await A.call("staff.finance", { id: u.id });
+    const bal = Number(data.balance_usd || 0);
+    S.detail = {...u, balance_usd: bal};
+    const ledger = data.ledger || [];
+    modal("العميل والمحفظة: " + u.display_name,
+      '<section class="f90-admin-customer"><div class="f90-admin-customer-head">'+customer(u)+
+      '<div class="f90-customer-current"><small>رصيد المحفظة</small><strong>'+e(C.money(bal,"USD",true))+'</strong><small>الرصيد الأساسي بالدولار</small></div></div>'+
+      '<div class="f90-finance-editor-grid"><section class="panel"><h3>خصم إضافي للعميل</h3><p class="muted small">يُضاف إلى خصم VIP، ويُحسب تلقائيًا عند تسعير الطلب.</p>'+
+      '<form id="userDiscountForm">'+field("percent","الخصم الإضافي ٪","number",data.extra_discount_percent || 0,'required min="0" max="50" step="0.001"')+
+      '<button class="button secondary" type="submit">حفظ الخصم الخاص</button></form></section>'+
+      '<section class="panel"><h3>إضافة أو خصم رصيد</h3><p class="muted small">كل حركة مسجلة مع السبب والتاريخ والرصيد قبل وبعد؛ الرصيد لا يصبح سالبًا.</p>'+
+      '<form id="financeAdjustForm">'+select("direction","نوع الحركة",[["credit","إضافة رصيد"],["debit","خصم رصيد"]],"credit")+
+      field("amount","المبلغ بالدولار","number","",'required min="0.000001" max="100000" step="0.000001"')+
+      field("note","سبب الحركة","textarea","",'required minlength="5" maxlength="500"')+
+      '<button class="button" type="submit">مراجعة حركة الرصيد</button></form></section></div>'+
+      '<section class="panel"><h3>سجل الرصيد والعمليات</h3><div class="table-wrap"><table class="f90-finance-table"><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الحركة</th><th>الرصيد بعد</th></tr></thead><tbody>'+
+      (ledger.length ? ledger.map(x=>'<tr><td>'+e(C.date(x.created_at))+'</td><td>'+e(x.description||x.kind)+'</td><td class="'+(Number(x.amount_usd)>=0?'ledger-plus':'ledger-minus')+'">'+e(C.money(x.amount_usd,"USD",true))+'</td><td>'+e(C.money(x.balance_after,"USD",true))+'</td></tr>').join("") : '<tr><td colspan="4">لا توجد حركات رصيد بعد</td></tr>')+
+      '</tbody></table></div><p class="muted small">آخر 50 حركة. السجل الكامل متاح في قسم السجل المالي.</p></section>'+
+      '<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
+      '<form id="userForm">'+select("role","الصلاحية",Object.entries(C.roles),u.role)+
+      select("status","حالة الحساب",[["active","تفعيل الحساب"],["suspended","إيقاف مؤقت"],["banned","حظر الحساب"]],u.account_status)+
+      select("vip","المستوى",[["","تلقائي بحسب الإنفاق"],...S.vip.map(t=>[t.level,"تخصيص المستوى "+t.level])],u.vip_override||"")+
+      '<button class="button secondary" type="submit">حفظ صلاحيات الحساب</button></form></section></section>'
     );
   }
   function categoryOptions(includeEmpty = true, exclude) {
@@ -1651,6 +1662,24 @@
       toast(verification ? "تمت مراجعة التوثيق" : "تمت مراجعة الإيداع");
       return listPage(verification ? "verification" : "deposits");
     }
+    if (form.id === "userDiscountForm") {
+      const percent=Number(d.percent);
+      if(!Number.isFinite(percent)||percent<0||percent>50)throw new Error("النسبة بين 0 و50٪");
+      await A.call("staff.discount",{id:S.detail.id,percent});
+      toast("تم حفظ الخصم الإضافي");
+      return detailUser(S.detail);
+    }
+    if (form.id === "financeAdjustForm") {
+      const raw=Number(d.amount);
+      if(!Number.isFinite(raw)||raw<=0||raw>100000)throw new Error("المبلغ غير صالح");
+      if(String(d.note||"").trim().length<5)throw new Error("سبب الحركة مطلوب");
+      const amount=d.direction==="debit"?-raw:raw;
+      if(!window.confirm("تأكيد "+(amount>0?"إضافة":"خصم")+" "+C.money(Math.abs(amount))+" لحساب "+S.detail.display_name+"؟ السبب: "+d.note))return;
+      if(!form.dataset.requestId)form.dataset.requestId=crypto.randomUUID();
+      await A.call("staff.adjust",{id:S.detail.id,amount_usd:amount,note:d.note,request_id:form.dataset.requestId,expected_balance:Number(S.detail.balance_usd)});
+      toast("تم تسجيل حركة الرصيد");
+      return detailUser(S.detail);
+    }
     if (form.id === "userForm") {
       await A.call("staff.user", {
         id: S.detail.id,
@@ -1988,7 +2017,7 @@
       else if (action === "detail-verification")
         await detailVerification(S.list.find((x) => x.id === b.dataset.id));
       else if (action === "detail-user")
-        detailUser(S.list.find((x) => x.id === b.dataset.id));
+        await detailUser(S.list.find((x) => x.id === b.dataset.id));
       else if (action === "verification-image") {
         const r = await A.call("staff.file", {
           kind: "verification",
