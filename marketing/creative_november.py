@@ -104,6 +104,6 @@ def poster(topic,index):
   card(im,section,(59,558,1021,953),accent)
   d.arc((85,524,998,1040),10,100,fill=accent,width=10)
  bottom(im,accent)
- im.save(O/fn+'.png',optimize=True)
+ im.save(O/(fn+'.png'),optimize=True)
  print(fn,(O/(fn+'.png')).stat().st_size,flush=True)
 for i,t in enumerate(TOPICS):poster(t,i)
