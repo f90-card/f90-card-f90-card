@@ -210,7 +210,9 @@ async function harness(file = "index.html", options = {}) {
   const schedule = (callback, delay, ...args) => {
     const id = nativeTimeout(() => { timers.delete(id); callback(...args); }, delay);
     timers.add(id);
-    id.unref?.(); // A background UI timer must not keep the test runner alive.
+    // Short boot/quote timers must remain live until their test resolves.
+    // Long scheduling timers must not keep Node waiting for minutes.
+    if (Number(delay) > 1000) id.unref?.();
     return id;
   };
   const repeat = (callback, delay, ...args) => {
