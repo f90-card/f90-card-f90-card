@@ -1637,6 +1637,37 @@
          ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"],
          ["تلجرام","الإيداعات والتوثيق والطلبات المهمة فقط","telegram-alerts"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
+    // Lightweight live previews: form edits never write to the database until Save.
+    const logoSource=C.safeUrl(S.settings.logo_url)||"./f90-logo.png";
+    for(const kind of ["dark","cream"]){
+      const tile=$("f90Preview"+(kind==="dark"?"Dark":"Cream"));
+      if(!tile)continue;
+      const mark=document.createElement("img");
+      mark.src=logoSource;mark.alt="";mark.loading="lazy";tile.appendChild(mark);
+      const form=$("designCenterForm");
+      const picture=form.elements["background_"+kind+"_file"];
+      const urlField=form.elements["background_"+kind+"_url"];
+      const shade=form.elements["background_"+kind+"_dim"];
+      const enabled=form.elements["background_"+kind+"_enabled"];
+      const draw=()=>{
+        if(tile.dataset.previewBlob){URL.revokeObjectURL(tile.dataset.previewBlob);delete tile.dataset.previewBlob;}
+        let url=C.safeUrl(urlField.value);
+        if(picture.files?.[0] && /^image\\/(?:png|jpeg|webp|gif)$/.test(picture.files[0].type)){
+          url=URL.createObjectURL(picture.files[0]);tile.dataset.previewBlob=url;
+        }
+        const level=Math.max(0,Math.min(.85,Number(shade.value)||0));
+        const veil=kind==="cream"?"rgba(246,240,235,"+level+")":"rgba(8,10,16,"+level+")";
+        const fallback=kind==="cream"?"#e6dfd5":"#11121b";
+        tile.style.backgroundImage=enabled.checked&&url?"linear-gradient("+veil+","+veil+"),url("+JSON.stringify(url)+")":"none";
+        tile.style.backgroundColor=fallback;
+        tile.style.backgroundSize="cover";
+        tile.style.backgroundPosition="center";
+      };
+      for(const el of [picture,urlField,shade,enabled]){
+        if(el)el.addEventListener(el===shade?"input":"change",draw);
+      }
+      draw();
+    }
   }
   async function uploadAppInstallIcons(file,folder){
     if(!file || !["image/png","image/jpeg","image/webp"].includes(file.type))
