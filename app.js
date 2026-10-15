@@ -215,12 +215,14 @@
     }).join("");
   }
   function displayMoney(usd, fine = false) {
-    const target = S.rates.find(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd) > 0);
-    if (S.currency === "USD" || !target) return C.money(usd,"USD",fine);
-    const converted = C.convert(usd, S.currency, S.rates);
-    if (converted === null) return C.money(usd,"USD",fine);
-    const amount = new Intl.NumberFormat("ar",{minimumFractionDigits:2,maximumFractionDigits:fine?6:2}).format(converted);
-    return amount + " " + (target.name_ar || S.currency);
+    const rate = S.rates.find(r=>r.currency===S.currency&&r.is_enabled&&Number(r.per_usd)>0);
+    const code=rate?.currency||"USD";
+    const value=code==="USD"?Number(usd):C.convert(usd,code,S.rates);
+    if(!Number.isFinite(value))return "—";
+    const symbols={USD:"$",ILS:"₪",JOD:"د.أ",EUR:"€",SAR:"ر.س",AED:"د.إ",EGP:"ج.م",TRY:"₺",GBP:"£"};
+    let symbol=symbols[code];
+    if(!symbol)try{symbol=new Intl.NumberFormat("en",{style:"currency",currency:code,currencyDisplay:"narrowSymbol"}).formatToParts(0).find(p=>p.type==="currency")?.value||code;}catch{symbol=code;}
+    return symbol+" "+new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:fine?6:2}).format(value);
   }
   function chrome() {
     brand();
@@ -232,13 +234,13 @@
       I("wallet") +
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(displayMoney(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
     $("drawerProfile").innerHTML =
-      `<a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>`;
+      `<section class="f90-drawer-identity"><a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>${me ? `<button type="button" class="f90-drawer-session" data-action="logout">${I("logout")} تسجيل الخروج</button>` : `<a class="f90-drawer-session" href="#/auth">${I("user")} تسجيل الدخول</a>`}</section>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
     $("drawerProfile").insertAdjacentHTML("beforeend", `<div class="f90-drawer-social"><div class="f90-drawer-social-title">تابع منصاتنا الرسمية</div><div class="f90-social-card-grid">${f90SocialCards() || '<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>'}</div></div>`);
     const drawerBalance = me && !me.needs_mfa && !S.walletStale
       ? e(displayMoney(me.wallet?.balance_usd,true))
       : me ? "الرصيد يحتاج تحديث" : "سجّل الدخول لعرض الرصيد";
-    $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
+    $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-card-top"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="F90 CARD"><span>F90 DIGITAL WALLET</span></div><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><small class="f90-drawer-wallet-copy">© F90 CARD · محفظة رقمية داخل المتجر</small><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
@@ -247,7 +249,6 @@
       ["favorites", "المفضلة", "heart"],
       ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
-      ["recipients", "دفتر العملاء", "doc"],
       ["wallet", "محفظتي", "wallet"],
       ["deposit", "إضافة رصيد", "plus"],
       ["orders", "سجل حركات الخدمات", "clock"],
@@ -260,7 +261,7 @@
       ["@help", "المزيد"],
       ["install", "تثبيت التطبيق", "plus"],
       ...(me?.role === "trader" ? [["developers", "صفحة التاجر", "link"]] : []),
-      ["api-guide", "دليل API للمبرمجين", "link"],
+      ...(me?.role === "trader" ? [["api-guide", "دليل ربط التاجر", "doc"]] : []),
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
@@ -274,8 +275,7 @@
         )
         .join("") +
       (me
-        ? `<button data-action="logout">${I("logout")}تسجيل الخروج</button>`
-        : "");
+        ? "" : "");
     const staff = me && ["manager", "admin", "designer", "support"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
@@ -415,9 +415,15 @@
     const rows=(S.settings.config.promotions||[]).filter(x=>x.enabled&&C.visibleSchedule(x));
     const el=$("promotionBar");
     el.hidden=!rows.length;
-    if(!rows.length)return;
-    const content=rows.map(p=>`<span class="f90-ticker-item">${p.image_url?image(p.image_url,p.text_ar||"إعلان"):""}${e(p.text_ar||"")}</span>`).join("");
-    el.innerHTML=`<div class="f90-ticker-window"><div class="promotion-track" style="--promo-duration:${Math.max(18,Number(rows[0].animation_seconds)||28)}s"><div class="f90-ticker-copy">${content}</div><div class="f90-ticker-copy" aria-hidden="true">${content}</div></div></div>`;
+    if(!rows.length){el.replaceChildren();return;}
+    const item=p=>'<span class="f90-ticker-item">'+(C.safeUrl(p.image_url)?image(p.image_url,p.text_ar||"إعلان"):"")+
+      '<span class="f90-ticker-message">'+e(p.text_ar||"")+'</span></span>';
+    const content=rows.map(p=>C.safeUrl(p.link_url)
+      ? '<a class="f90-ticker-link" href="'+e(C.safeUrl(p.link_url))+'">'+item(p)+'</a>'
+      : item(p)).join("");
+    const duration=Math.max(30,Math.min(180,Number(rows[0].animation_seconds)||45));
+    el.innerHTML='<div class="f90-ticker-window" dir="ltr"><div class="promotion-track" style="--promo-duration:'+duration+'s">'+
+      '<div class="f90-ticker-copy" dir="rtl">'+content+'</div><div class="f90-ticker-copy" dir="rtl" aria-hidden="true">'+content+'</div></div></div>';
   }
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = (src, name) => image(C.safeUrl(src) || f90Fallback(), name || "قيد التعبئة", "f90-refill-image");
@@ -735,7 +741,7 @@
   function profile() {
     const me = S.me,
       p = me.profile;
-    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(7, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id"><span>معرّف العميل</span><b dir="ltr">${e(p.customer_id)}</b></div><div class="f90-profile-links"><a class="button f90-profile-vip-button" href="#/vip">${I("crown")}عرض مستوى VIP ومزاياي</a><a class="button secondary small" href="#/">الرئيسية</a><a class="button secondary small" href="#/wallet">المحفظة</a><a class="button secondary small" href="#/orders">سجل طلباتي</a><a class="button secondary small" href="#/history">سجل الحركات</a><a class="button secondary small" href="#/search">البحث عن خدمة</a><a class="button secondary small" href="#/recipients">دفتر العملاء</a><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats f90-profile-stats"><div><span class="f90-profile-stat-icon">${I("wallet")}</span><strong>${e(displayMoney(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><span class="f90-profile-stat-icon">${I("grid")}</span><strong>${e(displayMoney(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><span class="f90-profile-stat-icon">${I("crown")}</span><strong>${e(me.vip_level)} / ٧</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
+    main.innerHTML = `<section class="profile-cover f90-vip-${Math.max(1, Math.min(15, Number(me.vip_level) || 1))}">${avatar(p, "large")}<div><span class="small">كل تفاصيل عالمك، هنا</span><h1>${e(p.display_name)}</h1><div class="badges">${verified(p)}<span class="badge">${e(C.roles[me.role])}</span><span class="badge gold f90-vip-rank">${I("crown")} VIP ${e(me.vip_level)}</span></div><div class="profile-id"><span>معرّف العميل</span><b dir="ltr">${e(p.customer_id)}</b></div><div class="f90-profile-links"><a class="button f90-profile-vip-button" href="#/vip">${I("crown")}عرض مستوى VIP ومزاياي</a><a class="button secondary small" href="#/">الرئيسية</a><a class="button secondary small" href="#/wallet">المحفظة</a><a class="button secondary small" href="#/orders">سجل طلباتي</a><a class="button secondary small" href="#/history">سجل الحركات</a><a class="button secondary small" href="#/search">البحث عن خدمة</a><a class="button secondary small" href="#/security">أمان الحساب</a><a class="button secondary small" href="#/install">تثبيت التطبيق</a><a class="button secondary small" href="#/verification">توثيق الحساب</a></div></div></section><div class="profile-grid"><section class="panel"><h2>معلوماتك الشخصية</h2><form id="profileForm">${field("display_name", "الاسم", "text", p.display_name, 'required maxlength="100"')}${field("email", "البريد الإلكتروني", "email", p.email, 'disabled dir="ltr"')}<div class="field-row">${field("phone_country", "رمز الدولة", "tel", p.phone_country || "+970", 'maxlength="8" dir="ltr"')}${field("phone", "الهاتف <small>اختياري</small>", "tel", p.phone || "", 'maxlength="25" dir="ltr"')}</div>${field("avatar", "صورة حسابك", "file", "", 'accept="image/png,image/jpeg,image/webp,image/gif"')}<button class="button" type="submit">حفظ التعديلات</button></form></section><div><section class="panel"><h3>نظرة على حسابك</h3><div class="profile-stats f90-profile-stats"><div><span class="f90-profile-stat-icon">${I("wallet")}</span><strong>${e(displayMoney(me.wallet.balance_usd))}</strong><span>رصيد المحفظة</span></div><div><span class="f90-profile-stat-icon">${I("grid")}</span><strong>${e(displayMoney(me.spent_usd))}</strong><span>إنفاق مكتمل</span></div><div><span class="f90-profile-stat-icon">${I("crown")}</span><strong>${e(me.vip_level)} / ١٥</strong><span>مستوى التميّز</span></div></div><div class="actions"><a class="button secondary" href="#/orders">طلباتي</a><a class="button secondary" href="#/vip">امتيازاتي</a></div></section><section class="panel" style="margin-top:22px"><h3>أمانك أولًا</h3><p class="muted">تحكّم بالحماية الثنائية وكلمة المرور. يلزم توثيق حسابك قبل الإيداع والشراء.</p><div class="actions"><a class="button ghost" href="#/security">أمان الحساب</a><a class="button secondary" href="#/verification">التوثيق</a></div></section></div></div>`;
   }
   function recipientStorageKey() {
     return S.me?.profile?.id || S.me?.profile?.customer_id
@@ -1278,7 +1284,7 @@
       else if (page === "auth") auth();
       else if (page === "register") auth("register");
       else if (page === "profile") profile();
-      else if (page === "recipients") await recipients();
+      else if (page === "recipients") profile();
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
@@ -1288,8 +1294,8 @@
       else if (page === "vip") vip();
       else if (page === "security") await security();
       else if (page === "verification") await verification();
-      else if (page === "api-guide") apiGuide();
-      else if (page === "developers") developers();
+      else if (page === "api-guide") { if(S.me?.role==="trader") apiGuide(); else { location.hash="#/"; return; } }
+      else if (page === "developers") { if(S.me?.role==="trader") developers(); else { location.hash="#/"; return; } }
       else if (page === "support") support();
       else if (page === "policy") policy(id);
       else if (page === "reset") {
