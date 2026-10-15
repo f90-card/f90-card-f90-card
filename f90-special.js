@@ -108,18 +108,17 @@ function render(kind,settings,user,selected=""){
  const notice=(!isSigned?'<p class="f90-special-alert">سجّل الدخول قبل إرسال طلبك. <a href="#/auth">تسجيل الدخول</a></p>':
  ((salary||transfer)&&!isVerified?'<p class="f90-special-alert">توثيق الحساب مطلوب قبل العمليات المالية. <a href="#/verification">توثيق الحساب</a></p>':''));
  const enabled=c["show_"+d]!==false && (!salary||sal.enabled===true) && (!transfer||tr.enabled===true&&methods.length>0);
+ const footnote=transfer?"يُخصم صافي المبلغ والعمولة من المحفظة فور تقديم الطلب، ويُسترد المبلغ عند رفضه بعد مراجعة الإدارة.":
+   salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.";
+
  document.getElementById("mainContent").innerHTML=
  '<section class="f90-special-page" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
  '<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'"></div>'+
  '<div class="f90-special-panel"><h1>'+title+'</h1><p>'+esc(desc)+'</p>'+
  notice+'<form id="f90SpecialForm" data-kind="'+esc(d)+'"><input type="hidden" name="kind" value="'+esc(d)+'">'+
- fields+'<p class="f90-special-alert" data-status hidden></p>'+
+ fields+'<p class="f90-special-footnote">'+esc(footnote)+'</p><p class="f90-special-alert" data-status hidden></p>'+
  '<button class="button full" type="submit" '+(!enabled||!isSigned||((salary||transfer)&&!isVerified)?"disabled":"")+'>'+
- (transfer?"تأكيد طلب التحويل":"إرسال الطلب للمراجعة")+'</button></form>'+
- '<p class="f90-special-footnote">'+(transfer?
- "يُخصم صافي المبلغ والعمولة من المحفظة فور تقديم الطلب، ويُسترد المبلغ عند رفضه بعد مراجعة الإدارة.":
- salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.")+
- '</p></div></section>';
+ (transfer?"تأكيد طلب التحويل":"إرسال الطلب للمراجعة")+'</button></form></div></section>';
  updateEstimate(document.getElementById("f90SpecialForm"));
 }
 function updateEstimate(form){
