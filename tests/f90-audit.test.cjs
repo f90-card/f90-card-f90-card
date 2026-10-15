@@ -31,6 +31,27 @@ test("API key pages are trader-only in client router", () => {
   assert.match(app,/page === "api-guide"/);
   assert.match(app,/page === "developers"/);
 });
+test("Gold purchase card is compact and shows only final cost plus small current balance", () => {
+  const visa=read("f90-visa-checkout.css");
+  const purchase=app.slice(app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";'),app.indexOf('    if (inline) {',app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";')));
+  assert.match(mainHtml,/f90-visa-checkout\.css/);
+  assert.match(purchase,/f90-visa-purchase/);
+  assert.match(purchase,/f90-visa-watermark/);
+  assert.match(purchase,/f90-visa-logo/);
+  assert.match(purchase,/f90CheckoutTopTotal/);
+  assert.match(purchase,/f90CheckoutTopBalance/);
+  assert.doesNotMatch(purchase,/f90CheckoutTopRemaining|الرصيد بعد الشراء|الرصيد المتوقع/);
+  for(const id of ["checkoutForm","priceBoard","checkoutTotal","quoteError","buyButton","walletHint"]){
+    assert.ok(purchase.includes('id="'+id+'"'),id+" still needed for server-quote checkout");
+  }
+  assert.match(app,/await A\.call\("quote", \{/);
+  assert.match(app,/expected_total_usd: S\.quote\.total_usd/);
+  assert.match(app,/idempotency_key: reference/);
+  assert.match(app,/data-action="confirm-wallet-checkout"/);
+  assert.match(visa,/width:min\(390px,calc\(100vw - 18px\)\)/);
+  assert.match(visa,/--f90-visa-gold/);
+  assert.match(visa,/#modalRoot \.modal-backdrop\{z-index:1200!important\}/);
+});
 test("Wallet checkout and deposit use distinct idempotent operations", () => {
   assert.match(app,/idempotency_key/);
   assert.match(app,/receipt/);
