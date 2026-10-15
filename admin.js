@@ -1846,7 +1846,7 @@
       }
     }else{
       const url=String(d.music_direct_url||"").trim();
-      if((changes.enabled || url) && (!/^https:\/\//i.test(url) || /(?:youtube\.com|youtu\.be)/i.test(url)))
+      if((changes.enabled || url) && (!/^https:\/\//i.test(url) || /(?:youtube\.com|youtube-nocookie\.com|youtu\.be|googlevideo\.com)/i.test(url)))
         throw new Error("أدخل رابطًا مباشرًا لبث صوت مرخّص HTTPS، وليس رابط صفحة YouTube");
       changes.media_path="";
       changes.direct_audio_url=url;
