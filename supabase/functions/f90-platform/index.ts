@@ -869,7 +869,8 @@ async function staff(a: Actor, b: any) {
   if (action === "staff.radio.preview") {
     requireRole(a,"manager");
     const settings=check(await db.from("site_settings").select("config").eq("id",1).single());
-    const playlist=Array.isArray(settings.config?.music?.playlist)?settings.config.music.playlist:[];
+    const saved=Array.isArray(settings.config?.music?.playlist)?settings.config.music.playlist:[];
+    const playlist=saved.length?saved:[{path:String(check(await db.from("f90_radio_sources").select("media_path").eq("id",1).single()).media_path||""),title:"المقطع الحالي"}];
     const idx=integer(b.index,0,Math.max(0,playlist.length-1));
     const path=String(playlist[idx]?.path||"");
     if(!/^tracks\/[0-9a-f-]{36}\.(mp3|ogg|wav|m4a|aac|mp4|webm)$/i.test(path))
