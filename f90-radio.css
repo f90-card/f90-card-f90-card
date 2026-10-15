@@ -28,3 +28,42 @@
  .f90-radio-bubble[data-side="left"] .f90-radio-popup{left:calc(var(--f90-radio-mobile-size,44px) + 7px)}
  .f90-radio-bubble[data-side="right"] .f90-radio-popup{right:calc(var(--f90-radio-mobile-size,44px) + 7px)}
 }
+
+/* F90 CARD Radio 2026: official logo, fixed elevated control and balanced themes */
+.f90-radio-bubble{z-index:390!important;top:var(--f90-radio-top,76%);isolation:isolate}
+.f90-radio-orb{
+  position:relative;overflow:visible;isolation:isolate;
+  border:2px solid rgba(255,61,105,.84)!important;
+  background:radial-gradient(circle at 22% 18%,rgba(243,79,111,.21),rgba(9,11,21,.92) 68%)!important;
+  box-shadow:0 0 0 4px rgba(232,48,88,.13),0 6px 24px #0008,0 0 23px rgba(237,41,85,.36)!important;
+  width:var(--f90-radio-desktop-size,54px)!important;
+  min-width:var(--f90-radio-desktop-size,54px)!important;
+  height:var(--f90-radio-desktop-size,54px)!important;
+  border-radius:50%;padding:4px!important
+}
+.f90-radio-orb::after{content:"";position:absolute;inset:-5px;border:1px solid rgba(242,79,115,.32);border-radius:50%;pointer-events:none}
+.f90-radio-default-logo{display:block;width:91%;height:91%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 7px rgba(248,61,105,.48))}
+.f90-radio-default-logo[hidden]{display:none!important}
+.f90-radio-popup{
+  right:calc(var(--f90-radio-desktop-size,54px) + 11px)!important;
+  min-width:230px;max-width:min(78vw,292px);
+  border:1px solid rgba(250,92,133,.62)!important;
+  background:linear-gradient(160deg,rgba(13,17,29,.97),rgba(33,12,29,.95))!important;
+  box-shadow:0 15px 48px #000a,0 0 17px rgba(255,64,108,.14)!important;
+  border-radius:20px!important;padding:16px!important;gap:10px!important
+}
+.f90-radio-bubble[data-side="left"] .f90-radio-popup{right:auto!important;left:calc(var(--f90-radio-desktop-size,54px) + 11px)!important}
+.f90-radio-title{font-weight:850;font-size:14px;color:#fff}
+.f90-radio-current{font-size:11px;color:#ffafc1;max-width:245px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f90-radio-orb:focus-visible{outline:3px solid #ffdfe7!important;outline-offset:5px}
+:root[data-theme="cream"] .f90-radio-popup{background:linear-gradient(160deg,rgba(255,250,252,.98),rgba(255,237,244,.98))!important;color:#4f2334!important;border-color:#d5819d!important}
+:root[data-theme="cream"] .f90-radio-title{color:#552038}
+:root[data-theme="cream"] .f90-radio-current,:root[data-theme="cream"] .f90-radio-popup output{color:#9e244b}
+@media(max-width:650px){
+ .f90-radio-bubble{top:var(--f90-radio-top,76%)!important}
+ .f90-radio-orb{width:var(--f90-radio-mobile-size,49px)!important;min-width:var(--f90-radio-mobile-size,49px)!important;height:var(--f90-radio-mobile-size,49px)!important}
+ .f90-radio-bubble[data-side="right"] .f90-radio-popup{right:calc(var(--f90-radio-mobile-size,49px) + 9px)!important}
+ .f90-radio-bubble[data-side="left"] .f90-radio-popup{left:calc(var(--f90-radio-mobile-size,49px) + 9px)!important}
+ .f90-radio-popup{min-width:210px!important;width:min(65vw,260px)}
+}
+@media(prefers-reduced-motion:reduce){.f90-radio-orb{transition:none!important}}
