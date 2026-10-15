@@ -17,16 +17,25 @@ const check=(name,label,yes)=>'<label class="f90-manage-switch"><input type="che
 const heading=(title,desc)=>'<div class="page-head"><div><div class="eyebrow">F90 CARD · الإدارة</div><h1>'+title+'</h1><p>'+desc+'</p></div></div>';
 async function renderSettings(main,settings){
  currentSettings=settings;
- const c={...d,...(settings?.config?.special_services||{})};
+ const sal=settings?.config?.salary_withdrawal||{},tr=settings?.config?.money_transfer||{};
+ const c={...d,...(settings?.config?.special_services||{}),
+    salary_usd_per_100k:Number(sal.coins_per_usd)>0?100000/Number(sal.coins_per_usd):10,
+    salary_description:sal.details_ar||settings?.config?.special_services?.salary_description||"",
+    transfer_fee_percent:Number(tr.fee_percent??2),
+    transfer_eta_min_minutes:Number(tr.eta_min_minutes??5),
+    transfer_eta_max_minutes:Number(tr.eta_max_hours??48)*60,
+    transfer_methods:Array.isArray(tr.methods)?tr.methods.filter(x=>x.enabled!==false).map(x=>x.name_ar):d.transfer_methods,
+    show_salary:sal.enabled===true,show_transfer:tr.enabled===true
+ };
  main.innerHTML=heading("إدارة الخدمات الإضافية","أسعار ورسوم وتعليمات مستقلة. تعرض الأسعار للعميل ويؤكدها الخادم قبل تسجيل الطلب.")+
  '<form id="f90SpecialAdminForm" class="f90-manager-form">'+
  '<section class="panel"><h2>سحب رواتب Xena Live</h2><div class="field-row">'+
- field("salary_usd_per_100k","الدولار لكل 100,000 كوينز",c.salary_usd_per_100k,"number",'min="0" max="100000" step="0.01" required')+
- field("salary_fee_percent","عمولة سحب الراتب ٪",c.salary_fee_percent,"number",'min="0" max="50" step="0.01" required')+'</div>'+
+ field("salary_usd_per_100k","الدولار لكل 100,000 كوينز",c.salary_usd_per_100k,"number",'min="0.01" max="100000" step="0.01" required')+
+ '<p class="muted small">سحب الرواتب يخضع للاعتماد اليدوي وتُضاف قيمته بعد الموافقة. سعر الشحن يؤخذ من هذه النسبة المعتمدة.</p></div>'+
  textarea("salary_description","تفاصيل الخدمة للعميل",c.salary_description)+
  check("show_salary","إظهار الخدمة في طرق الإيداع",c.show_salary!==false)+'</section>'+
  '<section class="panel"><h2>التحويلات المالية</h2><div class="field-row">'+
- field("transfer_fee_percent","عمولة التحويل ٪",c.transfer_fee_percent,"number",'min="0" max="50" step="0.01" required')+
+ field("transfer_fee_percent","عمولة التحويل ٪",c.transfer_fee_percent,"number",'min="0" max="30" step="0.01" required')+
  field("transfer_eta_min_minutes","أقل مدة بالدقائق",c.transfer_eta_min_minutes,"number",'min="5" max="2880" required')+
  field("transfer_eta_max_minutes","أقصى مدة بالدقائق",c.transfer_eta_max_minutes,"number",'min="5" max="2880" required')+'</div>'+
  textarea("transfer_methods","طرق التحويل (كل طريقة بسطر)",(c.transfer_methods||d.transfer_methods||[]).join("\n"))+
@@ -50,22 +59,41 @@ async function renderSettings(main,settings){
  '<div class="f90-manager-save"><p data-f90-admin-status role="status"></p><button type="submit" class="button">حفظ إعدادات الخدمات</button></div></form>';
 }
 async function renderRequests(main){
- main.innerHTML=heading("طلبات الخدمات الخاصة","جميع عمليات التحويل وسحب الرواتب تبقى للمراجعة اليدوية. هذه الصفحة لا تخصم ولا تضيف رصيدًا.")+'<div id="f90RequestRecords" class="records"><p>جارٍ جلب الطلبات…</p></div>';
- const {data,error}=await window.F90API.client.from("f90_special_requests").select("*").order("created_at",{ascending:false}).limit(150);
- const el=document.getElementById("f90RequestRecords");
- if(!el)return;
- if(error){el.textContent="تعذر تحميل الطلبات: "+error.message;return;}
+ main.innerHTML=heading("طلبات سحب الرواتب والتحويلات والخدمات","سحب الرواتب يُعتمد لإضافة رصيد؛ التحويل يُخصم عند تقديمه ويُسترد عند رفضه. باقي الخدمات طلبات تواصل.")+
+ '<div id="f90RequestRecords" class="records"><p>جارٍ جلب الطلبات…</p></div>';
+ const client=window.F90API.client;
+ const [sp,sal,tr]=await Promise.all([
+   client.from("f90_special_requests").select("*").order("created_at",{ascending:false}).limit(150),
+   client.rpc("f90_list_salary"),
+   client.rpc("f90_list_transfers")
+ ]);
+ const el=document.getElementById("f90RequestRecords");if(!el)return;
+ const errors=[sp.error,sal.error,tr.error].filter(Boolean);
+ if(errors.length){el.textContent="تعذّر تحميل بعض القوائم: "+errors.map(x=>x.message).join(" · ");return;}
+ const records=[
+  ...(sp.data||[]).map(x=>({...x,source:"special",subtitle:x.service,contact:x.contact_whatsapp,
+    qty:x.amount_units,total:x.gross_usd,net:x.net_usd,note:x.client_details})),
+  ...(sal.data||[]).map(x=>({...x,source:"salary",kind:"salary",subtitle:"رواتب Xena Live",
+    contact:x.account_id,qty:x.coins,total:x.usd_amount,net:x.usd_amount,note:x.details_snapshot})),
+  ...(tr.data||[]).map(x=>({...x,source:"transfer",kind:"transfer",subtitle:x.method_name,
+    contact:x.recipient_details,qty:x.net_usd,total:x.total_usd,net:x.net_usd,note:x.recipient_details}))
+ ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
  const kinds={salary:"سحب راتب",transfer:"تحويل أموال",account:"حساب Xena",design:"تصميم",website:"إنشاء موقع"};
- const states={pending:"بانتظار المراجعة",processing:"قيد المعالجة",completed:"مكتمل",rejected:"مرفوض"};
- el.innerHTML=data?.length?data.map(x=>
- '<article class="record f90-special-request" data-id="'+esc(x.id)+'"><div class="record-main"><h3>'+esc(kinds[x.kind]||x.kind)+' · '+esc(x.service)+'</h3>'+
- '<p>الحساب: '+esc(x.account_id||"—")+' · التواصل: '+esc(x.contact_whatsapp||"—")+'</p>'+
- '<p>معلومات الطلب: '+esc(x.client_details||"—")+'</p>'+
- '<p>الكمية: '+esc(x.amount_units)+' | القيمة: $'+esc(x.gross_usd)+' | العمولة: $'+esc(x.fee_usd)+' | الصافي: $'+esc(x.net_usd)+'</p>'+
+ const states={pending:"بانتظار المراجعة",processing:"قيد المعالجة",completed:"مكتمل",rejected:"مرفوض",approved:"معتمد"};
+ el.innerHTML=records.length?records.map(x=>
+ '<article class="record f90-special-request" data-id="'+esc(x.id)+'" data-source="'+esc(x.source)+'"><div class="record-main">'+
+ '<h3>'+esc(kinds[x.kind]||x.kind)+' · '+esc(x.subtitle)+'</h3>'+
+ '<p>الحساب/التواصل: '+esc(x.contact||x.account_id||"—")+'</p>'+
+ '<p>التفاصيل: '+esc(x.note||"—")+'</p>'+
+ '<p>الكمية: '+esc(x.qty||0)+' | القيمة: $'+esc(x.total)+' | الصافي: $'+esc(x.net)+'</p>'+
  '<small>معرّف العميل: '+esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
  '<p>الحالة: '+esc(states[x.status]||x.status)+(x.review_note?" · "+esc(x.review_note):"")+'</p></div>'+
- (x.status==="pending"||x.status==="processing"?'<div class="f90-request-actions"><input type="text" placeholder="ملاحظة الإدارة" aria-label="ملاحظة المراجعة" maxlength="1200"><button class="button secondary small" data-f90-review="processing">قيد المعالجة</button><button class="button small" data-f90-review="completed">تم التنفيذ يدويًا</button><button class="button ghost small" data-f90-review="rejected">رفض الطلب</button></div>':'')+
- '</article>').join(""):'<p>لا توجد طلبات خاصة حاليًا.</p>';
+ (x.status==="pending"||(x.status==="processing"&&x.source==="special")?
+ '<div class="f90-request-actions"><input type="text" placeholder="ملاحظة الإدارة" maxlength="1200" aria-label="ملاحظة المراجعة">'+
+ (x.source==="special"?'<button class="button secondary small" data-f90-review="processing">قيد المعالجة</button>':'')+
+ '<button class="button small" data-f90-review="completed">'+(x.source==="salary"?"اعتماد وإضافة الرصيد":x.source==="transfer"?"اعتماد التحويل":"تم التنفيذ")+'</button>'+
+ '<button class="button ghost small" data-f90-review="rejected">'+(x.source==="transfer"?"رفض واسترداد كامل المبلغ":"رفض الطلب")+'</button></div>':'')+
+ '</article>').join(""):'<p>لا توجد طلبات حاليًا.</p>';
 }
 async function render(kind,main,settings){
  if(kind==="special-requests")return renderRequests(main);
@@ -91,12 +119,12 @@ document.addEventListener("submit",async ev=>{
  const d=new FormData(form);
  const old=currentSettings?.config?.special_services||{};
  const c={...old};
- for(const k of ["salary_usd_per_100k","salary_fee_percent","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd","website_price_usd"]){
+ for(const k of ["salary_usd_per_100k","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd","website_price_usd"]){
   const raw=Number(d.get(k));
   if(!Number.isFinite(raw)||raw<0)throw Error("قيمة غير صحيحة في "+k);
   c[k]=raw;
  }
- if(c.salary_fee_percent>50||c.transfer_fee_percent>50)throw Error("نسبة العمولة يجب ألا تتجاوز 50٪");
+ if(c.salary_usd_per_100k<=0||c.transfer_fee_percent>30)throw Error("نسبة الخدمة غير صحيحة");
  if(c.transfer_eta_min_minutes<5||c.transfer_eta_max_minutes>2880||c.transfer_eta_min_minutes>c.transfer_eta_max_minutes)throw Error("مدة التحويل من 5 دقائق حتى 48 ساعة");
  c.transfer_methods=String(d.get("transfer_methods")||"").split("\n").map(x=>x.trim().slice(0,120)).filter(Boolean).slice(0,50);
  if(!c.transfer_methods.length)throw Error("أدخل طريقة تحويل واحدة على الأقل");
@@ -111,18 +139,34 @@ document.addEventListener("submit",async ev=>{
  const s=currentSettings;
  await window.F90API.call("settings.save",{data:{store_name:s.store_name,logo_url:s.logo_url,primary_color:s.primary_color,
   currency:s.currency,contact_email:s.contact_email,announcement:s.announcement,
-  config:{...s.config,special_services:c}}});
+  config:{...s.config,special_services:c,
+    salary_withdrawal:{...s.config.salary_withdrawal,enabled:c.show_salary,
+      coins_per_usd:100000/c.salary_usd_per_100k,minimum_coins:100000,details_ar:c.salary_description},
+    money_transfer:{...s.config.money_transfer,enabled:c.show_transfer,
+      fee_percent:c.transfer_fee_percent,eta_min_minutes:c.transfer_eta_min_minutes,
+      eta_max_hours:Math.ceil(c.transfer_eta_max_minutes/60),
+      methods:c.transfer_methods.map((name,i)=>{
+        const prior=(s.config.money_transfer?.methods||[]).find(x=>x.name_ar===name);
+        return {id:prior?.id||"custom-"+(i+1),name_ar:name,enabled:true};
+      })}
+   }});
  out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
  }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
 });
 document.addEventListener("click",async ev=>{
  const btn=ev.target.closest?.("[data-f90-review]");if(!btn)return;
- const row=btn.closest("[data-id]"),note=row.querySelector("input")?.value||"";
+ const row=btn.closest("[data-id]"),note=row.querySelector("input")?.value||"",source=row.dataset.source;
  if(btn.disabled)return;
- if(!window.confirm("تأكيد تغيير الحالة؟ لا تُنفّذ أي عملية مالية تلقائيًا."))return;
+ const approved=btn.dataset.f90Review==="completed";
+ const explanation=source==="salary"?(approved?"سيُضاف رصيد العميل بعد الاعتماد.":"سيُرفض السحب دون إضافة رصيد."):
+   source==="transfer"?(approved?"سوف تعتمد الطلب المخصوم سابقًا.":"سيرد المبلغ والعمولة إلى المحفظة."):"هذا التغيير إداري فقط ولا ينفّذ معاملة مالية.";
+ if(!window.confirm("تأكيد القرار؟ "+explanation))return;
  btn.disabled=true;
  try{
-  const {error}=await window.F90API.client.rpc("f90_special_review",{p_id:row.dataset.id,p_status:btn.dataset.f90Review,p_note:note});
+  const fn=source==="salary"?"f90_review_salary":source==="transfer"?"f90_review_transfer":"f90_special_review";
+  const args=source==="special"?{p_id:row.dataset.id,p_status:btn.dataset.f90Review,p_note:note}:
+    {p_id:row.dataset.id,p_approve:approved,p_note:note};
+  const {error}=await window.F90API.client.rpc(fn,args);
   if(error)throw error;
   await renderRequests(document.getElementById("adminMain"));
  }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
