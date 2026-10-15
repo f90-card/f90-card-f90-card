@@ -149,7 +149,7 @@ document.addEventListener("submit",async ev=>{
         const prior=(s.config.money_transfer?.methods||[]).find(x=>x.name_ar===name);
         return {id:prior?.id||"custom-"+(i+1),name_ar:name,enabled:true};
       })}
-   }});
+   }}});
  out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
  }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
 });
