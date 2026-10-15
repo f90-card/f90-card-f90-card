@@ -71,6 +71,14 @@ test("Administration has its own install manifest", () => {
   assert.match(manifest.start_url,/admin\.html/);
   assert.match(adminHtml,/id="adminInstall"/);
 });
+test("Storefront startup uses browser History instead of its order-history renderer", () => {
+  assert.match(app, /async function history\(kind\)/);
+  assert.match(app, /window\.history\?\.replaceState\?\.\(/);
+  assert.match(app, /window\.history\?\.state\?\.f90ScrollEntry/);
+  assert.doesNotMatch(app, /(^|[^.])history\.replaceState\(/m);
+  assert.match(mainHtml, /f90-startup-rescue\.js/);
+});
+
 test("Route scroll restoration is back-aware and Telegram settings are restricted to managers", () => {
   assert.match(app,/f90ScrollPositions/);
   assert.match(app,/history\.scrollRestoration="manual"/);
