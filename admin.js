@@ -43,6 +43,7 @@
     ["orders", "إدارة الطلبات", "clock", ["manager", "admin", "support"]],
     ["order-requests", "الاعتراضات والإلغاء", "bell", ["manager", "admin", "support"]],
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
+    ["special-requests", "طلبات التحويل والخدمات", "clock", ["manager"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["audit", "سجل الإدارة", "shield", ["manager"]],
@@ -56,6 +57,7 @@
     ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
     ["infrastructure", "الخوادم والمراقبة", "chart", ["manager"]],
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
+    ["special-settings", "أسعار وخدمات F90", "edit", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
@@ -164,13 +166,23 @@
       `${S.me?.profile.display_name || ""} · ${C.roles[S.me?.role] || ""}`;
   }
   function navigation() {
-    const allowed = sections.filter((s) => s[3].includes(S.me.role));
-    $("adminNav").innerHTML = allowed
-      .map(
-        ([id, n, i]) =>
-          `<a href="#/${id}" class="${S.active === id ? "active" : ""}">${I(i)}${n}</a>`,
-      )
-      .join("");
+    const allowed=sections.filter((item)=>item[3].includes(S.me.role));
+    const buckets=[
+      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","special-requests","verification","ledger","audit"]],
+      ["العملاء والتجار",["users","traders","leaderboard"]],
+      ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
+      ["المدفوعات والأسعار",["payments","rates","vip","special-settings"]],
+      ["المظهر والمحتوى",["design-center","promotions","notifications","policies","settings"]],
+      ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
+    ];
+    const link=item=>'<a href="#/'+item[0]+'" class="'+(S.active===item[0]?'active':'')+'">'+I(item[2])+item[1]+'</a>';
+    $("adminNav").innerHTML=buckets.map(([title,ids])=>{
+      const items=ids.map(id=>allowed.find(x=>x[0]===id)).filter(Boolean);
+      if(!items.length)return '';
+      const expanded=items.some(x=>x[0]===S.active);
+      return '<details class="f90-admin-group" '+(expanded?'open':'')+'><summary>'+title+'</summary>'+
+        '<div class="f90-admin-group-links">'+items.map(link).join("")+'</div></details>';
+    }).join("");
   }
   async function catalogs() {
     const data = await A.call("staff.catalog");
@@ -2060,6 +2072,7 @@
       )
         publicListPage(page);
       else if (page === "settings") await settings();
+      else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
       else if (page === "vip") vip();
       else if (page === "policies") policies();
