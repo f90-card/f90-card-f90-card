@@ -1744,14 +1744,33 @@
       check("telegram_order_reviews","طلبات اعتراض أو إلغاء تتطلب المراجعة",prefs.order_reviews_enabled!==false)+
       '<p class="muted small">لن تُرسل تنبيهات لجميع المشتريات العادية أو رسائل تسويقية. تكرار نفس طلب الإيداع لا ينشئ إشعارًا جديدًا.</p>'+
       '<button class="button" type="submit">حفظ أنواع التنبيهات</button></form></section>'+
-      '<section class="panel"><h2>توصيل البوت بأمان</h2><p>أنشئ بوتًا من Telegram عبر @BotFather، وافتح محادثة معه وأرسل /start. احصل على معرّف المحادثة Chat ID، ثم أضف القيم التالية في إعدادات أسرار Supabase Edge Functions وليس في GitHub أو شاشة المتجر:</p>'+
-      '<pre dir="ltr">F90_TELEGRAM_BOT_TOKEN\nF90_TELEGRAM_CHAT_ID\nF90_TELEGRAM_DISPATCH_SECRET</pre>'+
-      '<p>احفظ نفس قيمة F90_TELEGRAM_DISPATCH_SECRET في Supabase Vault باسم <code>f90_telegram_dispatch_secret</code>. يرسل العامل الرسائل دوريًا كل دقيقة، ويحفظ الطلبات غير المرسلة في طابور للمحاولة لاحقًا.</p>'+
-      '<div class="notice warning">الاتصال لا يكتمل بمجرد إنشاء الصفحة. يلزم إعداد أسرار البوت ومعرّف المحادثة، ثم اختبار رسالة في تلجرام. لا ترسل توكن البوت لأي شخص.</div><button class="button secondary" type="button" data-action="telegram-test">وضع رسالة اختبار في قائمة تلجرام</button></section>'+
+      '<section class="panel"><h2>توصيل بوت تلجرام بأمان</h2>'+
+      '<div class="notice '+(result.configured?'success':'warning')+'">'+
+      (result.configured?'تم حفظ البوت في خزنة Supabase المشفرة. أرسل رسالة اختبار للتأكد من وصولها.':
+      'الربط غير مكتمل. جهّز البوت ثم أدخل رمزه ومعرّف المحادثة بالأسفل.')+'</div>'+
+      '<p>1. افتح <b>@BotFather</b> داخل Telegram وأنشئ بوتًا عبر /newbot. 2. افتح البوت الجديد وأرسل /start. 3. الصق توكن البوت واضغط «اكتشاف Chat ID». 4. احفظ الاتصال واختبر الإرسال.</p>'+
+      '<form id="telegramConnectForm" autocomplete="off">'+
+      field("bot_token","رمز Telegram Bot Token السري","password","",'required autocomplete="new-password" placeholder="123456789:..."')+
+      field("chat_id","معرّف محادثة تلجرام Chat ID","text","",'required inputmode="numeric" pattern="-?[0-9]{4,}" placeholder="123456789"')+
+      '<div id="telegramDiscoveredChats" class="f90-telegram-chat-choices" aria-live="polite"></div>'+
+      '<div class="actions"><button class="button secondary" type="button" data-action="telegram-find-chat">اكتشاف Chat ID من البوت</button>'+
+      '<button class="button" type="submit">حفظ اتصال تلجرام المشفر</button></div></form>'+
+      '<p class="muted small">يحفظ الخادم التوكن مشفرًا ولا يظهر في المتجر أو GitHub. يمكنك استبداله عند الحاجة. يرسل العامل التنبيهات كل دقيقة.</p>'+
+      '<button class="button secondary" type="button" data-action="telegram-test" '+(result.configured?'':'disabled')+'>إرسال رسالة اختبار</button></section>'+
       '<section class="panel"><h2>سجل آخر إشعارات تلجرام</h2><p class="muted small">الإشعارات الظاهرة أدناه تشمل المحاولات الحالية؛ عدم وجود حالة «أُرسلت» يعني أن وصول الرسائل لم يتأكد بعد.</p>'+
       '<div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الحالة</th><th>الوقت</th><th>المحاولات</th></tr></thead><tbody>'+
       (recent||'<tr><td colspan="4">لا توجد تنبيهات جديدة منذ تفعيل الربط</td></tr>')+
       '</tbody></table></div></section>';
+  }
+  async function saveTelegramConnection(form){
+    const bot=String(form.elements.bot_token.value||"").trim(),
+      chat=String(form.elements.chat_id.value||"").trim();
+    if(!/^[0-9]{6,}:[A-Za-z0-9_-]{20,}$/.test(bot) || !/^-?[0-9]{4,}$/.test(chat))
+      throw new Error("تحقق من رمز البوت ومعرّف المحادثة");
+    await A.call("staff.telegram.connect",{bot_token:bot,chat_id:chat});
+    form.elements.bot_token.value="";
+    toast("تم حفظ بوت تلجرام بشكل آمن. جرّب إرسال رسالة اختبار.");
+    await telegramAlerts();
   }
   async function saveTelegramAlerts(form){
     const c=S.settings.config||{};
@@ -1836,6 +1855,7 @@
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);
     if (form.id === "telegramAlertsForm") return saveTelegramAlerts(form);
+    if (form.id === "telegramConnectForm") return saveTelegramConnection(form);
     if (form.id === "searchUsers") {
       S.search = d.search;
       S.offset = 0;
@@ -2063,10 +2083,24 @@
     if (!b) return;
     const action = b.dataset.action;
     try {
-      if (action === "telegram-test") {
-        if(!confirm("هل أضفت بيانات البوت ومعرّف المحادثة داخل أسرار Supabase؟ سيتم وضع إشعار واحد للتجربة."))return;
+      if (action === "telegram-find-chat") {
+        const form=document.querySelector("#telegramConnectForm");
+        if(!form)return;
+        const bot=String(form.elements.bot_token.value||"").trim();
+        if(!bot)throw new Error("أدخل توكن البوت وأرسل /start داخل Telegram أولًا");
+        const discovery=await A.call("staff.telegram.discover",{bot_token:bot});
+        const target=document.querySelector("#telegramDiscoveredChats");
+        if(target)target.innerHTML=discovery.chats?.length
+          ? '<p class="muted small">اختر المحادثة التي تريد إرسال التنبيهات إليها:</p>'+
+            discovery.chats.map(c=>'<button type="button" class="button secondary small" data-action="telegram-select-chat" data-chat-id="'+e(c.id)+'">'+e(c.name)+' ('+e(c.id)+')</button>').join("")
+          : '<p class="notice warning">لا توجد محادثات. افتح البوت وأرسل /start، ثم جرّب مجددًا. لا يعمل اكتشاف الرسائل مع بوت لديه Webhook قديم.</p>';
+      } else if (action === "telegram-select-chat") {
+        const form=document.querySelector("#telegramConnectForm");
+        if(form)form.elements.chat_id.value=b.dataset.chatId||"";
+      } else if (action === "telegram-test") {
+        if(!confirm("إرسال رسالة اختبار واحدة إلى محادثة Telegram المربوطة؟"))return;
         await A.call("staff.telegram.test");
-        toast("تم وضع رسالة الاختبار في قائمة الإرسال. تظهر النتيجة خلال دقيقة إذا كان البوت متصلًا.");
+        toast("تمت جدولة رسالة الاختبار. افحص حالة الإرسال خلال دقيقة.");
         await telegramAlerts();
       } else if (action === "dynamic-toggle" && S.dynamicKind === "payments") {
         const rows=[...(S.settings.config.payment_methods||[])], index=Number(b.dataset.index);
