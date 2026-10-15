@@ -2632,12 +2632,15 @@ Deno.serve(async (req: Request) => {
     return fail(e);
   }
   })();
-  if (usage) {
+  // The callback above may assign usage asynchronously. Keep that type visible
+  // to Deno's control-flow analysis without changing the audit behavior.
+  const usageRecord=usage as { key_id:string; user_id:string; action:string } | null;
+  if (usageRecord) {
     try {
       const [logged, touched] = await Promise.all([
-        db.from("f90_api_usage").insert({ ...usage, http_status: response.status }),
+        db.from("f90_api_usage").insert({ ...usageRecord, http_status: response.status }),
         db.from("f90_api_keys").update({ last_used_at: new Date().toISOString() })
-          .eq("id", usage.key_id),
+          .eq("id", usageRecord.key_id),
       ]);
       if (logged.error || touched.error)
         console.error("API key usage logging failed", logged.error?.code, touched.error?.code);
