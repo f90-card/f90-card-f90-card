@@ -1535,7 +1535,7 @@
           form, productId: p.id, quoteSeq: S.quoteSeq, key: reference, total,
           fingerprint: JSON.stringify(data),
         };
-        modal("مراجعة طلب الشراء", `<p>الخدمة: <strong>${e(p.name)}</strong></p><p>الكمية: <strong>${e(data.quantity)}</strong></p><p>المبلغ من محفظتك: <strong>${e(displayMoney(total,true))}</strong></p><p class="muted">تأكد من بيانات الحساب قبل تأكيد الخصم.</p><button type="button" class="button full" data-action="confirm-wallet-checkout">تأكيد الشراء من المحفظة</button>`);
+        modal("مراجعة طلب الشراء", `<div class="f90-visa-confirm"><div class="f90-visa-confirm-row"><span>الخدمة</span><strong>${e(p.name)}</strong></div><div class="f90-visa-confirm-row"><span>الكمية</span><strong>${e(data.quantity)}</strong></div><div class="f90-visa-confirm-row f90-visa-confirm-amount"><span>التكلفة النهائية</span><strong>${e(displayMoney(total,true))}</strong></div><p class="f90-visa-confirm-note">راجع بيانات الحساب والسعر قبل تأكيد الخصم. لا تُخصم المحفظة قبل الخطوة التالية.</p><button type="button" class="button full f90-visa-confirm-buy" data-action="confirm-wallet-checkout">تأكيد الشراء من المحفظة</button></div>`);
         return;
       }
       let o;
