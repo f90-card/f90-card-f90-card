@@ -287,7 +287,6 @@
       ["/", "الرئيسية", "grid"],
       ["welcome", "التعرّف على F90", "doc"],
       ["quran", "القرآن الكريم", "book"],
-      ...(c.music?.enabled?[["music","ميوزك أف تسعين","headphones"]]:[]),
       ["favorites", "المفضلة", "heart"],
       ["@account", "حسابي ومعاملاتي"],
       ["profile", "حسابي", "user"],
@@ -553,6 +552,8 @@
     </div>`;
   }
   function musicPage(){
+    // Radio controls are exclusively in the floating edge bubble.
+    home();return;
     const music=S.settings.config?.music||{},status=window.F90MediaPlayer?.status();
     if(!music.enabled){
       main.innerHTML=pageHead("ميوزك أف تسعين كارد","المشغل متوقف حاليًا من إدارة المتجر.");
