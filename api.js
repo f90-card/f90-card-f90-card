@@ -75,16 +75,17 @@
     if (!client) throw new Error("تعذّر تحميل اتصال التخزين بالخادم. حدّث الصفحة ثم حاول مجددًا.");
     const video = bucket === "f90-videos";
     const audio = bucket === "f90-audio";
-    if (!file || file.size > (video ? 20971520 : audio ? 12582912 : 5242880))
-      throw new Error(video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : audio ? "اختر ملف صوت MP3 أو OGG أو WAV حتى 12 ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
+    const radio = bucket === "f90-radio";
+    if (!file || file.size > (radio ? 41943040 : video ? 20971520 : audio ? 12582912 : 5242880))
+      throw new Error(radio ? "ملف الراديو يجب أن يكون صوتًا أو فيديو صالحًا ولا يتجاوز 40 ميجابايت" : video ? "اختر فيديو MP4 أو WebM لا يتجاوز ٢٠ ميجابايت" : audio ? "اختر ملف صوت MP3 أو OGG أو WAV حتى 12 ميجابايت" : "اختر صورة لا تتجاوز ٥ ميجابايت");
     const types = [
       "image/jpeg",
       "image/png",
       "image/webp",
       ...(bucket === "f90-images" || bucket === "f90-avatars"
         ? ["image/gif"] : []),
-      ...(video ? ["video/mp4","video/webm"] : []),
-      ...(audio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4"] : []),
+      ...(video || radio ? ["video/mp4","video/webm"] : []),
+      ...(audio || radio ? ["audio/mpeg","audio/ogg","audio/wav","audio/mp4"] : []),
     ];
     if (!types.includes(file.type)) throw new Error(video ? "صيغة الفيديو غير مدعومة" : audio ? "صيغة الملف الصوتي غير مدعومة" : "اختر صورة بصيغة مدعومة");
     const {
@@ -101,7 +102,7 @@
       "audio/mpeg":"mp3", "audio/ogg":"ogg", "audio/wav":"wav","audio/mp4":"m4a",
     }[file.type];
     const path =
-      (bucket === "f90-images" || bucket === "f90-videos" || bucket === "f90-audio" ? folder || "catalog" : user.id) +
+      (bucket === "f90-images" || bucket === "f90-videos" || bucket === "f90-audio" || bucket === "f90-radio" ? folder || "catalog" : user.id) +
       "/" +
       crypto.randomUUID() +
       "." +
@@ -113,7 +114,7 @@
       throw new Error(video ? "تعذّر رفع الفيديو. تحقق من الصلاحيات وحجم الملف وحاول مجددًا" : audio ? "تعذّر رفع الملف الصوتي" : "تعذّر رفع الصورة. تحقق من الصلاحيات وحاول مجددًا");
     return {
       path,
-      url: client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
+      url: radio ? "" : client.storage.from(bucket).getPublicUrl(path).data.publicUrl,
     };
   }
   window.F90API = { call, upload, endpoint, client };
