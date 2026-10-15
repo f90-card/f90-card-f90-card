@@ -1574,6 +1574,11 @@
       select("promo_video_mode","المحتوى داخل الهاتف",[["video","فيديو صامت"],["image","صورة ثابتة أو GIF"]],c.promo_video?.mode==="image"?"image":c.promo_video?.url?"video":"image")+
       field("promo_video_image_url","رابط صورة شاشة الهاتف","url",c.promo_video?.image_url||"")+
       field("promo_video_image_file","رفع صورة أو GIF لشاشة الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
+      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = واتساب المتجر)"')+
+      field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","number",c.promo_video?.phone_size??178,'min="132" max="280" step="1"')+
+      field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","number",c.promo_video?.phone_size_mobile??153,'min="120" max="240" step="1"')+
+      field("promo_phone_x","تحريك الهاتف أفقيًا (يمين أو يسار)","number",c.promo_video?.phone_x??0,'min="-110" max="110" step="1"')+
+      field("promo_phone_y","تحريك الهاتف عموديًا (أعلى أو أسفل)","number",c.promo_video?.phone_y??0,'min="-90" max="90" step="1"')+
       field("promo_video_title","عنوان إعلان الهاتف","text",c.promo_video?.title_ar||"F90 CARD",'maxlength="120"')+
       field("promo_video_display_text","النص المتوهج داخل الشاشة","textarea",c.promo_video?.display_text||"F90 CARD",'maxlength="130"')+
       field("promo_video_message_1","النص المتحرك رقم 1","text",c.promo_video?.messages?.[0]||"أولوياتنا إسعادك وراحتك معنا",'maxlength="150"')+
@@ -1703,6 +1708,12 @@
     const posterFile=form.elements.promo_video_poster_file?.files?.[0];
     const phoneImageFile=form.elements.promo_video_image_file?.files?.[0];
     const phoneImageUrl=phoneImageFile?.size?(await A.upload(phoneImageFile,"f90-images","promo-phone")).url:String(d.promo_video_image_url||"").trim();
+    const phoneLink=String(d.promo_video_link_url||"").trim();
+    if(phoneLink && (!C.safeUrl(phoneLink)||!/^https:\/\//i.test(phoneLink)))
+      throw new Error("رابط الهاتف يجب أن يكون HTTPS صالحًا");
+    const phoneBound=(v,min,max,fallback)=>{
+      const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;
+    };
     const videoUrl=videoFile?.size?(await A.upload(videoFile,"f90-videos","promo")).url:String(d.promo_video_url||"").trim();
     const videoPoster=posterFile?.size?(await A.upload(posterFile,"f90-images","branding")).url:String(d.promo_video_poster||"").trim();
     if(form.elements.promo_video_enabled.checked && d.promo_video_mode==="video" && !videoUrl)throw new Error("ارفع الفيديو قبل التفعيل");
@@ -1737,6 +1748,11 @@
       show_ticker:form.elements.show_ticker.checked,
       promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,
       mode:d.promo_video_mode,url:videoUrl,image_url:phoneImageUrl,poster_url:videoPoster,
+      link_url:phoneLink,
+      phone_size:phoneBound(d.promo_phone_size,132,280,178),
+      phone_size_mobile:phoneBound(d.promo_phone_size_mobile,120,240,153),
+      phone_x:phoneBound(d.promo_phone_x,-110,110,0),
+      phone_y:phoneBound(d.promo_phone_y,-90,90,0),
       title_ar:String(d.promo_video_title||"").trim().slice(0,120),
       display_text:String(d.promo_video_display_text||"").trim().slice(0,130),
       messages:[d.promo_video_message_1,d.promo_video_message_2,d.promo_video_message_3].map(x=>String(x||"").trim().slice(0,150))},
