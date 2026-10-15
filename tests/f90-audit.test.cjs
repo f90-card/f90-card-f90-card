@@ -332,10 +332,11 @@ test("Administration has its own install manifest", () => {
   assert.match(manifest.start_url,/admin\.html/);
   assert.match(adminHtml,/id="adminInstall"/);
 });
-test("Storefront startup uses browser History instead of its order-history renderer", () => {
+test("Storefront navigation resets to top without interfering with order history", () => {
   assert.match(app, /async function history\(kind\)/);
-  assert.match(app, /window\.history\?\.replaceState\?\.\(/);
-  assert.match(app, /window\.history\?\.state\?\.f90ScrollEntry/);
+  assert.match(app, /function f90ScrollTopNow\(\)/);
+  assert.match(app, /window\.history\.scrollRestoration="manual"/);
+  assert.match(app, /window\.addEventListener\("hashchange"/);
   assert.doesNotMatch(app, /(^|[^.])history\.replaceState\(/m);
   assert.match(mainHtml, /f90-startup-rescue\.js/);
 });
