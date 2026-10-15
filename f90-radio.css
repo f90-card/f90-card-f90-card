@@ -1,0 +1,19 @@
+/* F90 CARD radio: one fixed audio-only control across the storefront. */
+.f90-radio-dock[hidden]{display:none!important}
+.f90-radio-dock{position:fixed;z-index:420;bottom:max(13px,env(safe-area-inset-bottom));left:14px;right:14px;margin:auto;max-width:540px;min-height:70px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 15px;border:1px solid rgba(255,64,91,.58);border-radius:22px;background:linear-gradient(125deg,#171a25f7,#290f1bf7);box-shadow:0 12px 35px #0009,0 0 18px #f22a4438;direction:rtl;color:#fff;backdrop-filter:blur(18px);font-family:inherit}
+.f90-radio-mark{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:13px;color:#ff6179;font-size:25px;background:#ff29421c;box-shadow:inset 0 0 0 1px #ff45635a}
+.f90-radio-info{display:flex;flex-direction:column;gap:0;min-width:110px;flex:1 1 125px;line-height:1.45}
+.f90-radio-info strong{font-weight:900;font-size:14px;white-space:nowrap}
+.f90-radio-info small{font-size:11px;color:#c4adba}
+.f90-radio-dock.is-playing .f90-radio-mark{animation:f90-radio-pulse 2.7s ease-in-out infinite}
+.f90-radio-control{display:grid;place-items:center;flex:0 0 43px;height:43px;padding:0;border:0;border-radius:50%;color:white;background:linear-gradient(140deg,#fa284c,#bb0d32);box-shadow:0 0 15px #ee1c4c77;cursor:pointer;font-size:16px}
+.f90-radio-control:focus-visible,.f90-radio-volume input:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.f90-radio-volume{display:flex;gap:7px;flex:1 1 160px;min-width:120px;align-items:center;white-space:nowrap}
+.f90-radio-volume span{font-size:16px}.f90-radio-volume output{min-width:34px;direction:ltr;font-size:11px;color:#f1dfe6}
+.f90-radio-volume input{width:100%;max-width:180px;accent-color:#ff3353;cursor:pointer;height:20px}
+.f90-radio-notice{width:100%;font-size:11px;color:#e7b6c4;line-height:1.35}
+.f90-radio-notice:empty{display:none}
+.f90-radio-hidden-media{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;top:0;left:0;overflow:hidden;clip-path:inset(50%)}
+@keyframes f90-radio-pulse{50%{box-shadow:inset 0 0 0 1px #ff45635a,0 0 19px #fd214a77}}
+@media(max-width:440px){.f90-radio-dock{left:8px;right:8px;bottom:max(7px,env(safe-area-inset-bottom));padding:9px 11px;gap:9px}.f90-radio-mark{flex-basis:34px;height:34px;font-size:20px}.f90-radio-info{min-width:103px}.f90-radio-info strong{font-size:12px}.f90-radio-control{flex-basis:39px;height:39px}.f90-radio-volume{flex-basis:100%;padding-inline:8px}.f90-radio-volume input{max-width:none}}
+@media(prefers-reduced-motion:reduce){.f90-radio-dock.is-playing .f90-radio-mark{animation:none}}
