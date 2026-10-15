@@ -1185,6 +1185,10 @@
   }
   async function route() {
     const seq = ++S.route;
+    const oldPromoVideo=main.querySelector(".f90-iphone-video");
+    if(oldPromoVideo)oldPromoVideo.pause();
+    promoVideoObserver?.disconnect();
+    promoVideoObserver=null;
     closeBellPanel();
     const ticker=$("promotionBar");
     if(ticker && ticker.parentElement===main)main.parentElement.insertBefore(ticker,main);
