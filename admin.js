@@ -894,6 +894,8 @@
           "required",
         ) +
         field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
+        field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
+
         field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
         field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
         (d.barcode_url ? '<div class="f90-barcode-preview">'+image(d.barcode_url,"باركود طريقة الدفع","editor-preview")+'</div>' : '') +
@@ -1365,6 +1367,11 @@
         name_ar: d.name_ar,
         destination: d.destination,
         details_ar: d.details_ar,
+        deposit_fee_percent: (()=>{
+          const value=Number(d.deposit_fee_percent);
+          if(!Number.isFinite(value)||value<0||value>50)throw new Error("يجب أن تكون عمولة الإيداع بين 0 و50٪");
+          return Math.round(value*1000)/1000;
+        })(),
         barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
