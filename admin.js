@@ -59,6 +59,7 @@
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
     ["special-settings", "أسعار وخدمات F90", "edit", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
+    ["pricing-center", "سعر المورد وهوامش الربح", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
     ["promotions", "الشريط الإعلاني", "bell", ["manager"]],
     ["notifications", "إشعارات المتجر", "bell", ["manager"]],
@@ -176,7 +177,7 @@
       ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","special-requests","verification","ledger","audit"]],
       ["العملاء والتجار",["users","traders","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
-      ["المدفوعات والأسعار",["payments","rates","vip","special-settings"]],
+      ["المدفوعات والأسعار",["pricing-center","rates","payments","vip","special-settings"]],
       ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
       ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
     ];
@@ -643,7 +644,7 @@
           )
           .map(
             (r) =>
-              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${kind === "products" ? `<input type="checkbox" class="f90-bulk-check" aria-label="تحديد ${e(r.name)}" value="${e(r.id)}">` : ""}<button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
+              `<article class="catalog-row" draggable="true" data-row-id="${r.id}">${kind === "products" ? `<input type="checkbox" class="f90-bulk-check" aria-label="تحديد ${e(r.name)}" value="${e(r.id)}">` : ""}<button type="button" class="catalog-drag-handle" aria-label="اضغط واسحب لترتيب ${e(r.name || r.title || "العنصر")}" title="اسحب لترتيب العنصر">⠿</button>${image(r.image_url, r.name || r.title, "row-image")}<div class="row-content"><h3>${e(r.name || r.title || "إعلان مصوّر")}</h3><p>${r.is_active ? "منشور" : "مخفي"}${kind === "products" ? " · " + (r.commerce?.fulfillment === "automatic" ? "آلي" : "يدوي") + " · " + (manager() ? e(C.money(r.commerce?.prices?.USD ?? r.price)) : "") : ""}${kind === "categories" && r.parent_id ? " · داخل " + e(S.categories.find((c) => c.id === r.parent_id)?.name || "قسم") : ""}</p>${C.unavailable(r) || r.presentation?.availability === "refilling" ? '<span class="badge">قيد التعبئة</span>' : ""}</div><div class="row-actions"><button class="icon-button" data-action="move-up" data-id="${r.id}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="move-down" data-id="${r.id}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="catalog-edit" data-id="${r.id}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="catalog-duplicate" data-id="${r.id}" aria-label="تكرار">${I("copy")}</button>${kind === "products" || kind === "categories" ? `<a class="button secondary small" href="#/pricing-center" title="هامش الربح الإضافي">هامش الربح</a>` : ""}<button class="icon-button" data-action="catalog-link" data-id="${r.id}" aria-label="نسخ الرابط">${I("link")}</button><button class="icon-button" data-action="catalog-delete" data-id="${r.id}" aria-label="حذف">${I("trash")}</button></div></article>`,
           )
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
@@ -1060,7 +1061,7 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 13, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
@@ -2087,6 +2088,7 @@
       else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
       else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
+      else if (page === "pricing-center") await window.F90PricingAdmin.render(main);
       else if (page === "vip") vip();
       else if (page === "policies") policies();
       else if (page === "providers") await providers();
