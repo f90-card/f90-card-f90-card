@@ -16,6 +16,10 @@ with sync_playwright() as p:
         print('MODAL_NOT_FOUND',str(e)[:160])
     print('TITLE',page.title(),'URL',page.url,'BODY',page.locator('body').inner_text()[:1000])
     page.screenshot(path=str(out/'homepage-mobile.png'),full_page=False,animations='disabled')
+    for label,scroll in [('categories-mobile',1120),('products-mobile',2050)]:
+        page.evaluate('(scroll)=>window.scrollTo(0,scroll)',scroll)
+        page.wait_for_timeout(2200)
+        page.screenshot(path=str(out/(label+'.png')),full_page=False,animations='disabled')
     browser.close()
 
 # Re-run capture after CI upload workflow correction
