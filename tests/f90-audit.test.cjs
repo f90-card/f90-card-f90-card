@@ -88,6 +88,27 @@ test("The official F90 watermark and theme backgrounds stay independent", () => 
   assert.match(admin, /f90PreviewCream/);
   assert.match(admin, /f90PreviewDark/);
 });
+test("Each theme has independent, readable 50–150% brightness controls", () => {
+  const scene=read("f90-theme-background.js");
+  const style=read("f90-theme-background.css");
+  assert.match(admin, /name="brightness_dark"/);
+  assert.match(admin, /name="brightness_cream"/);
+  assert.match(admin, /brightness:bound\(d\.brightness_dark,50,150,100\)/);
+  assert.match(admin, /brightness:bound\(d\.brightness_cream,50,150,100\)/);
+  assert.match(admin, /brightnessDarkValue/);
+  assert.match(admin, /brightnessCreamValue/);
+  assert.match(scene, /selected\?\.brightness,50,150,100/);
+  assert.match(scene, /--f90-base-percent/);
+  assert.match(scene, /--f90-tint-percent/);
+  assert.match(scene, /photo\.style\.filter="brightness\("/);
+  assert.doesNotMatch(scene, /document\.body\.style\.filter/);
+  assert.match(style, /--surface:color-mix/);
+  assert.match(style, /--bg:color-mix/);
+  assert.match(mainHtml, /f90-theme-background\.js\?v=20261015-brightness1/);
+  assert.match(mainHtml, /f90-theme-background\.css\?v=20261015-brightness1/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-brightness1/);
+});
+
 test("Visitors see only edge volume controls; managers own radio sources", () => {
   const radio=read("f90-media-player.js"), css=read("f90-radio.css");
   const live=read("supabase/functions/f90-platform/index.ts");
@@ -164,7 +185,7 @@ test("Route scroll restoration is back-aware and Telegram settings are restricte
   assert.match(admin,/telegram-alerts/);
 });
 test("Telegram connector safely discovers Chat ID without requiring it upfront", () => {
-  assert.match(adminHtml, /admin\.js\?v=20261015-radio-mobile5/);
+  assert.match(adminHtml, /admin\.js\?v=20261015-brightness1/);
   assert.match(admin, /if\(!chat\)\{/);
   assert.match(admin, /staff\.telegram\.discover/);
   assert.match(admin, /chats\.length!==1/);
