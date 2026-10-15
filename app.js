@@ -664,47 +664,47 @@
   }
   async function quoteProduct(p) {
     const f = $("checkoutForm");
-    if (!f) return;
+    if (!p || !f || f.dataset.product !== String(p.id)) return;
     const qty = Number(f.elements.quantity?.value || 1);
     const seq = ++S.quoteSeq;
+    const button = $("buyButton");
+    if (button) button.disabled = true;
+    f.dataset.pricePending = "1";
+    const price = $("f90CheckoutTopTotal");
+    if (price) price.setAttribute("aria-busy","true");
     try {
-      const quote = await A.call("quote", {
-        product_id: p.id,
-        quantity: qty,
-      });
-      if (!f.isConnected || seq !== S.quoteSeq) return;
+      // Only the authoritative quote from the server unlocks checkout.
+      const quote = await A.call("quote", {product_id:p.id, quantity:qty});
+      if (!f.isConnected || f !== $("checkoutForm") || seq !== S.quoteSeq ||
+          Number(f.elements.quantity?.value || 1) !== qty) return;
       S.quote = quote;
-      $("priceBoard").removeAttribute("aria-busy");
-      $("priceBoard").innerHTML = priceBoard(quote.total_usd);
-      $("checkoutTotal").textContent = C.money(
-        C.convert(quote.total_usd, S.currency, S.rates),
-        S.currency,
-        true,
-      );
-      const summaryTotal = $("f90CheckoutTopTotal");
-      const summaryBalance = $("f90CheckoutTopBalance");
-      if (summaryTotal) summaryTotal.textContent = displayMoney(quote.total_usd,true);
-      if (summaryBalance) summaryBalance.textContent = S.me ? displayMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
-      $("discountHint").textContent =
-        Number(quote.discount_usd) > 0
-          ? "الخصم المطبق: " + displayMoney(quote.discount_usd,true)
-          : "";
-      $("quoteError").textContent = "";
-      $("buyButton").disabled = C.unavailable(p);
-      const insufficient =
-        S.me && Number(S.me.wallet?.balance_usd) < Number(quote.total_usd);
-      $("walletHint").innerHTML = insufficient
-        ? '<span class="f90-visa-shortfall">الرصيد غير كافٍ · <a href="#/deposit">إضافة رصيد</a></span>'
-        : "";
-    } catch (err) {
-      if (!f.isConnected || seq !== S.quoteSeq) return;
-      S.quote = null;
+      f.dataset.quotedQuantity = String(qty);
+      delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
-      $("checkoutTotal").textContent="السعر غير متاح";
-      if ($("f90CheckoutTopTotal")) $("f90CheckoutTopTotal").textContent = "السعر غير متاح";
-      if ($("walletHint")) $("walletHint").textContent = "";
+      if (price) {price.removeAttribute("aria-busy");price.textContent=displayMoney(quote.total_usd,true);}
+      $("checkoutTotal").textContent = C.money(
+        C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
+      );
+      $("f90CheckoutTopBalance").textContent = S.me ?
+        displayMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
+      $("discountHint").textContent = Number(quote.discount_usd)>0
+        ? "خصم VIP: " + displayMoney(quote.discount_usd,true) : "";
+      $("quoteError").textContent = "";
+      if (button) button.disabled = C.unavailable(p);
+      const insufficient = S.me && Number(S.me.wallet?.balance_usd) < Number(quote.total_usd);
+      $("walletHint").innerHTML = insufficient
+        ? '<span class="f90-visa-shortfall">الرصيد غير كافٍ · <a href="#/deposit">إضافة رصيد</a></span>' : "";
+    } catch(err) {
+      if (!f.isConnected || f !== $("checkoutForm") || seq !== S.quoteSeq) return;
+      S.quote = null;
+      delete f.dataset.quotedQuantity;
+      delete f.dataset.pricePending;
+      $("priceBoard")?.removeAttribute("aria-busy");
+      if (price) {price.removeAttribute("aria-busy");price.textContent="السعر غير متاح";}
+      $("checkoutTotal").textContent = "السعر غير متاح";
+      $("walletHint").textContent = "";
       $("quoteError").textContent = message(err);
-      $("buyButton").disabled = true;
+      if (button) button.disabled = true;
     }
   }
   function recipientFieldKind(field) {
@@ -1509,7 +1509,7 @@
         modal("توثيق الحساب مطلوب", `<p>يلزم توثيق حسابك وموافقة الإدارة قبل تنفيذ الشراء.</p><a class="button" href="#/verification">انتقل إلى توثيق الهوية</a>`);
         return;
       }
-      if (!S.quote) throw new Error("انتظر تحديث السعر قبل التأكيد");
+      if (!S.quote || form.dataset.pricePending === "1" || form.dataset.quotedQuantity !== String(Number(form.elements.quantity?.value || 1))) throw new Error("انتظر السعر النهائي المحدث قبل التأكيد");
       // A cached balance must never authorize a new checkout after a failed refresh.
       if (S.walletStale) {
         const refreshed = await refreshMe();
@@ -1791,19 +1791,35 @@
       return;
     }
     if (ev.target.id === "savedRecipient") return;
-    if (ev.target.closest("#checkoutForm")) {
-      S.quote = null;
-      S.quoteSeq++;
+    if (ev.target.closest("#checkoutForm") && ev.target.name === "quantity") {
+      const form=ev.target.closest("form");
+      const p=S.products.find(x=>x.id===form.dataset.product);
+      if (!p) return;
+      const raw=ev.target.value,qty=Number(raw);
+      if (S.quote && form.dataset.quotedQuantity===String(qty)) return;
+      // Customer ID, saved account and notes never affect the supplier's price.
+      // Invalidate only on quantity changes to avoid an RPC per typed character.
+      S.quote=null;
+      ++S.quoteSeq;
+      delete form.dataset.quotedQuantity;
+      $("buyButton").disabled=true;
+      const board=$("priceBoard");
+      board?.setAttribute("aria-busy","true");
       const total=$("checkoutTotal");
       if(total)total.textContent="جارٍ تحديث السعر…";
-      const board=$("priceBoard");
-      if(board)board.setAttribute("aria-busy","true");
-      const p = S.products.find(
-        (x) => x.id === ev.target.closest("form").dataset.product,
-      );
-      $("buyButton").disabled = true;
+      const shown=$("f90CheckoutTopTotal");
+      if(shown){
+        const estimated=Number(C.previewPrice(p,qty));
+        const validQty=raw!==""&&Number.isFinite(qty)&&qty>0&&
+          qty>=Number(p.commerce?.quantity_min||1)&&
+          qty<=Number(p.commerce?.quantity_max||1000000000);
+        shown.textContent=validQty&&Number.isFinite(estimated)&&estimated>0
+          ? "≈ "+displayMoney(estimated,true)+" · تقديري" : "جارٍ تحديث السعر…";
+        shown.setAttribute("aria-busy","true");
+      }
       clearTimeout(quoteTimer);
-      quoteTimer = setTimeout(() => quoteProduct(p), 350);
+      if(raw===""||!Number.isFinite(qty)||qty<=0)return;
+      quoteTimer=setTimeout(()=>quoteProduct(p),120);
     }
     if (ev.target.closest("#depositForm")) {
       const f = $("depositForm");
