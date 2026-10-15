@@ -75,19 +75,22 @@
           ["dark", "cream"].includes(localStorage.getItem("f90-theme")) ? localStorage.getItem("f90-theme") : "dark";
       } catch {}
     </script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"
-      defer
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+    <script>
+      // Fallback only when the primary CDN fails; load it before deferred app files.
+      if (!window.supabase?.createClient) {
+        document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.117.3"><\\/script>');
+      }
+    </script>
     <script src="./config.js?v=20261014-2" defer></script>
     <script src="./store-core.js" defer></script>
-    <script src="./api.js?v=20261015-3" defer></script>
+    <script src="./api.js?v=20261015-rescue1" defer></script>
     <script src="./reports.js?v=20261013-12" defer></script>
     <script src="./f90-quran.js?v=20261014-13" defer></script>
     <script src="./f90-merchant-v2.js?v=2" defer></script>
     <script src="./f90-welcome-scene.js?v=4" defer></script>
     <script src="./f90-media-player.js?v=2" defer></script>
-    <script src="./app.js?v=20261015-15" defer></script>
+    <script src="./app.js?v=20261015-rescue1" defer></script>
     <link rel="stylesheet" href="./f90-merchant-hub.css?v=1" />
     <link rel="stylesheet" href="./f90-experience-v3.css?v=2" />
       <link rel="stylesheet" href="./f90-social.css?v=1" />
@@ -187,6 +190,19 @@
     </nav>
     <div class="toast" id="toast" role="status" hidden></div>
     <div id="modalRoot"></div>
+    <script>
+      // Independent startup watchdog: never leave visitors stuck on the loading screen.
+      (function(){
+        var first=document.getElementById("mainContent");
+        setTimeout(function(){
+          if(!first || !first.querySelector(".loading")) return;
+          var text=first.textContent||"";
+          if(text.indexOf("جار")<0 || text.indexOf("عالمك الرقمي")<0)return;
+          first.innerHTML='<section class="panel" style="max-width:620px;margin:40px auto;text-align:center"><h2>الاتصال بالمتجر تأخر</h2><p>تعذّر إكمال تحميل الصفحة. تحقق من الاتصال، ثم اضغط إعادة المحاولة. لم تُنفّذ أي عملية مالية.</p><button class="button" id="f90EmergencyRetry">إعادة المحاولة</button></section>';
+          document.getElementById("f90EmergencyRetry")?.addEventListener("click",function(){location.reload();});
+        },16000);
+      })();
+    </script>
   </body>
 </html>
 
