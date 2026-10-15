@@ -488,7 +488,7 @@
   const f90CategoryAvailability = new Map();
   const f90CategoryById = new Map();
   function categoryIsUnavailable(cat) {
-    if (!cat?.id) return false;
+    if (!cat?.id) return true; // Preserve the original orphan-product safety behavior.
     if (f90CategoryAvailability.has(cat.id)) return f90CategoryAvailability.get(cat.id);
     const disabled=C.categoryUnavailable(cat,S.categories,S.products);
     f90CategoryAvailability.set(cat.id,disabled);
@@ -1838,7 +1838,12 @@
         shown.setAttribute("aria-busy","true");
       }
       clearTimeout(quoteTimer);
-      if(raw===""||!Number.isFinite(qty)||qty<=0)return;
+      if(raw===""||!Number.isFinite(qty)||qty<=0||
+        qty<Number(p.commerce?.quantity_min||1)||
+        qty>Number(p.commerce?.quantity_max||1000000000)){
+        if(shown){shown.textContent="أدخل كمية صحيحة";shown.removeAttribute("aria-busy");}
+        return;
+      }
       quoteTimer=setTimeout(()=>quoteProduct(p),120);
     }
     if (ev.target.closest("#depositForm")) {
