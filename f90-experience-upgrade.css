@@ -63,3 +63,13 @@
 .f90-welcome-route #footer,.f90-welcome-route .site-footer{display:none!important}
 @media(max-width:740px){.f90-phone-login-form{gap:5px}.f90-phone-login-form input{min-height:29px;padding:5px 7px;font-size:10px}.f90-phone-login-form button{min-height:30px}.f90-welcome-phone-logo{top:13%;height:67px}.f90-welcome-auth-overlay{bottom:12px}}
 @media(prefers-reduced-motion:reduce){.f90-welcome-flying-copy span:first-child{opacity:1;right:auto;top:4%;width:100%;text-align:center}}
+
+/* The standalone welcome route stays visually empty even if the rest of the store uses a wallpaper. */
+body.f90-welcome-route{background-image:none!important}
+body.f90-welcome-route #mainContent{background:transparent!important}
+body.f90-welcome-route .f90-minimal-welcome{background:transparent!important}
+.f90-admin-phone-preview{width:94px;height:180px;margin:14px auto;padding:6px;border-radius:21px;border:2px solid #b45479;background:linear-gradient(130deg,#4d0224,#ae255b 60%,#5a0527);box-shadow:12px 15px 25px #0003}
+.f90-admin-phone-display{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0a0710;border-radius:16px;color:#fff}
+.f90-admin-phone-display img{width:65px;height:60px;object-fit:contain}
+.f90-admin-phone-display span{font-size:9px;letter-spacing:2px}
+@media(max-width:740px){body:not(.f90-welcome-route){background-attachment:scroll!important}}
