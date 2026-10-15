@@ -864,7 +864,8 @@
           "textarea",
           d.text_ar || "",
         ) +
-        `<div class="field-row">${field("display_seconds", "مدة الظهور بالثواني <small>٠ = يبقى ظاهرًا</small>", "number", d.display_seconds || 0, 'min="0" max="86400"')}${field("animation_seconds", "مدة دورة الحركة بالثواني", "number", d.animation_seconds || 25, 'min="8" max="120"')}</div>`;
+        field("link_url", "الرابط الذي يفتح عند الضغط على الإعلان (اختياري)", "url", d.link_url || "", 'placeholder="https://..."') +
+        `<div class="field-row">${field("display_seconds", "مدة الظهور بالثواني <small>٠ = يبقى ظاهرًا</small>", "number", d.display_seconds || 0, 'min="0" max="86400"')}${field("animation_seconds", "مدة مرور الشريط بالثواني", "number", d.animation_seconds || 45, 'min="30" max="180"')}</div>`;
     if (kind === "notifications")
       body +=
         field("title_ar", "العنوان", "text", d.title_ar || "", "required") +
@@ -957,10 +958,10 @@
   function vip() {
     main.innerHTML =
       head(
-        "مستويات التميّز السبعة",
+        "مستويات VIP من 1 إلى 15",
         "ترقية تلقائية وفق الإنفاق المكتمل. المدير يستطيع تخصيص مستوى العميل.",
       ) +
-      `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="2" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٢٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
+      `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="3" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٣٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
   }
   function policies() {
     const titles = {
@@ -1328,6 +1329,7 @@
     if (kind === "promotions")
       Object.assign(row, {
         text_ar: d.text_ar,
+        link_url: String(d.link_url || "").trim().slice(0,1000),
         image_url: await selectedImage(form),
         display_seconds: Number(d.display_seconds),
         animation_seconds: Number(d.animation_seconds),
@@ -1532,6 +1534,19 @@
       field("hero_file","رفع بانر جديد","file","",`accept="image/png,image/jpeg,image/webp,image/gif"`)+
       field("announcement","رسالة الشريط العلوي","textarea",S.settings.announcement||"",`maxlength="1000" rows="2"`)+
       field("footer_ar","النص التعريفي أسفل الصفحة","textarea",c.footer_ar||"",`maxlength="1200" rows="2"`)+
+      '<div class="f90-design-video-fields"><h3>إعلان فيديو بتصميم هاتف ثلاثي الأبعاد</h3><p class="muted small">ارفع فيديو MP4/WebM حتى ٢٠ ميجابايت. يعرض بلا صوت، ويتوقف خارج الشاشة. عند تعطيله يختفي القسم بالكامل.</p>'+
+      check("promo_video_enabled","إظهار إعلان الفيديو في الصفحة الرئيسية",c.promo_video?.enabled===true)+
+      field("promo_video_title","عنوان إعلان الفيديو","text",c.promo_video?.title_ar||"عالم F90 CARD",'maxlength="120"')+
+      field("promo_video_url","رابط ملف الفيديو","url",c.promo_video?.url||"",'placeholder="https://..."')+
+      field("promo_video_file","رفع فيديو إعلاني جديد","file","",'accept="video/mp4,video/webm"')+
+      field("promo_video_poster","صورة ثابتة قبل التشغيل (اختياري)","url",c.promo_video?.poster_url||"")+
+      field("promo_video_poster_file","رفع صورة ثابتة","file","",'accept="image/png,image/jpeg,image/webp"')+
+      '</div>'+
+      '<div class="f90-design-visibility"><h3>إظهار وإخفاء عناصر الواجهة</h3>'+
+      check("show_banners","إظهار بانرات الصفحة الرئيسية",c.show_banners!==false)+
+      check("show_intro","إظهار بانر التعريف",c.show_intro!==false)+
+      check("show_ticker","إظهار الشريط الإعلاني المتحرك",c.show_ticker!==false)+
+      '<p class="muted small">إيقاف العنصر يخفيه عن الزوار ولا يحذف الصور أو الفيديو المحفوظ.</p></div>'+
       field("edge_glow_color","لون التوهج","color",c.edge_glow_color||"#ff2444")+
       check("edge_glow_enabled","تفعيل توهج الكروت والأزرار",c.edge_glow_enabled!==false)+
       `<button class="button" type="submit">حفظ التعديلات مباشرة</button></div><aside class="f90-visual-preview"><span>معاينة تقريبية · Preview</span><div class="f90-visual-preview-hero">`+
@@ -1543,7 +1558,12 @@
         ["صور وأسعار المنتجات","تعديل المنتجات وترتيبها وصورها","products"],
         ["طرق الإيداع","أسماء وبيانات الدفع، الصور والترتيب","payments"],
         ["الإعلانات","رفع البانرات والإعلانات المصورة","banners"],
-        ["صفحات السياسات","تعديل المعلومات والشروط والخصوصية","policies"]
+        ["صفحات السياسات","تعديل المعلومات والشروط والخصوصية","policies"],
+         ["الثيم والشعار","الشعار والثيم وأيقونة التثبيت","settings"],
+         ["الشريط المتحرك","النصوص وصور الإعلانات وروابط الضغط","promotions"],
+         ["العملات","العملة الافتراضية وأسعار الصرف","rates"],
+         ["مستويات VIP","المستويات والخصومات من 1 إلى 15","vip"],
+         ["الخوادم والمراقبة","اتصال الخادم والموردين والتنبيهات","infrastructure"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
   }
   async function saveVisualDesign(form,d){
@@ -1552,9 +1572,18 @@
     const welcomeFile=form.elements.welcome_image_file.files?.[0],heroFile=form.elements.hero_file.files?.[0];
     const welcomeUrl=welcomeFile?.size?(await A.upload(welcomeFile,"f90-images","branding")).url:String(d.welcome_image||"").trim();
     const heroUrl=heroFile?.size?(await A.upload(heroFile,"f90-images","banners")).url:String(d.hero_image||"").trim();
+    const videoFile=form.elements.promo_video_file?.files?.[0];
+    const posterFile=form.elements.promo_video_poster_file?.files?.[0];
+    const videoUrl=videoFile?.size?(await A.upload(videoFile,"f90-videos","promo")).url:String(d.promo_video_url||"").trim();
+    const videoPoster=posterFile?.size?(await A.upload(posterFile,"f90-images","branding")).url:String(d.promo_video_poster||"").trim();
+    if(form.elements.promo_video_enabled.checked && !videoUrl)throw new Error("ارفع الفيديو أو أضف رابط فيديو قبل التفعيل");
     const updated={...prior,announcement:String(d.announcement||"").trim().slice(0,1000),config:{...c,
       welcome:{...c.welcome,title_ar:rawTitle,subtitle_ar:String(d.welcome_subtitle||"").trim().slice(0,350),image_url:welcomeUrl},
       hero_image:heroUrl,footer_ar:String(d.footer_ar||"").trim().slice(0,1200),
+      show_banners:form.elements.show_banners.checked,
+      show_intro:form.elements.show_intro.checked,
+      show_ticker:form.elements.show_ticker.checked,
+      promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,url:videoUrl,poster_url:videoPoster,title_ar:String(d.promo_video_title||"").trim().slice(0,120)},
       edge_glow_color:d.edge_glow_color,edge_glow_enabled:form.elements.edge_glow_enabled.checked}};
     await A.call("settings.save",{data:updated});
     await refreshSettings(); brand(); designCenter(); toast("تم حفظ التصميم والنصوص بنجاح");
