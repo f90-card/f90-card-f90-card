@@ -312,12 +312,15 @@ async function assertProviderAvailable(productId: string) {
     .eq("product_id", productId)
     .maybeSingle());
   if (!link?.provider_id) return;
-  const product = check(await db.from("products")
-    .select("commerce").eq("id", productId).maybeSingle());
-  const p = check(await db.from("f90_providers")
-    .select("is_enabled,adapter,config")
-    .eq("id", link.provider_id)
-    .maybeSingle());
+  // These are independent read-only checks; requesting both concurrently
+  // avoids one extra database roundtrip without weakening availability rules.
+  const [productResult, providerResult] = await Promise.all([
+    db.from("products").select("commerce").eq("id",productId).maybeSingle(),
+    db.from("f90_providers").select("is_enabled,adapter,config")
+      .eq("id",link.provider_id).maybeSingle()
+  ]);
+  const product=check(productResult);
+  const p=check(providerResult);
   if (!p?.is_enabled || p.config?.disconnected || p.config?.archived_at)
     throw new AppError("F90_UNAVAILABLE", 409, "الخدمة قيد التعبئة لدى المورّد");
   if (product?.commerce?.fulfillment === "automatic" &&
@@ -2081,16 +2084,21 @@ Deno.serve(async (req: Request) => {
           ? { version: 3, checkout: "wallet" }
           : await publicCatalog(),
       );
-    const a = await actor(req, action === "quote");
+    // Start the provider availability check alongside authentication.
+    // Both must succeed before the non-mutating quote RPC can run.
+    const quoteProductId = action === "quote" ? uuid(b.product_id) : null;
+    const [a] = await Promise.all([
+      actor(req, action === "quote"),
+      quoteProductId ? assertProviderAvailable(quoteProductId) : Promise.resolve(),
+    ]);
     if (a?.keyId)
       usage = { key_id: a.keyId, user_id: a.id, action };
     if (action === "quote") {
-      await assertProviderAvailable(uuid(b.product_id));
       if (a?.keyId) scoped(a, "orders");
       return out(
         await rpc("f90_quote", {
           p_user: a && !a.needsMfa ? a.id : null,
-          p_product: uuid(b.product_id),
+          p_product: quoteProductId!,
           p_quantity: integer(b.quantity || 1),
           p_coupon: "",
         }),
