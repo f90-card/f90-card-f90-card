@@ -761,8 +761,8 @@
           <div class="f90-visa-balance"><span>رصيدك</span><strong id="f90CheckoutTopBalance">${S.me ? e(displayMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
         </div>
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
-        ${fields.map((f)=>field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","","${f.required ? "required" : ""} maxlength=\"1000\" placeholder=\"${e(f.placeholder_ar||"")}\"")).join("")}
-        ${quantity ? field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,`min="${Number(c.quantity_min)||1}" max="${Number(c.quantity_max)||1000000000}" step="${Number(c.quantity_step)||1}" required`) : '<input type="hidden" name="quantity" value="1">'}
+        ${fields.map((f)=>field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')).join("")}
+        ${quantity ? field("quantity",e(c.quantity_label_ar||"الكمية المطلوبة"),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required') : '<input type="hidden" name="quantity" value="1">'}
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note">تأكد من صحة بيانات الحساب قبل إتمام الطلب.</p>
         <p id="quoteError" class="inline-error" role="status"></p>
