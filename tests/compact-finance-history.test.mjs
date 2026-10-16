@@ -12,9 +12,9 @@ test("customer sees credited amount in the account currency, not a USD-only figu
  assert.match(app,/accountMoney\(net,currency\)/);
  assert.match(app,/method_snapshot\?\.deposit_fee_percent/);
  assert.match(app,/savedRate>0/);
- assert.match(salary,/function|const salaryCredit/);
- assert.match(salary,/salaryCredit\(usd\)/);
- assert.match(salary,/salaryCredit\(Number\(data\.usd_amount\|\|0\)\)/);
+ assert.match(salary,/targetMoney\(amount,customerSalaryCurrency\)/);
+ assert.match(salary,/targetMoney\(value\/100000\*Number\(option\.per_100k\),customerSalaryCurrency\)/);
+ assert.match(salary,/targetMoney\(data\.payout_amount, data\.payout_currency\|\|customerSalaryCurrency\)/);
  assert.match(api,/const currency=previous\?\.currency\|\|accountCurrency/);
  assert.match(salary,/f90_submit_salary_v3/);
 });
