@@ -1224,7 +1224,11 @@
   function syncInstallButtons() {
     const installed=isAppInstalled();
     const header=$("installButton");
-    if(header)header.hidden=installed;
+    if(header){
+      header.hidden=installed;
+      if(!installed && !header.querySelector(".f90-install-shortcuts"))
+        header.innerHTML=f90InstallShortcuts(["ios","android","windows"],"drawer");
+    }
     const action=$("f90InstallAction");
     document.querySelectorAll('[data-action="install"]').forEach(button=>{
       if(button !== action)button.hidden=installed;
