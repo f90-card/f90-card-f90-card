@@ -1598,7 +1598,17 @@ async function staff(a: Actor, b: any) {
   if (action === "staff.file") {
     requireRole(a, "manager", "admin");
     let bucket: string, path: string;
-    if (b.kind === "deposit") {
+    if (b.kind === "salary") {
+      const d = check(
+        await db
+          .from("f90_salary_requests")
+          .select("receipt_path")
+          .eq("id", uuid(b.id))
+          .single(),
+      );
+      bucket = "f90-receipts";
+      path = d.receipt_path;
+    } else if (b.kind === "deposit") {
       const d = check(
         await db
           .from("f90_deposits")
