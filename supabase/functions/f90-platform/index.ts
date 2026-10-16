@@ -2560,6 +2560,17 @@ Deno.serve(async (req: Request) => {
         { request_id: request.id, kind, order_number: order.order_number });
       return out(request, 201);
     }
+    if (action === "history.salary") {
+      // The customer may inspect only their own Xena payout requests.
+      if(a.keyId) throw new AppError("F90_FORBIDDEN");
+      scoped(a,"balance");
+      const offset=integer(b.offset||0,0,100000);
+      const rows=await db.from("f90_salary_requests")
+        .select("id,coins,usd_amount,status,created_at,payout_currency,payout_amount,review_note",{count:"exact"})
+        .eq("user_id",a.id).order("created_at",{ascending:false})
+        .range(offset,offset+49);
+      return out({items:check(rows),count:rows.count||0});
+    }
     if (action === "history") {
       const table = (
         {
