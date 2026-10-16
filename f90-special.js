@@ -115,15 +115,15 @@ function render(kind,settings,user,selected="",rates=[]){
  let fields="";
  if(salary){
    const min=Math.max(100000,Number(sal.minimum_coins)||100000);
-   fields=(desc||sal.processing_notice_ar?'<details class="f90-finance-help"><summary>تعليمات سحب الرواتب</summary>'+
-     '<p>'+esc(desc)+'</p>'+
+   fields=(desc||sal.processing_notice_ar?'<div class="f90-finance-visible-instructions" role="note">'+
+     '<strong>تعليمات سحب الرواتب</strong>'+
+     (desc?'<p>'+esc(desc)+'</p>':'')+
      (sal.processing_notice_ar?'<p>'+esc(sal.processing_notice_ar)+'</p>':'')+
-     '</details>':'')+
+     '</div>':'')+
    input("account",esc(sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه"),"text",'required minlength="2" maxlength="120" autocomplete="off" placeholder="معرّف حسابك في Xena Live"')+
    input("amount","كمية الكوينز للسحب","number",'required min="'+min+'" step="1" inputmode="numeric" value="'+min+'"')+
    '<small class="f90-finance-hint">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز</small>'+
-   '<div class="f90-fixed-account-currency" role="status"><small>عملة حسابك</small>'+
-     '<strong>'+esc(visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency)?.label_ar||customerSalaryCurrency)+' ('+esc(customerSalaryCurrency)+')</strong></div>'+
+   
    '<input name="payout_currency" type="hidden" value="'+esc(customerSalaryCurrency)+'">'+
    (!visibleSalaryOptions.some(x=>x.currency===customerSalaryCurrency)?
      '<p class="f90-special-alert">سحب الرواتب غير متاح حاليًا بعملة حسابك؛ اختر عملة أخرى من الشريط العام.</p>':'')+
@@ -132,10 +132,10 @@ function render(kind,settings,user,selected="",rates=[]){
      '<strong data-salary-target>—</strong>'+
      '<span data-salary-coins hidden></span><span data-salary-usd hidden></span>'+
      '<p data-salary-rate hidden></p></div>'+
-   '<details class="f90-finance-help"><summary>إضافة ملاحظة (اختياري)</summary>'+
+   '<details class="f90-finance-help f90-salary-optional-note"><summary>ملاحظة (اختياري)</summary>'+
      '<label class="field"><span>ملاحظة للإدارة</span><textarea name="note" rows="2" maxlength="1200" placeholder="ملاحظة أو رقم تأكيد"></textarea></label></details>'+
    '<label class="field f90-deposit-upload"><span>صورة تأكيد السحب</span><input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp"><small>JPG أو PNG أو WEBP، بحد أقصى 5 ميجابايت</small></label>'+
-   '<p class="f90-special-tiny">لا يُضاف الرصيد إلا بعد موافقة الإدارة.</p>';
+   '';
  }else if(transfer){
    fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
      methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+' · '+esc(x.currency||"USD")+'</option>').join("")+'</select></label>'+
@@ -164,7 +164,7 @@ function render(kind,settings,user,selected="",rates=[]){
 
  document.getElementById("mainContent").innerHTML=
  '<section class="f90-special-page f90-deposit-compact" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
- '<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'" loading="lazy" decoding="async"></div>'+
+ (salary?'':'<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'" loading="lazy" decoding="async"></div>')+
  '<div class="f90-special-panel"><h1>'+title+'</h1>'+(salary?'':'<p>'+esc(desc)+'</p>')+
  (transfer?'<div data-method-info></div>':'')+
  (!salary&&chosenService?.image_url?'<img class="f90-service-art" src="'+esc(chosenService.image_url)+'" alt="'+esc(chosenService.name_ar)+'">':'')+
