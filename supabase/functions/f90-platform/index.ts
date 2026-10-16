@@ -739,6 +739,15 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     result.supplier_previous_availability = result.availability;
     result.availability = "refilling";
   }
+  // Keep special-service checkout guard when a manager edits a draft.
+  if (existing.special_route === "transfer") {
+    result.special_route = "transfer";
+    result.transfer_method_id = text(existing.transfer_method_id, 100);
+    result.no_checkout = true;
+  } else if (existing.no_checkout === true && Number(result.prices.USD) <= 0) {
+    result.no_checkout = true;
+    result.admin_draft = true;
+  }
   if (result.quantity_max < result.quantity_min)
     throw new AppError("F90_QUANTITY");
   result.pricing_tiers = (Array.isArray(c.pricing_tiers) ? c.pricing_tiers : [])
@@ -797,6 +806,13 @@ async function catalogSave(a: Actor, b: any) {
       old.commerce,
       a.role === "designer",
     );
+    if (data.is_active && data.commerce?.special_route === "transfer")
+      throw new AppError("F90_FIELDS", 400,
+        "خدمات تحويل الأموال تستخدم نموذج التحويل المخصص ولا تُنشر للشراء المكرر");
+    if (data.is_active && data.commerce?.no_checkout === true)
+      throw new AppError("F90_FIELDS", 400,
+        "حدّد سعر خدمة حقيقيًا أولًا، ثم احفظ المنتج وانشره");
+
     if (a.role === "manager") {
       data.price = data.commerce.prices.USD;
       data.currency = "USD";
