@@ -28,3 +28,10 @@ test("the starter documentation warns against copying customer data and publishi
  assert.match(doc,/لا تنسخ قاعدة العملاء/);
  assert.match(doc,/ليست نسخة معتمدة للبيع فورًا/);
 });
+
+test("starter frontend is disconnected from production Supabase until a customer config is provided",()=>{
+ const code=fs.readFileSync(path.join(root,"config.js"),"utf8");
+ assert.match(code,/https:\/\/NEW_PROJECT_REF\.supabase\.co/);
+ assert.match(code,/YOUR_NEW_SUPABASE_PUBLISHABLE_KEY/);
+ assert.doesNotMatch(code,/xzqnrpycjxfbyrfaolud/);
+});
