@@ -241,7 +241,12 @@ async function renderSalaryInbox(main){
  }
  const content=host?.querySelector("[data-salary-content]");
  if(!content)return;
- const result=await window.F90API.client.rpc("f90_list_salary").catch(error=>({error,data:[]}));
+ // The staff API authenticates the acting manager and reads salary records
+ // through a secure server-only connection. A public PostgREST RPC or a
+ // failed ordinary deposit query cannot hide these financial requests.
+ const result=await window.F90API.call("staff.salary.list")
+   .then(response=>({data:response.items||[],pending:response.pending||0}))
+   .catch(error=>({error,data:[]}));
  if(!document.contains(host))return;
  if(result.error){
    content.innerHTML='<div class="notice warning">تعذر جلب طلبات رواتب Xena: '+
@@ -251,7 +256,8 @@ async function renderSalaryInbox(main){
  }
  const records=(result.data||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
  const pending=records.filter(x=>x.status==="pending").length;
- content.innerHTML='<p class="muted small">'+esc(pending)+' بانتظار الاعتماد · '+esc(records.length)+' طلب سحب راتب. اعتماد الطلب يضيف المقابل الدولاري مرة واحدة فقط.</p>'+
+ content.innerHTML='<div class="actions"><p class="muted small">'+esc(pending)+' بانتظار الاعتماد · '+esc(records.length)+' طلب سحب راتب. اعتماد الطلب يضيف المقابل الدولاري مرة واحدة فقط.</p>'+
+ '<button type="button" class="button secondary small" data-f90-reload-salary>تحديث طلبات Xena</button></div>'+
  (records.length?records.map(x=>
    '<article class="record f90-special-request" data-id="'+esc(x.id)+'" data-source="salary">'+
    '<div class="record-main"><h3>سحب رواتب Xena Live · '+esc(x.status==="pending"?"بانتظار المراجعة":x.status==="approved"?"معتمد":"مرفوض")+'</h3>'+
@@ -271,6 +277,19 @@ document.addEventListener("click",ev=>{
  ev.preventDefault();
  void renderSalaryInbox(document.getElementById("adminMain"));
 });
+// Refresh the manager's Xena inbox after a new submission, without losing
+// note fields while an administrator is typing. A fresh page load is not
+// required for incoming requests to become visible.
+let lastSalaryInboxPoll=0;
+window.setInterval(()=>{
+ const host=document.getElementById("f90SalaryInbox");
+ if(!host || document.visibilityState!=="visible" ||
+    document.activeElement?.closest?.("#f90SalaryInbox .f90-request-actions"))return;
+ const now=Date.now();
+ if(now-lastSalaryInboxPoll<20000)return;
+ lastSalaryInboxPoll=now;
+ void renderSalaryInbox(document.getElementById("adminMain"));
+},30000);
 async function render(kind,main,settings){
  if(kind==="special-requests")return renderRequests(main);
  return renderSettings(main,settings);
