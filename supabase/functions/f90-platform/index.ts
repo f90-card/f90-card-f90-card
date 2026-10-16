@@ -1476,6 +1476,48 @@ async function staff(a: Actor, b: any) {
     await auditSafe(a.id,"telegram.test",String(result.id),{kind:"delivery_check"});
     return {queued:true,id:result.id};
   }
+  if (action === "staff.salary.list") {
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    requireRole(a, "manager", "admin");
+    const rows = check(await db.from("f90_salary_requests")
+      .select("id,user_id,account_id,coins,usd_amount,status,created_at,reviewed_at,review_note,payout_currency,payout_amount,client_note,receipt_path")
+      .order("created_at", { ascending: false }).limit(150));
+    return { items: rows, pending: rows.filter((x: any) => x.status === "pending").length };
+  }
+  // This diagnostic checks Telegram's configured destination without
+  // exposing bot credentials or a complete chat ID to the browser.
+  if (action === "staff.telegram.destination") {
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    requireRole(a, "manager");
+    const creds = check(await db.rpc("f90_telegram_credentials"));
+    const bot = String(creds?.token || ""), chat = String(creds?.chat || "");
+    if (!bot || !chat) return { configured: false };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 7000);
+    try {
+      const [target, me] = await Promise.all([
+        fetch("https://api.telegram.org/bot" + bot + "/getChat?chat_id=" + encodeURIComponent(chat),
+          { signal: controller.signal }),
+        fetch("https://api.telegram.org/bot" + bot + "/getMe", { signal: controller.signal })
+      ]);
+      const aChat = await target.json().catch(() => null);
+      const aBot = await me.json().catch(() => null);
+      if (!target.ok || aChat?.ok !== true)
+        return { configured: true, verified: false, chat_suffix: chat.slice(-4) };
+      const result = aChat.result || {}, botResult = aBot?.result || {};
+      return {
+        configured: true, verified: true, chat_suffix: chat.slice(-4),
+        chat_title: text(result.title || [result.first_name, result.last_name].filter(Boolean).join(" ") || result.username || "محادثة خاصة", 120),
+        chat_type: text(result.type || "", 24),
+        chat_username: text(result.username || "", 120),
+        bot_username: me.ok && aBot?.ok === true ? text(botResult.username || "", 120) : ""
+      };
+    } catch {
+      return { configured: true, verified: false, chat_suffix: chat.slice(-4) };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   if (action === "staff.telegram") {
     if(a.keyId)throw new AppError("F90_FORBIDDEN");
     requireRole(a,"manager");
