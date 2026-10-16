@@ -19,8 +19,9 @@ test("deposit pages restore existing method pictures and barcode while preservin
  assert.match(deposit,/method-grid f90-deposit-methods-with-images/);
  assert.match(deposit,/method-tile f90-method-active/);
  assert.match(deposit,/image\(x\.image_url,x\.name_ar,"f90-deposit-method-art"\)/);
- assert.match(deposit,/f90-deposit-detail-art/);
- assert.match(deposit,/image\(m\.image_url,m\.name_ar,"f90-deposit-method-art"\)/);
+ assert.doesNotMatch(deposit,/f90-deposit-detail-art/);
+ assert.doesNotMatch(deposit,/image\(m\.image_url,m\.name_ar,"f90-deposit-method-art"\)/);
+ assert.match(deposit,/f90-finance-visible-instructions/);
  assert.match(deposit,/C\.safeUrl\(m\.barcode_url\)/);
  assert.match(deposit,/f90-deposit-request-card/);
  assert.match(deposit,/f90-deposit-destination/);
