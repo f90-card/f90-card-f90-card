@@ -1654,6 +1654,38 @@ async function staff(a: Actor, b: any) {
         400,
         "لا تضع مفاتيح أو كلمات مرور داخل إعدادات الموقع العامة",
       );
+    // Other administration pages may save an older config snapshot. Do not
+    // accidentally remove the salary payout table when they save unrelated
+    // settings; only the dedicated editor sends payout_options explicitly.
+    const previousSalary = current.config?.salary_withdrawal || {};
+    const incomingSalary = c.salary_withdrawal;
+    if (Array.isArray(previousSalary.payout_options) &&
+        (!incomingSalary || !Array.isArray(incomingSalary.payout_options))) {
+      c.salary_withdrawal = {
+        ...previousSalary,
+        ...(incomingSalary && typeof incomingSalary === "object" ? incomingSalary : {}),
+        payout_options: previousSalary.payout_options,
+      };
+    }
+    if (Array.isArray(c.salary_withdrawal?.payout_options)) {
+      const rows = c.salary_withdrawal.payout_options;
+      if (!rows.length || rows.length > 40) throw new AppError("F90_FIELDS");
+      const seen = new Set<string>();
+      c.salary_withdrawal.payout_options = rows.map((x: any) => {
+        const currency = text(x.currency, 8).toUpperCase();
+        const per100k = Number(x.per_100k);
+        const perUsd = currency === "USD" ? 1 : Number(x.units_per_usd);
+        if (!/^[A-Z]{3,8}$/.test(currency) || seen.has(currency) ||
+            !Number.isFinite(per100k) || per100k <= 0 || per100k > 1e12 ||
+            !Number.isFinite(perUsd) || perUsd <= 0 || perUsd > 1e12)
+          throw new AppError("F90_FIELDS");
+        seen.add(currency);
+        return {
+          currency, label_ar: text(x.label_ar || currency, 80),
+          per_100k: per100k, units_per_usd: perUsd, enabled: x.enabled === true,
+        };
+      });
+    }
     if (c.payment_methods) {
       c.payment_methods = c.payment_methods.slice(0, 50).map((m: any) => ({
         ...m,
