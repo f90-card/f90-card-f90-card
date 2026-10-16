@@ -108,7 +108,11 @@ function render(kind,settings,user,selected="",rates=[]){
  let fields="";
  if(salary){
    const min=Math.max(100000,Number(sal.minimum_coins)||100000);
-   fields=input("account","ID حساب Xena Live","text",'required minlength="2" maxlength="120" autocomplete="off"')+
+   fields='<div class="f90-deposit-note-top"><strong>تأكيد رواتب Xena Live</strong>'+
+     '<p>'+esc(desc)+'</p>'+
+     (sal.processing_notice_ar?'<p class="f90-deposit-extra-info">'+esc(sal.processing_notice_ar)+'</p>':'')+
+     '</div>'+
+   input("account",esc(sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه"),"text",'required minlength="2" maxlength="120" autocomplete="off" placeholder="معرّف حسابك في Xena Live"')+
    input("amount","كمية الكوينز للسحب","number",'required min="'+min+'" step="1" inputmode="numeric" value="'+min+'"')+
    '<p class="f90-special-tiny">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز • لا يوجد سقف ثابت معلن</p>'+
    '<label class="field"><span>اختر عملة الإيداع التي تريد حساب المبلغ بها</span><select name="payout_currency" required>'+
@@ -118,7 +122,9 @@ function render(kind,settings,user,selected="",rates=[]){
      '<div><span>قيمة الإيداع بالعملة المختارة</span><strong data-salary-target>—</strong></div>'+
      '<div><span>الرصيد الذي سيضاف لمحفظة F90 بعد الموافقة</span><strong data-salary-usd>—</strong></div>'+
      '<p data-salary-rate class="f90-special-tiny"></p></div>'+
-   '<p class="f90-special-tiny">عملة المحفظة الأساسية هي الدولار. اختيار شيقل أو دينار أو كوينز يعرض المقابل بحسب تسعير سحب الرواتب المحدد من الإدارة، ويُعتمد ما يعادله بالدولار داخل المحفظة.</p>';
+   '<label class="field"><span>إشعار أو ملاحظة للطلب (اختياري)</span><textarea name="note" rows="2" maxlength="1200" placeholder="رقم العملية أو تفاصيل التأكيد"></textarea></label>'+
+   '<label class="field f90-deposit-upload"><span>إرفاق صورة تأكيد سحب الراتب</span><input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp"><small>صورة JPG أو PNG أو WEBP بحجم لا يتجاوز 5 ميجابايت. تحفظ بشكل خاص لمراجعة الإدارة.</small></label>'+
+   '<p class="f90-special-tiny">عملة المحفظة الأساسية هي الدولار. تعرض العملات الأخرى المقابل بحسب تسعير سحب الرواتب من الإدارة؛ ويُضاف ما يعادلها بالدولار بعد الموافقة.</p>';
  }else if(transfer){
    fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
      methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+' · '+esc(x.currency||"USD")+'</option>').join("")+'</select></label>'+
@@ -146,11 +152,11 @@ function render(kind,settings,user,selected="",rates=[]){
    salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.";
 
  document.getElementById("mainContent").innerHTML=
- '<section class="f90-special-page" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
- '<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'"></div>'+
- '<div class="f90-special-panel"><h1>'+title+'</h1><p>'+esc(desc)+'</p>'+
+ '<section class="f90-special-page f90-deposit-compact" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
+ (salary?'':'<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'"></div>')+
+ '<div class="f90-special-panel"><h1>'+title+'</h1>'+(salary?'':'<p>'+esc(desc)+'</p>')+
  (transfer?'<div data-method-info></div>':'')+
- (chosenService?.image_url?'<img class="f90-service-art" src="'+esc(chosenService.image_url)+'" alt="'+esc(chosenService.name_ar)+'">':'')+
+ (!salary&&chosenService?.image_url?'<img class="f90-service-art" src="'+esc(chosenService.image_url)+'" alt="'+esc(chosenService.name_ar)+'">':'')+
  notice+'<form id="f90SpecialForm" data-kind="'+esc(d)+'"><input type="hidden" name="kind" value="'+esc(d)+'">'+
  fields+'<p class="f90-special-footnote">'+esc(footnote)+'</p><p class="f90-special-alert" data-status hidden></p>'+
  '<button class="button full" type="submit" '+(!enabled||!isSigned||((salary||transfer)&&!isVerified)?"disabled":"")+'>'+
@@ -243,7 +249,27 @@ document.addEventListener("submit",async ev=>{
      if(!window.confirm("سحب "+value.toLocaleString("en-US")+" كوينز مقابل إيداع "+quote.toLocaleString("en-US",{maximumFractionDigits:6})+" "+(option.label_ar||currency)+"، وسيُضاف المقابل بالدولار إلى محفظتك فقط بعد موافقة الإدارة. تأكيد الإرسال؟")){
        button.disabled=false;delete form.dataset.busy;out.hidden=true;return;
      }
-     result=await client.rpc("f90_submit_salary_v2",{p_account:String(d.get("account")||""),p_coins:value,p_currency:currency,p_key:key});
+     const proof=d.get("receipt");
+     if(!proof||!["image/jpeg","image/png","image/webp"].includes(proof.type)||proof.size===0||proof.size>5242880)
+       throw Error("ارفع صورة تأكيد سحب الراتب بصيغة مدعومة، بحد أقصى 5 ميجابايت.");
+     const signature=[proof.name,proof.size,proof.lastModified].join(":");
+     const fieldsKey=JSON.stringify({account:String(d.get("account")||""),coins:value,currency,
+       note:String(d.get("note")||"").trim()});
+     if(form.dataset.proofKey===key&&(form.dataset.proofSignature!==signature||form.dataset.proofData!==fieldsKey))
+       throw Error("تغيّرت تفاصيل السحب بعد رفع الإيصال. أعد فتح النموذج أو تحقق من الطلب السابق لتفادي التكرار.");
+     let path=form.dataset.proofKey===key?form.dataset.proofPath:"";
+     if(!path){
+       out.textContent="جارٍ رفع إيصال سحب الراتب بصورة خاصة…";
+       const uploaded=await window.F90API.upload(proof,"f90-receipts");
+       path=uploaded.path;
+       form.dataset.proofPath=path;form.dataset.proofKey=key;
+       form.dataset.proofSignature=signature;form.dataset.proofData=fieldsKey;
+     }
+     out.textContent="جارٍ إرسال طلب الراتب للمراجعة…";
+     result=await client.rpc("f90_submit_salary_v3",{
+       p_account:String(d.get("account")||""),p_coins:value,p_currency:currency,p_key:key,
+       p_note:String(d.get("note")||"").trim(),p_receipt:path
+     });
    }else if(kind==="transfer"){
      result=await client.rpc("f90_submit_transfer",{p_method:service,p_recipient:String(d.get("details")||""),p_net:value,p_key:key});
    }else{
@@ -260,6 +286,8 @@ document.addEventListener("submit",async ev=>{
      kind==="salary"?"تم إرسال طلب سحب الراتب للمراجعة. قيمة الإيداع المسجلة: "+Number(data.payout_amount||0).toLocaleString("en-US",{maximumFractionDigits:6})+" "+String(data.payout_currency||"USD")+"، وتعادل "+fmt(data.usd_amount||0)+" في المحفظة بعد الاعتماد. رقم "+String(data.id||"").slice(0,8):
      "تم إرسال الطلب للمراجعة برقم "+String(data.id||"").slice(0,8)+". لم يتم خصم رصيد.";
    form.dataset.submitted="1";delete form.dataset.requestKey;
+   delete form.dataset.proofPath;delete form.dataset.proofKey;
+   delete form.dataset.proofSignature;delete form.dataset.proofData;
    form.reset();updateEstimate(form);
  }catch(err){out.textContent=String(err?.message||"تعذر تسجيل الطلب");button.disabled=false;}
  finally{delete form.dataset.busy;}
