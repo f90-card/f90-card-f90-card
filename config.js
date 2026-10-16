@@ -1,10 +1,10 @@
 (function () {
   "use strict";
 
-  const SUPABASE_URL = "https://xzqnrpycjxfbyrfaolud.supabase.co";
+  const SUPABASE_URL = "https://NEW_PROJECT_REF.supabase.co";
 
   const SUPABASE_PUBLISHABLE_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6cW5ycHljanhmYnlyZmFvbHVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzY3NDIsImV4cCI6MjEwNzMxMjc0Mn0.D3asmxTLRI7ZhKofbhxzP3FIaILepUVX2mYQT-mFrAk";
+    "YOUR_NEW_SUPABASE_PUBLISHABLE_KEY";
 
   if (
     !SUPABASE_PUBLISHABLE_KEY ||
