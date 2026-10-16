@@ -854,6 +854,18 @@ async function catalogSave(a: Actor, b: any) {
   );
   if (kind === "product" && a.role === "manager" && d.internal) {
     const i = d.internal;
+    // A manual price edit must not be overwritten by the next supplier poll.
+    // Image/category/name/visibility-only edits keep automatic pricing intact.
+    let editedYassenPrice = false;
+    if(id && i.provider_id){
+      const selectedProvider = check(await db.from("f90_providers")
+        .select("adapter").eq("id",uuid(i.provider_id)).single());
+      const previousPrice=Number(old.commerce?.prices?.USD??old.price);
+      const chosenPrice=Number(data.commerce?.prices?.USD??data.price);
+      editedYassenPrice=selectedProvider.adapter==="yassen" &&
+        Number.isFinite(previousPrice)&&Number.isFinite(chosenPrice) &&
+        Math.abs(chosenPrice-previousPrice)>0.005;
+    }
     check(
       await db.from("f90_product_internal").upsert({
         product_id: saved.id,
@@ -867,7 +879,7 @@ async function catalogSave(a: Actor, b: any) {
           i.trader_price_usd === "" || i.trader_price_usd == null
             ? null
             : num(i.trader_price_usd, 0.000001, 1000000),
-        auto_margin: !!i.auto_margin,
+        auto_margin: !!i.auto_margin && !editedYassenPrice,
       }),
     );
   }
