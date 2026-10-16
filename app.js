@@ -456,6 +456,12 @@
       try {
         const me = await A.call("me");
         S.me = me;
+        const accountCurrency=me?.profile?.account_currency;
+        if(["USD","ILS","JOD"].includes(accountCurrency)){
+          S.currency=accountCurrency;
+          try{localStorage.setItem("f90-currency",accountCurrency);}catch{}
+          S.currencyPreference=true;
+        }
         S.walletStale = false;
         return true;
       } catch (err) {
@@ -1291,11 +1297,10 @@
         (!active.length&&!fallbackSalary?empty("لا توجد طرق إيداع مفعّلة حاليًا","wallet"):"");
       return;
     }
-    const allowed=S.rates.filter(r=>r.is_enabled&&Number(r.per_usd)>0 &&
-      (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)) &&
-      (r.currency!=="XCN"||(Array.isArray(m.accepted_currencies)&&m.accepted_currencies.includes("XCN"))));
-    const defaultCurrency=allowed.some(r=>r.currency===S.currency)?S.currency:
-      allowed.some(r=>r.currency==="USD")?"USD":allowed[0]?.currency||"USD";
+    const accountCurrency=S.me?.profile?.account_currency||"USD";
+    const accountRate=S.rates.find(r=>r.currency===accountCurrency&&r.is_enabled&&Number(r.per_usd)>0);
+    const methodSupports=!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(accountCurrency);
+    const canDeposit=!!accountRate&&methodSupports;
     const min=Number(m.minimum_amount)>0?Number(m.minimum_amount):0;
     const name=e(m.name_ar||"إيداع");
     const receiver=e(m.receiver_name||"");
@@ -1316,9 +1321,9 @@
         '<img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async">'+
         '<small>استخدم الرمز إذا كانت وسيلة الدفع تدعم المسح.</small></div>':"")+
       '<form id="depositForm" class="f90-deposit-order-form">'+
-      '<label class="field"><span>العملة التي حوّلت بها</span><select name="currency" required>'+
-       allowed.map(r=>'<option value="'+e(r.currency)+'" '+(r.currency===defaultCurrency?"selected":"")+'>'+e(r.name_ar||r.currency)+' ('+e(r.currency)+')</option>').join("")+
-      '</select></label>'+
+      '<div class="f90-fixed-account-currency" role="status"><small>عملة الحساب المعتمدة للإيداع</small><strong>'+e(accountRate?.name_ar||accountCurrency)+' ('+e(accountCurrency)+')</strong><span>تُحدَّد من عملة الحساب ولا يمكن تغييرها أثناء الإيداع.</span></div>'+
+      '<input type="hidden" name="currency" value="'+e(accountCurrency)+'">'+
+      (!canDeposit?'<div class="notice warning">طريقة الإيداع لا تدعم عملة حسابك حاليًا. اختر طريقة أخرى أو غيّر عملة حسابك من شريط العملات.</div>':"")+
       '<label class="field"><span>قيمة المبلغ المحوّل</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="أدخل قيمة التحويل">'+
       (min?'<small>الحد الأدنى لهذه الطريقة: '+e(min)+' بعملة التحويل</small>':"")+'</label>'+
       '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><strong>القيمة التي ستضاف إلى محفظتك</strong><span>أدخل المبلغ لعرض الصافي والرسوم قبل الطلب.</span></div>'+
@@ -1328,7 +1333,7 @@
         '<input type="file" name="receipt" required accept="image/jpeg,image/png,image/webp">'+
         '<small>'+e(m.receipt_help||"ارفع إيصالًا واضحًا بصيغة JPG أو PNG أو WEBP، بحد أقصى 5 ميجابايت. لا يظهر الإيصال للعامة.")+'</small></label>'+
       '<p class="f90-deposit-request-footnote">تراجع الإدارة الطلب والإيصال قبل إضافة أي رصيد. قيمة الإيداع النهائية يحددها الخادم وفق سعر الصرف والرسوم المعتمدة.</p>'+
-      '<button type="submit" class="button full">تقديم طلب الإيداع</button>'+
+      '<button type="submit" class="button full" '+(!canDeposit?'disabled':'')+'>تقديم طلب الإيداع</button>'+
       '</form></section></div>';
   }
   function orderRecord(o) {
@@ -1895,7 +1900,7 @@
       const signature = file ? [file.name, file.size, file.lastModified].join(":") : "";
       const depositDetails = JSON.stringify({
         method_id: S.selectedMethod?.id,
-        currency: data.currency,
+        currency: S.me?.profile?.account_currency||"USD",
         amount: Number(data.amount),
         reference: data.reference || "",
       });
@@ -1918,7 +1923,7 @@
       try {
         await A.call("deposit.submit", {
           method_id: S.selectedMethod.id,
-          currency: data.currency,
+          currency: S.me?.profile?.account_currency||"USD",
           amount: Number(data.amount),
           reference: data.reference,
           receipt_path: receiptPath,
@@ -2128,7 +2133,7 @@
         estimate.innerHTML='<strong>المبلغ أقل من الحد الأدنى</strong><span>الحد الأدنى لهذه الطريقة: '+e(min)+' '+e(f.elements.currency.value)+'.</span>';
         return;
       }
-      const rate = S.rates.find((row) => row.currency === f.elements.currency.value && row.is_enabled);
+      const rate = S.rates.find((row) => row.currency === (S.me?.profile?.account_currency||"USD") && row.is_enabled);
       const perUsd = Number(rate?.per_usd);
       if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
         estimate.innerHTML = '<strong>صافي مبلغ الإيداع</strong><span>أدخل مبلغًا صالحًا لعرض التفاصيل.</span><small>تُخصم عمولة الإيداع عند اعتماد الطلب.</small>';
@@ -2403,14 +2408,27 @@
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
   $("themeToggle").addEventListener("click", () => theme(document.documentElement.dataset.theme === "cream" ? "dark" : "cream"));
-  $("currencySelect").addEventListener("change", (ev) => {
-    S.currency = ev.target.value;
-    try {
-      localStorage.setItem("f90-currency", S.currency);
-    } catch {}
-    S.currencyPreference = true;
-    chrome();
-    route();
+  $("currencySelect").addEventListener("change", async (ev) => {
+    const chosen=String(ev.target.value||"");
+    const before=S.me?.profile?.account_currency||S.currency;
+    if(!["USD","ILS","JOD"].includes(chosen)){ev.target.value=before;return;}
+    if(S.me){
+      ev.target.disabled=true;
+      try{
+        const result=await A.call("profile.currency",{currency:chosen});
+        if(result?.currency!==chosen)throw Error("تعذّر حفظ عملة الحساب");
+        S.me.profile.account_currency=chosen;
+      }catch(error){
+        ev.target.value=before;
+        toast(message(error)||"تعذّر تغيير عملة الحساب");
+        ev.target.disabled=false;return;
+      }
+      ev.target.disabled=false;
+    }
+    S.currency=chosen;
+    try{localStorage.setItem("f90-currency",chosen)}catch{}
+    S.currencyPreference=true;
+    chrome();route();
   });
   $("installButton").addEventListener("click", () => { location.hash = "#/install"; });
   document.addEventListener("keydown", (ev) => {
