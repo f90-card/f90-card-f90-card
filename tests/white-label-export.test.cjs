@@ -24,7 +24,7 @@ test("white-label exporter separates each tenant and omits original migrations a
 });
 test("the starter documentation warns against copying customer data and publishing early",()=>{
  const doc=fs.readFileSync(path.join(root,"white-label","README_AR.md"),"utf8");
- assert.match(doc,/قاعدة Supabase جديدة/);
+ assert.match(doc,/Supabase جديدًا/);
  assert.match(doc,/لا تنسخ قاعدة العملاء/);
  assert.match(doc,/ليست نسخة معتمدة للبيع فورًا/);
 });
