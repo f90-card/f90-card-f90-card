@@ -381,7 +381,7 @@
         )
         .join(
           "",
-        )}<a class="button ghost small" href="#/install">تثبيت التطبيق</a></nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div></div>`;
+        )}${f90InstallShortcuts(["ios","android","windows"],"footer")}</nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div></div>`;
   }
   let previousUnreadCount = null;
   function updateStoreBell() {
@@ -634,7 +634,7 @@
         <p class="f90-experience-pretitle">وجهتك إلى عالم الخدمات الرقمية</p>
         <h1 id="f90-experience-title">${e(w.title_ar || "عالمك الرقمي يبدأ هنا")} <span>F90 CARD.</span></h1>
         <p class="f90-experience-description">${e(w.subtitle_ar||"الألعاب، شحن التطبيقات والخدمات الرقمية في تجربة عربية واحدة. تصفّح، اختر، وتابع كل طلب بوضوح.")}</p>
-        <div class="f90-experience-actions"><a class="button" href="#/">اكتشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/install">ثبّت التطبيق ${I("plus")}</a></div>
+        <div class="f90-experience-actions"><a class="button" href="#/deposit">إيداع نقود الآن ${I("wallet")}</a>${f90InstallShortcuts(["ios","android","windows"],"hero")}</div>
         <div class="f90-experience-signals"><span>${I("shield")} حساب موثّق للشراء</span><span>${I("clock")} متابعة الطلبات</span><span>${I("wallet")} محفظة بالدولار</span></div><div class="f90-experience-real-stats" aria-label="مؤشرات فعلية من المتجر"><div><strong>${S.categories.filter(c=>c.is_active&&!c.parent_id).length}</strong><span>قسم رئيسي متاح</span></div><div><strong>${available.length}</strong><span>خدمة متاحة بالكتالوج</span></div><div><strong>${methods.length}</strong><span>طريقة إيداع مفعّلة</span></div></div></div>
         <div class="f90-experience-visual"><div class="f90-experience-halo" aria-hidden="true"></div><div class="f90-experience-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="الشعار الرسمي لمتجر أف تسعين كارد" fetchpriority="high" decoding="async"><strong>F90 CARD</strong><span>PLAY · CONNECT · EXPLORE</span></div><div class="f90-experience-float float-a">${I("grid")} ألعاب وتطبيقات</div><div class="f90-experience-float float-b">${I("wallet")} خدمات رقمية</div></div>
         <a class="f90-experience-scroll" href="#f90-experience-discover">اكتشف المزيد ↓</a>
@@ -675,7 +675,7 @@
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><div class="f90-hero-link"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></div><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  ${window.F90Special?.home(S.settings) || ''}
- ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
+ ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -1186,10 +1186,45 @@
     if (device === "windows") return "على Windows: افتح المتجر باستخدام Edge أو Chrome، ثم من قائمة المتصفح اختر «تثبيت هذا الموقع كتطبيق» إذا كان الخيار متاحًا.";
     return "على Android: افتح المتجر باستخدام Chrome، واضغط «تثبيت التطبيق» من قائمة المتصفح. إذا ظهر طلب تثبيت مباشر، وافق عليه.";
   }
+  function f90InstallPlatforms(){
+    return [
+      {id:"ios",name:"Apple · iPhone",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.05 12.5c-.03-3.02 2.46-4.5 2.57-4.57-1.4-2.04-3.57-2.32-4.34-2.34-1.84-.2-3.62 1.08-4.56 1.08-.96 0-2.41-1.05-3.99-1.02-2.06.03-3.97 1.2-5.03 3.03-2.15 3.73-.55 9.22 1.55 12.25 1.03 1.49 2.25 3.16 3.87 3.1 1.55-.07 2.14-.99 3.99-.99s2.4.99 4 .96c1.65-.03 2.7-1.5 3.71-3a12.2 12.2 0 0 0 1.7-3.51c-.04-.02-3.23-1.24-3.26-4.98ZM14.29 3.52C15.14 2.49 15.72 1.06 15.56 0c-1.22.05-2.7.81-3.58 1.84-.78.88-1.47 2.35-1.28 3.73 1.36.1 2.75-.7 3.59-2.05Z" transform="translate(2 1) scale(.82)"/></svg>'},
+      {id:"android",name:"Android",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5.25 9a6.75 6.75 0 0 1 13.5 0ZM3.5 10.5h17v7.25A2.25 2.25 0 0 1 18.25 20H5.75a2.25 2.25 0 0 1-2.25-2.25ZM7 20h2v3H7Zm8 0h2v3h-2ZM2 11h1v7H2zm19 0h1v7h-1Z"/><path d="M6.5 2.5 9 6M17.5 2.5 15 6" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8.5" r=".7" fill="#111"/><circle cx="16" cy="8.5" r=".7" fill="#111"/></svg>'},
+      {id:"windows",name:"Windows",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M2 4.4 11 3v8H2zm10-1.56L22 1.4V11H12zM2 12h9v8.1L2 18.8zm10 0h10v10.6L12 21.1z"/></svg>'}
+
+    ];
+  }
+  function f90InstallShortcuts(devices=["ios","android","windows"],location=""){
+    const available=f90InstallPlatforms();
+    return '<span class="f90-install-shortcuts'+(location?' f90-install-'+location:'')+
+      '" role="group" aria-label="تثبيت التطبيق حسب النظام">'+devices.map(device=>{
+        const item=available.find(x=>x.id===device);
+        if(!item)return "";
+        return '<button type="button" class="f90-install-icon-btn" data-action="install-platform" data-platform="'+item.id+
+          '" aria-label="تثبيت F90 CARD على '+e(item.name)+'" title="تثبيت على '+e(item.name)+'">'+item.icon+'</button>';
+      }).join("")+'</span>';
+  }
+  async function f90RequestInstall(device){
+    if(isAppInstalled()){toast("التطبيق مثبت بالفعل على هذا الجهاز");return;}
+    const platform=["ios","android","windows"].includes(device)?device:f90InstallDevice();
+    const current=f90InstallDevice();
+    const guide=f90InstallHelp(platform);
+    if(platform==="ios"||platform!==current||!installPrompt){
+      modal("تثبيت F90 CARD",'<p>'+e(guide)+'</p>');
+      return;
+    }
+    const prompt=installPrompt;
+    installPrompt=null;
+    try{
+      await prompt.prompt();
+      // The browser owns approval and actual installation.
+      await prompt.userChoice;
+    }finally{syncInstallButtons();}
+  }
   function syncInstallButtons() {
     const installed=isAppInstalled();
     const header=$("installButton");
-    if(header) header.hidden=installed || !installPrompt;
+    if(header)header.hidden=installed;
     const action=$("f90InstallAction");
     document.querySelectorAll('[data-action="install"]').forEach(button=>{
       if(button !== action)button.hidden=installed;
@@ -1199,25 +1234,20 @@
     if(action){
       action.disabled=installed;
       const device=document.querySelector('.f90-install-platform[aria-pressed="true"]')?.dataset.platform || f90InstallDevice();
-      action.querySelector("span").textContent=installed?"التطبيق مثبت بالفعل":
-        installPrompt && device!=="ios"?"تثبيت الآن":"عرض خطوات التثبيت";
+      action.setAttribute("aria-label",installed?"التطبيق مثبت بالفعل":"تثبيت تطبيق F90 CARD على "+device);
     }
   }
   function installPage() {
     const selected=f90InstallDevice();
     const installIcon=e(C.safeUrl(S.settings.config?.app_icon_url || "./assets/icons/icon-192.png") || "./assets/icons/icon-192.png");
     const official=e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png");
-    const platforms=[
-      {id:"ios",name:"Apple · iPhone",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.05 12.5c-.03-3.02 2.46-4.5 2.57-4.57-1.4-2.04-3.57-2.32-4.34-2.34-1.84-.2-3.62 1.08-4.56 1.08-.96 0-2.41-1.05-3.99-1.02-2.06.03-3.97 1.2-5.03 3.03-2.15 3.73-.55 9.22 1.55 12.25 1.03 1.49 2.25 3.16 3.87 3.1 1.55-.07 2.14-.99 3.99-.99s2.4.99 4 .96c1.65-.03 2.7-1.5 3.71-3a12.2 12.2 0 0 0 1.7-3.51c-.04-.02-3.23-1.24-3.26-4.98ZM14.29 3.52C15.14 2.49 15.72 1.06 15.56 0c-1.22.05-2.7.81-3.58 1.84-.78.88-1.47 2.35-1.28 3.73 1.36.1 2.75-.7 3.59-2.05Z" transform="translate(2 1) scale(.82)"/></svg>'},
-      {id:"android",name:"Android",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5.25 9a6.75 6.75 0 0 1 13.5 0ZM3.5 10.5h17v7.25A2.25 2.25 0 0 1 18.25 20H5.75a2.25 2.25 0 0 1-2.25-2.25ZM7 20h2v3H7Zm8 0h2v3h-2ZM2 11h1v7H2zm19 0h1v7h-1Z"/><path d="M6.5 2.5 9 6M17.5 2.5 15 6" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8.5" r=".7" fill="#111"/><circle cx="16" cy="8.5" r=".7" fill="#111"/></svg>'},
-      {id:"windows",name:"Windows",icon:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M2 4.4 11 3v8H2zm10-1.56L22 1.4V11H12zM2 12h9v8.1L2 18.8zm10 0h10v10.6L12 21.1z"/></svg>'}
-    ];
+    const platforms=f90InstallPlatforms();
     main.innerHTML = '<section class="f90-install-premium" aria-labelledby="f90InstallHeading"><header class="f90-install-top"><img src="'+official+'" alt="شعار F90 CARD"><span class="f90-install-label">F90 DIGITAL EXPERIENCE</span></header>'+
       '<div class="f90-install-hero"><div class="f90-install-hero-icon"><img src="'+installIcon+'" alt="أيقونة المتجر"></div><div><h1 id="f90InstallHeading">تثبيت F90 CARD</h1><p>أضف المتجر إلى جهازك للوصول السريع إلى خدماتك ومحفظتك وطلباتك.</p></div></div>'+
-      '<div class="f90-install-platforms" role="group" aria-label="اختر نظام جهازك">'+platforms.map(x=>'<button type="button" class="f90-install-platform" data-action="select-install-platform" data-platform="'+x.id+'" aria-pressed="'+(x.id===selected)+'" aria-label="'+x.name+'">'+x.icon+'<span>'+x.name+'</span></button>').join("")+'</div>'+
+      '<div class="f90-install-platforms" role="group" aria-label="اختر نظام جهازك">'+platforms.map(x=>'<button type="button" class="f90-install-platform" data-action="install-platform" data-platform="'+x.id+'" aria-pressed="'+(x.id===selected)+'" aria-label="تثبيت على '+x.name+'">'+x.icon+'</button>').join("")+'</div>'+
       '<div class="f90-install-steps"><strong>طريقة التثبيت</strong><p id="f90InstallGuide">'+e(f90InstallHelp(selected))+'</p></div>'+
       '<p id="f90InstallState" class="f90-install-success" hidden>تم تشغيل المتجر بوضع التطبيق على هذا الجهاز.</p>'+
-      '<button type="button" id="f90InstallAction" class="f90-install-cta" data-action="install"><span>عرض خطوات التثبيت</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v4h16v-4"/></svg></button></section>';
+      '<div class="f90-install-page-icons">'+f90InstallShortcuts(["ios","android","windows"],"page")+'</div></section>';
     syncInstallButtons();
   }
   async function wallet() {
@@ -1600,7 +1630,7 @@
         ["03", "متابعة من الحساب", "راجع حالة طلباتك وسجل حركات المحفظة ضمن صفحات مخصصة."],
         ["04", "تواصل مباشر", "اطلب المساعدة من فريق المتجر عبر صفحة الدعم."]
       ];
-      main.innerHTML = `<section class="f90-about-hero" aria-labelledby="f90-about-title"><div class="f90-about-eyebrow">F90 CARD · عالم الخدمات الرقمية</div><div class="f90-about-split"><div class="f90-about-copy"><span class="f90-about-kicker">وجهتك الرقمية بطابع مختلف</span><h1 id="f90-about-title">أف تسعين كارد <span>أقرب لعالمك.</span></h1><p>${e(description)}</p><div class="f90-about-cta"><a class="button" href="#/">استكشف المتجر ${I("arrow-left")}</a><a class="button secondary" href="#/support">تواصل معنا ${I("support")}</a></div></div><div class="f90-about-art" aria-label="هوية أف تسعين كارد"><img src="./f90-logo.png" alt="شعار أف تسعين كارد الأصلي" loading="eager"><div class="f90-about-art-caption">F90 CARD <span>خدمات رقمية · تجربة عربية</span></div></div></div><div class="f90-about-glow f90-about-glow-a" aria-hidden="true"></div><div class="f90-about-glow f90-about-glow-b" aria-hidden="true"></div></section><section class="f90-about-body"><div class="f90-about-heading"><span class="eyebrow">بُنيت التجربة لتكون أسهل</span><h2>كل خطوة في مكانها.</h2><p class="muted">تصميم واضح، تفاصيل مقروءة، ووصول سريع للخدمات والحساب.</p></div><div class="f90-about-features">${highlights.map(([n,t,d]) => `<article class="f90-about-feature"><span class="f90-about-number">${n}</span><h3>${t}</h3><p>${d}</p></article>`).join("")}</div><div class="f90-about-final"><div><span class="eyebrow">رحلتك تبدأ هنا</span><h2>اختر الخدمة. والباقي واضح.</h2><p>تصفح خدماتنا وتعرف على التفاصيل والسعر قبل الشراء.</p></div><div class="f90-about-cta"><a class="button" href="#/">تصفح الأقسام ${I("arrow-left")}</a><a class="button secondary" href="#/policy/terms">الشروط والأحكام</a></div></div></section>`;
+      main.innerHTML = `<section class="f90-about-hero" aria-labelledby="f90-about-title"><div class="f90-about-eyebrow">F90 CARD · عالم الخدمات الرقمية</div><div class="f90-about-split"><div class="f90-about-copy"><span class="f90-about-kicker">وجهتك الرقمية بطابع مختلف</span><h1 id="f90-about-title">أف تسعين كارد <span>أقرب لعالمك.</span></h1><p>${e(description)}</p><div class="f90-about-cta"><a class="button" href="#/">استكشف المتجر ${I("arrow-left")}</a>${f90InstallShortcuts(["ios","android"],"about")}</div></div><div class="f90-about-art" aria-label="هوية أف تسعين كارد"><img src="./f90-logo.png" alt="شعار أف تسعين كارد الأصلي" loading="eager"><div class="f90-about-art-caption">F90 CARD <span>خدمات رقمية · تجربة عربية</span></div></div></div><div class="f90-about-glow f90-about-glow-a" aria-hidden="true"></div><div class="f90-about-glow f90-about-glow-b" aria-hidden="true"></div></section><section class="f90-about-body"><div class="f90-about-heading"><span class="eyebrow">بُنيت التجربة لتكون أسهل</span><h2>كل خطوة في مكانها.</h2><p class="muted">تصميم واضح، تفاصيل مقروءة، ووصول سريع للخدمات والحساب.</p></div><div class="f90-about-features">${highlights.map(([n,t,d]) => `<article class="f90-about-feature"><span class="f90-about-number">${n}</span><h3>${t}</h3><p>${d}</p></article>`).join("")}</div><div class="f90-about-final"><div><span class="eyebrow">رحلتك تبدأ هنا</span><h2>اختر الخدمة. والباقي واضح.</h2><p>تصفح خدماتنا وتعرف على التفاصيل والسعر قبل الشراء.</p></div><div class="f90-about-cta"><a class="button" href="#/">تصفح الأقسام ${I("arrow-left")}</a><a class="button secondary" href="#/policy/terms">الشروط والأحكام</a></div></div></section>`;
       return;
     }
     main.innerHTML = `<div class="policy-layout"><nav class="policy-nav">${Object.entries(
@@ -2564,21 +2594,15 @@
       } else if (action === "api-jump") {
         const target = document.getElementById(button.dataset.target);
         if (target && main.contains(target)) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else if (action === "select-install-platform") {
+      } else if (action === "install-platform") {
         const device=ev.target.closest("[data-platform]")?.dataset.platform;
         if (!["ios","android","windows"].includes(device)) return;
-        document.querySelectorAll(".f90-install-platform").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.platform===device)));
-        const guide=$("f90InstallGuide");
-        if(guide)guide.textContent=f90InstallHelp(device);
-        syncInstallButtons();
+        document.querySelectorAll(".f90-install-platform").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.platform===device)));
+        const guide=$("f90InstallGuide");if(guide)guide.textContent=f90InstallHelp(device);
+        await f90RequestInstall(device);
       } else if (action === "install") {
-        if(isAppInstalled()){toast("المتجر مثبت على جهازك بالفعل");return;}
         const device=document.querySelector('.f90-install-platform[aria-pressed="true"]')?.dataset.platform || f90InstallDevice();
-        if(installPrompt && device!=="ios"){
-          await installPrompt.prompt();
-          installPrompt=null;
-          syncInstallButtons();
-        } else modal("طريقة تثبيت F90 CARD",'<p>'+e(f90InstallHelp(device))+'</p>');
+        await f90RequestInstall(device);
       }
     } catch (err) {
       toast(message(err));
@@ -2620,7 +2644,6 @@
     S.currencyPreference = true;
     chrome();route();
   });
-  $("installButton").addEventListener("click", () => { location.hash = "#/install"; });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
       closeModal();
