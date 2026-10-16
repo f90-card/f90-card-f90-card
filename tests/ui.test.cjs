@@ -152,3 +152,42 @@ test("install card has selectable native platform icons and device-specific inst
     h.cleanup();
   }
 });
+
+
+test("home deposit CTA and install shortcuts use device logos instead of text buttons", async () => {
+  const h = await harness();
+  try {
+    const intro = h.document.querySelector(".f90-home-intro");
+    assert.ok(intro?.querySelector('a[href="#/deposit"]'), "home discovery button goes straight to deposits");
+    assert.match(intro.textContent, /إيداع نقود الآن/);
+    const footer = [...h.document.querySelectorAll(".f90-install-footer .f90-install-icon-btn")];
+    assert.deepEqual(footer.map(x=>x.dataset.platform), ["ios","android","windows"]);
+    for(const button of footer){
+      assert.ok(button.querySelector("svg"), "platform logo rendered");
+      assert.ok(button.getAttribute("aria-label"), "logo-only buttons remain accessible");
+      assert.equal(button.textContent.trim(), "", "no redundant install-now text");
+    }
+  } finally { h.cleanup(); }
+});
+
+test("about page installs with icon-only iPhone and Android actions", async () => {
+  const h = await harness("index.html", {hash:"#/policy/about",guest:true});
+  try {
+    const group = h.document.querySelector(".f90-about-cta .f90-install-about");
+    assert.ok(group, "install shortcuts appear inside about card");
+    assert.deepEqual([...group.querySelectorAll("[data-action='install-platform']")].map(x=>x.dataset.platform),
+      ["ios","android"]);
+    for(const el of group.querySelectorAll("button")){
+      assert.ok(el.querySelector("svg"));
+      assert.equal(el.textContent.trim(),"");
+    }
+  } finally {h.cleanup();}
+});
+
+test("welcome action launches deposit screen and shows platform icon shortcuts", async () => {
+  const h=await harness("index.html",{hash:"#/welcome",guest:true});
+  try {
+    assert.ok(h.document.querySelector('.f90-experience-actions a[href="#/deposit"]'));
+    assert.equal(h.document.querySelectorAll(".f90-install-hero .f90-install-icon-btn").length,3);
+  } finally {h.cleanup();}
+});
