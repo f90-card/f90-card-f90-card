@@ -14,15 +14,19 @@ test("new deposit and salary modules parse without breaking the existing store",
    assert.doesNotThrow(()=>new vm.Script(code,{filename:file}));
 });
 
-test("deposit pages use text-only methods and an accessible payment receipt form",()=>{
+test("deposit pages restore existing method pictures and barcode while preserving secure form",()=>{
  const deposit=app.slice(app.indexOf("  function deposit(methodId) {"),app.indexOf("  function orderRecord(o) {"));
- assert.match(deposit,/f90-deposit-methods-list/);
+ assert.match(deposit,/method-grid f90-deposit-methods-with-images/);
+ assert.match(deposit,/method-tile f90-method-active/);
+ assert.match(deposit,/image\(x\.image_url,x\.name_ar,"f90-deposit-method-art"\)/);
+ assert.match(deposit,/f90-deposit-detail-art/);
+ assert.match(deposit,/image\(m\.image_url,m\.name_ar,"f90-deposit-method-art"\)/);
+ assert.match(deposit,/C\.safeUrl\(m\.barcode_url\)/);
  assert.match(deposit,/f90-deposit-request-card/);
  assert.match(deposit,/f90-deposit-destination/);
  assert.match(deposit,/f90-deposit-output/);
  assert.match(deposit,/name="receipt" required/);
  assert.match(deposit,/accepted_currencies/);
- assert.doesNotMatch(deposit,/<img|method-tile|f90-deposit-barcode/);
 });
 
 test("manager can independently edit bank deposit destination, min, instructions and reference",()=>{
@@ -40,7 +44,7 @@ test("Xena receipt and optional note are private and payout is authoritative",()
  assert.match(salary,/p_receipt:path/);
  assert.match(salary,/name="note"/);
  assert.match(salary,/data-salary-target/);
- assert.match(salary,/salary\?'':'<div class="f90-special-banner"/);
+ assert.match(salary,/'<div class="f90-special-banner"><img src='/);
  assert.match(sql,/storage\.objects/);
  assert.match(sql,/receipt_path/);
  assert.match(sql,/client_note/);
