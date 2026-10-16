@@ -384,7 +384,9 @@ document.addEventListener("click",async ev=>{
     {p_id:row.dataset.id,p_approve:approved,p_note:note};
   const {error}=await window.F90API.client.rpc(fn,args);
   if(error)throw error;
-  await renderRequests(document.getElementById("adminMain"));
+  const adminMain=document.getElementById("adminMain");
+  if(document.getElementById("f90SalaryInbox"))await renderSalaryInbox(adminMain);
+  else await renderRequests(adminMain);
  }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
 });
 window.F90SpecialAdmin={render,salaryEditor,renderSalaryInbox};
