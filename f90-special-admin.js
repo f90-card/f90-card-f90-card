@@ -190,14 +190,17 @@ async function renderRequests(main){
  main.innerHTML=heading("طلبات سحب الرواتب والتحويلات والخدمات","سحب الرواتب يُعتمد لإضافة رصيد؛ التحويل يُخصم عند تقديمه ويُسترد عند رفضه. باقي الخدمات طلبات تواصل.")+
  '<div id="f90RequestRecords" class="records"><p>جارٍ جلب الطلبات…</p></div>';
  const client=window.F90API.client;
- const [sp,sal,tr]=await Promise.all([
+ const results=await Promise.allSettled([
    client.from("f90_special_requests").select("*").order("created_at",{ascending:false}).limit(150),
    client.rpc("f90_list_salary"),
    client.rpc("f90_list_transfers")
  ]);
+ const [sp,sal,tr]=results.map(x=>x.status==="fulfilled"?x.value:
+    {data:[],error:x.reason||new Error("تعذّر جلب السجلات")});
  const el=document.getElementById("f90RequestRecords");if(!el)return;
  const errors=[sp.error,sal.error,tr.error].filter(Boolean);
- if(errors.length){el.textContent="تعذّر تحميل بعض القوائم: "+errors.map(x=>x.message).join(" · ");return;}
+ const warnings=errors.length?'<div class="notice warning">بعض قوائم الطلبات غير متاحة مؤقتًا، لكن الطلبات الأخرى تظهر: '+
+   errors.map(x=>esc(x.message||"تعذر الاتصال")).join(" · ")+'</div>':"";
  const records=[
   ...(sp.data||[]).map(x=>({...x,source:"special",subtitle:x.service,contact:x.contact_whatsapp,
     qty:x.amount_units,total:x.gross_usd,net:x.net_usd,note:x.client_details})),
@@ -209,7 +212,7 @@ async function renderRequests(main){
  ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
  const kinds={salary:"سحب راتب",transfer:"تحويل أموال",account:"حساب Xena",design:"تصميم",website:"إنشاء موقع"};
  const states={pending:"بانتظار المراجعة",processing:"قيد المعالجة",completed:"مكتمل",rejected:"مرفوض",approved:"معتمد"};
- el.innerHTML=records.length?records.map(x=>
+ el.innerHTML=warnings+(records.length?records.map(x=>
  '<article class="record f90-special-request" data-id="'+esc(x.id)+'" data-source="'+esc(x.source)+'"><div class="record-main">'+
  '<h3>'+esc(kinds[x.kind]||x.kind)+' · '+esc(x.subtitle)+'</h3>'+
  '<p>الحساب/التواصل: '+esc(x.contact||x.account_id||"—")+'</p>'+
@@ -224,8 +227,50 @@ async function renderRequests(main){
  (x.source==="special"?'<button class="button secondary small" data-f90-review="processing">قيد المعالجة</button>':'')+
  '<button class="button small" data-f90-review="completed">'+(x.source==="salary"?"اعتماد وإضافة الرصيد":x.source==="transfer"?"اعتماد التحويل":"تم التنفيذ")+'</button>'+
  '<button class="button ghost small" data-f90-review="rejected">'+(x.source==="transfer"?"رفض واسترداد كامل المبلغ":"رفض الطلب")+'</button></div>':'')+
- '</article>').join(""):'<p>لا توجد طلبات حاليًا.</p>';
+ '</article>').join(""):'<p>لا توجد طلبات حاليًا.</p>');
 }
+
+async function renderSalaryInbox(main){
+ // Salary deposits are a separate financial table. Never hide these requests
+ // when ordinary deposits or unrelated transfer requests fail to load.
+ let host=document.getElementById("f90SalaryInbox");
+ if(!host){
+   main.insertAdjacentHTML("beforeend",
+     '<section class="panel" id="f90SalaryInbox"><h2>طلبات إيداع رواتب Xena Live</h2><div data-salary-content role="status">جارٍ جلب الطلبات…</div></section>');
+   host=document.getElementById("f90SalaryInbox");
+ }
+ const content=host?.querySelector("[data-salary-content]");
+ if(!content)return;
+ const result=await window.F90API.client.rpc("f90_list_salary").catch(error=>({error,data:[]}));
+ if(!document.contains(host))return;
+ if(result.error){
+   content.innerHTML='<div class="notice warning">تعذر جلب طلبات رواتب Xena: '+
+     esc(result.error.message||"خطأ اتصال")+
+     ' <button class="button secondary small" type="button" data-f90-reload-salary>إعادة المحاولة</button></div>';
+   return;
+ }
+ const records=(result.data||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ const pending=records.filter(x=>x.status==="pending").length;
+ content.innerHTML='<p class="muted small">'+esc(pending)+' بانتظار الاعتماد · '+esc(records.length)+' طلب سحب راتب. اعتماد الطلب يضيف المقابل الدولاري مرة واحدة فقط.</p>'+
+ (records.length?records.map(x=>
+   '<article class="record f90-special-request" data-id="'+esc(x.id)+'" data-source="salary">'+
+   '<div class="record-main"><h3>سحب رواتب Xena Live · '+esc(x.status==="pending"?"بانتظار المراجعة":x.status==="approved"?"معتمد":"مرفوض")+'</h3>'+
+   '<p>ID حساب Xena: '+esc(x.account_id)+'</p>'+
+   '<p>الكوينز المسحوبة: '+esc(x.coins)+'</p>'+
+   '<p>المقابل: '+esc(x.payout_amount)+' '+esc(x.payout_currency)+' · رصيد المحفظة: '+esc(x.usd_amount)+' USD</p>'+
+   (x.client_note?'<p>إشعار العميل: '+esc(x.client_note)+'</p>':'')+
+   (x.receipt_path?'<button type="button" class="button secondary small" data-f90-salary-receipt="'+esc(x.id)+'">فتح الإيصال</button><span data-f90-receipt-status></span>':'')+
+   '<small>التاريخ: '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small></div>'+
+   (x.status==="pending"?'<div class="f90-request-actions"><input type="text" maxlength="1200" aria-label="ملاحظة المراجعة" placeholder="ملاحظة الإدارة">'+
+   '<button class="button small" type="button" data-f90-review="completed">اعتماد وإضافة الرصيد</button>'+
+   '<button class="button ghost small" type="button" data-f90-review="rejected">رفض الطلب</button></div>':'')+
+   '</article>').join(""):'<p>لا توجد طلبات سحب رواتب.</p>');
+}
+document.addEventListener("click",ev=>{
+ if(!ev.target.closest?.("[data-f90-reload-salary]"))return;
+ ev.preventDefault();
+ void renderSalaryInbox(document.getElementById("adminMain"));
+});
 async function render(kind,main,settings){
  if(kind==="special-requests")return renderRequests(main);
  return renderSettings(main,settings);
@@ -342,7 +387,7 @@ document.addEventListener("click",async ev=>{
   await renderRequests(document.getElementById("adminMain"));
  }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
 });
-window.F90SpecialAdmin={render,salaryEditor};
+window.F90SpecialAdmin={render,salaryEditor,renderSalaryInbox};
 
 document.addEventListener('click',ev=>{
  if(ev.target.closest?.('[data-add-service]'))document.getElementById('f90ServiceRows')?.insertAdjacentHTML('beforeend',catalogRow({id:crypto.randomUUID(),kind:'design',name_ar:'',enabled:true}));
