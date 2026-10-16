@@ -43,7 +43,11 @@ let visibleSalaryOptions=[];
 let customerSalaryCurrency="USD";
 let canSubmitSalary=false;
 let canSubmitTransfer=false;
-const targetMoney=(amount,code)=>Number(amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+code;
+const targetMoney=(amount,code)=>Number(amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3})+' '+code;
+const salaryCredit=(usd)=>{
+ const rate=visibleRates.find(x=>x.currency===customerSalaryCurrency&&x.is_enabled&&Number(x.per_usd)>0);
+ return rate?targetMoney(Number(usd)*Number(rate.per_usd),customerSalaryCurrency):"—";
+};
 function home(settings){
  const c=conf(settings);
  const ads=[["digital","الخدمات الرقمية"],["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"]];
@@ -111,27 +115,27 @@ function render(kind,settings,user,selected="",rates=[]){
  let fields="";
  if(salary){
    const min=Math.max(100000,Number(sal.minimum_coins)||100000);
-   fields='<div class="f90-deposit-note-top"><strong>تأكيد رواتب Xena Live</strong>'+
+   fields=(desc||sal.processing_notice_ar?'<details class="f90-finance-help"><summary>تعليمات سحب الرواتب</summary>'+
      '<p>'+esc(desc)+'</p>'+
-     (sal.processing_notice_ar?'<p class="f90-deposit-extra-info">'+esc(sal.processing_notice_ar)+'</p>':'')+
-     '</div>'+
+     (sal.processing_notice_ar?'<p>'+esc(sal.processing_notice_ar)+'</p>':'')+
+     '</details>':'')+
    input("account",esc(sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه"),"text",'required minlength="2" maxlength="120" autocomplete="off" placeholder="معرّف حسابك في Xena Live"')+
    input("amount","كمية الكوينز للسحب","number",'required min="'+min+'" step="1" inputmode="numeric" value="'+min+'"')+
-   '<p class="f90-special-tiny">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز • لا يوجد سقف ثابت معلن</p>'+
-   '<div class="f90-fixed-account-currency" role="status"><small>عملة سحب الراتب في حسابك</small>'+
-     '<strong>'+esc(visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency)?.label_ar||customerSalaryCurrency)+' ('+esc(customerSalaryCurrency)+')</strong>'+
-     '<span>لا يمكن تغيير العملة أثناء تقديم الطلب؛ يمكنك تعديل عملة الحساب من شريط العملات العام.</span></div>'+
+   '<small class="f90-finance-hint">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز</small>'+
+   '<div class="f90-fixed-account-currency" role="status"><small>عملة حسابك</small>'+
+     '<strong>'+esc(visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency)?.label_ar||customerSalaryCurrency)+' ('+esc(customerSalaryCurrency)+')</strong></div>'+
    '<input name="payout_currency" type="hidden" value="'+esc(customerSalaryCurrency)+'">'+
    (!visibleSalaryOptions.some(x=>x.currency===customerSalaryCurrency)?
      '<p class="f90-special-alert">سحب الرواتب غير متاح حاليًا بعملة حسابك؛ اختر عملة أخرى من الشريط العام.</p>':'')+
-   '<div class="f90-salary-quote" role="status" aria-live="polite">'+
-     '<div><span>كمية الكوينز المسحوبة</span><strong data-salary-coins>—</strong></div>'+
-     '<div><span>قيمة الإيداع بالعملة المختارة</span><strong data-salary-target>—</strong></div>'+
-     '<div><span>الرصيد الذي سيضاف لمحفظة F90 بعد الموافقة</span><strong data-salary-usd>—</strong></div>'+
-     '<p data-salary-rate class="f90-special-tiny"></p></div>'+
-   '<label class="field"><span>إشعار أو ملاحظة للطلب (اختياري)</span><textarea name="note" rows="2" maxlength="1200" placeholder="رقم العملية أو تفاصيل التأكيد"></textarea></label>'+
-   '<label class="field f90-deposit-upload"><span>إرفاق صورة تأكيد سحب الراتب</span><input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp"><small>صورة JPG أو PNG أو WEBP بحجم لا يتجاوز 5 ميجابايت. تحفظ بشكل خاص لمراجعة الإدارة.</small></label>'+
-   '<p class="f90-special-tiny">عملة المحفظة الأساسية هي الدولار. تعرض العملات الأخرى المقابل بحسب تسعير سحب الرواتب من الإدارة؛ ويُضاف ما يعادلها بالدولار بعد الموافقة.</p>';
+   '<div class="f90-salary-quote f90-finance-simple-quote" role="status" aria-live="polite">'+
+     '<small>سينضاف لرصيدك بعد الموافقة</small>'+
+     '<strong data-salary-target>—</strong>'+
+     '<span data-salary-coins hidden></span><span data-salary-usd hidden></span>'+
+     '<p data-salary-rate hidden></p></div>'+
+   '<details class="f90-finance-help"><summary>إضافة ملاحظة (اختياري)</summary>'+
+     '<label class="field"><span>ملاحظة للإدارة</span><textarea name="note" rows="2" maxlength="1200" placeholder="ملاحظة أو رقم تأكيد"></textarea></label></details>'+
+   '<label class="field f90-deposit-upload"><span>صورة تأكيد السحب</span><input name="receipt" type="file" required accept="image/jpeg,image/png,image/webp"><small>JPG أو PNG أو WEBP، بحد أقصى 5 ميجابايت</small></label>'+
+   '<p class="f90-special-tiny">لا يُضاف الرصيد إلا بعد موافقة الإدارة.</p>';
  }else if(transfer){
    fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
      methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+' · '+esc(x.currency||"USD")+'</option>').join("")+'</select></label>'+
@@ -165,7 +169,8 @@ function render(kind,settings,user,selected="",rates=[]){
  (transfer?'<div data-method-info></div>':'')+
  (!salary&&chosenService?.image_url?'<img class="f90-service-art" src="'+esc(chosenService.image_url)+'" alt="'+esc(chosenService.name_ar)+'">':'')+
  notice+'<form id="f90SpecialForm" data-kind="'+esc(d)+'"><input type="hidden" name="kind" value="'+esc(d)+'">'+
- fields+'<p class="f90-special-footnote">'+esc(footnote)+'</p><p class="f90-special-alert" data-status hidden></p>'+
+ fields+(salary?'':'<p class="f90-special-footnote">'+esc(footnote)+'</p>')+
+ '<div class="f90-finance-review" data-review hidden></div><p class="f90-special-alert" data-status hidden></p>'+
  '<button class="button full" type="submit" '+(!enabled||!isSigned||((salary||transfer)&&!isVerified)?"disabled":"")+'>'+
  (transfer?"تأكيد طلب التحويل":"إرسال الطلب للمراجعة")+'</button></form></div></section>';
  updateEstimate(document.getElementById("f90SpecialForm"));
@@ -183,12 +188,9 @@ function updateEstimate(form){
      Number.isFinite(rate)&&rate>0 && Number.isFinite(perUsd)&&perUsd>0;
    const amount=valid?v/100000*rate:0, usd=valid?amount/perUsd:0;
    form.querySelector("[data-salary-coins]").textContent=v.toLocaleString("en-US")+" كوينز";
-   form.querySelector("[data-salary-target]").textContent=valid?amount.toLocaleString("en-US",{maximumFractionDigits:6})+" "+(opt.label_ar||opt.currency):"أدخل كمية صحيحة واختر عملة متاحة";
+   form.querySelector("[data-salary-target]").textContent=valid?salaryCredit(usd):"—";
    form.querySelector("[data-salary-usd]").textContent=valid?fmt(usd):"—";
-   form.querySelector("[data-salary-rate]").textContent=opt?
-     "لكل 100,000 كوينز: "+rate.toLocaleString("en-US")+" "+(opt.label_ar||opt.currency)+
-     " · كل دولار بالمحفظة = "+perUsd.toLocaleString("en-US")+" "+opt.currency+
-     " · التسعير النهائي يُثبت على الخادم عند إرسال الطلب.":"لا توجد عملة إيداع مفعّلة لهذه الخدمة.";
+   form.querySelector("[data-salary-rate]").textContent=opt?"تسعير الرواتب معتمد لدى الإدارة.":"";
    const btn=form.querySelector('button[type="submit"]');
    if(btn)btn.disabled=!canSubmitSalary||!valid||!Number.isFinite(usd)||usd<=0;
    return;
@@ -223,8 +225,8 @@ document.addEventListener("click",ev=>{
     btn.setAttribute("aria-pressed",String(btn===opt)));
  updateEstimate(form);
 });
-document.addEventListener("input",ev=>{if(ev.target.closest?.("#f90SpecialForm"))updateEstimate(ev.target.form);});
-document.addEventListener("change",ev=>{if(ev.target.closest?.("#f90SpecialForm"))updateEstimate(ev.target.form);});
+document.addEventListener("input",ev=>{if(ev.target.closest?.("#f90SpecialForm")){const f=ev.target.form;if(f?.dataset.reviewReady){delete f.dataset.reviewReady;const box=f.querySelector("[data-review]");if(box)box.hidden=true;const btn=f.querySelector('button[type="submit"]');if(btn)btn.textContent="إرسال الطلب للمراجعة";}updateEstimate(f);}});
+document.addEventListener("change",ev=>{if(ev.target.closest?.("#f90SpecialForm")){const f=ev.target.form;if(f?.dataset.reviewReady){delete f.dataset.reviewReady;const box=f.querySelector("[data-review]");if(box)box.hidden=true;const btn=f.querySelector('button[type="submit"]');if(btn)btn.textContent="إرسال الطلب للمراجعة";}updateEstimate(f);}});
 document.addEventListener("submit",async ev=>{
  if(ev.target?.id!=="f90SpecialForm")return;
  ev.preventDefault();
@@ -245,7 +247,22 @@ document.addEventListener("submit",async ev=>{
    const ok=window.confirm("سيُخصم من محفظتك تقريبًا "+fmt(total)+" مقابل وصول "+targetMoney(value,currency)+". يؤكد الخادم السعر لحظة الإرسال. تأكيد تقديم الطلب؟");
    if(!ok)return;
  }
- button.disabled=true;form.dataset.busy="1";out.hidden=false;out.textContent="جارٍ إرسال الطلب للتحقق على الخادم…";
+ if(kind==="salary"&&!form.dataset.reviewReady){
+   const option=visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency);
+   if(!option||!Number.isSafeInteger(value)||value<visibleConfig.salary_minimum_coins)return;
+   const usd=(value/100000*Number(option.per_100k))/Number(option.units_per_usd);
+   const review=form.querySelector("[data-review]");
+   if(review){
+     review.hidden=false;
+     review.innerHTML='<strong>مراجعة طلب السحب</strong><span>'+esc(value.toLocaleString("en-US"))+' كوينز</span>'+
+       '<strong>'+esc(salaryCredit(usd))+'</strong><small>يضاف بعد موافقة الإدارة فقط</small>';
+   }
+   form.dataset.reviewReady="1";
+   button.textContent="تأكيد وإرسال الطلب";
+   review?.scrollIntoView?.({block:"nearest",behavior:"smooth"});
+   return;
+ }
+ button.disabled=true;form.dataset.busy="1";out.hidden=false;out.textContent="جارٍ تسجيل الطلب…";
  try{
    let result;
    if(kind==="salary"){
@@ -253,9 +270,6 @@ document.addEventListener("submit",async ev=>{
      const option=visibleSalaryOptions.find(x=>x.currency===currency);
      if(!option || !Number.isSafeInteger(value) || value<visibleConfig.salary_minimum_coins)throw Error("راجع كمية الكوينز وعملة الإيداع.");
      const quote=value/100000*Number(option.per_100k);
-     if(!window.confirm("سحب "+value.toLocaleString("en-US")+" كوينز مقابل إيداع "+quote.toLocaleString("en-US",{maximumFractionDigits:6})+" "+(option.label_ar||currency)+"، وسيُضاف المقابل بالدولار إلى محفظتك فقط بعد موافقة الإدارة. تأكيد الإرسال؟")){
-       button.disabled=false;delete form.dataset.busy;out.hidden=true;return;
-     }
      const proof=d.get("receipt");
      if(!proof||!["image/jpeg","image/png","image/webp"].includes(proof.type)||proof.size===0||proof.size>5242880)
        throw Error("ارفع صورة تأكيد سحب الراتب بصيغة مدعومة، بحد أقصى 5 ميجابايت.");
@@ -288,14 +302,24 @@ document.addEventListener("submit",async ev=>{
    }
    if(result.error)throw result.error;
    const data=result.data||{};
-   out.textContent=kind==="transfer"?
-     "تم تسجيل التحويل وخصم الإجمالي من المحفظة، ورقم المتابعة "+String(data.id||"").slice(0,8)+".":
-     kind==="salary"?"تم إرسال طلب سحب الراتب للمراجعة. قيمة الإيداع المسجلة: "+Number(data.payout_amount||0).toLocaleString("en-US",{maximumFractionDigits:6})+" "+String(data.payout_currency||"USD")+"، وتعادل "+fmt(data.usd_amount||0)+" في المحفظة بعد الاعتماد. رقم "+String(data.id||"").slice(0,8):
-     "تم إرسال الطلب للمراجعة برقم "+String(data.id||"").slice(0,8)+". لم يتم خصم رصيد.";
+   if(kind==="salary"){
+     form.innerHTML='<div class="f90-finance-success" role="status" aria-live="polite">'+
+       '<span class="f90-finance-success-icon" aria-hidden="true">✓</span>'+
+       '<h2>تم إرسال طلب سحب الراتب</h2><p>الطلب بانتظار مراجعة الإدارة.</p>'+
+       '<div class="f90-finance-success-amount"><small>سينضاف لرصيدك عند الموافقة</small>'+
+       '<strong>'+esc(salaryCredit(Number(data.usd_amount||0)))+'</strong></div>'+
+       '<small>رقم المتابعة: '+esc(String(data.id||"").slice(0,8))+'</small>'+
+       '<a class="button full" href="#/deposits">سجل الإيداعات</a>'+
+       '<a class="f90-finance-success-back" href="#/deposit">طرق الإيداع</a></div>';
+   }else{
+     out.textContent=kind==="transfer"?
+       "تم تسجيل التحويل، رقم المتابعة "+String(data.id||"").slice(0,8):
+       "تم تسجيل الطلب، رقم المتابعة "+String(data.id||"").slice(0,8);
+     form.reset();updateEstimate(form);
+   }
    form.dataset.submitted="1";delete form.dataset.requestKey;
    delete form.dataset.proofPath;delete form.dataset.proofKey;
    delete form.dataset.proofSignature;delete form.dataset.proofData;
-   form.reset();updateEstimate(form);
  }catch(err){out.textContent=String(err?.message||"تعذر تسجيل الطلب");button.disabled=false;}
  finally{delete form.dataset.busy;}
 });
