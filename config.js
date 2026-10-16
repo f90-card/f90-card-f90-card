@@ -35,7 +35,18 @@
     candidate.removeItem(probe);
     storage = candidate;
   } catch {
-    console.warn("F90 browser storage unavailable: temporary session mode");
+    // Some Android browser shells block localStorage yet allow sessionStorage.
+    // A tab-scoped persisted session survives a page reload without exposing
+    // credentials to the URL or storing them in application custom keys.
+    try {
+      const candidate=window.sessionStorage;
+      const probe="f90-session-storage-probe";
+      candidate.setItem(probe,"1");candidate.removeItem(probe);
+      storage=candidate;
+      console.warn("F90 local storage unavailable: using tab session storage");
+    } catch {
+      console.warn("F90 browser storage unavailable: temporary in-memory session");
+    }
   }
   try {
     window.f90Supabase = window.supabase.createClient(
