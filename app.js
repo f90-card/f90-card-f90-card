@@ -1921,7 +1921,26 @@
             "البريد الإلكتروني أو كلمة المرور غير صحيحين، أو الحساب غير مفعّل",
           );
       }
-      await refreshMe();
+      const restored = await refreshMe();
+      if(!restored){
+        // Supabase may have accepted the password while the F90 profile API
+        // is temporarily offline. Keep the authenticated session intact and
+        // do not bounce the customer back to the login page.
+        let validSession=false;
+        try{validSession=!!(await A.client.auth.getSession())?.data?.session;}catch{}
+        if(validSession){
+          const errorEl=$("authError");
+          if(errorEl)errorEl.textContent="تم تسجيل الدخول، لكن تعذّر تحميل بيانات حسابك مؤقتًا. احتفظنا بالجلسة؛ حدّث الصفحة عند عودة الاتصال.";
+          S.walletStale=true;
+          return;
+        }
+        throw new Error("تعذّر تأكيد جلسة الدخول. حاول مجددًا.");
+      }
+      if(!S.settings?.store_name){
+        const errorEl=$("authError");
+        if(errorEl)errorEl.textContent="تم تسجيل الدخول. تعذّر تحميل بيانات المتجر مؤقتًا؛ حدّث الصفحة عند عودة الاتصال.";
+        return;
+      }
       chrome();
       if (location.hash === "#/profile") await route();
       else location.hash = "#/profile";
