@@ -21,7 +21,10 @@ test("Currency belongs to account profile, not local browser choice",()=>{
 
 test("deposit is submitted only in account currency regardless of form edits",()=>{
  const form=app.slice(app.indexOf("  function deposit(methodId) {"),app.indexOf("  function orderRecord(o) {"));
- assert.match(form,/f90-fixed-account-currency/);
+ // The account currency remains authoritative, even though we intentionally
+ // removed its decorative panel from the compact deposit form.
+ assert.match(form,/const accountCurrency=S\.me\?\.profile\?\.account_currency\|\|"USD"/);
+ assert.doesNotMatch(form,/f90-fixed-account-currency/);
  assert.match(form,/input type="hidden" name="currency"/);
  assert.doesNotMatch(form,/<select name="currency"/);
  assert.match(form,/accountCurrency=S\.me\?\.profile\?\.account_currency\|\|"USD"/);
