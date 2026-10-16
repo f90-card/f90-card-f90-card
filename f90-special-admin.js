@@ -218,6 +218,7 @@ async function renderRequests(main){
  '<p>الحساب/التواصل: '+esc(x.contact||x.account_id||"—")+'</p>'+
  '<p>التفاصيل: '+esc(x.note||"—")+'</p>'+
  '<p>الكمية: '+esc(x.qty||0)+' | القيمة: $'+esc(x.total)+' | الصافي: $'+esc(x.net)+'</p>'+
+ (x.source==="salary"?'<p>عملة طلب الراتب: '+esc(x.payout_currency||"USD")+'</p>':'')+
  (x.source==="salary"?'<p>المقابل بعملة الإيداع: '+esc(x.payout_amount||0)+' '+esc(x.payout_currency||"USD")+'</p>'+
  (x.receipt_path?'<div class="f90-salary-receipt-action"><button class="button secondary small" type="button" data-f90-salary-receipt="'+esc(x.id)+'">عرض إيصال سحب الراتب</button><span data-f90-receipt-status></span></div>':''):'')+
  '<small>معرّف العميل: '+esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
@@ -262,6 +263,8 @@ async function renderSalaryInbox(main){
    '<article class="record f90-special-request" data-id="'+esc(x.id)+'" data-source="salary">'+
    '<div class="record-main"><h3>سحب رواتب Xena Live · '+esc(x.status==="pending"?"بانتظار المراجعة":x.status==="approved"?"معتمد":"مرفوض")+'</h3>'+
    '<p>ID حساب Xena: '+esc(x.account_id)+'</p>'+
+   '<p>عملة حساب العميل الحالية: <strong>'+esc(x.customer?.account_currency||"USD")+'</strong></p>'+
+   '<p>عملة العميل وقت طلب الراتب: '+esc(x.payout_currency)+'</p>'+
    '<p>الكوينز المسحوبة: '+esc(x.coins)+'</p>'+
    '<p>المقابل: '+esc(x.payout_amount)+' '+esc(x.payout_currency)+' · رصيد المحفظة: '+esc(x.usd_amount)+' USD</p>'+
    (x.client_note?'<p>إشعار العميل: '+esc(x.client_note)+'</p>':'')+
