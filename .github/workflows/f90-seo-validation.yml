@@ -1,0 +1,33 @@
+name: F90 SEO static validation
+on:
+  push:
+    branches: [main, f90-seo-indexable-pages-20261016]
+    paths:
+      - 'discover/**'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'index.html'
+      - 'tests/f90-seo.test.cjs'
+      - '.github/workflows/f90-seo-validation.yml'
+  pull_request:
+    paths:
+      - 'discover/**'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'index.html'
+      - 'tests/f90-seo.test.cjs'
+      - '.github/workflows/f90-seo-validation.yml'
+permissions:
+  contents: read
+jobs:
+  static:
+    name: Verify sitemap and indexable category pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate canonical pages, SEO metadata, assets and links
+        run: node --test tests/f90-seo.test.cjs
