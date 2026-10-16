@@ -1457,24 +1457,72 @@
       '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد نتائج مطابقة.</p>'+(r.count>0?paging:'');
     applyHistoryFilter();
   }
+  function orderRecipientFields(o){
+    const fields=o.customer_fields && typeof o.customer_fields==="object"&&!Array.isArray(o.customer_fields)
+      ? o.customer_fields:{};
+    const values=Object.entries(fields).filter(([k,v])=>v!=null&&String(v).trim()!=="");
+    const pick=(keys)=>{for(const key of keys){const entry=values.find(([k])=>k.toLowerCase()===key);if(entry)return String(entry[1]);}return "";};
+    // param_1 is the supplied service recipient field for many older orders.
+    // We never claim an externally verified player name from a numeric ID.
+    const accountId=pick(["account_id","player_id","playerid","uid","game_id","user_id","recipient_id","target_id","param_1"]);
+    const accountName=pick(["account_name","player_name","character_name","nickname","username","recipient_name","in_game_name"]);
+    const extras=values.filter(([key])=>!["account_id","player_id","playerid","uid","game_id","user_id","recipient_id","target_id","param_1","account_name","player_name","character_name","nickname","username","recipient_name","in_game_name"].includes(key.toLowerCase()));
+    return {accountId,accountName,extras};
+  }
+  function orderSummaryFields(o){
+    const recipient=orderRecipientFields(o);
+    const quantity=Number(o.quantity)||0;
+    const subtotal=Number(o.subtotal_usd);
+    const unit=quantity>0&&Number.isFinite(subtotal)?subtotal/quantity:quantity>0?Number(o.total_usd)/quantity:0;
+    return [
+      ["رقم العملية",String(o.order_number||o.id)],
+      ["اسم المنتج",String(o.product_name||"—")],
+      ["الكمية",String(o.quantity??"—")],
+      ["السعر",accountMoney(unit)],
+      ["السعر الإجمالي",accountMoney(o.total_usd)],
+      ["التاريخ والوقت",C.date(o.created_at)],
+      ...(recipient.accountId?[["ID الشحن",recipient.accountId]]:[]),
+      ...(recipient.accountName?[["اسم الحساب المسجل",recipient.accountName]]:[])
+    ];
+  }
   async function order(id) {
-    const seq = S.route;
-    main.innerHTML = '<div class="loading">جارٍ تحميل تفاصيل طلبك…</div>';
-    const { order: o, events, requests = [] } = await A.call("order", { id });
-    if (seq !== S.route) return;
-    S.currentOrder = o;
-    const openKinds = new Set(requests.filter((r) => r.status === "pending").map((r) => r.kind));
-    const requestPanel = `<section class="panel f90-order-requests"><h2>الاعتراض وطلب الإلغاء</h2><p class="muted small">يصل الطلب إلى الإدارة للمراجعة. لا يُلغى الشراء ولا يُرد الرصيد تلقائيًا.</p>${requests.map((r) => `<article class="record"><div class="record-main"><strong>${r.kind === "cancel" ? "طلب إلغاء" : "اعتراض"}</strong><p>${e(r.reason)}</p><small>${e(C.date(r.created_at))}</small>${r.review_note ? `<p>${e(r.review_note)}</p>` : ""}</div>${status(r.status)}</article>`).join("")}${(!openKinds.has("cancel") && !["completed", "partial", "failed", "refunded"].includes(o.status)) || !openKinds.has("dispute") ? `<form id="orderRequestForm">${select("kind", "نوع الطلب", [...(!openKinds.has("cancel") && !["completed", "partial", "failed", "refunded"].includes(o.status) ? [["cancel", "طلب إلغاء"]] : []), ...(!openKinds.has("dispute") ? [["dispute", "اعتراض"]] : [])], "")}${field("reason", "اشرح السبب للإدارة", "textarea", "", 'required minlength="5" maxlength="2000"')}<button class="button secondary" type="submit">إرسال للمراجعة</button></form>` : ""}</section>`;
-    main.innerHTML = `${pageHead("طلبك #" + o.order_number, o.product_name, `<button class="button secondary small" data-action="order-pdf">${I("download")}تنزيل تفاصيل الطلب</button>`)}<div class="split"><section class="panel"><div class="record" style="padding:0;border:0;margin-bottom:24px">${image(o.product_image, o.product_name, "record-image")}<div>${status(o.status)}<p class="muted small">${o.fulfillment === "automatic" ? "تنفيذ آلي عبر المورّد" : "تنفيذ يدوي من الإدارة"}</p></div></div><div class="profile-stats"><div><strong>${e(displayMoney(o.total_usd))}</strong><span>المبلغ المدفوع</span></div><div><strong>${e(o.quantity)}</strong><span>الكمية</span></div><div><strong>${e(C.duration(o))}</strong><span>مدة التنفيذ</span></div></div><p class="muted small">التقديم: ${e(C.date(o.created_at))}<br>الوقت المتوقع: ${o.expected_minutes ? e(o.expected_minutes) + " دقيقة" : "حسب الخدمة وحالة التنفيذ"}<br>الإكمال: ${e(C.date(o.completed_at))}</p>${Number(o.refunded_usd) > 0 ? `<div class="notice success">استُرد ${e(C.money(o.refunded_usd, "USD", true))} إلى محفظتك.</div>` : ""}<h3>بيانات طلبك</h3>${Object.entries(
-      o.customer_fields || {},
-    )
-      .map(
-        ([k, v]) =>
-          `<p class="small"><span class="muted">${k === "account_id" ? "معرّف الحساب" : e(k)}:</span> <b>${e(v)}</b></p>`,
-      )
-      .join(
-        "",
-      )}<div class="actions"><button class="button secondary" data-action="refresh-route">تحديث الحالة</button>${supportLink("مساعدة في الطلب " + o.order_number)}</div></section><section class="panel"><h2>رحلة طلبك</h2><div class="timeline">${events.map((ev) => `<div class="timeline-item"><h3>${e(C.statuses[ev.status] || ev.status)}</h3><p>${e(ev.note)}</p><small>${e(C.date(ev.created_at))}</small></div>`).join("")}</div></section></div>${requestPanel}`;
+    const seq=S.route;
+    main.innerHTML='<div class="loading">جارٍ تحميل تفاصيل طلبك…</div>';
+    const {order:o,events=[],requests=[]}=await A.call("order",{id});
+    if(seq!==S.route)return;
+    S.currentOrder=o;
+    const fields=orderSummaryFields(o);
+    const recipient=orderRecipientFields(o);
+    const openKinds=new Set(requests.filter(r=>r.status==="pending").map(r=>r.kind));
+    const requestPanel='<section class="f90-order-requests"><h3>مراجعة أو اعتراض</h3>'+
+      '<p class="muted small">طلبات الاعتراض والإلغاء تخضع لمراجعة الإدارة، ولا تُنفّذ تلقائيًا.</p>'+
+      requests.map(r=>'<article class="record"><div class="record-main"><strong>'+e(r.kind==="cancel"?"طلب إلغاء":"اعتراض")+'</strong><p>'+e(r.reason)+'</p><small>'+e(C.date(r.created_at))+'</small>'+
+      (r.review_note?'<p>'+e(r.review_note)+'</p>':'')+'</div>'+status(r.status)+'</article>').join("")+
+      ((!openKinds.has("cancel")&&!["completed","partial","failed","refunded"].includes(o.status))||!openKinds.has("dispute")
+        ?'<form id="orderRequestForm">'+select("kind","نوع الطلب",[
+          ...(!openKinds.has("cancel")&&!["completed","partial","failed","refunded"].includes(o.status)?[["cancel","طلب إلغاء"]]:[]),
+          ...(!openKinds.has("dispute")?[["dispute","اعتراض"]]:[])
+         ],"")+field("reason","سبب الطلب","textarea","",'required minlength="5" maxlength="2000"')+
+         '<button class="button secondary" type="submit">إرسال للمراجعة</button></form>':"")+'</section>';
+    const rows=fields.map(([label,value])=>'<div class="f90-order-summary-row"><span>'+e(label)+'</span><strong dir="auto">'+e(value)+'</strong></div>').join("");
+    const more=recipient.extras.length?
+      '<details class="f90-order-extra"><summary>بيانات الشحن الإضافية</summary>'+
+      recipient.extras.map(([key,val])=>'<p><span>'+e(key)+'</span><strong dir="auto">'+e(typeof val==="object"?JSON.stringify(val):val)+'</strong></p>').join("")+'</details>':"";
+    const eventsHtml=events.map(ev=>'<div class="timeline-item"><h3>'+e(C.statuses[ev.status]||ev.status)+'</h3>'+
+      '<p>'+e(ev.note||"")+'</p><small>'+e(C.date(ev.created_at))+'</small></div>').join("");
+    main.innerHTML=pageHead("تفاصيل الطلب #"+o.order_number,"",
+      '<button class="button secondary small" data-action="order-pdf">'+I("download")+' تنزيل PDF</button>')+
+      '<div class="f90-order-summary-layout"><section class="panel f90-order-summary-card">'+
+      '<div class="f90-order-summary-heading"><img src="'+e(C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png")+'" alt="F90 CARD" loading="lazy">'+
+      '<div><h2>ملخص الطلب</h2>'+status(o.status)+'</div></div>'+
+      '<div class="f90-order-summary-rows">'+rows+'</div>'+
+      (Number(o.refunded_usd)>0?'<p class="notice success">قيمة مستردة: '+e(accountMoney(o.refunded_usd))+'</p>':"")+
+      more+'<div class="f90-order-summary-actions">'+
+      '<button class="button secondary small" data-action="refresh-route">تحديث حالة الطلب</button>'+
+      supportLink("مساعدة في الطلب "+o.order_number)+'</div></section>'+
+      '<details class="panel f90-order-secondary"><summary>متابعة التنفيذ أو طلب المساعدة</summary>'+
+      '<h3>حالة التنفيذ</h3><div class="timeline">'+eventsHtml+'</div>'+requestPanel+
+      '</details></div>';
   }
   function vip() {
     const me = S.me,
