@@ -40,6 +40,7 @@ let visibleConfig=defaults;
 let visibleRates=[];
 let visibleMethods=[];
 let visibleSalaryOptions=[];
+let customerSalaryCurrency="USD";
 let canSubmitSalary=false;
 let canSubmitTransfer=false;
 const targetMoney=(amount,code)=>Number(amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+code;
@@ -94,6 +95,8 @@ function render(kind,settings,user,selected="",rates=[]){
  const isVerified=!!user?.profile?.is_verified,isSigned=!!user;
  canSubmitTransfer=isVerified&&isSigned&&tr.enabled===true&&c.show_transfer!==false;
  canSubmitSalary=isVerified&&isSigned&&sal.enabled===true&&c.show_salary!==false;
+ customerSalaryCurrency=["USD","ILS","JOD"].includes(user?.profile?.account_currency)
+   ? user.profile.account_currency:"USD";
  visibleSalaryOptions=(Array.isArray(sal.payout_options)?sal.payout_options:[]).filter(x=>
    x?.enabled===true && visibleRates.some(r=>r.currency===x.currency&&r.is_enabled&&Number(r.per_usd)>0) &&
    Number(x.per_100k)>0 && Number(x.units_per_usd)>0);
@@ -115,8 +118,12 @@ function render(kind,settings,user,selected="",rates=[]){
    input("account",esc(sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه"),"text",'required minlength="2" maxlength="120" autocomplete="off" placeholder="معرّف حسابك في Xena Live"')+
    input("amount","كمية الكوينز للسحب","number",'required min="'+min+'" step="1" inputmode="numeric" value="'+min+'"')+
    '<p class="f90-special-tiny">الحد الأدنى '+min.toLocaleString('en-US')+' كوينز • لا يوجد سقف ثابت معلن</p>'+
-   '<label class="field"><span>اختر عملة الإيداع التي تريد حساب المبلغ بها</span><select name="payout_currency" required>'+
-     visibleSalaryOptions.map(x=>'<option value="'+esc(x.currency)+'">'+esc(x.label_ar||x.currency)+' ('+esc(x.currency)+')</option>').join('')+'</select></label>'+
+   '<div class="f90-fixed-account-currency" role="status"><small>عملة سحب الراتب في حسابك</small>'+
+     '<strong>'+esc(visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency)?.label_ar||customerSalaryCurrency)+' ('+esc(customerSalaryCurrency)+')</strong>'+
+     '<span>لا يمكن تغيير العملة أثناء تقديم الطلب؛ يمكنك تعديل عملة الحساب من شريط العملات العام.</span></div>'+
+   '<input name="payout_currency" type="hidden" value="'+esc(customerSalaryCurrency)+'">'+
+   (!visibleSalaryOptions.some(x=>x.currency===customerSalaryCurrency)?
+     '<p class="f90-special-alert">سحب الرواتب غير متاح حاليًا بعملة حسابك؛ اختر عملة أخرى من الشريط العام.</p>':'')+
    '<div class="f90-salary-quote" role="status" aria-live="polite">'+
      '<div><span>كمية الكوينز المسحوبة</span><strong data-salary-coins>—</strong></div>'+
      '<div><span>قيمة الإيداع بالعملة المختارة</span><strong data-salary-target>—</strong></div>'+
@@ -147,7 +154,7 @@ function render(kind,settings,user,selected="",rates=[]){
  const notice=(!isSigned?'<p class="f90-special-alert">سجّل الدخول قبل إرسال طلبك. <a href="#/auth">تسجيل الدخول</a></p>':
  ((salary||transfer)&&!isVerified?'<p class="f90-special-alert">توثيق الحساب مطلوب قبل العمليات المالية. <a href="#/verification">توثيق الحساب</a></p>':''));
  if(account&&chosenService)fields+='<input type="hidden" name="service" value="'+esc(chosenService.name_ar)+'">';
- const enabled=(!(account||design)||!selected||!!chosenService)&&c["show_"+d]!==false && (!salary||sal.enabled===true&&visibleSalaryOptions.length>0) && (!transfer||tr.enabled===true&&methods.length>0);
+ const enabled=(!(account||design)||!selected||!!chosenService)&&c["show_"+d]!==false && (!salary||sal.enabled===true&&visibleSalaryOptions.some(x=>x.currency===customerSalaryCurrency)) && (!transfer||tr.enabled===true&&methods.length>0);
  const footnote=transfer?"يُخصم صافي المبلغ والعمولة من المحفظة فور تقديم الطلب، ويُسترد المبلغ عند رفضه بعد مراجعة الإدارة.":
    salary?"لا يُضاف الرصيد إلا بعد مراجعة سحب الراتب واعتماده.":"هذا طلب خدمة وتواصل، وليس خصمًا من محفظتك.";
 
@@ -169,7 +176,7 @@ function updateEstimate(form){
  if(!["salary","transfer"].includes(k))return;
  const v=Math.max(0,Number(form.elements.amount?.value)||0);
  if(k==="salary"){
-   const opt=visibleSalaryOptions.find(x=>x.currency===form.elements.payout_currency?.value);
+   const opt=visibleSalaryOptions.find(x=>x.currency===customerSalaryCurrency);
    const min=Math.max(100000,Number(visibleConfig.salary_minimum_coins)||100000);
    const rate=Number(opt?.per_100k),perUsd=Number(opt?.units_per_usd);
    const valid=!!opt && Number.isSafeInteger(v) && v>=min && v<=1000000000000 &&
@@ -242,7 +249,7 @@ document.addEventListener("submit",async ev=>{
  try{
    let result;
    if(kind==="salary"){
-     const currency=String(d.get("payout_currency")||"");
+     const currency=customerSalaryCurrency;
      const option=visibleSalaryOptions.find(x=>x.currency===currency);
      if(!option || !Number.isSafeInteger(value) || value<visibleConfig.salary_minimum_coins)throw Error("راجع كمية الكوينز وعملة الإيداع.");
      const quote=value/100000*Number(option.per_100k);
