@@ -2545,6 +2545,18 @@ Deno.serve(async (req: Request) => {
       const amount = num(b.amount, 0.000001, currency === "XCN" ? 1000000000000 : 1000000);
       const receipt = text(b.receipt_path, 500);
       const memo = text(b.reference, 300);
+      // The minimum deposit amount belongs to the method's selected currency.
+      // Check it server-side as well as in the browser, so clients cannot
+      // bypass a manager-defined limit by editing the form.
+      const settings = check(await db.from("site_settings").select("config").eq("id", 1).single());
+      const paymentMethod = (Array.isArray(settings.config?.payment_methods)
+        ? settings.config.payment_methods : []).find((m: any) => m.id === method && m.enabled === true);
+      if (!paymentMethod || paymentMethod.is_salary_withdrawal === true)
+        throw new AppError("F90_PAYMENT_METHOD");
+      const minimum = Number(paymentMethod.minimum_amount || 0);
+      if (Number.isFinite(minimum) && minimum > 0 && amount < minimum)
+        throw new AppError("F90_AMOUNT", 400,
+          "المبلغ أقل من الحد الأدنى المحدد لهذه الطريقة");
       // Read-only collision check. The database RPC still owns atomic insert/deduplication.
       const previous = check(await db.from("f90_deposits")
         .select("method_id,currency,amount,receipt_path,reference")
