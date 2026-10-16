@@ -875,7 +875,7 @@
       head(
         names[kind],
         kind === "payments"
-          ? "صور مربعة للطرق، وتعليمات التحويل التي يراها العميل."
+          ? "يمكن ضبط اسم المستفيد وبيانات التحويل والحد الأدنى والرسوم والعملات والإشعار لكل طريقة. الصور لا تظهر داخل نماذج الإيداع."
           : "يمكنك تعديل العنصر أو إخفاؤه أو تكراره وترتيبه.",
         `<button class="button" data-action="dynamic-new">${I("plus")}إضافة</button>`,
       ) +
@@ -898,7 +898,13 @@
           d.name_ar || "",
           "required",
         ) +
+        field("receiver_name","اسم المستفيد أو صاحب الحساب (اختياري)","text",d.receiver_name||"",'maxlength="150"') +
+        field("destination","رقم الحساب أو المحفظة أو عنوان التحويل (اختياري)","textarea",d.destination||"",'maxlength="1500" rows="3"') +
+        field("network_ar","اسم الشبكة أو معلومات إضافية (اختياري)","text",d.network_ar||"",'maxlength="160"') +
         field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
+        field("minimum_amount","الحد الأدنى للتحويل بعملة الطريقة (0 = دون حد إضافي)","number",d.minimum_amount??0,'min="0" max="1000000000000" step="any"') +
+        field("reference_label","اسم حقل الإشعار أو رقم العملية","text",d.reference_label||"إشعار أو رقم العملية (اختياري)",'maxlength="150"') +
+        field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
         field("accepted_currencies","عملات هذه الطريقة (مثال USD,ILS,JOD,XCN للكوينز)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD,XCN"')+
 
@@ -1395,7 +1401,17 @@
     if (kind === "payments")
       Object.assign(row, {
         name_ar: d.name_ar,
-        destination: d.destination,
+        receiver_name: String(d.receiver_name||"").trim().slice(0,150),
+        destination: String(d.destination||"").trim().slice(0,1500),
+        network_ar: String(d.network_ar||"").trim().slice(0,160),
+        minimum_amount: (()=>{
+          const x=Number(d.minimum_amount);
+          if(!Number.isFinite(x)||x<0||x>1000000000000)
+            throw Error("الحد الأدنى لطريقة الإيداع غير صالح");
+          return x;
+        })(),
+        reference_label: String(d.reference_label||"").trim().slice(0,150),
+        receipt_help: String(d.receipt_help||"").trim().slice(0,500),
         details_ar: d.details_ar,
         deposit_fee_percent: (()=>{
           const value=Number(d.deposit_fee_percent);
