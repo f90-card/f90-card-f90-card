@@ -124,7 +124,9 @@ test("Mobile performance optimizations never bypass financial validation", () =>
   assert.match(app,/catalogRefreshBusy = true/);
   assert.match(app,/catalogRefreshBusy = false/);
   assert.match(app,/\}, 360000\)/);
-  assert.match(app,/\? 2500 : 400/);
+  assert.match(app,/\? 3500 : 400/);
+   assert.match(app,/\["profile","wallet","deposit","orders"/);
+   assert.match(app,/await pendingMeRefresh/);
   assert.match(atmosphere,/@media\(max-width:760px\)\{\s*body::before,body::after\{/);
   assert.match(ambient,/\.main-content::before\{filter:none!important;opacity:\.12!important\}/);
   assert.match(mainHtml,/app\.js\?v=[^"]+/);
