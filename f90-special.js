@@ -153,7 +153,7 @@ function render(kind,settings,user,selected="",rates=[]){
 
  document.getElementById("mainContent").innerHTML=
  '<section class="f90-special-page f90-deposit-compact" data-kind="'+esc(d)+'"><a class="f90-special-back" href="#/">‹ العودة إلى الرئيسية</a>'+
- (salary?'':'<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'"></div>')+
+ '<div class="f90-special-banner"><img src="'+esc(banner)+'" alt="'+esc(title)+'" loading="lazy" decoding="async"></div>'+
  '<div class="f90-special-panel"><h1>'+title+'</h1>'+(salary?'':'<p>'+esc(desc)+'</p>')+
  (transfer?'<div data-method-info></div>':'')+
  (!salary&&chosenService?.image_url?'<img class="f90-service-art" src="'+esc(chosenService.image_url)+'" alt="'+esc(chosenService.name_ar)+'">':'')+
