@@ -1301,7 +1301,7 @@ async function staff(a: Actor, b: any) {
       ? check(
           await db
             .from("profiles")
-            .select("id,display_name,customer_id,email")
+            .select("id,display_name,customer_id,email,account_currency")
             .in("id", ids),
         )
       : [];
@@ -1482,7 +1482,12 @@ async function staff(a: Actor, b: any) {
     const rows = check(await db.from("f90_salary_requests")
       .select("id,user_id,account_id,coins,usd_amount,status,created_at,reviewed_at,review_note,payout_currency,payout_amount,client_note,receipt_path")
       .order("created_at", { ascending: false }).limit(150));
-    return { items: rows, pending: rows.filter((x: any) => x.status === "pending").length };
+    const ids = [...new Set(rows.map((x: any) => x.user_id))];
+    const users = ids.length ? check(await db.from("profiles")
+      .select("id,display_name,customer_id,account_currency").in("id",ids)) : [];
+    const profiles = new Map(users.map((p: any) => [p.id,p]));
+    return { items: rows.map((x: any) => ({...x,customer:profiles.get(x.user_id)||null})),
+      pending: rows.filter((x: any) => x.status === "pending").length };
   }
   // This diagnostic checks Telegram's configured destination without
   // exposing bot credentials or a complete chat ID to the browser.
@@ -2434,7 +2439,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "checkout" || action === "add") {
       scoped(a, "orders");
-      const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
+      const verification = check(await db.from("profiles").select("is_verified,account_currency").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
       const product = uuid(b.product_id || b.service);
       await assertProviderAvailable(product);
@@ -2583,14 +2588,21 @@ Deno.serve(async (req: Request) => {
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       const method = text(b.method_id, 100);
-      const currency = text(b.currency, 8);
-      const amount = num(b.amount, 0.000001, currency === "XCN" ? 1000000000000 : 1000000);
+      // The account preference stored in Postgres is the sole authority. A
+      // modified browser payload cannot change the deposit currency.
+      const accountCurrency=String(verification.account_currency||"USD");
+      if (!["USD","ILS","JOD"].includes(accountCurrency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      const referenceCurrency=text(b.currency||"",8);
+      const amount = num(b.amount,0.000001,1000000);
       const receipt = text(b.receipt_path, 500);
       const memo = text(b.reference, 300);
       // Read-only collision check. The database RPC still owns atomic insert/deduplication.
       const previous = check(await db.from("f90_deposits")
         .select("method_id,currency,amount,receipt_path,reference")
         .eq("user_id", a.id).eq("idempotency_key", reference).maybeSingle());
+      const currency=previous?.currency||accountCurrency;
+      if (!previous && referenceCurrency && referenceCurrency !== accountCurrency)
+        throw new AppError("F90_ACCOUNT_CURRENCY",400,"عملة الإيداع يجب أن تطابق عملة الحساب");
       if (previous &&
           (previous.method_id !== method || previous.currency !== currency ||
            Number(previous.amount) !== amount || previous.receipt_path !== receipt ||
@@ -2608,11 +2620,10 @@ Deno.serve(async (req: Request) => {
         const minimum = Number(paymentMethod.minimum_amount || 0);
         if (Number.isFinite(minimum) && minimum > 0 && amount < minimum)
           throw new AppError("F90_AMOUNT", 400, "المبلغ أقل من الحد الأدنى المحدد لهذه الطريقة");
-        if (currency === "XCN" &&
-            (!Array.isArray(paymentMethod.accepted_currencies) ||
-             !paymentMethod.accepted_currencies.includes("XCN")))
-          throw new AppError("F90_FIELDS", 400,
-            "إيداع الكوينز غير متاح بهذه الطريقة. اختر طريقة مخصصة للكوينز");
+        if (Array.isArray(paymentMethod.accepted_currencies) &&
+            !paymentMethod.accepted_currencies.includes(currency))
+          throw new AppError("F90_DEPOSIT_CURRENCY", 400,
+            "طريقة الإيداع لا تدعم عملة حسابك؛ اختر طريقة أخرى");
       }
       return out(
         await rpc("f90_submit_deposit", {
@@ -2626,6 +2637,16 @@ Deno.serve(async (req: Request) => {
         }),
         201,
       );
+    }
+    if (action === "profile.currency") {
+      if (a.keyId || a.needsMfa) throw new AppError("F90_FORBIDDEN");
+      const currency = text(b.currency, 8).toUpperCase();
+      if (!["USD","ILS","JOD"].includes(currency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      const rate = check(await db.from("f90_rates")
+        .select("currency,is_enabled,per_usd").eq("currency",currency).single());
+      if (!rate.is_enabled || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
+      check(await db.from("profiles").update({account_currency:currency}).eq("id",a.id));
+      return out({currency});
     }
     if (action === "profile.save") {
       const d: any = {
