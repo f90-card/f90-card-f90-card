@@ -88,7 +88,7 @@ function salaryEditor(settings,rates=[]){
  const options=activeRates.map(rate=>{
    const old=rows.find(x=>x.currency===rate.currency)||{};
    const base=Number(sal.coins_per_usd)>0 ? 100000/Number(sal.coins_per_usd) : 10;
-   const units=Number(old.units_per_usd)>0?Number(old.units_per_usd):Number(rate.per_usd);
+   const units=rate.currency==="USD"?1:(Number(old.units_per_usd)>0?Number(old.units_per_usd):Number(rate.per_usd));
    const payout=Number(old.per_100k)>0?Number(old.per_100k):(rate.currency==="XCN"?100000:base*units);
    const isEnabled=old.enabled===true || (!rows.length && ["USD","ILS","JOD","XCN"].includes(rate.currency));
    return '<div class="f90-salary-currency-row" data-salary-currency="'+esc(rate.currency)+'"><strong>'+
@@ -96,7 +96,7 @@ function salaryEditor(settings,rates=[]){
      check("salary_option_enabled","إتاحة الاختيار للعميل",isEnabled)+
      '<div class="field-row">'+
      field("salary_rate_100k","المبلغ المقابل لسحب كل 100,000 كوينز",payout,"number",'required min="0.00000001" max="1000000000000" step="any"')+
-     field("salary_units_per_usd","كم وحدة من هذه العملة تعادل دولارًا واحدًا من محفظة F90",units,"number",'required min="0.00000001" max="1000000000000" step="any"')+
+     field("salary_units_per_usd","كم وحدة من هذه العملة تعادل دولارًا واحدًا من محفظة F90",units,"number",'required min="0.00000001" max="1000000000000" step="any"'+(rate.currency==="USD"?' readonly':''))+
      '</div></div>';
  }).join("");
  return '<section class="panel f90-salary-admin" id="f90SalaryDepositControls">'+
