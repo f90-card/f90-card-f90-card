@@ -912,7 +912,7 @@
         field("reference_label","اسم حقل الإشعار أو رقم العملية","text",d.reference_label||"إشعار أو رقم العملية (اختياري)",'maxlength="150"') +
         field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
-        field("accepted_currencies","عملات هذه الطريقة (مثال USD,ILS,JOD,XCN للكوينز)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD,XCN"')+
+        field("accepted_currencies","عملات هذه الطريقة (USD,ILS,JOD فقط)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
 
         field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
         field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
@@ -1428,8 +1428,8 @@
         barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
-    if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!S.rates.some(rate=>rate.currency===code&&rate.is_enabled))))
-      throw new Error("اختر عملة واحدة على الأقل من أسعار الصرف المفعّلة؛ XCN تعني كوينز اكزينا لايف.");
+    if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!["USD","ILS","JOD"].includes(code)||!S.rates.some(rate=>rate.currency===code&&rate.is_enabled))))
+      throw new Error("اختر عملة متاحة من الدولار أو الدينار أو الشيقل فقط.");
     if (kind === "promotions")
       Object.assign(row, {
         text_ar: d.text_ar,
