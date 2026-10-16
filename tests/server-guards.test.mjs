@@ -17,7 +17,8 @@ test("account verification is enforced for checkout and deposits", () => {
   const deposit = slice('if (action === "deposit.submit")', 'if (action === "profile.save")');
   assert.match(checkout, /select\("is_verified"\)/);
   assert.match(checkout, /if \(!verification\.is_verified\) throw new AppError\("F90_VERIFICATION_REQUIRED"/);
-  assert.match(deposit, /select\("is_verified"\)/);
+  assert.match(deposit, /select\("is_verified,account_currency"\)/);
+  assert.match(deposit, /const accountCurrency=String\(verification\.account_currency/);
   assert.match(deposit, /if \(!verification\.is_verified\) throw new AppError\("F90_VERIFICATION_REQUIRED"/);
 });
 
