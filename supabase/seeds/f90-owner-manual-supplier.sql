@@ -14,12 +14,12 @@ DECLARE
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtext('f90-owner-manual-supplier'));
   SELECT id INTO owner_id FROM public.f90_providers
-   WHERE name = 'خدمات أف تسعين' AND adapter = 'local'
+   WHERE name = 'خدمات أف تسعين' AND adapter = 'f90'
    ORDER BY created_at LIMIT 1;
   IF owner_id IS NULL THEN
     INSERT INTO public.f90_providers
       (name, endpoint, adapter, currency, is_enabled, margin_percent, config)
-    VALUES ('خدمات أف تسعين', '', 'local', 'USD', true, 0,
+    VALUES ('خدمات أف تسعين', 'https://f90-card.github.io/f90-card-f90-card/', 'f90', 'USD', true, 0,
       '{"manual_supplier":true,"automatic_orders_enabled":false,"description_ar":"خدمات أف تسعين اليدوية؛ لا تحتاج إلى مفتاح API"}'::jsonb)
     RETURNING id INTO owner_id;
   END IF;
