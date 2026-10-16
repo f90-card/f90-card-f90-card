@@ -1343,9 +1343,8 @@
       (destination?'<div class="f90-deposit-destination"><span>حوّل إلى</span>'+
         '<strong dir="auto">'+destination+'</strong></div>':"")+
       (instructions||m.network_ar?'<details class="f90-finance-help"><summary>تعليمات التحويل</summary><p>'+instructions+'</p></details>':"")+
-      (C.safeUrl(m.barcode_url)?'<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3>'+
-        '<img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async">'+
-        '<small>استخدم الرمز إذا كانت وسيلة الدفع تدعم المسح.</small></div>':"")+
+      (C.safeUrl(m.barcode_url)?'<details class="f90-finance-help"><summary>عرض باركود الدفع</summary>'+
+        '<div class="f90-deposit-barcode"><img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async"></div></details>':"")+
       '<form id="depositForm" class="f90-deposit-order-form">'+
       '<div class="f90-fixed-account-currency" role="status"><small>عملة حسابك</small><strong>'+e(accountRate?.name_ar||accountCurrency)+' ('+e(accountCurrency)+')</strong></div>'+
       '<input type="hidden" name="currency" value="'+e(accountCurrency)+'">'+
