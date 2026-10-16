@@ -2439,7 +2439,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "checkout" || action === "add") {
       scoped(a, "orders");
-      const verification = check(await db.from("profiles").select("is_verified,account_currency").eq("id", a.id).single());
+      const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
       const product = uuid(b.product_id || b.service);
       await assertProviderAvailable(product);
@@ -2585,7 +2585,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "deposit.submit") {
       const reference = paymentReference(b.idempotency_key);
-      const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
+      const verification = check(await db.from("profiles").select("is_verified,account_currency").eq("id", a.id).single());
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       const method = text(b.method_id, 100);
       // The account preference stored in Postgres is the sole authority. A
