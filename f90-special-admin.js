@@ -106,6 +106,8 @@ function salaryEditor(settings,rates=[]){
    check("salary_active","تفعيل خدمة سحب الرواتب في طرق الإيداع",sal.enabled===true)+
    field("salary_minimum","أقل كمية كوينز للسحب",Math.max(100000,Number(sal.minimum_coins)||100000),"number",'required min="100000" max="1000000000000" step="1"')+
    textarea("salary_details","الوصف والتعليمات المعروضة للعميل",sal.details_ar||"")+
+   field("salary_account_label","عنوان حقل حساب Xena Live",sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه","text",'maxlength="120"')+
+   textarea("salary_processing_notice","معلومات الإيداع ومدة التأكيد الظاهرة للعميل",sal.processing_notice_ar||"")+
    '<div class="f90-salary-admin-photo"><img id="f90SalaryImagePreview" src="'+esc(image||"./assets/f90-new/banner-salary.webp")+'" alt="معاينة صورة سحب الرواتب">'+
    field("salary_image_url","رابط صورة الخدمة",image,"url",'placeholder="https://..."')+
    '<label class="field"><span>رفع صورة جديدة من جهازك</span><input name="salary_image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>'+
@@ -160,9 +162,12 @@ document.addEventListener("submit",async ev=>{
    const old=salaryAdminSettings,config=old.config;
    const current=config.salary_withdrawal||{};
    const desc=String(form.elements.salary_details.value||"").trim().slice(0,4000);
+   const accountLabel=String(form.elements.salary_account_label.value||"").trim().slice(0,120);
+   const processingNotice=String(form.elements.salary_processing_notice.value||"").trim().slice(0,2500);
    const enabled=!!form.elements.salary_active.checked;
    const usd=options.find(x=>x.currency==="USD");
-   const salary={...current,enabled,minimum_coins:min,details_ar:desc,image_url:imageUrl,
+   const salary={...current,enabled,minimum_coins:min,details_ar:desc,
+     account_label_ar:accountLabel,processing_notice_ar:processingNotice,image_url:imageUrl,
      payout_options:options,coins_per_usd:usd?.per_100k>0?100000/(usd.per_100k/usd.units_per_usd):current.coins_per_usd};
    const methods=(config.payment_methods||[]).map(method=>
      method.is_salary_withdrawal===true||method.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062"?
