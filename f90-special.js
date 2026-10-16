@@ -66,7 +66,7 @@ function category(slug,settings){
 function moneyPanel(gross,fee,net,feePercent,label){
  return '<div class="f90-special-estimate" role="status" aria-live="polite">'+
  '<div><span>'+(label||"المبلغ قبل العمولة")+'</span><strong data-gross>'+fmt(gross)+'</strong></div>'+
- '<div><span>العمولة '+feePercent+'٪</span><strong data-fee>'+fmt(fee)+'</strong></div>'+
+ '<div><span>العمولة <span data-fee-rate>'+feePercent+'٪</span></span><strong data-fee>'+fmt(fee)+'</strong></div>'+
  '<div class="f90-special-net"><span>الصافي بعد العمولة</span><strong data-net>'+fmt(net)+'</strong></div></div>';
 }
 const input=(name,label,type="text",attr="")=>'<label class="field"><span>'+label+'</span><input name="'+name+'" type="'+type+'" '+attr+'></label>';
@@ -103,9 +103,9 @@ function render(kind,settings,user,selected="",rates=[]){
    input("amount","قيمة السحب بعملة الخدمة المختارة","number",'required min="1" max="100000000" step="0.01" inputmode="decimal" placeholder="0.00"')+
    '<p class="f90-special-tiny" data-target-currency>العملة: '+esc(methods.find(x=>x.id===selected)?.currency||methods[0]?.currency||"USD")+'</p>'+
    '<label class="field"><span>بيانات المستلم والتحويل</span><textarea name="details" required minlength="3" maxlength="2000" rows="4" placeholder="بيانات المستلم والوسيلة ورقم الحساب أو العنوان"></textarea></label>'+
-   moneyPanel(0,0,0,c.transfer_fee_percent,"إجمالي الخصم من المحفظة USD")+
+   moneyPanel(0,0,0,num(methods.find(x=>x.id===selected)?.fee_percent??methods[0]?.fee_percent,c.transfer_fee_percent,0,30),"إجمالي الخصم من المحفظة USD")+
    '<p class="f90-special-tiny" data-target-net>المبلغ الذي سيصل للمستفيد: —</p>'+
-   '<p class="f90-special-tiny">تضاف عمولة '+c.transfer_fee_percent+'٪ فوق المبلغ الصافي. المدة المتوقعة: من '+c.transfer_eta_min_minutes+' إلى '+c.transfer_eta_max_minutes+' دقيقة بعد المراجعة.</p>'+
+   '<p class="f90-special-tiny">تضاف عمولة الطريقة المختارة فوق المبلغ الصافي. المدة المتوقعة: من '+c.transfer_eta_min_minutes+' إلى '+c.transfer_eta_max_minutes+' دقيقة بعد المراجعة.</p>'+
    '<p class="f90-special-tiny">رصيد محفظتك الحالي: '+(isSigned?fmt(Number(user?.wallet?.balance_usd)||0):"سجّل الدخول")+'</p>';
  }else{
    fields=(design?'<label class="field"><span>نوع التصميم</span><select name="service">'+defaults.design_services.map((x,i)=>'<option '+(selected===String(i+1)?'selected':'')+'>'+x+'</option>').join("")+'</select></label>':'')+
@@ -137,13 +137,15 @@ function updateEstimate(form){
  const v=Math.max(0,Number(form.elements.amount?.value)||0);
  const selected=visibleMethods.find(x=>x.id===form.elements.service?.value);
  const currency=selected?.currency||"USD";
+ const feePercent=num(selected?.fee_percent,c.transfer_fee_percent,0,30);
  const rate=visibleRates.find(x=>x.currency===currency&&x.is_enabled&&Number(x.per_usd)>0);
  const perUsd=currency==="USD"?1:Number(rate?.per_usd)||0;
  const usd=k==="transfer"&&perUsd?v/perUsd:0;
- const fee=k==="salary"?0:usd*num(c.transfer_fee_percent,2,0,30)/100;
+ const fee=k==="salary"?0:usd*feePercent/100;
  const total=k==="salary"?v*num(c.salary_usd_per_100k,10,0)/100000:usd+fee;
  form.querySelector("[data-gross]").textContent=fmt(total);
  form.querySelector("[data-fee]").textContent=fmt(fee);
+ if(k==="transfer")form.querySelector("[data-fee-rate]").textContent=feePercent+"٪";
  form.querySelector("[data-net]").textContent=k==="salary"?fmt(total):targetMoney(v,currency);
  if(k==="transfer"){
    form.querySelector("[data-target-currency]").textContent="عملة الخدمة: "+currency;
@@ -179,7 +181,7 @@ document.addEventListener("submit",async ev=>{
    const method=visibleMethods.find(x=>x.id===service),currency=method?.currency||"USD";
    const perUsd=currency==="USD"?1:Number(visibleRates.find(x=>x.currency===currency&&x.is_enabled)?.per_usd)||0;
    if(!perUsd){out.hidden=false;out.textContent="سعر التحويل غير متاح لهذه العملة";return;}
-   const total=value/perUsd*(1+num(visibleConfig.transfer_fee_percent,2,0,30)/100);
+   const total=value/perUsd*(1+num(method?.fee_percent,visibleConfig.transfer_fee_percent,0,30)/100);
    const ok=window.confirm("سيُخصم من محفظتك تقريبًا "+fmt(total)+" مقابل وصول "+targetMoney(value,currency)+". يؤكد الخادم السعر لحظة الإرسال. تأكيد تقديم الطلب؟");
    if(!ok)return;
  }
