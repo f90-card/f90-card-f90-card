@@ -1277,11 +1277,16 @@
     if(!m){
       main.innerHTML=pageHead("طرق الإيداع", "اختر وسيلة الإيداع المناسبة. ستظهر لك تفاصيلها قبل الطلب.",
         '<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>')+
-        '<div class="f90-deposit-methods-list">'+active.map(x=>
-          '<a class="f90-deposit-method-choice" href="'+(salaryMethod(x)?"#/special/salary":href("deposit",x.id))+'">'+
-          '<span><strong>'+e(x.name_ar)+'</strong><small>عرض التفاصيل وطلب الإيداع</small></span>'+
-          '<span aria-hidden="true">‹</span></a>').join("")+
-        (fallbackSalary?'<a class="f90-deposit-method-choice" href="#/special/salary"><span><strong>سحب رواتب Xena Live</strong><small>حساب قيمة الكوينز وتقديم الطلب</small></span><span aria-hidden="true">‹</span></a>':"")+
+        '<div class="method-grid f90-deposit-methods-with-images">'+methods.map(x=>x.enabled===true?
+          '<a class="method-tile f90-method-active" href="'+(salaryMethod(x)?"#/special/salary":href("deposit",x.id))+'" aria-label="'+e(x.name_ar)+'">'+
+          image(x.image_url,x.name_ar,"f90-deposit-method-art")+
+          '<strong>'+e(x.name_ar)+'</strong><small>إيداع متاح الآن</small></a>':
+          '<div class="method-tile f90-method-unavailable" aria-disabled="true">'+
+          image(x.image_url,x.name_ar,"f90-deposit-method-art")+
+          '<strong>'+e(x.name_ar)+'</strong><small>غير متاح حاليًا</small></div>').join("")+
+        (fallbackSalary?'<a class="method-tile f90-method-active" href="#/special/salary">'+
+          image(S.settings.config?.salary_withdrawal?.image_url||"./assets/f90-new/xena-salary-v2.webp","سحب رواتب Xena Live","f90-deposit-method-art")+
+          '<strong>سحب رواتب Xena Live</strong><small>حساب الكوينز وتقديم الطلب</small></a>':"")+
         '</div>'+
         (!active.length&&!fallbackSalary?empty("لا توجد طرق إيداع مفعّلة حاليًا","wallet"):"");
       return;
@@ -1299,12 +1304,17 @@
     main.innerHTML=
       '<div class="f90-deposit-compact">'+
       '<nav class="f90-deposit-navigation"><a href="#/deposit">‹ جميع طرق الإيداع</a><a href="#/deposits">سجل الإيداعات</a></nav>'+
-      '<section class="f90-deposit-request-card"><header class="f90-deposit-request-head"><h1>'+name+'</h1>'+
+      '<section class="f90-deposit-request-card">'+
+      '<div class="f90-deposit-detail-art">'+image(m.image_url,m.name_ar,"f90-deposit-method-art")+'</div>'+
+      '<header class="f90-deposit-request-head"><h1>'+name+'</h1>'+
       (receiver?'<strong>'+receiver+'</strong>':"")+
       (m.network_ar?'<span>'+e(m.network_ar)+'</span>':"")+
       '<p>'+instructions+'</p></header>'+
       (destination?'<div class="f90-deposit-destination"><span>بيانات الحساب أو وجهة التحويل</span>'+
         '<strong dir="auto">'+destination+'</strong></div>':"")+
+      (C.safeUrl(m.barcode_url)?'<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3>'+
+        '<img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async">'+
+        '<small>استخدم الرمز إذا كانت وسيلة الدفع تدعم المسح.</small></div>':"")+
       '<form id="depositForm" class="f90-deposit-order-form">'+
       '<label class="field"><span>العملة التي حوّلت بها</span><select name="currency" required>'+
        allowed.map(r=>'<option value="'+e(r.currency)+'" '+(r.currency===defaultCurrency?"selected":"")+'>'+e(r.name_ar||r.currency)+' ('+e(r.currency)+')</option>').join("")+
