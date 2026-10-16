@@ -405,7 +405,7 @@
         .join("");
     } else if (kind === "deposits") {
       columns = [
-        "العميل",
+        "العميل وعملته",
         "الطريقة",
         "المبلغ الأصلي",
         "الرصيد بالدولار",
@@ -416,7 +416,7 @@
       rows = r.items
         .map(
           (d) =>
-            `<tr><td>${customer(d.customer)}<small class="muted">${e(C.date(d.created_at))}</small></td><td>${e(d.method_name)}</td><td>${e(C.money(d.amount, d.currency, true))}</td><td>${e(C.money(d.usd_amount, "USD", true))}<br><small class="muted">صرف ${e(d.rate_snapshot)}</small></td><td>${status(d.status)}</td><td>${e(d.reviewer?.display_name || (d.reviewed_by ? d.reviewed_by.slice(0,8) : "بانتظار المراجعة"))}</td><td><button class="button secondary small" data-action="detail-deposit" data-id="${d.id}">الإيصال والمراجعة</button></td></tr>`,
+            `<tr><td>${customer(d.customer)}<small class="muted">عملة الحساب الآن: ${e(d.customer?.account_currency||"USD")}</small><small class="muted">${e(C.date(d.created_at))}</small></td><td>${e(d.method_name)}</td><td>${e(C.money(d.amount, d.currency, true))}</td><td>${e(C.money(d.usd_amount, "USD", true))}<br><small class="muted">صرف ${e(d.rate_snapshot)}</small></td><td>${status(d.status)}</td><td>${e(d.reviewer?.display_name || (d.reviewed_by ? d.reviewed_by.slice(0,8) : "بانتظار المراجعة"))}</td><td><button class="button secondary small" data-action="detail-deposit" data-id="${d.id}">الإيصال والمراجعة</button></td></tr>`,
         )
         .join("");
     } else if (kind === "verification") {
@@ -545,7 +545,7 @@
     S.detail = d;
     modal(
       "مراجعة إيداع",
-      `<div class="staff-detail-grid"><div><small>العميل</small><b>${e(d.customer?.display_name)}</b></div><div><small>رصيد يُضاف بعد القبول</small><b>${e(C.money(d.usd_amount, "USD", true))}</b></div><div><small>التحويل الأصلي</small><b>${e(C.money(d.amount, d.currency, true))}</b></div><div><small>سعر الصرف المحفوظ</small><b>${e(d.rate_snapshot)}</b></div></div><p class="small" style="margin-top:20px">${e(d.method_name)} · ${e(d.reference || "بدون ملاحظة")}</p><div id="receiptLoading" class="loading">جارٍ فتح الإيصال الخاص…</div>${d.status === "pending" ? `<form id="reviewDepositForm">${field("note", "ملاحظة المراجعة", "textarea", "", 'maxlength="2000"')}<div class="actions"><button class="button success" type="submit" name="approve" value="yes">قبول وإضافة الرصيد</button><button class="button danger" type="submit" name="approve" value="no">رفض الطلب</button></div></form>` : `${status(d.status)}<p>${e(d.review_note || "")}</p>`}`,
+      `<div class="staff-detail-grid"><div><small>العميل</small><b>${e(d.customer?.display_name)}</b></div><div><small>عملة حساب العميل الحالية</small><b>${e(d.customer?.account_currency||"USD")}</b></div><div><small>عملة الإيداع عند تقديم الطلب</small><b>${e(d.currency)}</b></div><div><small>رصيد يُضاف بعد القبول</small><b>${e(C.money(d.usd_amount, "USD", true))}</b></div><div><small>التحويل الأصلي</small><b>${e(C.money(d.amount, d.currency, true))}</b></div><div><small>سعر الصرف المحفوظ</small><b>${e(d.rate_snapshot)}</b></div></div><p class="small" style="margin-top:20px">${e(d.method_name)} · ${e(d.reference || "بدون ملاحظة")}</p><div id="receiptLoading" class="loading">جارٍ فتح الإيصال الخاص…</div>${d.status === "pending" ? `<form id="reviewDepositForm">${field("note", "ملاحظة المراجعة", "textarea", "", 'maxlength="2000"')}<div class="actions"><button class="button success" type="submit" name="approve" value="yes">قبول وإضافة الرصيد</button><button class="button danger" type="submit" name="approve" value="no">رفض الطلب</button></div></form>` : `${status(d.status)}<p>${e(d.review_note || "")}</p>`}`,
     );
     const r = await A.call("staff.file", { kind: "deposit", id: d.id });
     if ($("receiptLoading"))
