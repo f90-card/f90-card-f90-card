@@ -2508,6 +2508,24 @@
       }
     }
   });
+  // Restore stale account details after an offline/mobile background interval.
+  // Never refresh while hidden, interrupt an active form, or turn an offline
+  // read failure into an explicit logout.
+  function recoverVisibleSession() {
+    if (document.visibilityState !== "visible" || !S.walletStale || !S.settings?.store_name) return;
+    void refreshMe().then(async (ok) => {
+      if (!ok) return;
+      chrome();
+      const page = (location.hash || "#/").split("/")[1] || "";
+      if (["profile","wallet","orders","history","deposits","verification","developers"].includes(page) &&
+          !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+        await route();
+      }
+    }).catch(() => { /* Wait for the next connection/recovery event. */ });
+  }
+  document.addEventListener("visibilitychange", recoverVisibleSession);
+  window.addEventListener("online", recoverVisibleSession);
+
   let bootRetryTimer = null;
   let bootRetryAttempts = 0;
   // Public catalog only: session-scoped warm start speeds repeat visits.
