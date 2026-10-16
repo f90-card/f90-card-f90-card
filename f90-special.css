@@ -305,8 +305,8 @@
 @media(max-width:650px){.f90-salary-admin-photo{grid-template-columns:1fr}.f90-salary-admin-photo img{max-width:250px}.f90-salary-quote>div{align-items:flex-start;flex-direction:column}}
 
 
-/* Screenshot-inspired deposit layout, kept within the F90 black/red and cream themes.
-   Deposit and Xena sections deliberately render no product or banner images. */
+/* Screenshot-inspired deposit layout with the original saved method and Xena images.
+   Keep F90 dark/red and cream themes; preserve the latest secure financial forms. */
 .f90-deposit-compact{width:min(100%,690px);margin:12px auto 35px;padding:0 10px;box-sizing:border-box;direction:rtl}
 .f90-deposit-navigation{display:flex;gap:14px;justify-content:space-between;margin:10px 0 15px;font-size:13px}
 .f90-deposit-navigation a{color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:11px;padding:8px 12px;background:var(--surface)}
@@ -352,7 +352,7 @@
 .f90-special-page[data-kind="salary"]{margin-top:5px}
 .f90-special-page[data-kind="salary"] .f90-special-panel{width:min(100%,690px);max-width:690px;border-radius:23px;margin:10px auto;padding:clamp(17px,4vw,30px)}
 .f90-special-page[data-kind="salary"] .f90-special-panel h1{margin:0 0 15px}
-.f90-special-page[data-kind="salary"] .f90-special-banner{display:none}
+.f90-special-page[data-kind="salary"] .f90-special-banner{display:block;max-height:none;margin:0 auto 16px;overflow:hidden;border-radius:17px}
 .f90-deposit-note-top{padding:13px 0 10px;font-size:13px}
 .f90-deposit-note-top strong{font-size:14px;font-weight:800}
 .f90-deposit-note-top p{white-space:pre-line;line-height:1.85;color:var(--muted);margin:9px 0 0;overflow-wrap:anywhere}
@@ -361,3 +361,40 @@
 .f90-salary-receipt-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}
 .f90-salary-receipt-action a{font-weight:700;color:var(--accent)}
 @media(max-width:560px){.f90-deposit-compact{padding:0 3px}.f90-deposit-request-card{padding:15px;border-radius:17px}.f90-deposit-order-form{gap:13px}.f90-deposit-methods-list{grid-template-columns:1fr}.f90-deposit-request-head p{font-size:13px}}
+
+
+/* Restored existing deposit method images, including the saved Xena art. */
+.f90-deposit-methods-with-images{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:13px}
+.f90-deposit-methods-with-images .method-tile{
+  min-width:0;min-height:196px;padding:12px 10px;gap:8px;border-radius:17px;
+  overflow:hidden;justify-content:center;
+}
+.f90-deposit-methods-with-images .f90-deposit-method-art{
+  display:block;width:100%;height:128px;object-fit:contain;max-width:240px;
+  border-radius:11px;flex:0 0 auto;
+}
+.f90-deposit-methods-with-images strong{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.f90-deposit-methods-with-images small{font-size:11px;text-align:center}
+.f90-deposit-methods-with-images .f90-method-unavailable{opacity:.6;cursor:default}
+.f90-deposit-detail-art{display:flex;align-items:center;justify-content:center;margin:0 0 19px}
+.f90-deposit-detail-art img{
+  display:block;width:min(100%,330px);height:190px;object-fit:contain;
+  border-radius:16px;
+}
+.f90-deposit-request-card .f90-deposit-barcode{
+  display:grid;justify-items:center;gap:8px;margin:0 auto 18px;
+  padding:12px;background:var(--surface2);border:1px solid var(--line);
+  border-radius:15px;max-width:360px;text-align:center;
+}
+.f90-deposit-request-card .f90-deposit-barcode img{max-width:min(100%,225px);height:auto;object-fit:contain}
+.f90-deposit-request-card .f90-deposit-barcode h3{margin:0;font-size:14px}
+.f90-special-page[data-kind="salary"] .f90-special-banner img{
+  display:block;width:100%;max-height:255px;object-fit:contain;
+}
+@media(max-width:560px){
+ .f90-deposit-methods-with-images{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .f90-deposit-methods-with-images .method-tile{min-height:180px;padding:10px 8px}
+ .f90-deposit-methods-with-images .f90-deposit-method-art{height:108px}
+ .f90-deposit-detail-art img{height:150px}
+ .f90-special-page[data-kind="salary"] .f90-special-banner img{max-height:185px}
+}
