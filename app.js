@@ -1255,38 +1255,70 @@
   }
   function deposit(methodId) {
     if (!S.me?.profile?.is_verified) {
-      main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") + `<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>`;
+      main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") +
+        '<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>';
       return;
     }
-    const methods = (S.settings.config.payment_methods || []);
-    S.selectedMethod = methods.find((m) => m.id === methodId && m.enabled) || null;
-    S.depositKey = C.key();
-    const m = S.selectedMethod;
-    const salaryMethod=x=>x?.is_salary_withdrawal===true || x?.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062" || (Array.isArray(x?.accepted_currencies)&&x.accepted_currencies.includes("XCN")&&/سحب رواتب|اكزينا|Xena/i.test(x.name_ar||""));
-    if(m && salaryMethod(m)){window.F90Special.render("salary",S.settings,S.me,"",S.rates);return;}
-    main.innerHTML = `${pageHead("أضف رصيدًا لعالمك", "اختر طريقة الإيداع، وأرسل إيصالك للمراجعة", `<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>`)}<div class="deposit-steps"><span><b>١</b>اختر الطريقة</span><span><b>٢</b>حوّل وارفع الإيصال</span><span><b>٣</b>اعتماد الإدارة</span></div>${
-      !m
-        ? methods.length
-          ? `<div class="method-grid">${methods.map(x=>x.enabled ? `<a class="method-tile f90-method-active" href="${salaryMethod(x)?"#/special/salary":href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>إيداع متاح الآن</small></a>` : `<div class="method-tile f90-method-unavailable" aria-disabled="true">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>غير متاح حاليًا</small></div>`).join("")}</div>`
-          : empty(
-              "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
-              "wallet",
-            )
-        : `<div class="split"><section class="panel"><div class="actions" style="margin-bottom:22px"><a class="button secondary small" href="#/deposit">تغيير الطريقة</a><h2 style="margin:0">${e(m.name_ar)}</h2></div>${image(m.image_url, m.name_ar, "file-preview")}${C.safeUrl(m.barcode_url) ? `<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3><img src="${e(C.safeUrl(m.barcode_url))}" alt="باركود ${e(m.name_ar)}" loading="lazy"><small>افتح تطبيق الدفع وامسح الرمز إذا كانت الطريقة تدعم ذلك.</small></div>` : ""}<div class="f90-deposit-instructions"><h3>معلومات وتعليمات الإيداع</h3><p class="product-description">${e(m.details_ar || "راجع بيانات التحويل مع الإدارة قبل إرسال المبلغ.")}</p></div><p class="muted small">لا يُضاف الرصيد حتى تعتمد الإدارة صحة التحويل. سعر الصرف يُحفظ لحظة تقديم الطلب.</p></section><section class="panel"><h2>بيانات الإيداع</h2><form id="depositForm"><div class="field-row">${field("amount", "المبلغ المحوّل أو الكوينز", "number", "", 'required min="0.000001" max="1000000000000" step="0.000001"')}${select(
-            "currency",
-            "عملة التحويل",
-            S.rates
-              .filter((r) => r.is_enabled && r.per_usd && (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)))
-              .map((r) => [r.currency, r.name_ar]),
-            S.currency,
-          )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع ${e(Number(m.deposit_fee_percent ?? 2))}٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
-    }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
-    if(!m && !methods.some(salaryMethod) && S.settings.config?.special_services?.show_salary !== false){
-      const tile='<a href="#/special/salary" class="f90-special-deposit-link">'+
-        '<img src="./assets/f90-new/xena-salary-v2.webp" alt="Xena Live سحب رواتب">'+
-        '<span><strong>سحب رواتب Xena Live</strong><small>100,000 كوينز = '+e(S.settings.config?.special_services?.salary_usd_per_100k ?? 10)+' دولار قبل الرسوم · بعد مراجعة الإدارة</small></span></a>';
-      (main.querySelector(".method-grid") || main).insertAdjacentHTML("beforeend",tile);
+    const methods=S.settings.config.payment_methods||[];
+    const salaryMethod=x=>x?.is_salary_withdrawal===true ||
+      x?.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062" ||
+      (Array.isArray(x?.accepted_currencies)&&x.accepted_currencies.includes("XCN")&&/سحب رواتب|اكزينا|Xena/i.test(x.name_ar||""));
+    S.selectedMethod=methods.find(m=>m.id===methodId&&m.enabled)||null;
+    S.depositKey=C.key();
+    const m=S.selectedMethod;
+    if(m&&salaryMethod(m)){
+      window.F90Special.render("salary",S.settings,S.me,"",S.rates);
+      return;
     }
+    const active=methods.filter(x=>x.enabled===true);
+    const salaryEnabled=S.settings.config?.salary_withdrawal?.enabled===true &&
+      S.settings.config?.special_services?.show_salary!==false;
+    const fallbackSalary=salaryEnabled&&!methods.some(salaryMethod);
+    if(!m){
+      main.innerHTML=pageHead("طرق الإيداع", "اختر وسيلة الإيداع المناسبة. ستظهر لك تفاصيلها قبل الطلب.",
+        '<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>')+
+        '<div class="f90-deposit-methods-list">'+active.map(x=>
+          '<a class="f90-deposit-method-choice" href="'+(salaryMethod(x)?"#/special/salary":href("deposit",x.id))+'">'+
+          '<span><strong>'+e(x.name_ar)+'</strong><small>عرض التفاصيل وطلب الإيداع</small></span>'+
+          '<span aria-hidden="true">‹</span></a>').join("")+
+        (fallbackSalary?'<a class="f90-deposit-method-choice" href="#/special/salary"><span><strong>سحب رواتب Xena Live</strong><small>حساب قيمة الكوينز وتقديم الطلب</small></span><span aria-hidden="true">‹</span></a>':"")+
+        '</div>'+
+        (!active.length&&!fallbackSalary?empty("لا توجد طرق إيداع مفعّلة حاليًا","wallet"):"");
+      return;
+    }
+    const allowed=S.rates.filter(r=>r.is_enabled&&Number(r.per_usd)>0 &&
+      (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)));
+    const defaultCurrency=allowed.some(r=>r.currency===S.currency)?S.currency:
+      allowed.some(r=>r.currency==="USD")?"USD":allowed[0]?.currency||"USD";
+    const min=Number(m.minimum_amount)>0?Number(m.minimum_amount):0;
+    const name=e(m.name_ar||"إيداع");
+    const receiver=e(m.receiver_name||"");
+    const destination=e(m.destination||"");
+    const instructions=e(m.details_ar||"أكمل التحويل إلى بيانات الحساب المعتمدة ثم أرسل إيصال التحويل للمراجعة.");
+    main.innerHTML=
+      '<div class="f90-deposit-compact">'+
+      '<nav class="f90-deposit-navigation"><a href="#/deposit">‹ جميع طرق الإيداع</a><a href="#/deposits">سجل الإيداعات</a></nav>'+
+      '<section class="f90-deposit-request-card"><header class="f90-deposit-request-head"><h1>'+name+'</h1>'+
+      (receiver?'<strong>'+receiver+'</strong>':"")+
+      (m.network_ar?'<span>'+e(m.network_ar)+'</span>':"")+
+      '<p>'+instructions+'</p></header>'+
+      (destination?'<div class="f90-deposit-destination"><span>بيانات الحساب أو وجهة التحويل</span>'+
+        '<strong dir="auto">'+destination+'</strong></div>':"")+
+      '<form id="depositForm" class="f90-deposit-order-form">'+
+      '<label class="field"><span>العملة التي حوّلت بها</span><select name="currency" required>'+
+       allowed.map(r=>'<option value="'+e(r.currency)+'" '+(r.currency===defaultCurrency?"selected":"")+'>'+e(r.name_ar||r.currency)+' ('+e(r.currency)+')</option>').join("")+
+      '</select></label>'+
+      '<label class="field"><span>قيمة المبلغ المحوّل</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="أدخل قيمة التحويل">'+
+      (min?'<small>الحد الأدنى لهذه الطريقة: '+e(min)+' بعملة التحويل</small>':"")+'</label>'+
+      '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><strong>القيمة التي ستضاف إلى محفظتك</strong><span>أدخل المبلغ لعرض الصافي والرسوم قبل الطلب.</span></div>'+
+      '<label class="field"><span>'+e(m.reference_label||"إشعار أو رقم العملية (اختياري)")+'</span>'+
+        '<input name="reference" type="text" maxlength="300" placeholder="أدخل رقم العملية أو ملاحظة التأكيد"></label>'+
+      '<label class="field f90-deposit-upload"><span>إرفاق صورة إيصال التحويل</span>'+
+        '<input type="file" name="receipt" required accept="image/jpeg,image/png,image/webp">'+
+        '<small>'+e(m.receipt_help||"ارفع إيصالًا واضحًا بصيغة JPG أو PNG أو WEBP، بحد أقصى 5 ميجابايت. لا يظهر الإيصال للعامة.")+'</small></label>'+
+      '<p class="f90-deposit-request-footnote">تراجع الإدارة الطلب والإيصال قبل إضافة أي رصيد. قيمة الإيداع النهائية يحددها الخادم وفق سعر الصرف والرسوم المعتمدة.</p>'+
+      '<button type="submit" class="button full">تقديم طلب الإيداع</button>'+
+      '</form></section></div>';
   }
   function orderRecord(o) {
     return `<a class="record" href="${href("order", o.id)}">${image(o.product_image, o.product_name, "record-image")}<div class="record-main"><h3>${e(o.product_name)}</h3><p>طلب #${e(o.order_number)} · ${e(C.date(o.created_at))}</p><div class="record-footer">${status(o.status)}<span class="badge">${o.fulfillment === "automatic" ? "آلي" : "يدوي"}</span></div></div><strong class="record-price">${e(displayMoney(o.total_usd))}</strong></a>`;
