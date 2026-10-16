@@ -202,7 +202,8 @@ async function renderRequests(main){
   ...(sp.data||[]).map(x=>({...x,source:"special",subtitle:x.service,contact:x.contact_whatsapp,
     qty:x.amount_units,total:x.gross_usd,net:x.net_usd,note:x.client_details})),
   ...(sal.data||[]).map(x=>({...x,source:"salary",kind:"salary",subtitle:"رواتب Xena Live",
-    contact:x.account_id,qty:x.coins,total:x.usd_amount,net:x.usd_amount,note:x.details_snapshot})),
+    contact:x.account_id,qty:x.coins,total:x.usd_amount,net:x.usd_amount,
+    note:[x.client_note,x.details_snapshot].filter(Boolean).join(" · ")})),
   ...(tr.data||[]).map(x=>({...x,source:"transfer",kind:"transfer",subtitle:x.method_name,
     contact:x.recipient_details,qty:x.net_usd,total:x.total_usd,net:x.net_usd,note:x.recipient_details}))
  ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -214,6 +215,8 @@ async function renderRequests(main){
  '<p>الحساب/التواصل: '+esc(x.contact||x.account_id||"—")+'</p>'+
  '<p>التفاصيل: '+esc(x.note||"—")+'</p>'+
  '<p>الكمية: '+esc(x.qty||0)+' | القيمة: $'+esc(x.total)+' | الصافي: $'+esc(x.net)+'</p>'+
+ (x.source==="salary"?'<p>المقابل بعملة الإيداع: '+esc(x.payout_amount||0)+' '+esc(x.payout_currency||"USD")+'</p>'+
+ (x.receipt_path?'<div class="f90-salary-receipt-action"><button class="button secondary small" type="button" data-f90-salary-receipt="'+esc(x.id)+'">عرض إيصال سحب الراتب</button><span data-f90-receipt-status></span></div>':''):'')+
  '<small>معرّف العميل: '+esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
  '<p>الحالة: '+esc(states[x.status]||x.status)+(x.review_note?" · "+esc(x.review_note):"")+'</p></div>'+
  (x.status==="pending"||(x.status==="processing"&&x.source==="special")?
@@ -302,6 +305,22 @@ document.addEventListener("submit",async ev=>{
    }}});
  out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
  }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
+});
+document.addEventListener("click",async ev=>{
+ const proofButton=ev.target.closest?.("[data-f90-salary-receipt]");
+ if(!proofButton)return;
+ ev.preventDefault();
+ if(proofButton.disabled)return;
+ proofButton.disabled=true;
+ const status=proofButton.parentElement?.querySelector("[data-f90-receipt-status]");
+ if(status)status.textContent="جارٍ تجهيز رابط الإيصال الخاص…";
+ try{
+   const ticket=await window.F90API.call("staff.file",{kind:"salary",id:proofButton.dataset.f90SalaryReceipt});
+   const url=String(ticket?.signedUrl||"");
+   if(!/^https:\/\//i.test(url))throw Error("رابط الإيصال غير متاح");
+   if(status)status.innerHTML='<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">فتح الإيصال الخاص</a> <small>صلاحية الرابط 5 دقائق</small>';
+ }catch(err){if(status)status.textContent=String(err?.message||"تعذّر تحميل الإيصال");}
+ finally{proofButton.disabled=false;}
 });
 document.addEventListener("click",async ev=>{
  if(ev.target.closest?.('[data-add-method]')){document.getElementById('f90TransferRows')?.insertAdjacentHTML('beforeend',methodRow({id:'method-'+crypto.randomUUID().slice(0,8)}));return;}
