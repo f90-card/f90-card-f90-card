@@ -1287,7 +1287,8 @@
       return;
     }
     const allowed=S.rates.filter(r=>r.is_enabled&&Number(r.per_usd)>0 &&
-      (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)));
+      (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)) &&
+      (r.currency!=="XCN"||(Array.isArray(m.accepted_currencies)&&m.accepted_currencies.includes("XCN"))));
     const defaultCurrency=allowed.some(r=>r.currency===S.currency)?S.currency:
       allowed.some(r=>r.currency==="USD")?"USD":allowed[0]?.currency||"USD";
     const min=Number(m.minimum_amount)>0?Number(m.minimum_amount):0;
@@ -2112,6 +2113,11 @@
       const estimate = $("depositEstimate");
       if (!estimate) return;
       const amount = Number(f.elements.amount.value);
+      const min = Number(S.selectedMethod?.minimum_amount || 0);
+      if (Number.isFinite(amount) && Number.isFinite(min) && min>0 && amount<min) {
+        estimate.innerHTML='<strong>المبلغ أقل من الحد الأدنى</strong><span>الحد الأدنى لهذه الطريقة: '+e(min)+' '+e(f.elements.currency.value)+'.</span>';
+        return;
+      }
       const rate = S.rates.find((row) => row.currency === f.elements.currency.value && row.is_enabled);
       const perUsd = Number(rate?.per_usd);
       if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
