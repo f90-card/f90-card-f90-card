@@ -130,6 +130,7 @@ document.addEventListener("input",ev=>{
 document.addEventListener("submit",async ev=>{
  if(ev.target?.id!=="f90SalaryDepositAdminForm")return;
  ev.preventDefault();
+ ev.stopImmediatePropagation();
  const form=ev.target,button=form.querySelector('button[type="submit"]');
  const status=form.querySelector("#f90SalaryAdminStatus");
  if(button.disabled)return;
@@ -234,6 +235,7 @@ document.addEventListener("input",ev=>{
 document.addEventListener("submit",async ev=>{
  if(ev.target?.id!=="f90SpecialAdminForm")return;
  ev.preventDefault();
+ ev.stopImmediatePropagation();
  const form=ev.target,send=form.querySelector('button[type="submit"]'),out=form.querySelector("[data-f90-admin-status]");
  if(send.disabled)return;
  send.disabled=true;out.textContent="جارٍ حفظ الخدمات وصورها…";
