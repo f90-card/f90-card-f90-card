@@ -19,7 +19,16 @@ const currencies=["USD","ILS","JOD","SYP","TRY","AED","EUR","EGP","SAR","QAR"];
 const methodRow=(x={})=>'<div class="f90-transfer-method-row" data-method-row>'+field("method_id","معرّف الطريقة",x.id||"","text",'required pattern="[a-z0-9-]{2,60}"')+field("method_name","اسم الخدمة",x.name_ar||"","text",'required maxlength="120"')+
  '<label class="field"><span>عملة المستفيد</span><select name="method_currency">'+currencies.map(c=>'<option value="'+c+'" '+((x.currency||"USD")===c?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
  field("method_fee","عمولة هذه الخدمة ٪",x.fee_percent??2,"number",'min="0" max="30" step="0.01" required')+
+ field("method_rate","سعر مستقل: وحدات العملة لكل دولار (فارغ = سعر العملات المعتمد)",x.per_usd??"","number",'min="0.00000001" step="any"')+
+ field("method_image","رابط صورة هذه الخدمة",x.image_url||"","url")+
+ textarea("method_details","تعليمات هذه الخدمة",x.details_ar||"")+
  check("method_enabled","إظهار الخدمة",x.enabled!==false)+'<button class="button secondary small" type="button" data-remove-method>حذف الطريقة</button></div>';
+const catalogRow=x=>'<div data-service-row class="panel">'+
+ '<label class="field"><span>نوع الخدمة</span><select name="service_kind"><option value="design" '+(x.kind==="design"?'selected':'')+'>تصميم</option><option value="account" '+(x.kind==="account"?'selected':'')+'>حساب</option></select></label>'+
+ field("service_id","معرّف الخدمة",x.id,"text",'required')+field("service_name","اسم الخدمة",x.name_ar,"text",'required')+
+ textarea("service_details","تفاصيل الخدمة",x.details_ar||"")+field("service_image","رابط الصورة",x.image_url||"","text")+
+ field("service_product","رابط المنتج المسعّر أو معرّفه (اختياري)",x.product_slug||"")+check("service_enabled","تفعيل الخدمة",x.enabled!==false)+
+ '<button type="button" class="button secondary small" data-remove-service>حذف الخدمة من القائمة</button></div>';
 async function renderSettings(main,settings){
  currentSettings=settings;
  const sal=settings?.config?.salary_withdrawal||{},tr=settings?.config?.money_transfer||{};
@@ -54,6 +63,7 @@ async function renderSettings(main,settings){
  check("show_account","إظهار حسابات Xena",c.show_account!==false)+
  check("show_design","إظهار قسم التصاميم",c.show_design!==false)+
  check("show_website","إظهار قسم المواقع",c.show_website!==false)+'</section>'+
+ '<section class="panel"><h2>خدمات التصميم والحسابات</h2><p>أضف خدمة بصورة ووصف مستقلين. لتحديد سعر ودفع حقيقي، أنشئ المنتج من إدارة المنتجات وحدد القسم وحقل واتساب ثم ألصق رابطه هنا. اترك الرابط فارغًا لطلب التفاصيل دون خصم.</p><div id="f90ServiceRows">'+(window.F90Special?.serviceCatalog(settings)||c.service_catalog||[]).map(catalogRow).join('')+'</div><button type="button" class="button secondary" data-add-service>إضافة خدمة</button></section>'+
  '<section class="panel"><h2>الصور والبنرات الخاصة بالخدمات</h2><p class="muted">كل صورة مستقلة، وتظهر معاينتها قبل الرفع. يمكنك أيضًا استخدام رابط صورة موجودة.</p>'+
  imageFields.map(([id,title,where])=>{
  const url=c[id+"_banner_url"]||"./assets/f90-new/banner-"+(id==="account"?"accounts":id)+".webp";
@@ -137,11 +147,22 @@ document.addEventListener("submit",async ev=>{
    const name_ar=String(row.querySelector('[name="method_name"]').value||"").trim();
    const currency=row.querySelector('[name="method_currency"]').value;
    const fee_percent=Number(row.querySelector('[name="method_fee"]').value);
+   const rawRate=row.querySelector('[name="method_rate"]').value.trim();
+   const per_usd=rawRate?Number(rawRate):null;
+   if(per_usd!==null&&(!Number.isFinite(per_usd)||per_usd<=0))throw Error("سعر تحويل الخدمة غير صحيح");
    const enabled=row.querySelector('[name="method_enabled"]').checked;
    if(!/^[a-z0-9-]{2,60}$/.test(id)||!name_ar||name_ar.length>120||!currencies.includes(currency)||!Number.isFinite(fee_percent)||fee_percent<0||fee_percent>30)throw Error("راجع بيانات كل طريقة تحويل");
-   return {id,name_ar,currency,fee_percent,enabled};
+   return {...(currentSettings?.config?.money_transfer?.methods||[]).find(x=>x.id===id),id,name_ar,currency,fee_percent,enabled,per_usd,
+     image_url:String(row.querySelector('[name="method_image"]').value||""),
+     details_ar:String(row.querySelector('[name="method_details"]').value||"").slice(0,2500)};
  });
  if(!methods.length||methods.length>50||new Set(methods.map(x=>x.id)).size!==methods.length)throw Error("أدخل طرق تحويل مستقلة وغير مكررة");
+ c.service_catalog=[...form.querySelectorAll('[data-service-row]')].map(row=>{
+  const get=name=>String(row.querySelector('[name="service_'+name+'"]').value||'').trim();
+  const slug=get('product').split('#/product/').pop();
+  return {id:get('id'),kind:get('kind'),name_ar:get('name'),details_ar:get('details').slice(0,2500),image_url:get('image'),product_slug:slug,enabled:row.querySelector('[name="service_enabled"]').checked};
+ });
+ if(c.service_catalog.some(x=>!x.id||!x.name_ar)||new Set(c.service_catalog.map(x=>x.kind+':'+x.id)).size!==c.service_catalog.length)throw Error('راجع أسماء ومعرّفات الخدمات');
  c.transfer_methods=methods.map(x=>x.name_ar);
  for(const k of ["salary","transfer","account","website"])c[k+"_description"]=String(d.get(k+"_description")||"").slice(0,2500);
  for(const k of ["salary","transfer","account","website","design"])c["show_"+k]=d.get("show_"+k)==="on";
@@ -186,4 +207,10 @@ document.addEventListener("click",async ev=>{
  }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
 });
 window.F90SpecialAdmin={render};
+
+document.addEventListener('click',ev=>{
+ if(ev.target.closest?.('[data-add-service]'))document.getElementById('f90ServiceRows')?.insertAdjacentHTML('beforeend',catalogRow({id:crypto.randomUUID(),kind:'design',name_ar:'',enabled:true}));
+ ev.target.closest?.('[data-remove-service]')?.closest('[data-service-row]')?.remove();
+});
+
 })();

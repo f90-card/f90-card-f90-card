@@ -273,3 +273,16 @@
 .f90-gallery-thumb{padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);cursor:pointer}
 .f90-gallery-thumb[aria-pressed="true"]{border-color:var(--accent)}
 .f90-gallery-thumb img{display:block;width:48px;height:48px;object-fit:cover;border-radius:5px}
+
+/* Read-only media: preserve the complete uploaded artwork. */
+.f90-special-ad img,.f90-hero-link img{object-fit:contain!important;height:auto!important;aspect-ratio:1029/345;background:#08090c}
+.f90-special-banner{max-height:none;overflow:visible}
+.f90-home-phone-image,.f90-home-phone-video,.f90-home-laptop-display img,.f90-home-laptop-display video{object-fit:contain!important;background:#050609}
+.f90-special-deposit-link img{width:76px;height:76px;object-fit:contain}
+
+.f90-home-phone-image,.f90-home-phone-video{transform:translate(var(--f90-media-x,0%),var(--f90-media-y,0%)) scale(var(--f90-media-scale,1))}
+.f90-home-laptop-display img,.f90-home-laptop-display video{transform:translate(var(--f90-laptop-media-x,0%),var(--f90-laptop-media-y,0%)) scale(var(--f90-laptop-media-scale,1))}
+.f90-home-laptop-shell:after{content:"ASUS";display:block;text-align:center;color:#bbb;font:600 9px sans-serif;letter-spacing:2px;background:#17191e}
+.f90-service-art{width:min(100%,260px);height:auto;aspect-ratio:1;object-fit:contain;border-radius:14px}
+
+.f90-service-thumb{width:76px;height:76px;object-fit:contain;border-radius:10px}.f90-special-section-option:has(.f90-service-thumb){grid-template-columns:76px 1fr 18px;min-height:100px}
