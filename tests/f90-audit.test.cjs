@@ -290,7 +290,7 @@ test("Visitors see only edge volume controls; managers own radio sources", () =>
   assert.doesNotMatch(app, /\["music","ميوزك أف تسعين","headphones"\]/);
 });
 
-test("Radio controls are manager only, with configurable icon and mobile layout", () => {
+test("Radio sources remain manager-only; listeners can seek and change tracks with mobile controls", () => {
   const radio=read("f90-media-player.js");
   const css=read("f90-radio.css");
   const edge=read("supabase/functions/f90-platform/index.ts");
@@ -309,7 +309,11 @@ test("Radio controls are manager only, with configurable icon and mobile layout"
   assert.match(radio,/addEventListener\("waiting"/);
   assert.match(radio,/f90-radio-custom-icon/);
   assert.match(radio,/media\.state/);
-  assert.doesNotMatch(radio,/id="f90RadioPause"|id="f90RadioNext"|id="f90RadioStop"/);
+  assert.match(radio,/id="f90RadioPrev"/);
+  assert.match(radio,/id="f90RadioNext"/);
+  assert.match(radio,/id="f90RadioSeek"/);
+  assert.match(radio,/id="f90RadioPlayPause"/);
+  assert.doesNotMatch(radio,/staff\.radio\.save/);
   assert.match(css,/f90-radio-mobile-size/);
   assert.match(css,/data-side="left"/);
   assert.match(edge,/currentBubble/);
