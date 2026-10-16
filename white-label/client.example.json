@@ -1,0 +1,8 @@
+{
+  "storeNameAr": "اسم المتجر الجديد",
+  "storeNameEn": "CLIENT STORE",
+  "siteUrl": "https://new-client.example/",
+  "supportWhatsapp": "+000000000000",
+  "supabaseUrl": "https://NEW_PROJECT_REF.supabase.co",
+  "supabasePublishableKey": "YOUR_NEW_SUPABASE_PUBLISHABLE_KEY"
+}
