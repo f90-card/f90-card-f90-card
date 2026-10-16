@@ -83,14 +83,14 @@ function salaryEditor(settings,rates=[]){
  const pay=(settings?.config?.payment_methods||[]).find(x=>x.is_salary_withdrawal===true ||
    x.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062");
  const activeRates=(rates||[]).filter(x=>x.is_enabled && Number(x.per_usd)>0 &&
-   /^[A-Z]{3,8}$/.test(String(x.currency||"")));
+   ["USD","ILS","JOD"].includes(String(x.currency||"")));
  const image=String(sal.image_url||pay?.image_url||"");
  const options=activeRates.map(rate=>{
    const old=rows.find(x=>x.currency===rate.currency)||{};
    const base=Number(sal.coins_per_usd)>0 ? 100000/Number(sal.coins_per_usd) : 10;
    const units=rate.currency==="USD"?1:(Number(old.units_per_usd)>0?Number(old.units_per_usd):Number(rate.per_usd));
-   const payout=Number(old.per_100k)>0?Number(old.per_100k):(rate.currency==="XCN"?100000:base*units);
-   const isEnabled=old.enabled===true || (!rows.length && ["USD","ILS","JOD","XCN"].includes(rate.currency));
+   const payout=Number(old.per_100k)>0?Number(old.per_100k):base*units;
+   const isEnabled=old.enabled===true || (!rows.length && ["USD","ILS","JOD"].includes(rate.currency));
    return '<div class="f90-salary-currency-row" data-salary-currency="'+esc(rate.currency)+'"><strong>'+
      esc(rate.name_ar||rate.currency)+' · '+esc(rate.currency)+'</strong>'+
      check("salary_option_enabled","إتاحة الاختيار للعميل",isEnabled)+
