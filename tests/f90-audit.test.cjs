@@ -200,8 +200,8 @@ test("Welcome information page is restored and owner-only home phone media stays
   assert.match(app,/F90WelcomeScene\.homePhone/);
   assert.match(phone,/promo_video/);
   assert.match(phone,/source data-src/);
-  assert.match(phone,/const target=safe\(p\.link_url\)/);
-  assert.match(phone,/safe\(laptop\.link_url\)/);
+  assert.doesNotMatch(phone,/p\.link_url|laptop\.link_url/);
+  assert.doesNotMatch(phone,/safe\(laptop\.link_url\)/);
   assert.doesNotMatch(phone,/\|\|contact/);
   assert.doesNotMatch(phone,/id="authForm"/);
   assert.match(admin,/promo_video_image_file/);
@@ -315,7 +315,7 @@ test("Radio controls are manager only, with configurable icon and mobile layout"
   assert.match(edge,/currentBubble/);
   assert.match(edge,/bubble:m\.bubble\|\|\{\}/);
   assert.match(edge,/size_mobile/);
-  assert.match(phone,/p\.link_url/);
+  assert.doesNotMatch(phone,/p\.link_url|laptop\.link_url/);
   assert.match(phone,/f90-phone-size/);
   assert.match(api,/radioMimeAliases/);
   assert.match(api,/audio\/x-m4a/);

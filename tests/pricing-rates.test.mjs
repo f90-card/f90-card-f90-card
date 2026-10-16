@@ -35,7 +35,7 @@ test("radio, device improvements and maintenance controls were preserved",()=>{
  const scene=read("f90-welcome-scene.js"),radio=read("f90-media-player.js"),css=read("f90-special.css"),app=read("app.js");
  assert.doesNotThrow(()=>new vm.Script(scene));
  assert.doesNotThrow(()=>new vm.Script(radio));
- assert.match(scene,/const target=safe\(p\.link_url\)/);
+ assert.doesNotMatch(scene,/p\.link_url|laptop\.link_url/);
  assert.match(radio,/value===null \? \.02/);
  assert.match(css,/f90-maintenance-content/);
  assert.match(css,/f90RadioNeonWaves/);

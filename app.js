@@ -536,6 +536,8 @@
   const f90CategoryById = new Map();
   function categoryIsUnavailable(cat) {
     if (!cat?.id) return true; // Preserve the original orphan-product safety behavior.
+    if(cat.presentation?.availability!=="refilling" && ["money-transfer","account-sales","design-services"].includes(cat.slug))return false;
+    if(cat.presentation?.availability!=="refilling" && cat.slug?.startsWith("transfer-") && S.categories.some(p=>p.id===cat.parent_id&&p.slug==="money-transfer"))return false;
     if (f90CategoryAvailability.has(cat.id)) return f90CategoryAvailability.get(cat.id);
     const disabled=C.categoryUnavailable(cat,S.categories,S.products);
     f90CategoryAvailability.set(cat.id,disabled);
@@ -551,7 +553,7 @@
   function categoryTile(c) {
     const specialRoutes={"money-transfer":"transfer","account-sales":"account","design-services":"design","complete-website":"website"};
     const specialRoute=specialRoutes[c.slug];
-    const categoryLink=specialRoute==="website" ? href("product","f90-full-website-500") : specialRoute ? "#/special/"+specialRoute : href("category",c.slug||c.id);
+    const categoryLink=specialRoute==="website" ? href("product","f90-full-website-500") : specialRoute && !["account","design","transfer"].includes(specialRoute) ? "#/special/"+specialRoute : href("category",c.slug||c.id);
     const disabled = categoryIsUnavailable(c);
     return `<a class="image-tile f90-category-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${categoryLink}"`} data-search="${e(window.F90CatalogSearch?.keys(c.name) || c.name)}" aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
@@ -631,10 +633,10 @@
           : null;
     const art = hero?.image_url || c.hero_image || "./assets/sections/hero.png";
     const target = hero?.link_url || "#/";
-    main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><a class="f90-hero-link" href="${e(C.safeUrl(target) || "#categories")}"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></a><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
+    main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><div class="f90-hero-link"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></div><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
+ ${window.F90Special?.home(S.settings) || ''}
  ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/welcome">اكتشف المتجر</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
- ${window.F90Special?.home(S.settings) || ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
      ? `<div class="image-grid">${S.categories
@@ -672,7 +674,7 @@
         const nextArt=C.safeUrl(current.image_url||c.hero_image||"./assets/sections/hero.png");
         pic.src=nextArt;
         pic.alt=current.title||"إعلان أف تسعين كارد";
-        link.href=C.safeUrl(current.link_url||"#/")||"#/";
+
         overlay.hidden=!current.presentation?.overlay_enabled;
         overlay.querySelector("h2").textContent=current.title||"";
         overlay.querySelector("p").textContent=current.subtitle||"";
@@ -1229,10 +1231,12 @@
     S.selectedMethod = methods.find((m) => m.id === methodId && m.enabled) || null;
     S.depositKey = C.key();
     const m = S.selectedMethod;
+    const salaryMethod=x=>Array.isArray(x.accepted_currencies)&&x.accepted_currencies.includes("XCN");
+    if(m && salaryMethod(m)){window.F90Special.render("salary",S.settings,S.me,"",S.rates);return;}
     main.innerHTML = `${pageHead("أضف رصيدًا لعالمك", "اختر طريقة الإيداع، وأرسل إيصالك للمراجعة", `<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>`)}<div class="deposit-steps"><span><b>١</b>اختر الطريقة</span><span><b>٢</b>حوّل وارفع الإيصال</span><span><b>٣</b>اعتماد الإدارة</span></div>${
       !m
         ? methods.length
-          ? `<div class="method-grid">${methods.map(x=>x.enabled ? `<a class="method-tile f90-method-active" href="${href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>إيداع متاح الآن</small></a>` : `<div class="method-tile f90-method-unavailable" aria-disabled="true">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>غير متاح حاليًا</small></div>`).join("")}</div>`
+          ? `<div class="method-grid">${methods.map(x=>x.enabled ? `<a class="method-tile f90-method-active" href="${salaryMethod(x)?"#/special/salary":href("deposit", x.id)}" aria-label="${e(x.name_ar)}">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>إيداع متاح الآن</small></a>` : `<div class="method-tile f90-method-unavailable" aria-disabled="true">${image(x.image_url,x.name_ar)}<strong>${e(x.name_ar)}</strong><small>غير متاح حاليًا</small></div>`).join("")}</div>`
           : empty(
               "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
               "wallet",
@@ -1246,9 +1250,9 @@
             S.currency,
           )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع ${e(Number(m.deposit_fee_percent ?? 2))}٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
     }${supportLink() ? `<div class="notice"><p>تحتاج مساعدة؟ التواصل اختياري، ويمكنك متابعة طلبك داخل الموقع.</p>${supportLink("تواصل مع الدعم")}</div>` : ""}`;
-    if(!m && S.settings.config?.special_services?.show_salary !== false){
+    if(!m && !methods.some(salaryMethod) && S.settings.config?.special_services?.show_salary !== false){
       const tile='<a href="#/special/salary" class="f90-special-deposit-link">'+
-        '<img src="./assets/f90-new/banner-salary.webp" alt="Xena Live سحب رواتب">'+
+        '<img src="./assets/f90-new/xena-salary-v2.webp" alt="Xena Live سحب رواتب">'+
         '<span><strong>سحب رواتب Xena Live</strong><small>100,000 كوينز = '+e(S.settings.config?.special_services?.salary_usd_per_100k ?? 10)+' دولار قبل الرسوم · بعد مراجعة الإدارة</small></span></a>';
       (main.querySelector(".method-grid") || main).insertAdjacentHTML("beforeend",tile);
     }

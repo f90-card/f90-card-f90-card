@@ -1613,7 +1613,7 @@
       select("promo_video_mode","المحتوى داخل الهاتف",[["video","فيديو صامت"],["image","صورة ثابتة أو GIF"]],c.promo_video?.mode==="image"?"image":c.promo_video?.url?"video":"image")+
       field("promo_video_image_url","رابط صورة شاشة الهاتف","url",c.promo_video?.image_url||"")+
       field("promo_video_image_file","رفع صورة أو GIF لشاشة الهاتف","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
-      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url",c.promo_video?.link_url||"",'placeholder="https://wa.me/... (فارغ = بدون رابط)"')+
+      field("promo_video_link_url","رابط الضغط على الهاتف الإعلاني","url","",'disabled placeholder="عرض فقط — بدون توجيه"')+
       field("promo_phone_size","حجم الهاتف في الكمبيوتر (بكسل)","range",c.promo_video?.phone_size??178,'min="1" max="480" step="1"')+
       field("promo_phone_size_mobile","حجم الهاتف في الجوال (بكسل)","range",c.promo_video?.phone_size_mobile??153,'min="1" max="360" step="1"')+
       '<h4>إعلان اللابتوب بجانب الهاتف</h4>'+ 
@@ -1622,9 +1622,10 @@
       field("promo_laptop_image_file","رفع صورة شاشة اللابتوب","file","",'accept="image/png,image/jpeg,image/webp,image/gif"')+
       field("promo_laptop_url","فيديو شاشة اللابتوب","url",c.promo_video?.laptop?.url||"")+
       field("promo_laptop_file","رفع فيديو شاشة اللابتوب","file","",'accept="video/mp4,video/webm"')+
-      field("promo_laptop_link","رابط الضغط على اللابتوب","url",c.promo_video?.laptop?.link_url||"")+
+      field("promo_laptop_link","رابط الضغط على اللابتوب","url","",'disabled placeholder="عرض فقط — بدون توجيه"')+
       field("promo_laptop_size","حجم اللابتوب في الكمبيوتر (بكسل)","range",c.promo_video?.laptop_size??320,'min="1" max="760" step="1"')+
       field("promo_laptop_size_mobile","حجم اللابتوب في الجوال (بكسل)","range",c.promo_video?.laptop_size_mobile??220,'min="1" max="360" step="1"')+
+      ["phone","laptop"].flatMap(device=>[field("promo_"+device+"_content_scale","تكبير محتوى "+(device==="phone"?"الآيفون":"اللابتوب"),"range",(device==="phone"?c.promo_video:c.promo_video?.laptop)?.content_scale??1,'min="0.25" max="2" step="0.01"'),...['x','y'].map(axis=>field("promo_"+device+"_content_"+axis,"موضع المحتوى "+axis,"range",(device==="phone"?c.promo_video:c.promo_video?.laptop)?.['content_'+axis]??0,'min="-50" max="50" step="1"'))]).join("")+
       field("promo_phone_x","تحريك الهاتف أفقيًا (يمين أو يسار)","number",c.promo_video?.phone_x??0,'min="-110" max="110" step="1"')+
       field("promo_phone_y","تحريك الهاتف عموديًا (أعلى أو أسفل)","number",c.promo_video?.phone_y??0,'min="-90" max="90" step="1"')+
       field("promo_video_title","عنوان إعلان الهاتف","text",c.promo_video?.title_ar||"F90 CARD",'maxlength="120"')+
@@ -1697,6 +1698,20 @@
          ["الموسيقى واليوتيوب","المشغل وروابط التشغيل والصوت","media-center"],
          ["تلجرام","الإيداعات والتوثيق والطلبات المهمة فقط","telegram-alerts"]
       ].map(([name,description,path])=>`<a class="panel f90-design-link" href="#/${path}"><h2>${name}</h2><p>${description}</p><span>فتح الإدارة ←</span></a>`).join("")}</div>`;
+    const deviceForm=$("designCenterForm"),devicePreview=document.createElement("section");
+    devicePreview.className="panel";devicePreview.innerHTML='<h3>معاينة الأجهزة قبل الحفظ</h3><div id="f90DevicePreview"></div>';
+    deviceForm.prepend(devicePreview);
+    const drawDevices=()=>{
+      const value=n=>deviceForm.elements[n]?.value;
+      const promo={...c.promo_video,enabled:true,mode:value('promo_video_mode'),image_url:value('promo_video_image_url'),url:value('promo_video_url')};
+      for(const key of ['phone_size','phone_size_mobile','laptop_size','laptop_size_mobile','phone_x','phone_y'])promo[key]=value('promo_'+key);
+      for(const key of ['content_scale','content_x','content_y'])promo[key]=value('promo_phone_'+key);
+      promo.laptop={...c.promo_video?.laptop,mode:value('promo_laptop_mode'),image_url:value('promo_laptop_image_url'),url:value('promo_laptop_url')};
+      for(const key of ['content_scale','content_x','content_y'])promo.laptop[key]=value('promo_laptop_'+key);
+      $('f90DevicePreview').innerHTML=window.F90WelcomeScene?.homePhone({...c,promo_video:promo},S.settings.logo_url)||'';
+    };
+    deviceForm.addEventListener('input',ev=>{if(ev.target.name?.startsWith('promo_'))drawDevices();});
+    drawDevices();
     // Lightweight live previews: form edits never write to the database until Save.
     const logoSource=C.safeUrl(S.settings.logo_url)||"./f90-logo.png";
     for(const kind of ["dark","cream"]){
@@ -1771,7 +1786,7 @@
     const laptopImageUrl=laptopImageFile?.size?(await A.upload(laptopImageFile,"f90-images","promo-laptop")).url:String(d.promo_laptop_image_url||"").trim();
     const laptopVideoUrl=laptopVideoFile?.size?(await A.upload(laptopVideoFile,"f90-videos","promo-laptop")).url:String(d.promo_laptop_url||"").trim();
     const phoneImageUrl=phoneImageFile?.size?(await A.upload(phoneImageFile,"f90-images","promo-phone")).url:String(d.promo_video_image_url||"").trim();
-    const phoneLink=String(d.promo_video_link_url||"").trim();
+    const phoneLink="";
     if(phoneLink && (!C.safeUrl(phoneLink)||!/^https:\/\//i.test(phoneLink)))
       throw new Error("رابط الهاتف يجب أن يكون HTTPS صالحًا");
     const phoneBound=(v,min,max,fallback)=>{
@@ -1811,12 +1826,12 @@
       show_ticker:form.elements.show_ticker.checked,
       promo_video:{...c.promo_video,enabled:form.elements.promo_video_enabled.checked,
       mode:d.promo_video_mode,url:videoUrl,image_url:phoneImageUrl,poster_url:videoPoster,
-      link_url:phoneLink,
+      link_url:phoneLink,content_scale:phoneBound(d.promo_phone_content_scale,.25,2,1),content_x:phoneBound(d.promo_phone_content_x,-50,50,0),content_y:phoneBound(d.promo_phone_content_y,-50,50,0),
       phone_size:phoneBound(d.promo_phone_size,1,480,178),
       phone_size_mobile:phoneBound(d.promo_phone_size_mobile,1,360,153),
       laptop_size:phoneBound(d.promo_laptop_size,1,760,320),
       laptop_size_mobile:phoneBound(d.promo_laptop_size_mobile,1,360,220),
-      laptop:{mode:d.promo_laptop_mode,url:laptopVideoUrl,image_url:laptopImageUrl,link_url:String(d.promo_laptop_link||"").trim()},
+      laptop:{mode:d.promo_laptop_mode,url:laptopVideoUrl,image_url:laptopImageUrl,link_url:"",content_scale:phoneBound(d.promo_laptop_content_scale,.25,2,1),content_x:phoneBound(d.promo_laptop_content_x,-50,50,0),content_y:phoneBound(d.promo_laptop_content_y,-50,50,0)},
       phone_x:phoneBound(d.promo_phone_x,-110,110,0),
       phone_y:phoneBound(d.promo_phone_y,-90,90,0),
       title_ar:String(d.promo_video_title||"").trim().slice(0,120),
