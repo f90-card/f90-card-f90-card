@@ -74,6 +74,112 @@ async function renderSettings(main,settings){
  }).join("")+'</section>'+
  '<div class="f90-manager-save"><p data-f90-admin-status role="status"></p><button type="submit" class="button">حفظ إعدادات الخدمات</button></div></form>';
 }
+
+let salaryAdminSettings=null;
+function salaryEditor(settings,rates=[]){
+ salaryAdminSettings=settings;
+ const sal=settings?.config?.salary_withdrawal||{};
+ const rows=Array.isArray(sal.payout_options)?sal.payout_options:[];
+ const pay=(settings?.config?.payment_methods||[]).find(x=>x.is_salary_withdrawal===true ||
+   x.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062");
+ const activeRates=(rates||[]).filter(x=>x.is_enabled && Number(x.per_usd)>0 &&
+   /^[A-Z]{3,8}$/.test(String(x.currency||"")));
+ const image=String(sal.image_url||pay?.image_url||"");
+ const options=activeRates.map(rate=>{
+   const old=rows.find(x=>x.currency===rate.currency)||{};
+   const base=Number(sal.coins_per_usd)>0 ? 100000/Number(sal.coins_per_usd) : 10;
+   const units=Number(old.units_per_usd)>0?Number(old.units_per_usd):Number(rate.per_usd);
+   const payout=Number(old.per_100k)>0?Number(old.per_100k):(rate.currency==="XCN"?100000:base*units);
+   const isEnabled=old.enabled===true || (!rows.length && ["USD","ILS","JOD","XCN"].includes(rate.currency));
+   return '<div class="f90-salary-currency-row" data-salary-currency="'+esc(rate.currency)+'"><strong>'+
+     esc(rate.name_ar||rate.currency)+' · '+esc(rate.currency)+'</strong>'+
+     check("salary_option_enabled","إتاحة الاختيار للعميل",isEnabled)+
+     '<div class="field-row">'+
+     field("salary_rate_100k","المبلغ المقابل لسحب كل 100,000 كوينز",payout,"number",'required min="0.00000001" max="1000000000000" step="any"')+
+     field("salary_units_per_usd","كم وحدة من هذه العملة تعادل دولارًا واحدًا من محفظة F90",units,"number",'required min="0.00000001" max="1000000000000" step="any"')+
+     '</div></div>';
+ }).join("");
+ return '<section class="panel f90-salary-admin" id="f90SalaryDepositControls">'+
+   '<h2>إعداد سحب رواتب Xena Live داخل الإيداع</h2>'+
+   '<p class="muted">هذه الأسعار خاصة بسحب الرواتب، مستقلة عن أسعار شراء الخدمات وصرف الإيداعات العادية. يمكنك ضبط سعر الكوينز لكل عملة بشكل منفصل. المحفظة الأساسية تُقيّد الرصيد بالدولار بعد موافقة الإدارة.</p>'+
+   '<form id="f90SalaryDepositAdminForm" class="f90-manager-form">'+
+   check("salary_active","تفعيل خدمة سحب الرواتب في طرق الإيداع",sal.enabled===true)+
+   field("salary_minimum","أقل كمية كوينز للسحب",Math.max(100000,Number(sal.minimum_coins)||100000),"number",'required min="100000" max="1000000000000" step="1"')+
+   textarea("salary_details","الوصف والتعليمات المعروضة للعميل",sal.details_ar||"")+
+   '<div class="f90-salary-admin-photo"><img id="f90SalaryImagePreview" src="'+esc(image||"./assets/f90-new/banner-salary.webp")+'" alt="معاينة صورة سحب الرواتب">'+
+   field("salary_image_url","رابط صورة الخدمة",image,"url",'placeholder="https://..."')+
+   '<label class="field"><span>رفع صورة جديدة من جهازك</span><input name="salary_image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>'+
+   '<h3>سعر الكوينز وعملة الإيداع لكل اختيار</h3>'+
+   '<p class="muted small">يمكنك إضافة عملة أخرى من قسم «العملات والصرف» ثم تفعيلها هنا. مثال: لو كل 100,000 كوينز = 32 شيقل، وكل دولار داخل المحفظة = 3.20 شيقل، سيظهر للعميل 32 شيقل ويُعتمد 10 دولارات في المحفظة.</p>'+
+   '<div id="f90SalaryCurrencyRows">'+options+'</div>'+
+   '<div class="f90-manager-save"><p id="f90SalaryAdminStatus" role="status"></p>'+
+   '<button class="button" type="submit">حفظ إعدادات سحب الرواتب</button></div></form></section>';
+}
+document.addEventListener("change",ev=>{
+ if(ev.target?.name!=="salary_image_file")return;
+ const preview=document.getElementById("f90SalaryImagePreview"),file=ev.target.files?.[0];
+ if(!preview||!file)return;
+ if(preview.dataset.blob)URL.revokeObjectURL(preview.dataset.blob);
+ const url=URL.createObjectURL(file);preview.dataset.blob=url;preview.src=url;
+});
+document.addEventListener("input",ev=>{
+ if(ev.target?.name!=="salary_image_url")return;
+ const preview=document.getElementById("f90SalaryImagePreview");
+ if(preview&&/^https:\/\//i.test(ev.target.value))preview.src=ev.target.value;
+});
+document.addEventListener("submit",async ev=>{
+ if(ev.target?.id!=="f90SalaryDepositAdminForm")return;
+ ev.preventDefault();
+ const form=ev.target,button=form.querySelector('button[type="submit"]');
+ const status=form.querySelector("#f90SalaryAdminStatus");
+ if(button.disabled)return;
+ button.disabled=true;status.textContent="جارٍ حفظ صورة الخدمة وأسعار السحب…";
+ try{
+   if(!salaryAdminSettings?.config)throw Error("بيانات الإدارة غير متاحة؛ أعد فتح صفحة الإيداع");
+   const min=Number(form.elements.salary_minimum.value);
+   if(!Number.isSafeInteger(min)||min<100000||min>1000000000000)throw Error("راجع الحد الأدنى للكوينز");
+   const options=[...form.querySelectorAll("[data-salary-currency]")].map(row=>{
+     const currency=row.dataset.salaryCurrency;
+     const per100k=Number(row.querySelector('[name="salary_rate_100k"]').value);
+     const perUsd=Number(row.querySelector('[name="salary_units_per_usd"]').value);
+     const enabled=row.querySelector('[name="salary_option_enabled"]').checked;
+     if(!Number.isFinite(per100k)||per100k<=0||per100k>1000000000000||
+        !Number.isFinite(perUsd)||perUsd<=0||perUsd>1000000000000)throw Error("سعر غير صالح للعملة "+currency);
+     return {currency,label_ar:row.querySelector("strong").textContent.split(" · ")[0],
+       per_100k:per100k,units_per_usd:perUsd,enabled};
+   });
+   if(!options.some(x=>x.enabled)||!options.some(x=>x.currency==="USD"))
+      throw Error("يجب أن تتوفر عملة واحدة على الأقل، مع تعريف سعر الدولار المرجعي");
+   const file=form.elements.salary_image_file.files?.[0];
+   if(file&&(!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)||file.size>5242880))
+     throw Error("الصورة يجب أن تكون PNG أو JPG أو WEBP أو GIF وأقل من 5 ميجابايت");
+   const imageUrl=file?(await window.F90API.upload(file,"f90-images","payment-methods")).url:
+     String(form.elements.salary_image_url.value||"").trim().slice(0,2000);
+   if(imageUrl&&!/^https:\/\//i.test(imageUrl)&&!imageUrl.startsWith("./"))throw Error("رابط الصورة يجب أن يكون آمنًا");
+   const old=salaryAdminSettings,config=old.config;
+   const current=config.salary_withdrawal||{};
+   const desc=String(form.elements.salary_details.value||"").trim().slice(0,4000);
+   const enabled=!!form.elements.salary_active.checked;
+   const usd=options.find(x=>x.currency==="USD");
+   const salary={...current,enabled,minimum_coins:min,details_ar:desc,image_url:imageUrl,
+     payout_options:options,coins_per_usd:usd?.per_100k>0?100000/(usd.per_100k/usd.units_per_usd):current.coins_per_usd};
+   const methods=(config.payment_methods||[]).map(method=>
+     method.is_salary_withdrawal===true||method.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062"?
+       {...method,is_salary_withdrawal:true,enabled,image_url:imageUrl,details_ar:desc,
+         accepted_currencies:options.filter(x=>x.enabled).map(x=>x.currency)}:method);
+   const specials={...(config.special_services||{}),show_salary:enabled,
+     salary_description:desc,salary_usd_per_100k:usd.per_100k/usd.units_per_usd};
+   const saved=await window.F90API.call("settings.save",{data:{
+     store_name:old.store_name,logo_url:old.logo_url,primary_color:old.primary_color,
+     currency:old.currency,contact_email:old.contact_email,announcement:old.announcement,
+     config:{...config,salary_withdrawal:salary,special_services:specials,payment_methods:methods}
+   }});
+   if(saved?.config)salaryAdminSettings=saved;
+   status.textContent="حُفظت إعدادات سحب الرواتب والعملات وصورة الخدمة بنجاح.";
+ }catch(err){status.textContent="تعذر الحفظ: "+(err?.message||"خطأ غير معروف");}
+ finally{button.disabled=false;}
+});
+
 async function renderRequests(main){
  main.innerHTML=heading("طلبات سحب الرواتب والتحويلات والخدمات","سحب الرواتب يُعتمد لإضافة رصيد؛ التحويل يُخصم عند تقديمه ويُسترد عند رفضه. باقي الخدمات طلبات تواصل.")+
  '<div id="f90RequestRecords" class="records"><p>جارٍ جلب الطلبات…</p></div>';
@@ -206,7 +312,7 @@ document.addEventListener("click",async ev=>{
   await renderRequests(document.getElementById("adminMain"));
  }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
 });
-window.F90SpecialAdmin={render};
+window.F90SpecialAdmin={render,salaryEditor};
 
 document.addEventListener('click',ev=>{
  if(ev.target.closest?.('[data-add-service]'))document.getElementById('f90ServiceRows')?.insertAdjacentHTML('beforeend',catalogRow({id:crypto.randomUUID(),kind:'design',name_ar:'',enabled:true}));
