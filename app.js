@@ -2427,7 +2427,7 @@
     }
     S.currency=chosen;
     try{localStorage.setItem("f90-currency",chosen)}catch{}
-    S.currencyPreference=true;
+    S.currencyPreference = true;
     chrome();route();
   });
   $("installButton").addEventListener("click", () => { location.hash = "#/install"; });
