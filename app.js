@@ -1389,7 +1389,7 @@
     const amount=Number(x.amount_usd||0),incoming=amount>=0;
     const name=x.kind==="deposit"?"إضافة رصيد":x.kind==="purchase"?"شراء خدمة":
       x.kind==="refund"?"استرداد رصيد":x.kind==="adjustment"?"تعديل رصيد":"حركة رصيد";
-    return '<article class="record f90-history-entry" data-state="'+(incoming?'approved':'completed')+'">'+
+    return '<article class="record f90-history-entry" data-state="'+e(x.kind||"adjustment")+'">'+
       '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(name)+'</h3>'+
       '<span class="f90-history-type '+(incoming?'ledger-plus':'ledger-minus')+'">'+(incoming?'وارد':'صادر')+'</span></div>'+
       '<small>'+e(C.date(x.created_at))+'</small>'+
@@ -1403,7 +1403,8 @@
     let visible=0;
     wrap.querySelectorAll("#historyRecords .record").forEach(row=>{
       const state=row.dataset.state||"";
-      const group=["pending","queued","submitting","processing","review"].includes(state)?"pending":
+      const group=wrap.dataset.page==="history"?state:
+        ["pending","queued","submitting","processing","review"].includes(state)?"pending":
         ["approved","completed","partial"].includes(state)?"completed":
         ["rejected","failed","cancelled","refunded"].includes(state)?"rejected":"pending";
       const matches=(selected==="all"||selected===group)&&(!term||row.textContent.toLocaleLowerCase("ar").includes(term));
@@ -1424,12 +1425,13 @@
     main.innerHTML=pageHead(title,"",
       '<button class="button secondary small" data-action="report" data-kind="'+e(kind)+'">PDF</button>'+
       '<button class="button secondary small" data-action="report-csv" data-kind="'+e(kind)+'">CSV</button>')+
-      '<section class="f90-history-view" id="f90HistoryView" data-filter="all">'+links+
+      '<section class="f90-history-view" id="f90HistoryView" data-page="'+e(kind)+'" data-filter="all">'+links+
       '<div class="f90-history-tools">'+
       '<input id="orderHistorySearch" type="search" placeholder="بحث في '+title+'" autocomplete="off" aria-label="بحث في '+title+'">'+
       '<small id="f90OrderSearchCount" role="status"></small></div>'+
       '<div class="f90-history-filters" role="group" aria-label="تصفية السجل">'+
-      [['all','الكل'],['pending','قيد المراجعة'],['completed','مكتمل'],['rejected','مرفوض']].map(([code,label])=>
+      (orders||deposits?[['all','الكل'],['pending','قيد المراجعة'],['completed','مكتمل'],['rejected','مرفوض']]:
+        [['all','الكل'],['deposit','إيداع'],['purchase','شراء'],['refund','استرداد'],['adjustment','تسوية']]).map(([code,label])=>
         '<button type="button" data-f90-history-filter="'+code+'" aria-pressed="'+(code==="all")+'">'+label+'</button>').join('')+
       '</div><div id="records" class="loading">جارٍ تحميل السجل…</div></section>';
     const [r,salaryResult]=await Promise.all([
@@ -1443,14 +1445,14 @@
     const paging='<div class="pagination"><button class="button secondary small" data-action="page-prev" '+(S.offset===0?'disabled':'')+'>السابق</button>'+
       '<span class="muted small">'+e(items.length?S.offset+1:0)+'–'+e(Math.min(S.offset+50,r.count))+' من '+e(r.count)+'</span>'+
       '<button class="button secondary small" data-action="page-next" '+(S.offset+50>=r.count?'disabled':'')+'>التالي</button></div>';
-    const salaryRows=deposits&&salaryResult?.items?.length
+    const salaryRows=deposits&&S.offset===0&&salaryResult?.items?.length
       ?'<section class="f90-history-salary-group"><h2>سحب رواتب Xena Live</h2>'+
         '<div class="records">'+salaryResult.items.map(salaryHistoryRecord).join("")+'</div></section>':"";
     document.getElementById("records").outerHTML=
       '<div class="records" id="historyRecords">'+(items.length?rows:
-        '<p class="f90-history-no-records">'+(orders?"لا توجد طلبات حتى الآن":deposits?"لا توجد إيداعات حتى الآن":"لا توجد عمليات حتى الآن")+'</p>')+
+        (salaryRows?'':'<p class="f90-history-no-records">'+(orders?"لا توجد طلبات حتى الآن":deposits?"لا توجد إيداعات حتى الآن":"لا توجد عمليات حتى الآن")+'</p>'))+
       (salaryRows?'<div class="f90-history-salary-in-list">'+salaryRows+'</div>':'')+'</div>'+
-      '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد نتائج مطابقة.</p>'+paging;
+      '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد نتائج مطابقة.</p>'+(r.count>0?paging:'');
     applyHistoryFilter();
   }
   async function order(id) {
