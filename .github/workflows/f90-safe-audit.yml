@@ -54,3 +54,5 @@ jobs:
           name: f90-safe-audit-results
           path: artifacts/f90-smoke/
           if-no-files-found: ignore
+
+# audit rerun requested 2026-10-16: read-only UI check on latest main
