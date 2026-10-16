@@ -275,6 +275,8 @@
       p = me?.profile,
       c = S.settings.config || {};
     updateStoreBell();
+    $("headerWallet").setAttribute("href","#/deposit");
+    $("headerWallet").setAttribute("aria-label","إضافة رصيد إلى حسابك");
     $("headerWallet").innerHTML =
       I("wallet") +
       `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(displayMoney(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
@@ -1335,24 +1337,24 @@
       '<div class="f90-deposit-compact">'+
       '<nav class="f90-deposit-navigation"><a href="#/deposit">‹ جميع طرق الإيداع</a><a href="#/deposits">سجل الإيداعات</a></nav>'+
       '<section class="f90-deposit-request-card">'+
-      '<div class="f90-deposit-detail-art">'+image(m.image_url,m.name_ar,"f90-deposit-method-art")+'</div>'+
+
       '<header class="f90-deposit-request-head"><h1>'+name+'</h1>'+
       (receiver?'<strong>'+receiver+'</strong>':"")+
       (m.network_ar?'<span>'+e(m.network_ar)+'</span>':"")+
       '</header>'+
       (destination?'<div class="f90-deposit-destination"><span>حوّل إلى</span>'+
         '<strong dir="auto">'+destination+'</strong></div>':"")+
-      (instructions||m.network_ar?'<details class="f90-finance-help"><summary>تعليمات التحويل</summary><p>'+instructions+'</p></details>':"")+
+      (instructions?'<div class="f90-finance-visible-instructions" role="note"><strong>تعليمات الإيداع</strong><p>'+instructions+'</p></div>':"")+
       (C.safeUrl(m.barcode_url)?'<details class="f90-finance-help"><summary>عرض باركود الدفع</summary>'+
         '<div class="f90-deposit-barcode"><img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async"></div></details>':"")+
       '<form id="depositForm" class="f90-deposit-order-form">'+
-      '<div class="f90-fixed-account-currency" role="status"><small>عملة حسابك</small><strong>'+e(accountRate?.name_ar||accountCurrency)+' ('+e(accountCurrency)+')</strong></div>'+
+      
       '<input type="hidden" name="currency" value="'+e(accountCurrency)+'">'+
       (!canDeposit?'<div class="notice warning">طريقة الإيداع لا تدعم عملة حسابك حاليًا. اختر طريقة أخرى أو غيّر عملة حسابك من شريط العملات.</div>':"")+
       '<label class="field"><span>مبلغ الإيداع ('+e(accountCurrency)+')</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="أدخل قيمة التحويل">'+
       (min?'<small>الحد الأدنى لهذه الطريقة: '+e(min)+' بعملة التحويل</small>':"")+'</label>'+
       '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><small>سينضاف لرصيدك بعد الموافقة</small><strong class="f90-deposit-net-amount">—</strong></div>'+
-      '<details class="f90-finance-help"><summary>رقم عملية أو ملاحظة (اختياري)</summary>'+
+      '<details class="f90-finance-help f90-salary-optional-note"><summary>ملاحظة (اختياري)</summary>'+
       '<label class="field"><span>'+e(m.reference_label||"رقم العملية")+'</span>'+
         '<input name="reference" type="text" maxlength="300" placeholder="رقم العملية أو ملاحظة"></label></details>'+
       '<label class="field f90-deposit-upload"><span>صورة الإيصال</span>'+
