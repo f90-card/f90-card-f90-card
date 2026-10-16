@@ -904,7 +904,7 @@
       </div>
       <div class="f90-visa-product">
         <span class="f90-premium-chip" aria-hidden="true"><svg viewBox="0 0 44 32" fill="none"><rect x="1" y="1" width="42" height="30" rx="6" stroke="currentColor" stroke-width="2"/><path d="M15 1v30M29 1v30M1 11h42M1 21h42M15 11l14 10M29 11 15 21" stroke="currentColor" stroke-width="1.5"/></svg></span>
-        <div class="product-art">${image(p.image_url,p.name,"f90-checkout-image")}</div>
+        <div class="product-art">${image(p.image_url,p.name,"f90-checkout-image")}${Array.isArray(p.gallery)&&p.gallery.length?`<div class="f90-product-gallery" aria-label="صور إضافية للخدمة">${[p.image_url,...p.gallery].filter(C.safeUrl).slice(0,9).map((url,n)=>`<button type="button" class="f90-gallery-thumb" data-action="gallery-switch" data-image="${e(C.safeUrl(url))}" aria-label="عرض الصورة ${n+1}">${image(url,p.name)}</button>`).join("")}</div>`:''}</div>
         <div class="product-info">
           <h1>${e(p.name)}</h1>
           <p class="f90-visa-subtitle">${e(c.fulfillment === "automatic" ? "شحن إلكتروني مباشر" : "خدمة رقمية عبر F90 CARD")}</p>
@@ -1237,11 +1237,11 @@
               "لا توجد طرق إيداع مفعّلة. تواصل مع الإدارة لمعرفة الطرق المتاحة",
               "wallet",
             )
-        : `<div class="split"><section class="panel"><div class="actions" style="margin-bottom:22px"><a class="button secondary small" href="#/deposit">تغيير الطريقة</a><h2 style="margin:0">${e(m.name_ar)}</h2></div>${image(m.image_url, m.name_ar, "file-preview")}${C.safeUrl(m.barcode_url) ? `<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3><img src="${e(C.safeUrl(m.barcode_url))}" alt="باركود ${e(m.name_ar)}" loading="lazy"><small>افتح تطبيق الدفع وامسح الرمز إذا كانت الطريقة تدعم ذلك.</small></div>` : ""}<div class="f90-deposit-instructions"><h3>معلومات وتعليمات الإيداع</h3><p class="product-description">${e(m.details_ar || "راجع بيانات التحويل مع الإدارة قبل إرسال المبلغ.")}</p></div><p class="muted small">لا يُضاف الرصيد حتى تعتمد الإدارة صحة التحويل. سعر الصرف يُحفظ لحظة تقديم الطلب.</p></section><section class="panel"><h2>بيانات الإيداع</h2><form id="depositForm"><div class="field-row">${field("amount", "المبلغ المحوّل", "number", "", 'required min="0.000001" max="1000000" step="0.000001"')}${select(
+        : `<div class="split"><section class="panel"><div class="actions" style="margin-bottom:22px"><a class="button secondary small" href="#/deposit">تغيير الطريقة</a><h2 style="margin:0">${e(m.name_ar)}</h2></div>${image(m.image_url, m.name_ar, "file-preview")}${C.safeUrl(m.barcode_url) ? `<div class="f90-deposit-barcode"><h3>باركود طريقة الدفع</h3><img src="${e(C.safeUrl(m.barcode_url))}" alt="باركود ${e(m.name_ar)}" loading="lazy"><small>افتح تطبيق الدفع وامسح الرمز إذا كانت الطريقة تدعم ذلك.</small></div>` : ""}<div class="f90-deposit-instructions"><h3>معلومات وتعليمات الإيداع</h3><p class="product-description">${e(m.details_ar || "راجع بيانات التحويل مع الإدارة قبل إرسال المبلغ.")}</p></div><p class="muted small">لا يُضاف الرصيد حتى تعتمد الإدارة صحة التحويل. سعر الصرف يُحفظ لحظة تقديم الطلب.</p></section><section class="panel"><h2>بيانات الإيداع</h2><form id="depositForm"><div class="field-row">${field("amount", "المبلغ المحوّل أو الكوينز", "number", "", 'required min="0.000001" max="1000000000000" step="0.000001"')}${select(
             "currency",
             "عملة التحويل",
             S.rates
-              .filter((r) => r.is_enabled && r.per_usd)
+              .filter((r) => r.is_enabled && r.per_usd && (!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(r.currency)))
               .map((r) => [r.currency, r.name_ar]),
             S.currency,
           )}</div><div class="f90-deposit-net-box" id="depositEstimate" role="status" aria-live="polite"><strong>صافي مبلغ الإيداع</strong><span>أدخل المبلغ لعرض تفاصيل عمولة الإيداع ${e(Number(m.deposit_fee_percent ?? 2))}٪.</span><small>سيُضاف صافي المبلغ إلى محفظتك بعد اعتماد الإيداع.</small></div>${field("reference", "رقم التحويل أو ملاحظة <small>اختياري</small>", "text", "", 'maxlength="300"')}${field("receipt", "صورة إيصال التحويل", "file", "", 'required accept="image/jpeg,image/png,image/webp"')}<button class="button full" type="submit">تقديم طلب الإيداع</button></form></section></div>`
@@ -1551,7 +1551,7 @@
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
       else if (page === "deposit") deposit(id);
-      else if (page === "special") window.F90Special?.render(id,S.settings,S.me,serviceChoice ? decodeURIComponent(serviceChoice) : "");
+      else if (page === "special") window.F90Special?.render(id,S.settings,S.me,serviceChoice ? decodeURIComponent(serviceChoice) : "",S.rates);
       else if (["orders", "deposits", "history"].includes(page))
         await history(page);
       else if (page === "order") await order(id);
@@ -2169,6 +2169,10 @@
         product(button.dataset.id, true);
       } else if (action === "close-quick-product") {
         closeQuickProduct();
+      } else if (action === "gallery-switch") {
+        const src=C.safeUrl(button.dataset.image);
+        const img=button.closest(".product-art")?.querySelector(".f90-checkout-image");
+        if(src&&img){img.src=src;button.closest(".f90-product-gallery")?.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===button)))}
       } else if (action === "favorite") {
         const id = button.dataset.id;
         S.favorites = S.favorites.includes(id)
