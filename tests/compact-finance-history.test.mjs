@@ -50,5 +50,5 @@ test("valid scripts and versioned styles are included in the storefront",()=>{
  for(const [p,c] of [["app.js",app],["f90-special.js",salary]])
   assert.doesNotThrow(()=>new vm.Script(c,{filename:p}));
  assert.match(index,/f90-history\.css\?v=20261016-compactlogs1/);
- assert.match(index,/f90-special\.css\?v=20261016-compactforms1/);
+ assert.match(index,/f90-special\.css\?v=20261016-financeclean1/);
 });
