@@ -408,3 +408,55 @@
 .f90-fixed-account-currency small{font-size:12px;font-weight:650;color:var(--muted)}
 .f90-fixed-account-currency strong{font-size:19px;font-weight:800;color:var(--accent)}
 .f90-fixed-account-currency span{font-size:12px;line-height:1.65;color:var(--muted)}
+
+
+/* Compact customer deposits and Xena salary confirmations. */
+.f90-deposit-request-card{padding:clamp(14px,3vw,22px);border-radius:18px;max-width:590px;margin:auto}
+.f90-deposit-request-head{margin-bottom:12px}
+.f90-deposit-request-head h1{margin-bottom:5px;font-size:clamp(19px,3.5vw,24px)}
+.f90-deposit-request-head>span{color:var(--muted);font-size:12px}
+.f90-deposit-detail-art{margin-bottom:9px}
+.f90-deposit-detail-art img{height:105px;max-width:175px;object-fit:contain}
+.f90-deposit-order-form,.f90-deposit-compact .f90-special-panel form{gap:12px}
+.f90-deposit-destination{margin:0 0 11px;padding:12px 14px}
+.f90-deposit-order-form .f90-deposit-output{padding:12px 15px;margin:0;gap:5px}
+.f90-deposit-order-form .f90-deposit-output small,
+.f90-finance-simple-quote small{font-size:12px;color:var(--muted)}
+.f90-deposit-order-form .f90-deposit-output .f90-deposit-net-amount{font-size:clamp(23px,5vw,29px);line-height:1.5}
+.f90-finance-fee-hint,.f90-finance-hint{display:block;font-size:11px;color:var(--muted)}
+.f90-finance-inline-error{color:var(--accent);font-size:13px}
+.f90-fixed-account-currency{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:10px 13px;margin:0;border-radius:12px}
+.f90-fixed-account-currency strong{font-size:15px}
+.f90-fixed-account-currency small{margin:0}
+.f90-finance-help{border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:var(--surface2);font-size:12px;color:var(--muted)}
+.f90-finance-help summary,.f90-history-more summary{cursor:pointer;color:var(--text);font-weight:700;list-style-position:inside}
+.f90-finance-help p{margin:9px 0 2px;line-height:1.75;white-space:pre-line;overflow-wrap:anywhere}
+.f90-finance-help .field{margin-top:9px}
+.f90-deposit-request-footnote{font-size:11px;line-height:1.5}
+.f90-finance-simple-quote{display:grid!important;gap:6px!important;justify-content:stretch!important;padding:12px 14px!important}
+.f90-finance-simple-quote>strong{display:block;text-align:right;direction:ltr;font-size:clamp(24px,5vw,29px);color:var(--accent)}
+.f90-finance-simple-quote [hidden]{display:none!important}
+.f90-special-page[data-kind="salary"] .f90-special-panel{padding:clamp(14px,3vw,21px);max-width:590px}
+.f90-special-page[data-kind="salary"] .f90-special-panel form{gap:11px}
+.f90-special-page[data-kind="salary"] .f90-special-banner img{max-height:130px;object-fit:contain}
+.f90-special-page[data-kind="salary"] .f90-special-banner{margin-bottom:8px;border-radius:13px}
+.f90-finance-review{border:1px solid color-mix(in srgb,var(--accent) 60%,var(--line));border-radius:15px;background:var(--surface2);padding:12px 16px;display:grid;gap:6px;text-align:center}
+.f90-finance-review[hidden]{display:none!important}
+.f90-finance-review span,.f90-finance-review small{color:var(--muted);font-size:12px}
+.f90-finance-review strong:last-of-type{color:var(--accent);font-size:21px;direction:ltr}
+.f90-finance-success{display:grid;justify-items:center;gap:10px;text-align:center;padding:clamp(15px,4vw,28px) 10px;margin:0 auto;max-width:440px}
+.f90-finance-success-icon{display:grid;place-items:center;width:62px;height:62px;border-radius:50%;font-size:28px;font-weight:900;color:var(--accent);border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.f90-finance-success h2{font-size:clamp(19px,4vw,24px);margin:5px 0 0}
+.f90-finance-success p{color:var(--muted);margin:0;line-height:1.6}
+.f90-finance-success-amount{width:100%;padding:13px 10px;border-radius:15px;background:var(--surface2);border:1px solid var(--line);box-sizing:border-box}
+.f90-finance-success-amount small{display:block;color:var(--muted);margin-bottom:5px}
+.f90-finance-success-amount strong{display:block;font-size:clamp(23px,5vw,30px);color:var(--accent);direction:ltr}
+.f90-finance-success>.button{margin-top:8px}
+.f90-finance-success-back{color:var(--muted);text-decoration:underline;font-size:13px}
+@media(max-width:480px){
+.f90-deposit-compact{padding:0 2px}
+.f90-deposit-request-card{padding:13px;border-radius:16px}
+.f90-deposit-detail-art img{height:83px}
+.f90-special-page[data-kind="salary"] .f90-special-panel{padding:14px}
+.f90-deposit-order-form .field input,.f90-deposit-compact .f90-special-panel .field input{min-height:46px}
+}
