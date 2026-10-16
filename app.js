@@ -2536,7 +2536,8 @@
           S.settings.store_name,
         );
       } else if (action === "order-pdf") {
-        await window.F90Reports.order(S.currentOrder, S.settings.store_name);
+        await window.F90Reports.order(S.currentOrder, S.settings.store_name,
+          orderSummaryFields(S.currentOrder));
       } else if (action === "copy-public-api-guide") {
         await navigator.clipboard.writeText("F90 CARD Merchant API\nEndpoint: " + A.endpoint + "\nDocumentation: " + new URL("./docs/F90_MERCHANT_API_EN.md",location.href).href + "\nHeader: x-f90-key: YOUR_SERVER_SIDE_TOKEN\nDo not include your private API key in this message.");
         toast("تم نسخ معلومات الربط الآمنة للمبرمج");
