@@ -3257,6 +3257,11 @@
           new Promise((_,reject)=>setTimeout(()=>reject(new Error("F90_AUTH_TIMEOUT")),9000))
         ])
       ]);
+      // A refresh/network failure is not an absent session. Keep the
+      // recovery screen instead of falsely presenting the login form.
+      if (sessionResult?.error) {
+        throw new Error("تعذّر استعادة الجلسة مؤقتًا. أعد المحاولة مع بقاء تسجيل الدخول محفوظًا.");
+      }
       const session=sessionResult?.data?.session || null;
       if (!session) {
         $("adminNav").innerHTML = "";
@@ -3264,7 +3269,16 @@
         main.innerHTML = `<section class="panel admin-empty-auth"><div class="eyebrow">أف تسعين كارد</div><h1>دخول الإدارة</h1><form id="adminAuth">${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${field("password", "كلمة المرور", "password", "", 'required autocomplete="current-password"')}<button class="button full" type="submit">دخول</button></form></section>`;
         return;
       }
-      S.me = await A.call("me");
+      // Server-side JWT validation may race with browser token rotation.
+      // Reissue the token and retry the read once, without signing out.
+      try {
+        S.me = await A.call("me");
+      } catch (err) {
+        if (err.code !== "F90_AUTH" && err.status !== 401) throw err;
+        const refreshed = await A.client.auth.refreshSession();
+        if (refreshed.error || !refreshed.data?.session) throw err;
+        S.me = await A.call("me");
+      }
       brand();
       if (S.me.needs_mfa) {
         main.innerHTML = `<section class="panel admin-empty-auth"><h1>تحقق من هويتك</h1><form id="adminMfa">${field("code", "رمز المصادقة", "text", "", 'required pattern="[0-9]{6}" inputmode="numeric" maxlength="6"')}<button class="button full" type="submit">تحقق</button></form></section>`;
