@@ -1714,26 +1714,26 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
-    const adapter = ["local", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
-    if (adapter !== "local") endpointURL(b.endpoint);
+    const adapter = ["f90", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
       .eq("id", uuid(b.id)).single()) : null;
     if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
-    if (!old && !b.token && adapter !== "local") throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
-    if (adapter !== "local" && new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
+    if (!old && !b.token && adapter !== "f90") throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
+    if (adapter !== "f90" && new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
-    const endpoint = adapter === "local" ? "" : text(b.endpoint, 2000);
+    const endpoint = adapter === "f90" ? "https://f90-card.github.io/f90-card-f90-card/" : text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
       old.adapter !== adapter);
     if (old && old.currency !== currency)
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
-    if (connectionChanged && !b.token && adapter !== "local")
+    if (connectionChanged && !b.token && adapter !== "f90")
       throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد بعد تغيير رابط أو بروتوكول الاتصال");
-    const autoOrders = adapter === "local" ? false : b.automatic_orders_enabled == null
+    const autoOrders = adapter === "f90" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
     if (autoOrders && adapter === "omega")
@@ -1744,7 +1744,7 @@ async function staff(a: Actor, b: any) {
       adapter,
       currency,
       // Connection changes require a fresh read-only diagnosis before activation.
-      is_enabled: adapter === "local" ? (old ? !!old.is_enabled : true) :
+      is_enabled: adapter === "f90" ? (old ? !!old.is_enabled : true) :
         !!old?.is_enabled && !connectionChanged && !b.token,
       margin_percent: num(b.margin_percent ?? 20, 0, 10000),
       config: {
@@ -1786,7 +1786,7 @@ async function staff(a: Actor, b: any) {
       .eq("id", id).single());
     if (current.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (typeof b.is_enabled !== "boolean") throw new AppError("F90_FIELDS");
-    if (b.is_enabled && current.adapter !== "local") {
+    if (b.is_enabled && current.adapter !== "f90") {
       const services = await providerAction(id, "services");
       if (!Array.isArray(services))
         throw new AppError("F90_FIELDS", 400, "تعذّر قراءة خدمات المورّد؛ بقي موقوفًا");
