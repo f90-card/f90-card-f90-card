@@ -1638,13 +1638,45 @@
       "verification",
       "reset",
     ];
-    if (privatePages.includes(page) && !S.me) {
-      if (location.hash !== "#/auth") {
-        location.hash = "#/auth";
+    // Do not interpret an unfinished Supabase session rehydration as logout.
+    // This is particularly important when the app is opened directly at
+    // #/deposit or #/special/salary on slower mobile browsers.
+    const needsAccount=privatePages.includes(page)||(page==="special"&&id==="salary");
+    if(needsAccount&&!S.me){
+      main.innerHTML='<section class="panel f90-session-recovery" role="status" aria-live="polite">'+
+        '<h2>جارٍ استعادة حسابك…</h2><p>نراجع الجلسة المحفوظة، دون تسجيل خروج أو تغيير الرصيد.</p></section>';
+      if(pendingMeRefresh){
+        try{await pendingMeRefresh;}catch{/* Recheck below */ }
+        if(seq!==S.route)return;
+      }
+      if(!S.me){
+        // A server timeout does not invalidate a stored authenticated session.
+        // Retain the intended route, rather than losing it to #/auth.
+        let checkSession;
+        try{checkSession=await A.client.auth.getSession();}
+        catch(err){checkSession={error:err};}
+        if(seq!==S.route)return;
+        if(checkSession?.error||checkSession?.data?.session){
+          S.walletStale=true;
+          main.innerHTML='<section class="panel f90-session-recovery" role="status">'+
+            '<h2>تعذّر تحديث بيانات الحساب مؤقتًا</h2>'+
+            '<p>الجلسة محفوظة. حاول إعادة الاتصال لعرض الإيداع بأمان.</p>'+
+            '<button type="button" class="button" id="f90RestoreAccountRetry">إعادة الاتصال</button></section>';
+          main.querySelector("#f90RestoreAccountRetry")?.addEventListener("click",async()=>{
+            const button=main.querySelector("#f90RestoreAccountRetry");
+            if(button)button.disabled=true;
+            try{if(await refreshMe()){chrome();await route();return;}}
+            catch(err){console.warn("F90 login recovery",err);}
+            if(button)button.disabled=false;
+            toast("تعذّرت استعادة الحساب مؤقتًا. حاول مجددًا");
+          });
+          return;
+        }
+        // Only a confirmed absence of a saved session requires a login.
+        if(location.hash!=="#/auth")location.hash="#/auth";
+        else loginRequired();
         return;
       }
-      loginRequired();
-      return;
     }
     if (S.me?.needs_mfa && privatePages.includes(page)) {
       main.innerHTML =
@@ -2638,8 +2670,11 @@
         if (!S.settings?.config || !S.settings?.store_name) return;
         try {
           const ok = await refreshMe();
-          if (ok) { chrome(); if (location.hash === "#/auth") location.hash = "#/profile"; }
-          else if (S.me) chrome();
+          if (ok) {
+            chrome();
+            if (location.hash === "#/auth") location.hash = "#/profile";
+            else if (document.querySelector(".f90-session-recovery")) await route();
+          } else if (S.me) chrome();
         } catch { /* Keep the existing UI on transient errors. */ }
       }, 250);
     }
@@ -2670,8 +2705,11 @@
       if (!ok) return;
       chrome();
       const page = (location.hash || "#/").split("/")[1] || "";
-      if (["profile","wallet","orders","history","deposits","verification","developers"].includes(page) &&
-          !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+      if ((["profile","wallet","deposit","orders","history","deposits","verification","developers"].includes(page) ||
+          (location.hash||"").startsWith("#/special/salary")) &&
+          !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName) &&
+          !document.getElementById("depositForm") &&
+          !document.getElementById("f90SpecialForm")) {
         await route();
       }
     }).catch(() => { /* Wait for the next connection/recovery event. */ });
@@ -2724,8 +2762,9 @@
       const accountResult=await Promise.race([
         accountRequest,
         new Promise(resolve=>setTimeout(()=>resolve(recoveryPending),
-          ["profile","wallet","orders","history","deposits","verification","developers","admin"].includes((location.hash||"#/").split("/")[1]||"")
-            ? 2500 : 400))
+          ["profile","wallet","deposit","orders","history","deposits","verification","developers","admin"].includes((location.hash||"#/").split("/")[1]||"") ||
+          (location.hash||"").startsWith("#/special/salary")
+            ? 3500 : 400))
       ]);
       if(accountResult===recoveryPending){
         S.walletStale=true;
@@ -2734,7 +2773,8 @@
           try{
             chrome();
             const current=(location.hash||"#/").split("/")[1]||"";
-            if(["profile","wallet","orders","history","deposits","verification","developers"].includes(current))
+            if(["profile","wallet","deposit","orders","history","deposits","verification","developers"].includes(current) ||
+               (location.hash||"").startsWith("#/special/salary"))
               await route();
           }catch(err){console.warn("F90 deferred account refresh",err);}
         }).catch(()=>{});
