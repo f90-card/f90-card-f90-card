@@ -40,8 +40,8 @@ function harness({
     },
   };
   // Include the single-flight closure that owns the real refreshMe function.
-  const fn = vm.runInNewContext("(() => {\\n" + source.slice(start, end) +
-    "\\n return refreshMe; })()", {
+  const fn = vm.runInNewContext("(() => { " + source.slice(start, end) +
+    " return refreshMe; })()", {
     A, S, console: { warn: () => {} },
     toast: (value) => messages.push(value), message: (err) => err.message,
   });
