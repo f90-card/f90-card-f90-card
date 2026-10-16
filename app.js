@@ -1264,18 +1264,25 @@
       '<a class="f90-finance-success-back" href="#/deposit">العودة لطرق الإيداع</a></div>';
   }
   function depositRecord(d) {
-    // Fees must be recorded by the server in the immutable payment-method snapshot.
-    // Never infer or deduct a fee locally from a historical or pending deposit.
-    const pct = Number(d.method_snapshot?.deposit_fee_percent);
-    const feeEnabled = Number.isFinite(pct) && pct > 0 && pct <= 100;
-    const feeRecorded = d.method_snapshot?.deposit_fee_percent !== undefined && d.method_snapshot?.deposit_fee_percent !== null;
-    const gross = Number(d.usd_amount || 0);
-    const fee = feeEnabled ? Math.round(gross * pct * 10000) / 1000000 : 0;
-    const net = Math.round((gross - fee) * 1000000) / 1000000;
-    const feeInfo = feeEnabled
-      ? `<p class="f90-deposit-fee-line">عمولة الإيداع ${e(pct)}٪: −${e(displayMoney(fee,true))} · ${d.status === "approved" ? "الصافي المضاف" : "الصافي المتوقع"} ${e(displayMoney(net,true))}</p>`
-      : `<p class="muted small">${feeRecorded ? "لم تُسجّل عمولة إيداع لهذه العملية." : "لا تتوفر بيانات عمولة إيداع مؤكدة لهذه العملية؛ راجع حركة المحفظة لمعرفة الرصيد المضاف."}</p>`;
-    return `<article class="record"><div class="record-main"><h3>${e(d.method_name)}</h3><p>${e(C.date(d.created_at))} · ${e(C.money(d.amount, d.currency, true))}</p>${feeInfo}<div class="record-footer">${status(d.status)}${d.review_note ? `<span class="muted small">${e(d.review_note)}</span>` : ""}</div></div><div class="f90-deposit-record-amount"><small>${feeEnabled ? (d.status === "approved" ? "الصافي المعتمد" : "الصافي المتوقع") : "المبلغ قبل العمولة"}</small><strong class="record-price">${e(displayMoney(feeEnabled ? net : gross,true))}</strong></div></article>`;
+    // Show the immutable recorded fee snapshot; never invent fees for older rows.
+    const pct=Number(d.method_snapshot?.deposit_fee_percent);
+    const hasFee=d.method_snapshot?.deposit_fee_percent!=null;
+    const gross=Number(d.usd_amount||0);
+    const fee=hasFee&&Number.isFinite(pct)?Math.round(gross*pct/100*1000000)/1000000:0;
+    const net=Math.max(0,gross-fee);
+    const currency=d.currency||"USD";
+    const converted=Number(d.rate_snapshot)>0
+      ?new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:3}).format(net*Number(d.rate_snapshot))+" "+currency
+      :accountMoney(net,currency);
+    const state=d.status||"pending";
+    const detail=hasFee?'رسوم الإيداع '+e(pct)+'٪':'الرسوم بحسب السجل الأصلي';
+    return '<article class="record f90-history-entry" data-state="'+e(state)+'">'+
+      '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(d.method_name)+'</h3>'+status(state)+'</div>'+
+      '<small>'+e(C.date(d.created_at))+'</small>'+
+      '<strong class="f90-history-sum">'+e(converted)+'</strong>'+
+      '<details class="f90-history-more"><summary>التفاصيل</summary>'+
+      '<p>المبلغ المُحوّل: '+e(C.money(d.amount,currency,true))+' · '+detail+'</p>'+
+      (d.review_note?'<p>'+e(d.review_note)+'</p>':'')+'</details></div></article>';
   }
   function deposit(methodId) {
     if (!S.me?.profile?.is_verified) {
@@ -1357,42 +1364,95 @@
       '</form></section></div>';
   }
   function orderRecord(o) {
-    return `<a class="record" href="${href("order", o.id)}">${image(o.product_image, o.product_name, "record-image")}<div class="record-main"><h3>${e(o.product_name)}</h3><p>طلب #${e(o.order_number)} · ${e(C.date(o.created_at))}</p><div class="record-footer">${status(o.status)}<span class="badge">${o.fulfillment === "automatic" ? "آلي" : "يدوي"}</span></div></div><strong class="record-price">${e(displayMoney(o.total_usd))}</strong></a>`;
+    const state=o.status||"pending";
+    return '<a class="record f90-history-entry f90-history-order" data-state="'+e(state)+'" href="'+href("order",o.id)+'">'+
+      image(o.product_image,o.product_name,"record-image")+
+      '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(o.product_name)+'</h3>'+status(state)+'</div>'+
+      '<small>طلب #'+e(o.order_number)+' · '+e(C.date(o.created_at))+'</small>'+
+      '<strong class="f90-history-sum">'+e(accountMoney(o.total_usd))+'</strong></div>'+
+      '<span class="f90-history-open" aria-hidden="true">‹</span></a>';
+  }
+  function salaryHistoryRecord(d){
+    const state=d.status||"pending";
+    return '<article class="record f90-history-entry" data-state="'+e(state)+'">'+
+      '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>سحب رواتب Xena Live</h3>'+status(state)+'</div>'+
+      '<small>'+e(C.date(d.created_at))+' · '+e(Number(d.coins).toLocaleString("en-US"))+' كوينز</small>'+
+      '<strong class="f90-history-sum">'+e(accountMoney(d.usd_amount))+'</strong>'+
+      '<details class="f90-history-more"><summary>التفاصيل</summary>'+
+      '<p>المبلغ وقت الطلب: '+e(targetSalaryMoney(d))+'</p>'+
+      (d.review_note?'<p>'+e(d.review_note)+'</p>':'')+'</details></div></article>';
+  }
+  function targetSalaryMoney(d){
+    return Number(d.payout_amount||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:3})+
+      " "+(d.payout_currency||"USD");
+  }
+  function ledgerRecord(x){
+    const amount=Number(x.amount_usd||0),incoming=amount>=0;
+    const name=x.kind==="deposit"?"إضافة رصيد":x.kind==="purchase"?"شراء خدمة":
+      x.kind==="refund"?"استرداد رصيد":x.kind==="adjustment"?"تعديل رصيد":"حركة رصيد";
+    return '<article class="record f90-history-entry" data-state="'+(incoming?'approved':'completed')+'">'+
+      '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(name)+'</h3>'+
+      '<span class="f90-history-type '+(incoming?'ledger-plus':'ledger-minus')+'">'+(incoming?'وارد':'صادر')+'</span></div>'+
+      '<small>'+e(C.date(x.created_at))+'</small>'+
+      '<strong class="f90-history-sum '+(incoming?'ledger-plus':'ledger-minus')+'">'+(incoming?'+':'−')+e(accountMoney(Math.abs(amount)))+'</strong>'+
+      '<details class="f90-history-more"><summary>الرصيد بعد العملية</summary><p>'+e(accountMoney(x.balance_after))+'</p></details></div></article>';
+  }
+  function applyHistoryFilter() {
+    const wrap=document.getElementById("f90HistoryView");if(!wrap)return;
+    const term=String(document.getElementById("orderHistorySearch")?.value||"").trim().toLocaleLowerCase("ar");
+    const selected=wrap.dataset.filter||"all";
+    let visible=0;
+    wrap.querySelectorAll("#historyRecords .record").forEach(row=>{
+      const state=row.dataset.state||"";
+      const group=["pending","queued","submitting","processing","review"].includes(state)?"pending":
+        ["approved","completed","partial"].includes(state)?"completed":
+        ["rejected","failed","cancelled","refunded"].includes(state)?"rejected":"pending";
+      const matches=(selected==="all"||selected===group)&&(!term||row.textContent.toLocaleLowerCase("ar").includes(term));
+      row.hidden=!matches;if(matches)visible++;
+    });
+    const counter=document.getElementById("f90OrderSearchCount");
+    if(counter)counter.textContent="النتائج: "+visible;
+    const emptyState=document.getElementById("f90OrderSearchEmpty");
+    if(emptyState)emptyState.hidden=visible>0;
+    wrap.querySelectorAll("[data-f90-history-filter]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f90HistoryFilter===selected)));
   }
   async function history(kind) {
-    const seq = S.route,
-      orders = kind === "orders",
-      deposits = kind === "deposits";
-    main.innerHTML =
-      pageHead(
-        orders
-          ? "تتبّع طلباتي"
-          : deposits
-            ? "طلبات الإيداع"
-            : "سجل حركات المحفظة",
-        orders
-          ? "من الدفع حتى التنفيذ. كل خطوة واضحة."
-          : "سجلك محفوظ داخل حسابك",
-        `<button class="button secondary small" data-action="report" data-kind="${kind}">${I("download")}PDF</button><button class="button secondary small" data-action="report-csv" data-kind="${kind}">${I("download")}CSV كامل</button>`,
-      ) + (orders ? '<div class="f90-record-search-wrap"><label class="field f90-record-search"><span>ابحث في الطلبات الظاهرة</span><input id="orderHistorySearch" type="search" placeholder="اسم الخدمة أو رقم الطلب" autocomplete="off" aria-describedby="f90OrderSearchCount"></label><span id="f90OrderSearchCount" class="muted small" role="status">البحث في الطلبات المعروضة حاليًا</span></div>' : "") + `<div id="records" class="loading">جارٍ تحميل السجل…</div>`;
-    const r = await A.call("history", {
-      kind: orders ? "orders" : deposits ? "deposits" : "ledger",
-      offset: S.offset,
-    });
-    if (seq !== S.route) return;
-    S.reportItems = r.items;
-    S.reportKind = kind;
-    const items = r.items;
-    $("records").outerHTML = items.length
-      ? `<div class="records" id="historyRecords">${items.map((x) => (orders ? orderRecord(x) : deposits ? depositRecord(x) : `<article class="record"><span class="avatar">${I(Number(x.amount_usd) > 0 ? "plus" : "wallet")}</span><div class="record-main"><h3>${e(x.description)}</h3><p>${e(C.date(x.created_at))} · الرصيد بعد الحركة ${e(displayMoney(x.balance_after,true))}</p></div><strong class="record-price ${Number(x.amount_usd) > 0 ? "ledger-plus" : "ledger-minus"}">${Number(x.amount_usd) > 0 ? "+" : ""}${e(displayMoney(x.amount_usd,true))}</strong></article>`)).join("")}</div>${orders ? '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد طلبات مطابقة في هذه الصفحة. جرّب عبارة أخرى أو انتقل للصفحة التالية.</p>' : ""}<div class="pagination"><button class="button secondary small" data-action="page-prev" ${S.offset === 0 ? "disabled" : ""}>السابق</button><span class="muted small">${e(S.offset + 1)}–${e(Math.min(S.offset + 50, r.count))} من ${e(r.count)}</span><button class="button secondary small" data-action="page-next" ${S.offset + 50 >= r.count ? "disabled" : ""}>التالي</button></div>`
-      : empty(
-          orders
-            ? "ليس لديك طلبات بعد"
-            : deposits
-              ? "لم تقدّم طلب إيداع بعد"
-              : "لم تحدث حركة في محفظتك بعد",
-          "clock",
-        );
+    const seq=S.route,orders=kind==="orders",deposits=kind==="deposits";
+    const title=orders?"سجل الطلبات":deposits?"سجل الإيداعات":"سجل العمليات";
+    const links='<nav class="f90-history-nav" aria-label="أقسام السجلات">'+
+      [['orders','الطلبات'],['deposits','الإيداعات'],['history','العمليات']].map(([id,label])=>
+        '<a href="#/'+id+'" '+((orders&&id==="orders")||(deposits&&id==="deposits")||(!orders&&!deposits&&id==="history")?'aria-current="page"':'')+'>'+label+'</a>').join('')+'</nav>';
+    main.innerHTML=pageHead(title,"",
+      '<button class="button secondary small" data-action="report" data-kind="'+e(kind)+'">PDF</button>'+
+      '<button class="button secondary small" data-action="report-csv" data-kind="'+e(kind)+'">CSV</button>')+
+      '<section class="f90-history-view" id="f90HistoryView" data-filter="all">'+links+
+      '<div class="f90-history-tools">'+
+      '<input id="orderHistorySearch" type="search" placeholder="بحث في '+title+'" autocomplete="off" aria-label="بحث في '+title+'">'+
+      '<small id="f90OrderSearchCount" role="status"></small></div>'+
+      '<div class="f90-history-filters" role="group" aria-label="تصفية السجل">'+
+      [['all','الكل'],['pending','قيد المراجعة'],['completed','مكتمل'],['rejected','مرفوض']].map(([code,label])=>
+        '<button type="button" data-f90-history-filter="'+code+'" aria-pressed="'+(code==="all")+'">'+label+'</button>').join('')+
+      '</div><div id="records" class="loading">جارٍ تحميل السجل…</div></section>';
+    const [r,salaryResult]=await Promise.all([
+      A.call("history",{kind:orders?"orders":deposits?"deposits":"ledger",offset:S.offset}),
+      deposits?A.call("history.salary",{offset:0}).catch(()=>null):Promise.resolve(null)
+    ]);
+    if(seq!==S.route)return;
+    S.reportItems=r.items;S.reportKind=kind;
+    const items=r.items||[];
+    const rows=items.map(x=>orders?orderRecord(x):deposits?depositRecord(x):ledgerRecord(x)).join("");
+    const paging='<div class="pagination"><button class="button secondary small" data-action="page-prev" '+(S.offset===0?'disabled':'')+'>السابق</button>'+
+      '<span class="muted small">'+e(items.length?S.offset+1:0)+'–'+e(Math.min(S.offset+50,r.count))+' من '+e(r.count)+'</span>'+
+      '<button class="button secondary small" data-action="page-next" '+(S.offset+50>=r.count?'disabled':'')+'>التالي</button></div>';
+    const salaryRows=deposits&&salaryResult?.items?.length
+      ?'<section class="f90-history-salary-group"><h2>سحب رواتب Xena Live</h2>'+
+        '<div class="records">'+salaryResult.items.map(salaryHistoryRecord).join("")+'</div></section>':"";
+    document.getElementById("records").outerHTML=
+      '<div class="records" id="historyRecords">'+(items.length?rows:
+        '<p class="f90-history-no-records">'+(orders?"لا توجد طلبات حتى الآن":deposits?"لا توجد إيداعات حتى الآن":"لا توجد عمليات حتى الآن")+'</p>')+
+      (salaryRows?'<div class="f90-history-salary-in-list">'+salaryRows+'</div>':'')+'</div>'+
+      '<p id="f90OrderSearchEmpty" class="f90-search-empty" hidden>لا توجد نتائج مطابقة.</p>'+paging;
+    applyHistoryFilter();
   }
   async function order(id) {
     const seq = S.route;
@@ -2105,17 +2165,7 @@
       return;
     }
     if (ev.target?.id === "orderHistorySearch") {
-      const term = ev.target.value.trim().toLocaleLowerCase("ar");
-      let visible = 0;
-      document.querySelectorAll("#historyRecords .record").forEach((row) => {
-        const match = !term || row.textContent.toLocaleLowerCase("ar").includes(term);
-        row.hidden = !match;
-        if (match) visible++;
-      });
-      const counter = $("f90OrderSearchCount");
-      if (counter) counter.textContent = term ? `النتائج المطابقة في هذه الصفحة: ${visible}` : "البحث في الطلبات المعروضة حاليًا";
-      const emptyState = $("f90OrderSearchEmpty");
-      if (emptyState) emptyState.hidden = !term || visible > 0;
+      applyHistoryFilter();
       return;
     }
     if (ev.target.id === "savedRecipient") return;
@@ -2196,6 +2246,13 @@
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.focus();
     }
+  });
+  document.addEventListener("click",ev=>{
+    const filter=ev.target.closest?.("[data-f90-history-filter]");
+    if(!filter)return;
+    ev.preventDefault();
+    const wrap=document.getElementById("f90HistoryView");
+    if(wrap){wrap.dataset.filter=filter.dataset.f90HistoryFilter;applyHistoryFilter();}
   });
   document.addEventListener("click", async (ev) => {
     const button = ev.target.closest("[data-action],[data-close-modal]");
