@@ -1262,7 +1262,7 @@
     S.selectedMethod = methods.find((m) => m.id === methodId && m.enabled) || null;
     S.depositKey = C.key();
     const m = S.selectedMethod;
-    const salaryMethod=x=>Array.isArray(x.accepted_currencies)&&x.accepted_currencies.includes("XCN");
+    const salaryMethod=x=>x?.is_salary_withdrawal===true || x?.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062" || (Array.isArray(x?.accepted_currencies)&&x.accepted_currencies.includes("XCN")&&/سحب رواتب|اكزينا|Xena/i.test(x.name_ar||""));
     if(m && salaryMethod(m)){window.F90Special.render("salary",S.settings,S.me,"",S.rates);return;}
     main.innerHTML = `${pageHead("أضف رصيدًا لعالمك", "اختر طريقة الإيداع، وأرسل إيصالك للمراجعة", `<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>`)}<div class="deposit-steps"><span><b>١</b>اختر الطريقة</span><span><b>٢</b>حوّل وارفع الإيصال</span><span><b>٣</b>اعتماد الإدارة</span></div>${
       !m
