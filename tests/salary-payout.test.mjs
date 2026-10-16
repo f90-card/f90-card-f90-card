@@ -14,8 +14,10 @@ test("Xena salary uses a server-signed currency-specific payout rather than norm
  assert.match(client,/visibleSalaryOptions/);
  assert.match(client,/data-salary-target/);
  assert.match(client,/data-salary-usd/);
- assert.match(client,/f90_submit_salary_v2/);
+ assert.match(client,/f90_submit_salary_v3/);
  assert.match(client,/p_currency:currency/);
+ assert.match(client,/p_receipt:path/);
+ assert.match(client,/p_note:String\(d\.get\("note"\)/);
  assert.doesNotMatch(client,/client\.rpc\("f90_submit_salary",/);
 });
 
