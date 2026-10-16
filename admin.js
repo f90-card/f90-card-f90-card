@@ -43,6 +43,7 @@
     ["orders", "إدارة الطلبات", "clock", ["manager", "admin", "support"]],
     ["order-requests", "الاعتراضات والإلغاء", "bell", ["manager", "admin", "support"]],
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
+    ["salary-requests", "رواتب Xena المعلّقة", "clock", ["manager", "admin"]],
     ["special-requests", "طلبات Xena والتحويل والخدمات", "clock", ["manager", "admin"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
@@ -173,7 +174,7 @@
   function navigation() {
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
-      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","special-requests","verification","ledger","audit"]],
+      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit"]],
       ["العملاء والتجار",["users","traders","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
@@ -321,12 +322,20 @@
   }
   async function listPage(kind) {
     const seq = S.token;
-    const r = await A.call("staff.list", kind === "ledger" ? ledgerQuery() : {
-      kind,
-      offset: S.offset,
-      status: S.filter || undefined,
-      search: kind === "users" ? S.search : undefined,
-    });
+    let depositListError=null;
+    let r;
+    try {
+      r = await A.call("staff.list", kind === "ledger" ? ledgerQuery() : {
+        kind,
+        offset: S.offset,
+        status: S.filter || undefined,
+        search: kind === "users" ? S.search : undefined,
+      });
+    } catch(error) {
+      if(kind!=="deposits")throw error;
+      depositListError=error;
+      r={items:[],count:0};
+    }
     if (seq !== S.token) return;
     S.list = r.items;
     S.count = r.count;
@@ -365,6 +374,9 @@
       `<div class="toolbar">${filters.length ? select("filter", "الحالة", [["", "كل الحالات"], ...filters.map((x) => [x, C.statuses[x]])], S.filter).replace("<select ", '<select id="listFilter" ') : ""}${kind === "users" ? `<form id="searchUsers" class="actions">${field("search", "بحث", "search", S.search, 'placeholder="البريد أو معرّف العميل"')}<button class="button secondary" type="submit">بحث</button></form>` : ""}</div>` +
       (kind === "ledger" ? `<form id="ledgerFilterForm" class="toolbar ledger-filters">${select("ledger_kind", "نوع الحركة", [["", "كل الحركات"], ["deposit", "إيداع"], ["purchase", "شراء"], ["refund", "استرداد"], ["adjustment", "تسوية"]], S.ledgerFilter.ledger_kind)}${field("customer_id", "رقم العميل", "search", S.ledgerFilter.customer_id, 'placeholder="F90..."')}${field("from", "من تاريخ", "date", S.ledgerFilter.from)}${field("to", "إلى تاريخ", "date", S.ledgerFilter.to)}<button class="button secondary" type="submit">تطبيق</button><button class="button secondary" type="button" data-action="ledger-reset">مسح الفلاتر</button></form>` : "");
     if (kind === "deposits") {
+      if(depositListError)
+        main.insertAdjacentHTML("beforeend",
+          '<div class="notice warning">تعذّر تحميل قائمة الإيداعات العادية مؤقتًا، لكن قائمة رواتب Xena مستقلة ومتاحة. '+e(depositListError.message||"خطأ اتصال")+'</div>');
       main.insertAdjacentHTML("beforeend",
         '<section class="panel" id="f90SalaryInbox"><h2>طلبات إيداع رواتب Xena Live</h2>'+
         '<div data-salary-content role="status">جارٍ جلب طلبات Xena…</div></section>');
@@ -2163,6 +2175,10 @@
       )
         publicListPage(page);
       else if (page === "settings") await settings();
+      else if (page === "salary-requests") {
+        main.innerHTML=head("طلبات رواتب Xena Live","طلبات السحب مستقلة عن بقية الإيداعات، ويمكنك اعتمادها أو رفضها بعد فحص الإيصال.");
+        await window.F90SpecialAdmin.renderSalaryInbox(main);
+      }
       else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
       else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
