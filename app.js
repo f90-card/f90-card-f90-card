@@ -39,6 +39,7 @@
     currencyPreference: false,
   };
   let authUiRefreshTimer,
+    authSignOutTimer,
     toastTimer,
     bannerTimer,
     quoteTimer,
@@ -2714,6 +2715,7 @@
         location.hash = "#/reset";
       }, 0);
     if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      clearTimeout(authSignOutTimer);
       // Supabase can restore credentials after the initial page render.
       // Defer work outside the auth callback to avoid auth-lock deadlocks.
       clearTimeout(authUiRefreshTimer);
@@ -2731,20 +2733,36 @@
     }
     if (event === "SIGNED_OUT") {
       clearTimeout(authUiRefreshTimer);
-      S.me = null;
-      S.walletStale = false;
-      S.savedRecipients = [];
-      if (S.settings?.store_name) chrome();
-      // Losing an account must not kick a visitor off a public page.
-      // Explicit logout already navigates to #/auth in its click handler.
-      const currentPage = (location.hash || "#/").split("/")[1] || "";
-      const privatePages = ["profile", "recipients", "wallet", "deposit", "orders", "order", "history", "deposits", "security", "verification", "reset"];
-      if (privatePages.includes(currentPage)) {
-        location.hash = "#/auth";
-      } else if (S.settings?.config) {
-        chrome();
-        route();
-      }
+      clearTimeout(authSignOutTimer);
+      // Supabase may briefly emit SIGNED_OUT during a failed refresh. Do not
+      // redirect a customer away from their deposit form until its session
+      // has been checked outside the auth callback's internal lock.
+      authSignOutTimer = setTimeout(async () => {
+        let result;
+        try { result=await A.client.auth.getSession(); }
+        catch { S.walletStale=true; return; }
+        if(result.error){S.walletStale=true;return;}
+        if(result.data?.session){
+          try{
+            if(await refreshMe()){
+              chrome();
+              if(document.querySelector(".f90-session-recovery"))await route();
+            }
+          }catch {/* A failed network read is not a confirmed sign-out. */}
+          return;
+        }
+        S.me = null;
+        S.walletStale = false;
+        S.savedRecipients = [];
+        if (S.settings?.store_name) chrome();
+        const currentPage = (location.hash || "#/").split("/")[1] || "";
+        const privatePages = ["profile", "recipients", "wallet", "deposit", "orders", "order", "history", "deposits", "security", "verification", "reset"];
+        if (privatePages.includes(currentPage) || (location.hash||"").startsWith("#/special/salary")) {
+          location.hash = "#/auth";
+        } else if (S.settings?.store_name) {
+          await route();
+        }
+      }, 350);
     }
   });
   // Restore stale account details after an offline/mobile background interval.
@@ -2936,10 +2954,19 @@
     } catch (err) {
       // A read-only emergency catalog may already be visible. Do not hide it.
       if (!window.F90StartupRescue?.hasShown) {
-        main.innerHTML =
-          pageHead("جارٍ استعادة الاتصال بالخادم") +
-          `<div class="notice error">${e(message(err))}</div><button class="button" id="bootRetry">إعادة المحاولة الآن</button>`;
-        $("bootRetry")?.addEventListener("click", boot);
+        const requestedPage=(location.hash||"#/").split("/")[1]||"";
+        if(requestedPage==="auth"||requestedPage==="register"){
+          // Sign-in and sign-up use Supabase Auth directly. A temporary
+          // public catalog failure must not remove their forms.
+          auth(requestedPage==="register"?"register":"login");
+          main.insertAdjacentHTML("afterbegin",
+            '<div class="notice warning">تعذّر جلب المنتجات مؤقتًا؛ يمكنك تسجيل الدخول، ثم إعادة تحميل المتجر.</div>');
+        }else{
+          main.innerHTML =
+            pageHead("جارٍ استعادة الاتصال بالخادم") +
+            `<div class="notice error">${e(message(err))}</div><div class="actions"><button class="button" id="bootRetry">إعادة المحاولة الآن</button><a class="button secondary" href="#/auth">تسجيل الدخول</a></div>`;
+          $("bootRetry")?.addEventListener("click", boot);
+        }
       }
       if (bootRetryAttempts < 3) {
         const delay = [3000, 7000, 15000][bootRetryAttempts++];
