@@ -188,7 +188,7 @@ function updateEstimate(form){
      Number.isFinite(rate)&&rate>0 && Number.isFinite(perUsd)&&perUsd>0;
    const amount=valid?v/100000*rate:0, usd=valid?amount/perUsd:0;
    form.querySelector("[data-salary-coins]").textContent=v.toLocaleString("en-US")+" كوينز";
-   form.querySelector("[data-salary-target]").textContent=valid?salaryCredit(usd):"—";
+   form.querySelector("[data-salary-target]").textContent=valid?targetMoney(amount,customerSalaryCurrency):"—";
    form.querySelector("[data-salary-usd]").textContent=valid?fmt(usd):"—";
    form.querySelector("[data-salary-rate]").textContent=opt?"تسعير الرواتب معتمد لدى الإدارة.":"";
    const btn=form.querySelector('button[type="submit"]');
@@ -255,7 +255,7 @@ document.addEventListener("submit",async ev=>{
    if(review){
      review.hidden=false;
      review.innerHTML='<strong>مراجعة طلب السحب</strong><span>'+esc(value.toLocaleString("en-US"))+' كوينز</span>'+
-       '<strong>'+esc(salaryCredit(usd))+'</strong><small>يضاف بعد موافقة الإدارة فقط</small>';
+       '<strong>'+esc(targetMoney(value/100000*Number(option.per_100k),customerSalaryCurrency))+'</strong><small>يضاف بعد موافقة الإدارة فقط</small>';
    }
    form.dataset.reviewReady="1";
    button.textContent="تأكيد وإرسال الطلب";
@@ -307,7 +307,7 @@ document.addEventListener("submit",async ev=>{
        '<span class="f90-finance-success-icon" aria-hidden="true">✓</span>'+
        '<h2>تم إرسال طلب سحب الراتب</h2><p>الطلب بانتظار مراجعة الإدارة.</p>'+
        '<div class="f90-finance-success-amount"><small>سينضاف لرصيدك عند الموافقة</small>'+
-       '<strong>'+esc(salaryCredit(Number(data.usd_amount||0)))+'</strong></div>'+
+       '<strong>'+esc(targetMoney(data.payout_amount, data.payout_currency||customerSalaryCurrency))+'</strong></div>'+
        '<small>رقم المتابعة: '+esc(String(data.id||"").slice(0,8))+'</small>'+
        '<a class="button full" href="#/deposits">سجل الإيداعات</a>'+
        '<a class="f90-finance-success-back" href="#/deposit">طرق الإيداع</a></div>';
