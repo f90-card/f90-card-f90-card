@@ -106,8 +106,6 @@ function salaryEditor(settings,rates=[]){
    check("salary_active","تفعيل خدمة سحب الرواتب في طرق الإيداع",sal.enabled===true)+
    field("salary_minimum","أقل كمية كوينز للسحب",Math.max(100000,Number(sal.minimum_coins)||100000),"number",'required min="100000" max="1000000000000" step="1"')+
    textarea("salary_details","الوصف والتعليمات المعروضة للعميل",sal.details_ar||"")+
-   field("salary_account_label","عنوان حقل ID حساب Xena Live",sal.account_label_ar||"ID حساب Xena Live الذي تم السحب منه","text",'maxlength="120"')+
-   textarea("salary_processing_notice","معلومات إضافية للعميل: وقت التأكيد أو مدة الإيداع",sal.processing_notice_ar||"")+
    '<div class="f90-salary-admin-photo"><img id="f90SalaryImagePreview" src="'+esc(image||"./assets/f90-new/banner-salary.webp")+'" alt="معاينة صورة سحب الرواتب">'+
    field("salary_image_url","رابط صورة الخدمة",image,"url",'placeholder="https://..."')+
    '<label class="field"><span>رفع صورة جديدة من جهازك</span><input name="salary_image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>'+
@@ -162,12 +160,9 @@ document.addEventListener("submit",async ev=>{
    const old=salaryAdminSettings,config=old.config;
    const current=config.salary_withdrawal||{};
    const desc=String(form.elements.salary_details.value||"").trim().slice(0,4000);
-   const accountLabel=String(form.elements.salary_account_label.value||"").trim().slice(0,120);
-   const processingNotice=String(form.elements.salary_processing_notice.value||"").trim().slice(0,2500);
    const enabled=!!form.elements.salary_active.checked;
    const usd=options.find(x=>x.currency==="USD");
-   const salary={...current,enabled,minimum_coins:min,details_ar:desc,
-     account_label_ar:accountLabel,processing_notice_ar:processingNotice,image_url:imageUrl,
+   const salary={...current,enabled,minimum_coins:min,details_ar:desc,image_url:imageUrl,
      payout_options:options,coins_per_usd:usd?.per_100k>0?100000/(usd.per_100k/usd.units_per_usd):current.coins_per_usd};
    const methods=(config.payment_methods||[]).map(method=>
      method.is_salary_withdrawal===true||method.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062"?
@@ -202,8 +197,7 @@ async function renderRequests(main){
   ...(sp.data||[]).map(x=>({...x,source:"special",subtitle:x.service,contact:x.contact_whatsapp,
     qty:x.amount_units,total:x.gross_usd,net:x.net_usd,note:x.client_details})),
   ...(sal.data||[]).map(x=>({...x,source:"salary",kind:"salary",subtitle:"رواتب Xena Live",
-    contact:x.account_id,qty:x.coins,total:x.usd_amount,net:x.usd_amount,
-    note:[x.client_note,x.details_snapshot].filter(Boolean).join(" · ")})),
+    contact:x.account_id,qty:x.coins,total:x.usd_amount,net:x.usd_amount,note:x.details_snapshot})),
   ...(tr.data||[]).map(x=>({...x,source:"transfer",kind:"transfer",subtitle:x.method_name,
     contact:x.recipient_details,qty:x.net_usd,total:x.total_usd,net:x.net_usd,note:x.recipient_details}))
  ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -214,259 +208,7 @@ async function renderRequests(main){
  '<h3>'+esc(kinds[x.kind]||x.kind)+' · '+esc(x.subtitle)+'</h3>'+
  '<p>الحساب/التواصل: '+esc(x.contact||x.account_id||"—")+'</p>'+
  '<p>التفاصيل: '+esc(x.note||"—")+'</p>'+
- '<p>الكمية: '+esc(x.qty||0)+' | القيمة: +esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
- '<p>الحالة: '+esc(states[x.status]||x.status)+(x.review_note?" · "+esc(x.review_note):"")+'</p></div>'+
- (x.status==="pending"||(x.status==="processing"&&x.source==="special")?
- '<div class="f90-request-actions"><input type="text" placeholder="ملاحظة الإدارة" maxlength="1200" aria-label="ملاحظة المراجعة">'+
- (x.source==="special"?'<button class="button secondary small" data-f90-review="processing">قيد المعالجة</button>':'')+
- '<button class="button small" data-f90-review="completed">'+(x.source==="salary"?"اعتماد وإضافة الرصيد":x.source==="transfer"?"اعتماد التحويل":"تم التنفيذ")+'</button>'+
- '<button class="button ghost small" data-f90-review="rejected">'+(x.source==="transfer"?"رفض واسترداد كامل المبلغ":"رفض الطلب")+'</button></div>':'')+
- '</article>').join(""):'<p>لا توجد طلبات حاليًا.</p>';
-}
-async function render(kind,main,settings){
- if(kind==="special-requests")return renderRequests(main);
- return renderSettings(main,settings);
-}
-document.addEventListener("change",ev=>{
- const file=ev.target.closest?.("[data-image-file]");
- if(!file?.files?.[0])return;
- const preview=document.querySelector('[data-preview="'+file.dataset.imageFile+'"]');
- if(preview){const url=URL.createObjectURL(file.files[0]);if(preview.dataset.blob)URL.revokeObjectURL(preview.dataset.blob);preview.dataset.blob=url;preview.src=url;}
-});
-document.addEventListener("input",ev=>{
- const link=ev.target.closest?.("[data-image-url]");
- if(link){const preview=document.querySelector('[data-preview="'+link.dataset.imageUrl+'"]');if(preview&&/^https:\/\//i.test(link.value))preview.src=link.value;}
-});
-document.addEventListener("submit",async ev=>{
- if(ev.target?.id!=="f90SpecialAdminForm")return;
- ev.preventDefault();
- ev.stopImmediatePropagation();
- const form=ev.target,send=form.querySelector('button[type="submit"]'),out=form.querySelector("[data-f90-admin-status]");
- if(send.disabled)return;
- send.disabled=true;out.textContent="جارٍ حفظ الخدمات وصورها…";
- try{
- const d=new FormData(form);
- const old=currentSettings?.config?.special_services||{};
- const c={...old};
- for(const k of ["salary_usd_per_100k","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd"]){
-  const raw=Number(d.get(k));
-  if(!Number.isFinite(raw)||raw<0)throw Error("قيمة غير صحيحة في "+k);
-  c[k]=raw;
- }
- if(c.salary_usd_per_100k<=0||c.transfer_fee_percent>30)throw Error("نسبة الخدمة غير صحيحة");
- if(c.transfer_eta_min_minutes<5||c.transfer_eta_max_minutes>2880||c.transfer_eta_min_minutes>c.transfer_eta_max_minutes)throw Error("مدة التحويل من 5 دقائق حتى 48 ساعة");
- const methods=[...form.querySelectorAll('[data-method-row]')].map(row=>{
-   const id=String(row.querySelector('[name="method_id"]').value||"").trim();
-   const name_ar=String(row.querySelector('[name="method_name"]').value||"").trim();
-   const currency=row.querySelector('[name="method_currency"]').value;
-   const fee_percent=Number(row.querySelector('[name="method_fee"]').value);
-   const rawRate=row.querySelector('[name="method_rate"]').value.trim();
-   const per_usd=rawRate?Number(rawRate):null;
-   if(per_usd!==null&&(!Number.isFinite(per_usd)||per_usd<=0))throw Error("سعر تحويل الخدمة غير صحيح");
-   const enabled=row.querySelector('[name="method_enabled"]').checked;
-   if(!/^[a-z0-9-]{2,60}$/.test(id)||!name_ar||name_ar.length>120||!currencies.includes(currency)||!Number.isFinite(fee_percent)||fee_percent<0||fee_percent>30)throw Error("راجع بيانات كل طريقة تحويل");
-   return {...(currentSettings?.config?.money_transfer?.methods||[]).find(x=>x.id===id),id,name_ar,currency,fee_percent,enabled,per_usd,
-     image_url:String(row.querySelector('[name="method_image"]').value||""),
-     details_ar:String(row.querySelector('[name="method_details"]').value||"").slice(0,2500)};
- });
- if(!methods.length||methods.length>50||new Set(methods.map(x=>x.id)).size!==methods.length)throw Error("أدخل طرق تحويل مستقلة وغير مكررة");
- c.service_catalog=[...form.querySelectorAll('[data-service-row]')].map(row=>{
-  const get=name=>String(row.querySelector('[name="service_'+name+'"]').value||'').trim();
-  const slug=get('product').split('#/product/').pop();
-  return {id:get('id'),kind:get('kind'),name_ar:get('name'),details_ar:get('details').slice(0,2500),image_url:get('image'),product_slug:slug,enabled:row.querySelector('[name="service_enabled"]').checked};
- });
- if(c.service_catalog.some(x=>!x.id||!x.name_ar)||new Set(c.service_catalog.map(x=>x.kind+':'+x.id)).size!==c.service_catalog.length)throw Error('راجع أسماء ومعرّفات الخدمات');
- c.transfer_methods=methods.map(x=>x.name_ar);
- for(const k of ["salary","transfer","account","website"])c[k+"_description"]=String(d.get(k+"_description")||"").slice(0,2500);
- for(const k of ["salary","transfer","account","website","design"])c["show_"+k]=d.get("show_"+k)==="on";
- for(const [id] of imageFields){
-   const file=form.elements[id+"_banner_file"].files?.[0];
-   if(file){if(!file.type.startsWith("image/")||file.size>5242880)throw Error("صورة غير مدعومة أو أكبر من 5 ميجابايت");
-     c[id+"_banner_url"]=(await window.F90API.upload(file,"f90-images","banners")).url;
-   }else c[id+"_banner_url"]=String(d.get(id+"_banner_url")||"").slice(0,2000);
- }
- const s=currentSettings;
- await window.F90API.call("settings.save",{data:{store_name:s.store_name,logo_url:s.logo_url,primary_color:s.primary_color,
-  currency:s.currency,contact_email:s.contact_email,announcement:s.announcement,
-  config:{...s.config,special_services:c,
-    salary_withdrawal:{...s.config.salary_withdrawal,enabled:c.show_salary,
-      coins_per_usd:100000/c.salary_usd_per_100k,
-      minimum_coins:s.config.salary_withdrawal?.minimum_coins||100000,
-      payout_options:(s.config.salary_withdrawal?.payout_options||[]).map(opt=>
-        opt.currency==="USD"?{...opt,per_100k:c.salary_usd_per_100k,units_per_usd:1}:opt),
-      details_ar:c.salary_description},
-    money_transfer:{...s.config.money_transfer,enabled:c.show_transfer,
-      fee_percent:c.transfer_fee_percent,eta_min_minutes:c.transfer_eta_min_minutes,
-      eta_max_hours:Math.ceil(c.transfer_eta_max_minutes/60),
-      methods}
-   }}});
- out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
- }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
-});
-document.addEventListener("click",async ev=>{
- const proofButton=ev.target.closest?.("[data-f90-salary-receipt]");
- if(proofButton){
-   ev.preventDefault();ev.stopImmediatePropagation();
-   if(proofButton.disabled)return;
-   proofButton.disabled=true;
-   const status=proofButton.parentElement?.querySelector("[data-f90-receipt-status]");
-   if(status)status.textContent="جارٍ تجهيز رابط الإيصال الخاص…";
-   try{
-     const ticket=await window.F90API.call("staff.file",{kind:"salary",id:proofButton.dataset.f90SalaryReceipt});
-     const url=String(ticket?.signedUrl||"");
-     if(!/^https:\/\//i.test(url))throw Error("رابط الإيصال غير متاح");
-     if(status)status.innerHTML='<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">فتح الإيصال الخاص</a> <small>صلاحية الرابط 5 دقائق</small>';
-   }catch(err){if(status)status.textContent=String(err?.message||"تعذّر تحميل الإيصال");}
-   finally{proofButton.disabled=false;}
-   return;
- }
- if(ev.target.closest?.('[data-add-method]')){document.getElementById('f90TransferRows')?.insertAdjacentHTML('beforeend',methodRow({id:'method-'+crypto.randomUUID().slice(0,8)}));return;}
- if(ev.target.closest?.('[data-remove-method]')){ev.target.closest('[data-method-row]')?.remove();return;}
- const btn=ev.target.closest?.("[data-f90-review]");if(!btn)return;
- const row=btn.closest("[data-id]"),note=row.querySelector("input")?.value||"",source=row.dataset.source;
- if(btn.disabled)return;
- const approved=btn.dataset.f90Review==="completed";
- const explanation=source==="salary"?(approved?"سيُضاف رصيد العميل بعد الاعتماد.":"سيُرفض السحب دون إضافة رصيد."):
-   source==="transfer"?(approved?"سوف تعتمد الطلب المخصوم سابقًا.":"سيرد المبلغ والعمولة إلى المحفظة."):"هذا التغيير إداري فقط ولا ينفّذ معاملة مالية.";
- if(!window.confirm("تأكيد القرار؟ "+explanation))return;
- btn.disabled=true;
- try{
-  const fn=source==="salary"?"f90_review_salary":source==="transfer"?"f90_review_transfer":"f90_special_review";
-  const args=source==="special"?{p_id:row.dataset.id,p_status:btn.dataset.f90Review,p_note:note}:
-    {p_id:row.dataset.id,p_approve:approved,p_note:note};
-  const {error}=await window.F90API.client.rpc(fn,args);
-  if(error)throw error;
-  await renderRequests(document.getElementById("adminMain"));
- }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
-});
-window.F90SpecialAdmin={render,salaryEditor};
-
-document.addEventListener('click',ev=>{
- if(ev.target.closest?.('[data-add-service]'))document.getElementById('f90ServiceRows')?.insertAdjacentHTML('beforeend',catalogRow({id:crypto.randomUUID(),kind:'design',name_ar:'',enabled:true}));
- ev.target.closest?.('[data-remove-service]')?.closest('[data-service-row]')?.remove();
-});
-
-})();
-+esc(x.total)+' | الصافي: +esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
- '<p>الحالة: '+esc(states[x.status]||x.status)+(x.review_note?" · "+esc(x.review_note):"")+'</p></div>'+
- (x.status==="pending"||(x.status==="processing"&&x.source==="special")?
- '<div class="f90-request-actions"><input type="text" placeholder="ملاحظة الإدارة" maxlength="1200" aria-label="ملاحظة المراجعة">'+
- (x.source==="special"?'<button class="button secondary small" data-f90-review="processing">قيد المعالجة</button>':'')+
- '<button class="button small" data-f90-review="completed">'+(x.source==="salary"?"اعتماد وإضافة الرصيد":x.source==="transfer"?"اعتماد التحويل":"تم التنفيذ")+'</button>'+
- '<button class="button ghost small" data-f90-review="rejected">'+(x.source==="transfer"?"رفض واسترداد كامل المبلغ":"رفض الطلب")+'</button></div>':'')+
- '</article>').join(""):'<p>لا توجد طلبات حاليًا.</p>';
-}
-async function render(kind,main,settings){
- if(kind==="special-requests")return renderRequests(main);
- return renderSettings(main,settings);
-}
-document.addEventListener("change",ev=>{
- const file=ev.target.closest?.("[data-image-file]");
- if(!file?.files?.[0])return;
- const preview=document.querySelector('[data-preview="'+file.dataset.imageFile+'"]');
- if(preview){const url=URL.createObjectURL(file.files[0]);if(preview.dataset.blob)URL.revokeObjectURL(preview.dataset.blob);preview.dataset.blob=url;preview.src=url;}
-});
-document.addEventListener("input",ev=>{
- const link=ev.target.closest?.("[data-image-url]");
- if(link){const preview=document.querySelector('[data-preview="'+link.dataset.imageUrl+'"]');if(preview&&/^https:\/\//i.test(link.value))preview.src=link.value;}
-});
-document.addEventListener("submit",async ev=>{
- if(ev.target?.id!=="f90SpecialAdminForm")return;
- ev.preventDefault();
- ev.stopImmediatePropagation();
- const form=ev.target,send=form.querySelector('button[type="submit"]'),out=form.querySelector("[data-f90-admin-status]");
- if(send.disabled)return;
- send.disabled=true;out.textContent="جارٍ حفظ الخدمات وصورها…";
- try{
- const d=new FormData(form);
- const old=currentSettings?.config?.special_services||{};
- const c={...old};
- for(const k of ["salary_usd_per_100k","transfer_fee_percent","transfer_eta_min_minutes","transfer_eta_max_minutes","account_price_usd"]){
-  const raw=Number(d.get(k));
-  if(!Number.isFinite(raw)||raw<0)throw Error("قيمة غير صحيحة في "+k);
-  c[k]=raw;
- }
- if(c.salary_usd_per_100k<=0||c.transfer_fee_percent>30)throw Error("نسبة الخدمة غير صحيحة");
- if(c.transfer_eta_min_minutes<5||c.transfer_eta_max_minutes>2880||c.transfer_eta_min_minutes>c.transfer_eta_max_minutes)throw Error("مدة التحويل من 5 دقائق حتى 48 ساعة");
- const methods=[...form.querySelectorAll('[data-method-row]')].map(row=>{
-   const id=String(row.querySelector('[name="method_id"]').value||"").trim();
-   const name_ar=String(row.querySelector('[name="method_name"]').value||"").trim();
-   const currency=row.querySelector('[name="method_currency"]').value;
-   const fee_percent=Number(row.querySelector('[name="method_fee"]').value);
-   const rawRate=row.querySelector('[name="method_rate"]').value.trim();
-   const per_usd=rawRate?Number(rawRate):null;
-   if(per_usd!==null&&(!Number.isFinite(per_usd)||per_usd<=0))throw Error("سعر تحويل الخدمة غير صحيح");
-   const enabled=row.querySelector('[name="method_enabled"]').checked;
-   if(!/^[a-z0-9-]{2,60}$/.test(id)||!name_ar||name_ar.length>120||!currencies.includes(currency)||!Number.isFinite(fee_percent)||fee_percent<0||fee_percent>30)throw Error("راجع بيانات كل طريقة تحويل");
-   return {...(currentSettings?.config?.money_transfer?.methods||[]).find(x=>x.id===id),id,name_ar,currency,fee_percent,enabled,per_usd,
-     image_url:String(row.querySelector('[name="method_image"]').value||""),
-     details_ar:String(row.querySelector('[name="method_details"]').value||"").slice(0,2500)};
- });
- if(!methods.length||methods.length>50||new Set(methods.map(x=>x.id)).size!==methods.length)throw Error("أدخل طرق تحويل مستقلة وغير مكررة");
- c.service_catalog=[...form.querySelectorAll('[data-service-row]')].map(row=>{
-  const get=name=>String(row.querySelector('[name="service_'+name+'"]').value||'').trim();
-  const slug=get('product').split('#/product/').pop();
-  return {id:get('id'),kind:get('kind'),name_ar:get('name'),details_ar:get('details').slice(0,2500),image_url:get('image'),product_slug:slug,enabled:row.querySelector('[name="service_enabled"]').checked};
- });
- if(c.service_catalog.some(x=>!x.id||!x.name_ar)||new Set(c.service_catalog.map(x=>x.kind+':'+x.id)).size!==c.service_catalog.length)throw Error('راجع أسماء ومعرّفات الخدمات');
- c.transfer_methods=methods.map(x=>x.name_ar);
- for(const k of ["salary","transfer","account","website"])c[k+"_description"]=String(d.get(k+"_description")||"").slice(0,2500);
- for(const k of ["salary","transfer","account","website","design"])c["show_"+k]=d.get("show_"+k)==="on";
- for(const [id] of imageFields){
-   const file=form.elements[id+"_banner_file"].files?.[0];
-   if(file){if(!file.type.startsWith("image/")||file.size>5242880)throw Error("صورة غير مدعومة أو أكبر من 5 ميجابايت");
-     c[id+"_banner_url"]=(await window.F90API.upload(file,"f90-images","banners")).url;
-   }else c[id+"_banner_url"]=String(d.get(id+"_banner_url")||"").slice(0,2000);
- }
- const s=currentSettings;
- await window.F90API.call("settings.save",{data:{store_name:s.store_name,logo_url:s.logo_url,primary_color:s.primary_color,
-  currency:s.currency,contact_email:s.contact_email,announcement:s.announcement,
-  config:{...s.config,special_services:c,
-    salary_withdrawal:{...s.config.salary_withdrawal,enabled:c.show_salary,
-      coins_per_usd:100000/c.salary_usd_per_100k,
-      minimum_coins:s.config.salary_withdrawal?.minimum_coins||100000,
-      payout_options:(s.config.salary_withdrawal?.payout_options||[]).map(opt=>
-        opt.currency==="USD"?{...opt,per_100k:c.salary_usd_per_100k,units_per_usd:1}:opt),
-      details_ar:c.salary_description},
-    money_transfer:{...s.config.money_transfer,enabled:c.show_transfer,
-      fee_percent:c.transfer_fee_percent,eta_min_minutes:c.transfer_eta_min_minutes,
-      eta_max_hours:Math.ceil(c.transfer_eta_max_minutes/60),
-      methods}
-   }}});
- out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
- }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
-});
-document.addEventListener("click",async ev=>{
- if(ev.target.closest?.('[data-add-method]')){document.getElementById('f90TransferRows')?.insertAdjacentHTML('beforeend',methodRow({id:'method-'+crypto.randomUUID().slice(0,8)}));return;}
- if(ev.target.closest?.('[data-remove-method]')){ev.target.closest('[data-method-row]')?.remove();return;}
- const btn=ev.target.closest?.("[data-f90-review]");if(!btn)return;
- const row=btn.closest("[data-id]"),note=row.querySelector("input")?.value||"",source=row.dataset.source;
- if(btn.disabled)return;
- const approved=btn.dataset.f90Review==="completed";
- const explanation=source==="salary"?(approved?"سيُضاف رصيد العميل بعد الاعتماد.":"سيُرفض السحب دون إضافة رصيد."):
-   source==="transfer"?(approved?"سوف تعتمد الطلب المخصوم سابقًا.":"سيرد المبلغ والعمولة إلى المحفظة."):"هذا التغيير إداري فقط ولا ينفّذ معاملة مالية.";
- if(!window.confirm("تأكيد القرار؟ "+explanation))return;
- btn.disabled=true;
- try{
-  const fn=source==="salary"?"f90_review_salary":source==="transfer"?"f90_review_transfer":"f90_special_review";
-  const args=source==="special"?{p_id:row.dataset.id,p_status:btn.dataset.f90Review,p_note:note}:
-    {p_id:row.dataset.id,p_approve:approved,p_note:note};
-  const {error}=await window.F90API.client.rpc(fn,args);
-  if(error)throw error;
-  await renderRequests(document.getElementById("adminMain"));
- }catch(e){window.alert(e.message||"تعذر تحديث الحالة");btn.disabled=false;}
-});
-window.F90SpecialAdmin={render,salaryEditor};
-
-document.addEventListener('click',ev=>{
- if(ev.target.closest?.('[data-add-service]'))document.getElementById('f90ServiceRows')?.insertAdjacentHTML('beforeend',catalogRow({id:crypto.randomUUID(),kind:'design',name_ar:'',enabled:true}));
- ev.target.closest?.('[data-remove-service]')?.closest('[data-service-row]')?.remove();
-});
-
-})();
-+esc(x.net)+'</p>'+
- (x.source==="salary"?'<p>المقابل بعملة الإيداع: '+esc(x.payout_amount||0)+' '+esc(x.payout_currency||"USD")+'</p>'+
- (x.receipt_path?'<div class="f90-salary-receipt-action"><button class="button secondary small" type="button" data-f90-salary-receipt="'+esc(x.id)+'">عرض إيصال سحب الراتب</button><span data-f90-receipt-status></span></div>':''):'')+
+ '<p>الكمية: '+esc(x.qty||0)+' | القيمة: $'+esc(x.total)+' | الصافي: $'+esc(x.net)+'</p>'+
  '<small>معرّف العميل: '+esc(x.user_id)+' · '+esc(new Date(x.created_at).toLocaleString("ar"))+'</small>'+
  '<p>الحالة: '+esc(states[x.status]||x.status)+(x.review_note?" · "+esc(x.review_note):"")+'</p></div>'+
  (x.status==="pending"||(x.status==="processing"&&x.source==="special")?
