@@ -18,6 +18,14 @@ function message(row:any):string{
    "<b>رقم الطلب:</b> <code>"+escapeHTML(id)+"</code>\n"+
    "راجع الطلب من لوحة الإدارة.";
  }
+ if(row.event_type==="salary_new")
+   return "💰 <b>F90 CARD | طلب سحب رواتب Xena Live</b>\n"+
+     "<b>الكوينز المسحوبة:</b> "+escapeHTML(d.coins)+"\n"+
+     "<b>قيمة الإيداع:</b> "+escapeHTML(d.payout_amount)+" "+escapeHTML(d.currency)+"\n"+
+     "<b>المقابل في محفظة F90:</b> "+escapeHTML(d.usd_amount)+" USD\n"+
+     "<b>وقت الطلب:</b> "+escapeHTML(date)+"\n"+
+     "<b>رقم طلب Xena:</b> <code>"+escapeHTML(id)+"</code>\n"+
+     "الطلب بانتظار المراجعة في لوحة الإدارة. لا يحتوي التنبيه على صورة الإيصال أو بيانات الحساب.";
  if(row.event_type==="verification_new")
    return "🪪 <b>F90 CARD | طلب توثيق جديد</b>\n"+
    "<b>وقت الطلب:</b> "+escapeHTML(date)+"\n"+
