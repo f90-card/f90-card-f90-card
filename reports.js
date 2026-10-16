@@ -1,7 +1,7 @@
 (function (root) {
   "use strict";
   const C = root.F90Core;
-  let library, fontData;
+  let library, fontData, logoData;
   async function load() {
     if (!root.jspdf) {
       if (!library)
@@ -28,9 +28,22 @@
         str += String.fromCharCode(...bytes.subarray(n, n + 16384));
       fontData = btoa(str);
     }
-    return { Constructor: root.jspdf.jsPDF, font: fontData };
+    if(logoData===undefined){
+      logoData=null;
+      try{
+        const response=await fetch(new URL("./assets/icons/icon-192.png",location.href));
+        if(response.ok){
+          const bytes=new Uint8Array(await response.arrayBuffer());
+          let buffer="";
+          for(let i=0;i<bytes.length;i+=16384)
+            buffer+=String.fromCharCode(...bytes.subarray(i,i+16384));
+          logoData="data:image/png;base64,"+btoa(buffer);
+        }
+      }catch{/* The PDF keeps its F90 typographic branding without an image. */}
+    }
+    return { Constructor: root.jspdf.jsPDF, font: fontData, logo: logoData };
   }
-  function createReport(Constructor, font, title, store, rows, notes = []) {
+  function createReport(Constructor, font, title, store, rows, notes = [], logo = null) {
     const doc = new Constructor({
       unit: "mm",
       format: "a4",
@@ -48,8 +61,13 @@
       page++;
       doc.setFillColor(14, 18, 27);
       doc.rect(0, 0, 210, 43, "F");
-      doc.setFillColor(232, 36, 65);
-      doc.rect(196, 0, 4, 43, "F");
+      doc.setFillColor(186, 27, 58);
+      doc.rect(0, 40, 210, 3, "F");
+      doc.rect(196, 0, 4, 40, "F");
+      if(logo)try{doc.addImage(logo,"PNG",15,9,24,24);}catch{/* Typography remains visible. */}
+      doc.setFontSize(8);
+      doc.setTextColor(235, 123, 140);
+      doc.text("F90 CARD",48,23);
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(17);
       doc.text(String(store || "أف تسعين كارد"), 190, 15, { align: "right" });
@@ -78,7 +96,7 @@
       heading();
     }
     heading();
-    for (const [label, value] of rows) {
+    for (const [index, [label, value]] of rows.entries()) {
       doc.setFontSize(10);
       const lines = doc.splitTextToSize(
         String(value ?? "—").replace(
@@ -89,8 +107,11 @@
       );
       const height = Math.max(15, lines.length * 5 + 8);
       if (y + height > 276) newPage();
-      doc.setFillColor(246, 247, 250);
-      doc.roundedRect(15, y, 180, height, 2, 2, "F");
+      if(index%2===0)doc.setFillColor(246,247,250);
+      else doc.setFillColor(251,250,251);
+      doc.roundedRect(15,y,180,height,2,2,"F");
+      doc.setFillColor(186,27,58);
+      doc.rect(193,y,2,height,"F");
       doc.setTextColor(128, 132, 142);
       doc.setFontSize(9);
       const labelLines = doc.splitTextToSize(String(label), 40);
@@ -114,8 +135,8 @@
     return doc;
   }
   async function save(title, store, rows, notes = []) {
-    const { Constructor, font } = await load();
-    const doc = createReport(Constructor, font, title, store, rows, notes);
+    const { Constructor, font, logo } = await load();
+    const doc = createReport(Constructor, font, title, store, rows, notes, logo);
     doc.save("F90-" + new Date().toISOString().slice(0, 10) + ".pdf");
   }
   const recordRows = (kind, items) =>
@@ -186,22 +207,24 @@
         recordRows(kind, items || []),
         ["يتضمن هذا الملف سجلات الصفحة الحالية فقط. الرصيد المرجعي بالدولار."],
       ),
-    order: (o, store) =>
-      save("تفاصيل الطلب #" + o.order_number, store, [
-        ["الخدمة", o.product_name],
-        ["الحالة", C.statuses[o.status]],
-        ["المبلغ المدفوع", C.money(o.total_usd, "USD", true)],
-        ["الاسترداد", C.money(o.refunded_usd, "USD", true)],
-        ["الكمية", o.quantity],
-        ["التنفيذ", o.fulfillment === "automatic" ? "آلي" : "يدوي"],
-        ["التقديم", C.date(o.created_at)],
-        ["الإكمال", C.date(o.completed_at)],
-        ["المدة", C.duration(o)],
-        ...Object.entries(o.customer_fields || {}).map(([k, v]) => [
-          k === "account_id" ? "معرّف الحساب" : k,
-          v,
-        ]),
-      ]),
+    order: (o, store, summaryRows) => {
+      const qty=Number(o.quantity)||0;
+      const amount=qty>0?Number(o.subtotal_usd||o.total_usd)/qty:0;
+      const standard=[
+        ["رقم العملية",o.order_number||o.id],
+        ["اسم المنتج",o.product_name],
+        ["الكمية",o.quantity],
+        ["السعر",C.money(amount,"USD",true)],
+        ["السعر الإجمالي",C.money(o.total_usd,"USD",true)],
+        ["التاريخ والوقت",C.date(o.created_at)]
+      ];
+      const extras=(Array.isArray(summaryRows)?summaryRows:[]).filter(([key])=>
+        ["ID الشحن","اسم الحساب المسجل"].includes(key));
+      return save("ملخص العملية #"+o.order_number,store,
+        [...(Array.isArray(summaryRows)?summaryRows.slice(0,6):standard),...extras,
+        ["الحالة",C.statuses[o.status]||o.status]],
+        ["F90 CARD | ملخص العملية من سجلك الشخصي. اسم الحساب يظهر فقط إذا كان مسجلًا في تفاصيل الطلب."]);
+    },
     admin: (r, store) =>
       save(
         "التقرير الشهري " + r.month,
