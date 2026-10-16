@@ -16,8 +16,9 @@ const conf=settings=>({...defaults,...(settings?.config?.special_services||{})})
 const fmt=n=>'$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const num=(v,fallback=0,lo=0,hi=100000000)=>{const x=Number(v);return Number.isFinite(x)?Math.max(lo,Math.min(hi,x)):fallback};
 const images={
+ digital:"./assets/f90-new/banner-digital.webp",
  transfer:"./assets/f90-new/banner-transfer.webp",
- account:"./assets/f90-new/banner-digital.webp",
+ account:"./assets/f90-new/banner-accounts.webp",
  design:"./assets/f90-new/banner-design.webp",
  website:"./assets/f90-new/banner-website.webp",
  salary:"./assets/f90-new/banner-salary.webp"
@@ -29,12 +30,16 @@ const links=[
  ["website","موقع كامل ملك لك","موقع شامل الخدمات بسعر واضح"]
 ];
 let visibleConfig=defaults;
+let visibleRates=[];
+let visibleMethods=[];
+let canSubmitTransfer=false;
+const targetMoney=(amount,code)=>Number(amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+code;
 function home(settings){
  const c=conf(settings);
- const ads=[["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"],["account","حسابات Xena"],["salary","سحب رواتب Xena"]];
+ const ads=[["digital","الخدمات الرقمية"],["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"],["salary","سحب رواتب Xena"]];
  return '<section class="f90-special-home" aria-label="إعلانات الخدمات">'+
  '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+ads.filter(([id])=>c["show_"+id]!==false).map(([id,title])=>
- '<a href="'+(id==="website"?"#/product/f90-full-website-500":"#/special/"+id)+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
+ '<a href="'+(id==="digital"?"#/category/applications":id==="website"?"#/product/f90-full-website-500":"#/special/"+id)+'" class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></a>').join("")+
  '</div></section>';
 }
 function category(slug,settings){
@@ -65,7 +70,8 @@ function moneyPanel(gross,fee,net,feePercent,label){
  '<div class="f90-special-net"><span>الصافي بعد العمولة</span><strong data-net>'+fmt(net)+'</strong></div></div>';
 }
 const input=(name,label,type="text",attr="")=>'<label class="field"><span>'+label+'</span><input name="'+name+'" type="'+type+'" '+attr+'></label>';
-function render(kind,settings,user,selected=""){
+function render(kind,settings,user,selected="",rates=[]){
+ visibleRates=Array.isArray(rates)?rates:[];
  const config=settings?.config||{},sal=config.salary_withdrawal||{},tr=config.money_transfer||{};
  const c=visibleConfig={...conf(settings),
   salary_usd_per_100k:Number(sal.coins_per_usd)>0?100000/Number(sal.coins_per_usd):10,
@@ -76,8 +82,9 @@ function render(kind,settings,user,selected=""){
  const d=kind||"transfer";
  if(d==="website"){location.hash="#/product/f90-full-website-500";return;}
  const isVerified=!!user?.profile?.is_verified,isSigned=!!user;
+ canSubmitTransfer=isVerified&&isSigned;
  const salary=d==="salary",transfer=d==="transfer",account=d==="account",design=d==="design",website=d==="website";
- const methods=Array.isArray(tr.methods)?tr.methods.filter(x=>x?.enabled!==false):[];
+ const methods=visibleMethods=Array.isArray(tr.methods)?tr.methods.filter(x=>x?.enabled!==false):[];
  const title=salary?"سحب رواتب Xena Live":transfer?"تحويل الأموال":account?"شراء حسابات Xena Live":design?"احصل على تصميم":"احصل على موقع كامل ملك لك";
  const banner=String(c[d+"_banner_url"]||images[d]||images.website);
  const desc=(salary?sal.details_ar:undefined)||c[d+"_description"]||defaults[d+"_description"]||"";
@@ -90,12 +97,14 @@ function render(kind,settings,user,selected=""){
    moneyPanel(min*c.salary_usd_per_100k/100000,0,min*c.salary_usd_per_100k/100000,0,"الرصيد المستحق بعد الاعتماد");
  }else if(transfer){
    fields='<label class="field"><span>وسيلة التحويل</span><select name="service" required>'+
-     methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+'</option>').join("")+'</select></label>'+
+     methods.map(x=>'<option value="'+esc(x.id)+'" '+(selected===x.id?'selected':'')+'>'+esc(x.name_ar)+' · '+esc(x.currency||"USD")+'</option>').join("")+'</select></label>'+
    '<div class="f90-transfer-methods" role="group" aria-label="خيارات التحويل">'+
-     methods.map((x,i)=>'<button type="button" data-f90-transfer-method="'+esc(x.id)+'" aria-pressed="'+(i===0)+'">'+esc(x.name_ar)+'</button>').join("")+'</div>'+
-   input("amount","صافي المبلغ الذي سيصل للمستلم USD","number",'required min="1" max="1000000" step="0.01" inputmode="decimal" placeholder="0.00"')+
+     methods.map((x,i)=>'<button type="button" data-f90-transfer-method="'+esc(x.id)+'" aria-pressed="'+(selected?selected===x.id:i===0)+'">'+esc(x.name_ar)+'</button>').join("")+'</div>'+
+   input("amount","قيمة السحب بعملة الخدمة المختارة","number",'required min="1" max="100000000" step="0.01" inputmode="decimal" placeholder="0.00"')+
+   '<p class="f90-special-tiny" data-target-currency>العملة: '+esc(methods.find(x=>x.id===selected)?.currency||methods[0]?.currency||"USD")+'</p>'+
    '<label class="field"><span>بيانات المستلم والتحويل</span><textarea name="details" required minlength="3" maxlength="2000" rows="4" placeholder="بيانات المستلم والوسيلة ورقم الحساب أو العنوان"></textarea></label>'+
-   moneyPanel(0,0,0,c.transfer_fee_percent,"إجمالي الخصم من المحفظة")+
+   moneyPanel(0,0,0,c.transfer_fee_percent,"إجمالي الخصم من المحفظة USD")+
+   '<p class="f90-special-tiny" data-target-net>المبلغ الذي سيصل للمستفيد: —</p>'+
    '<p class="f90-special-tiny">تضاف عمولة '+c.transfer_fee_percent+'٪ فوق المبلغ الصافي. المدة المتوقعة: من '+c.transfer_eta_min_minutes+' إلى '+c.transfer_eta_max_minutes+' دقيقة بعد المراجعة.</p>'+
    '<p class="f90-special-tiny">رصيد محفظتك الحالي: '+(isSigned?fmt(Number(user?.wallet?.balance_usd)||0):"سجّل الدخول")+'</p>';
  }else{
@@ -126,11 +135,21 @@ function updateEstimate(form){
  const k=form.dataset.kind,c=visibleConfig;
  if(!["salary","transfer"].includes(k))return;
  const v=Math.max(0,Number(form.elements.amount?.value)||0);
- const fee=k==="salary"?0:Math.round(v*num(c.transfer_fee_percent,2,0,30))/100;
- const total=k==="salary"?v*num(c.salary_usd_per_100k,10,0)/100000:v+fee;
+ const selected=visibleMethods.find(x=>x.id===form.elements.service?.value);
+ const currency=selected?.currency||"USD";
+ const rate=visibleRates.find(x=>x.currency===currency&&x.is_enabled&&Number(x.per_usd)>0);
+ const perUsd=currency==="USD"?1:Number(rate?.per_usd)||0;
+ const usd=k==="transfer"&&perUsd?v/perUsd:0;
+ const fee=k==="salary"?0:usd*num(c.transfer_fee_percent,2,0,30)/100;
+ const total=k==="salary"?v*num(c.salary_usd_per_100k,10,0)/100000:usd+fee;
  form.querySelector("[data-gross]").textContent=fmt(total);
  form.querySelector("[data-fee]").textContent=fmt(fee);
- form.querySelector("[data-net]").textContent=fmt(k==="salary"?total:v);
+ form.querySelector("[data-net]").textContent=k==="salary"?fmt(total):targetMoney(v,currency);
+ if(k==="transfer"){
+   form.querySelector("[data-target-currency]").textContent="عملة الخدمة: "+currency;
+   form.querySelector("[data-target-net]").textContent=perUsd?"سيصل للمستفيد: "+targetMoney(v,currency)+" · سعر التحويل: "+perUsd.toLocaleString("en-US")+" "+currency+" لكل دولار":"سعر تحويل العملة غير متاح. اختر عملة مفعّلة من الإدارة.";
+   form.querySelector('button[type="submit"]').disabled=!canSubmitTransfer||!perUsd||!v;
+ }
 }
 document.addEventListener("click",ev=>{
  const opt=ev.target.closest?.("[data-f90-transfer-method]");
@@ -140,8 +159,10 @@ document.addEventListener("click",ev=>{
  selector.value=opt.dataset.f90TransferMethod;
  form.querySelectorAll("[data-f90-transfer-method]").forEach(btn=>
     btn.setAttribute("aria-pressed",String(btn===opt)));
+ updateEstimate(form);
 });
 document.addEventListener("input",ev=>{if(ev.target.closest?.("#f90SpecialForm"))updateEstimate(ev.target.form);});
+document.addEventListener("change",ev=>{if(ev.target.closest?.("#f90SpecialForm"))updateEstimate(ev.target.form);});
 document.addEventListener("submit",async ev=>{
  if(ev.target?.id!=="f90SpecialForm")return;
  ev.preventDefault();
@@ -155,8 +176,11 @@ document.addEventListener("submit",async ev=>{
  if(!form.dataset.requestKey)form.dataset.requestKey=crypto.randomUUID();
  const key=form.dataset.requestKey;
  if(kind==="transfer"){
-   const total=value*(1+num(visibleConfig.transfer_fee_percent,2,0,30)/100);
-   const ok=window.confirm("سيُخصم من محفظتك "+fmt(total)+" مقابل صافي تحويل "+fmt(value)+". تأكيد تقديم الطلب؟");
+   const method=visibleMethods.find(x=>x.id===service),currency=method?.currency||"USD";
+   const perUsd=currency==="USD"?1:Number(visibleRates.find(x=>x.currency===currency&&x.is_enabled)?.per_usd)||0;
+   if(!perUsd){out.hidden=false;out.textContent="سعر التحويل غير متاح لهذه العملة";return;}
+   const total=value/perUsd*(1+num(visibleConfig.transfer_fee_percent,2,0,30)/100);
+   const ok=window.confirm("سيُخصم من محفظتك تقريبًا "+fmt(total)+" مقابل وصول "+targetMoney(value,currency)+". يؤكد الخادم السعر لحظة الإرسال. تأكيد تقديم الطلب؟");
    if(!ok)return;
  }
  button.disabled=true;form.dataset.busy="1";out.hidden=false;out.textContent="جارٍ إرسال الطلب للتحقق على الخادم…";

@@ -383,6 +383,19 @@ async function buildPublicCatalog() {
     .map((entry: any) => entry.product_id));
   const allowedCategoryIds = new Set<string>();
   const categoriesById = new Map(categories.map((entry:any)=>[entry.id,entry]));
+  // These owner-managed categories and their manual products belong beside the
+  // supplier catalog. Keep the supplier filter for every other category.
+  const ownerSlugs = new Set(["money-transfer","account-sales","design-services","complete-website"]);
+  const ownerCategoryIds = new Set<string>(categories.filter((entry:any)=>ownerSlugs.has(entry.slug)).map((entry:any)=>entry.id));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const entry of categories) if (entry.parent_id && ownerCategoryIds.has(entry.parent_id) && !ownerCategoryIds.has(entry.id)) {
+      ownerCategoryIds.add(entry.id); grew = true;
+    }
+  }
+  for (const id of ownerCategoryIds) allowedCategoryIds.add(id);
+  const providerProductIds = new Set(linked.map((entry:any)=>entry.product_id));
   for (const product of products) {
     if (!yassenProductIds.has(product.id)) continue;
     let categoryId = product.category_id;
@@ -452,7 +465,7 @@ async function buildPublicCatalog() {
           : c,
       ),
     products: products
-      .filter((p: any) => yassenProductIds.has(p.id) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
+      .filter((p: any) => (yassenProductIds.has(p.id) || (ownerCategoryIds.has(p.category_id) && !providerProductIds.has(p.id))) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         isCategoryRefilling(p.category_id) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
@@ -1617,6 +1630,7 @@ async function staff(a: Actor, b: any) {
         image_url: text(m.image_url, 2000),
         barcode_url: text(m.barcode_url, 2000),
         details_ar: text(m.details_ar, 8000),
+        accepted_currencies: Array.isArray(m.accepted_currencies) ? m.accepted_currencies.slice(0,20).map((code:any)=>text(code,8).toUpperCase()).filter((code:string)=>/^[A-Z]{3,8}$/.test(code)) : undefined,
         enabled: !!m.enabled,
       }));
     }
@@ -2453,7 +2467,7 @@ Deno.serve(async (req: Request) => {
       if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       const method = text(b.method_id, 100);
       const currency = text(b.currency, 8);
-      const amount = num(b.amount, 0.000001, 1000000);
+      const amount = num(b.amount, 0.000001, currency === "XCN" ? 1000000000000 : 1000000);
       const receipt = text(b.receipt_path, 500);
       const memo = text(b.reference, 300);
       // Read-only collision check. The database RPC still owns atomic insert/deduplication.

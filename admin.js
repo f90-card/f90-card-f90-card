@@ -781,6 +781,10 @@
           "textarea",
           d.description || "",
         ) +
+        '<div class="form-section"><h3>صور إضافية للخدمة</h3><p class="muted small">حتى 8 صور؛ تظهر داخل كرت الخدمة. عاين الملفات قبل الحفظ.</p>'+
+        field("gallery_urls","روابط الصور، كل رابط بسطر","textarea",Array.isArray(d.gallery)?d.gallery.join("\n"):"",'rows="4" dir="ltr"')+
+        field("gallery_files","رفع صور متعددة","file","",'multiple accept="image/jpeg,image/png,image/webp,image/gif"')+
+        '<div id="f90GalleryPreview" class="f90-gallery-preview"></div></div>'+
         field("search_aliases", "أسماء بحث مخفية <small>مثال: الاسم الإنجليزي عندما يظهر الاسم بالعربية؛ افصلها بفاصلة</small>", "text", (c.search_aliases || []).join("، "), 'maxlength="1500"') +
         select(
           "availability",
@@ -895,6 +899,7 @@
         ) +
         field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
+        field("accepted_currencies","عملات هذه الطريقة (مثال USD,ILS,JOD,XCN للكوينز)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD,XCN"')+
 
         field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
         field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
@@ -1291,6 +1296,12 @@
       ).url;
     if (kind === "product") {
       data.category_id = d.category_id || null;
+      const links=String(d.gallery_urls||"").split(/[\r\n]+/).map(x=>x.trim()).filter(Boolean);
+      const files=[...(form.elements.gallery_files?.files||[])];
+      if(links.length+files.length>8)throw new Error("الحد الأقصى 8 صور إضافية للخدمة");
+      if(links.some(x=>!/^https:\/\//i.test(x)))throw new Error("رابط الصورة الإضافية يجب أن يبدأ بـ HTTPS");
+      data.gallery=[...links];
+      for(const file of files)data.gallery.push((await A.upload(file,"f90-images","product-gallery")).url);
       // Supplier pauses are authoritative until a successful supplier sync.
       // Do not silently advertise a supplier-paused item as purchasable.
       const supplierPaused = old.commerce?.supplier_refilling === true;
@@ -1372,9 +1383,12 @@
           if(!Number.isFinite(value)||value<0||value>50)throw new Error("يجب أن تكون عمولة الإيداع بين 0 و50٪");
           return Math.round(value*1000)/1000;
         })(),
+        accepted_currencies: String(d.accepted_currencies||"").toUpperCase().split(/[,،\s]+/).filter(Boolean).filter((code,index,all)=>all.indexOf(code)===index).slice(0,20),
         barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
+    if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!S.rates.some(rate=>rate.currency===code&&rate.is_enabled))))
+      throw new Error("اختر عملة واحدة على الأقل من أسعار الصرف المفعّلة؛ XCN تعني كوينز اكزينا لايف.");
     if (kind === "promotions")
       Object.assign(row, {
         text_ar: d.text_ar,
@@ -3236,6 +3250,15 @@
       $("f90AdminBootRetry")?.addEventListener("click", () => boot());
     }
   }
+  document.addEventListener("change",ev=>{
+    if(ev.target?.name!=="gallery_files")return;
+    const preview=$("f90GalleryPreview");if(!preview)return;
+    preview.querySelectorAll("img").forEach(img=>{if(img.dataset.objectUrl)URL.revokeObjectURL(img.dataset.objectUrl)});
+    preview.replaceChildren();
+    for(const file of [...ev.target.files].slice(0,8)){
+      const img=document.createElement("img");img.dataset.objectUrl=URL.createObjectURL(file);img.src=img.dataset.objectUrl;img.alt=file.name;preview.append(img);
+    }
+  });
   boot();
 })();
 

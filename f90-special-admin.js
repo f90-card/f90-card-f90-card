@@ -15,6 +15,11 @@ const field=(name,label,value,type="text",attrs="")=>'<label class="field"><span
 const textarea=(name,label,value)=>'<label class="field"><span>'+label+'</span><textarea name="'+name+'" maxlength="2500" rows="3">'+esc(value??"")+'</textarea></label>';
 const check=(name,label,yes)=>'<label class="f90-manage-switch"><input type="checkbox" name="'+name+'" '+(yes?"checked":"")+'> '+label+'</label>';
 const heading=(title,desc)=>'<div class="page-head"><div><div class="eyebrow">F90 CARD · الإدارة</div><h1>'+title+'</h1><p>'+desc+'</p></div></div>';
+const currencies=["USD","ILS","JOD","SYP","TRY","AED","EUR","EGP","SAR","QAR"];
+const methodRow=(x={})=>'<div class="f90-transfer-method-row" data-method-row>'+field("method_id","معرّف الطريقة",x.id||"","text",'required pattern="[a-z0-9-]{2,60}"')+field("method_name","اسم الخدمة",x.name_ar||"","text",'required maxlength="120"')+
+ '<label class="field"><span>عملة المستفيد</span><select name="method_currency">'+currencies.map(c=>'<option value="'+c+'" '+((x.currency||"USD")===c?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
+ field("method_fee","عمولة هذه الخدمة ٪",x.fee_percent??2,"number",'min="0" max="30" step="0.01" required')+
+ check("method_enabled","إظهار الخدمة",x.enabled!==false)+'<button class="button secondary small" type="button" data-remove-method>حذف الطريقة</button></div>';
 async function renderSettings(main,settings){
  currentSettings=settings;
  const sal=settings?.config?.salary_withdrawal||{},tr=settings?.config?.money_transfer||{};
@@ -38,7 +43,8 @@ async function renderSettings(main,settings){
  field("transfer_fee_percent","عمولة التحويل ٪",c.transfer_fee_percent,"number",'min="0" max="30" step="0.01" required')+
  field("transfer_eta_min_minutes","أقل مدة بالدقائق",c.transfer_eta_min_minutes,"number",'min="5" max="2880" required')+
  field("transfer_eta_max_minutes","أقصى مدة بالدقائق",c.transfer_eta_max_minutes,"number",'min="5" max="2880" required')+'</div>'+
- textarea("transfer_methods","طرق التحويل (كل طريقة بسطر)",(c.transfer_methods||d.transfer_methods||[]).join("\n"))+
+ '<h3>كل طريقة مستقلة بعملتها وعمولتها</h3><div id="f90TransferRows">'+
+ (Array.isArray(tr.methods)?tr.methods:[]).map(methodRow).join("")+'</div><button class="button secondary small" type="button" data-add-method>إضافة طريقة تحويل</button>'+
  textarea("transfer_description","تفاصيل تحويل الأموال",c.transfer_description)+check("show_transfer","إظهار قسم التحويلات",c.show_transfer!==false)+'</section>'+
  '<section class="panel"><h2>بيع الحسابات والتصميم والمواقع</h2><div class="field-row">'+
  field("account_price_usd","سعر حساب Xena بالدولار (صفر = يُحدد لاحقًا)",c.account_price_usd||0,"number",'min="0" max="1000000" step="0.01"')+
@@ -50,7 +56,7 @@ async function renderSettings(main,settings){
  check("show_website","إظهار قسم المواقع",c.show_website!==false)+'</section>'+
  '<section class="panel"><h2>الصور والبنرات الخاصة بالخدمات</h2><p class="muted">كل صورة مستقلة، وتظهر معاينتها قبل الرفع. يمكنك أيضًا استخدام رابط صورة موجودة.</p>'+
  imageFields.map(([id,title,where])=>{
- const url=c[id+"_banner_url"]||"./assets/f90-new/banner-"+(id==="account"?"digital":id)+".webp";
+ const url=c[id+"_banner_url"]||"./assets/f90-new/banner-"+(id==="account"?"accounts":id)+".webp";
  return '<div class="f90-special-image-config"><strong>'+title+'</strong><small>مكان العرض: '+where+'</small>'+
  '<img class="f90-special-admin-preview" data-preview="'+id+'" alt="معاينة '+title+'" src="'+esc(url)+'">'+
  field(id+"_banner_url","رابط الصورة",c[id+"_banner_url"]||"","url",'data-image-url="'+id+'" placeholder="https://..."')+
@@ -126,8 +132,17 @@ document.addEventListener("submit",async ev=>{
  }
  if(c.salary_usd_per_100k<=0||c.transfer_fee_percent>30)throw Error("نسبة الخدمة غير صحيحة");
  if(c.transfer_eta_min_minutes<5||c.transfer_eta_max_minutes>2880||c.transfer_eta_min_minutes>c.transfer_eta_max_minutes)throw Error("مدة التحويل من 5 دقائق حتى 48 ساعة");
- c.transfer_methods=String(d.get("transfer_methods")||"").split("\n").map(x=>x.trim().slice(0,120)).filter(Boolean).slice(0,50);
- if(!c.transfer_methods.length)throw Error("أدخل طريقة تحويل واحدة على الأقل");
+ const methods=[...form.querySelectorAll('[data-method-row]')].map(row=>{
+   const id=String(row.querySelector('[name="method_id"]').value||"").trim();
+   const name_ar=String(row.querySelector('[name="method_name"]').value||"").trim();
+   const currency=row.querySelector('[name="method_currency"]').value;
+   const fee_percent=Number(row.querySelector('[name="method_fee"]').value);
+   const enabled=row.querySelector('[name="method_enabled"]').checked;
+   if(!/^[a-z0-9-]{2,60}$/.test(id)||!name_ar||name_ar.length>120||!currencies.includes(currency)||!Number.isFinite(fee_percent)||fee_percent<0||fee_percent>30)throw Error("راجع بيانات كل طريقة تحويل");
+   return {id,name_ar,currency,fee_percent,enabled};
+ });
+ if(!methods.length||methods.length>50||new Set(methods.map(x=>x.id)).size!==methods.length)throw Error("أدخل طرق تحويل مستقلة وغير مكررة");
+ c.transfer_methods=methods.map(x=>x.name_ar);
  for(const k of ["salary","transfer","account","website"])c[k+"_description"]=String(d.get(k+"_description")||"").slice(0,2500);
  for(const k of ["salary","transfer","account","website","design"])c["show_"+k]=d.get("show_"+k)==="on";
  for(const [id] of imageFields){
@@ -145,15 +160,14 @@ document.addEventListener("submit",async ev=>{
     money_transfer:{...s.config.money_transfer,enabled:c.show_transfer,
       fee_percent:c.transfer_fee_percent,eta_min_minutes:c.transfer_eta_min_minutes,
       eta_max_hours:Math.ceil(c.transfer_eta_max_minutes/60),
-      methods:c.transfer_methods.map((name,i)=>{
-        const prior=(s.config.money_transfer?.methods||[]).find(x=>x.name_ar===name);
-        return {id:prior?.id||"custom-"+(i+1),name_ar:name,enabled:true};
-      })}
+      methods}
    }}});
  out.textContent="تم حفظ الإعدادات، وستظهر بعد تحديث المتجر.";
  }catch(error){out.textContent="تعذر الحفظ: "+(error?.message||"خطأ غير معروف");}finally{send.disabled=false;}
 });
 document.addEventListener("click",async ev=>{
+ if(ev.target.closest?.('[data-add-method]')){document.getElementById('f90TransferRows')?.insertAdjacentHTML('beforeend',methodRow({id:'method-'+crypto.randomUUID().slice(0,8)}));return;}
+ if(ev.target.closest?.('[data-remove-method]')){ev.target.closest('[data-method-row]')?.remove();return;}
  const btn=ev.target.closest?.("[data-f90-review]");if(!btn)return;
  const row=btn.closest("[data-id]"),note=row.querySelector("input")?.value||"",source=row.dataset.source;
  if(btn.disabled)return;

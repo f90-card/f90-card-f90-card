@@ -262,3 +262,14 @@
  padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}
 .f90-install-platform{min-height:81px}
 @media(prefers-reduced-motion:reduce){.f90-radio-orb::before,.f90-radio-orb::after{animation:none!important;opacity:.3}}
+
+.f90-transfer-method-row{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:10px;align-items:end;padding:15px;margin:12px 0;border:1px solid var(--line);border-radius:15px;background:var(--surface2)}
+.f90-transfer-method-row .f90-manage-switch{grid-column:1 / -2}
+.f90-transfer-method-row .button{white-space:nowrap}
+@media(max-width:820px){.f90-transfer-method-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.f90-transfer-method-row{grid-template-columns:1fr}}
+.f90-gallery-preview,.f90-product-gallery{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.f90-gallery-preview img{width:74px;height:74px;object-fit:cover;border:1px solid var(--line);border-radius:10px}
+.f90-gallery-thumb{padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);cursor:pointer}
+.f90-gallery-thumb[aria-pressed="true"]{border-color:var(--accent)}
+.f90-gallery-thumb img{display:block;width:48px;height:48px;object-fit:cover;border-radius:5px}
