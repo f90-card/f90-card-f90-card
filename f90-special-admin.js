@@ -33,7 +33,7 @@ async function renderSettings(main,settings){
  currentSettings=settings;
  const sal=settings?.config?.salary_withdrawal||{},tr=settings?.config?.money_transfer||{};
  const c={...d,...(settings?.config?.special_services||{}),
-    salary_usd_per_100k:Number(sal.coins_per_usd)>0?100000/Number(sal.coins_per_usd):10,
+    salary_usd_per_100k:(()=>{const opt=(sal.payout_options||[]).find(x=>x.currency==="USD");return Number(opt?.per_100k)>0&&Number(opt?.units_per_usd)>0?Number(opt.per_100k)/Number(opt.units_per_usd):Number(sal.coins_per_usd)>0?100000/Number(sal.coins_per_usd):10;})(),
     salary_description:sal.details_ar||settings?.config?.special_services?.salary_description||"",
     transfer_fee_percent:Number(tr.fee_percent??2),
     transfer_eta_min_minutes:Number(tr.eta_min_minutes??5),
@@ -44,7 +44,7 @@ async function renderSettings(main,settings){
  main.innerHTML=heading("إدارة الخدمات الإضافية","أسعار ورسوم وتعليمات مستقلة. تعرض الأسعار للعميل ويؤكدها الخادم قبل تسجيل الطلب.")+
  '<form id="f90SpecialAdminForm" class="f90-manager-form">'+
  '<section class="panel"><h2>سحب رواتب Xena Live</h2><div class="field-row">'+
- field("salary_usd_per_100k","الدولار لكل 100,000 كوينز",c.salary_usd_per_100k,"number",'min="0.01" max="100000" step="0.01" required')+
+ field("salary_usd_per_100k","قيمة الدولار لكل 100,000 كوينز (يمكن تعديل بقية العملات من طرق الإيداع)",c.salary_usd_per_100k,"number",'min="0.01" max="100000" step="0.01" required')+
  '<p class="muted small">سحب الرواتب يخضع للاعتماد اليدوي وتُضاف قيمته بعد الموافقة. سعر الشحن يؤخذ من هذه النسبة المعتمدة.</p></div>'+
  textarea("salary_description","تفاصيل الخدمة للعميل",c.salary_description)+
  check("show_salary","إظهار الخدمة في طرق الإيداع",c.show_salary!==false)+'</section>'+
@@ -283,7 +283,11 @@ document.addEventListener("submit",async ev=>{
   currency:s.currency,contact_email:s.contact_email,announcement:s.announcement,
   config:{...s.config,special_services:c,
     salary_withdrawal:{...s.config.salary_withdrawal,enabled:c.show_salary,
-      coins_per_usd:100000/c.salary_usd_per_100k,minimum_coins:100000,details_ar:c.salary_description},
+      coins_per_usd:100000/c.salary_usd_per_100k,
+      minimum_coins:s.config.salary_withdrawal?.minimum_coins||100000,
+      payout_options:(s.config.salary_withdrawal?.payout_options||[]).map(opt=>
+        opt.currency==="USD"?{...opt,per_100k:c.salary_usd_per_100k,units_per_usd:1}:opt),
+      details_ar:c.salary_description},
     money_transfer:{...s.config.money_transfer,enabled:c.show_transfer,
       fee_percent:c.transfer_fee_percent,eta_min_minutes:c.transfer_eta_min_minutes,
       eta_max_hours:Math.ceil(c.transfer_eta_max_minutes/60),
