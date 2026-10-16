@@ -398,3 +398,13 @@
  .f90-deposit-detail-art img{height:150px}
  .f90-special-page[data-kind="salary"] .f90-special-banner img{max-height:185px}
 }
+
+
+/* A verified account currency is displayed, not selectable, in both deposit flows. */
+.f90-fixed-account-currency{
+ display:grid;gap:7px;padding:13px 17px;border:1px solid var(--line);
+ border-radius:17px;background:var(--surface2);color:var(--text);margin:4px 0 10px;
+}
+.f90-fixed-account-currency small{font-size:12px;font-weight:650;color:var(--muted)}
+.f90-fixed-account-currency strong{font-size:19px;font-weight:800;color:var(--accent)}
+.f90-fixed-account-currency span{font-size:12px;line-height:1.65;color:var(--muted)}
