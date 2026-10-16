@@ -18,7 +18,7 @@ test("dedicated wallet transfers and salary approval remain server-authoritative
  const ui=read("f90-special.js"),sql=read("supabase/migrations/20261015210000_f90_special_requests.sql");
  assert.match(ui,/client\.rpc\("f90_special_submit"/);
  assert.match(ui,/p_amount:value/);
- assert.match(ui,/client\.rpc\("f90_submit_salary"/);
+ assert.match(ui,/client\.rpc\("f90_submit_salary(?:_v2)?"/);
  assert.match(ui,/client\.rpc\("f90_submit_transfer"/);
  assert.match(ui,/p_net:value/);
  assert.match(ui,/salary_usd_per_100k:10/);
