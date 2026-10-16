@@ -143,7 +143,11 @@ test("install card has selectable native platform icons and device-specific inst
     android.dispatchEvent(new h.window.Event("click", { bubbles: true }));
     assert.equal(android.getAttribute("aria-pressed"), "true");
     assert.match(panel.querySelector("#f90InstallGuide").textContent, /Chrome|Android/);
-    assert.ok(panel.lastElementChild.matches("#f90InstallAction"), "no content below install action");
+    assert.ok(panel.lastElementChild.matches(".f90-install-page-icons"), "platform icon shortcuts end the installation card");
+    assert.equal(panel.querySelectorAll(".f90-install-page-icons .f90-install-icon-btn").length,3,
+      "iPhone, Android and Windows show icon-only install buttons");
+    assert.equal(panel.querySelectorAll(".f90-install-platform span").length,0,
+      "platform buttons do not repeat visible install text");
   } finally {
     h.cleanup();
   }
