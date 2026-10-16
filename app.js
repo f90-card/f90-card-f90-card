@@ -427,37 +427,68 @@
     updateStoreBell();
     panel.querySelector("button")?.focus();
   }
+  // A network error or an expired access token is not a user sign-out.
+  // Keep a single restoration attempt in flight while Supabase refreshes tokens.
+  let pendingMeRefresh = null;
   async function refreshMe() {
-    const {
-      data: { session },
-    } = await A.client.auth.getSession();
-    if (!session) {
-      S.me = null;
-      S.walletStale = false;
-      S.savedRecipients = [];
-      return false;
-    }
-    try {
-      S.me = await A.call("me");
-      S.walletStale = false;
-      return true;
-    } catch (err) {
-      S.walletStale = true;
-      // A transient network fault is not a sign-out event. Keep the last
-      // known identity, but report that balances may be stale to callers.
-      if (err.code === "F90_AUTH" || err.status === 401) {
+    if (pendingMeRefresh) return pendingMeRefresh;
+    pendingMeRefresh = (async () => {
+      let authResult;
+      try {
+        authResult = await A.client.auth.getSession();
+      } catch (err) {
+        S.walletStale = true;
+        console.warn("F90 session lookup interrupted", err);
+        return false;
+      }
+      // Failed storage/refresh checks must never erase a known account.
+      if (authResult.error) {
+        S.walletStale = true;
+        console.warn("F90 session temporarily unavailable", authResult.error);
+        return false;
+      }
+      if (!authResult.data?.session) {
         S.me = null;
         S.walletStale = false;
         S.savedRecipients = [];
-        try { await A.client.auth.signOut({ scope: "local" }); } catch {}
-        if (location.hash !== "#/auth") location.hash = "#/auth";
-        toast("انتهت جلسة الدخول. يرجى تسجيل الدخول مجددًا.");
-      } else if (err.code === "F90_FORBIDDEN" || err.status === 403) {
-        // An authorization restriction is not proof of an expired session.
-        // Keep credentials, show the error and do not force sign-out.
-        toast(message(err));
+        return false;
       }
-      return false;
+      try {
+        const me = await A.call("me");
+        S.me = me;
+        S.walletStale = false;
+        return true;
+      } catch (err) {
+        if (err.code === "F90_AUTH" || err.status === 401) {
+          // A stale JWT can race with an automatic token refresh. Retry
+          // the harmless profile read once, with a freshly issued token.
+          // Never call signOut here: only explicit logout/confirmed auth
+          // invalidation should end a persisted browser session.
+          try {
+            const refreshed = await A.client.auth.refreshSession();
+            if (!refreshed.error && refreshed.data?.session) {
+              const me = await A.call("me");
+              S.me = me;
+              S.walletStale = false;
+              return true;
+            }
+          } catch (retryError) {
+            console.warn("F90 account recheck deferred", retryError);
+          }
+        } else if (err.code === "F90_FORBIDDEN" || err.status === 403) {
+          toast(message(err));
+        }
+        // A failed server request does not prove the session was revoked.
+        // Keep the previous identity for navigation, but block checkout
+        // until the authoritative balance can be fetched again.
+        S.walletStale = true;
+        return false;
+      }
+    })();
+    try {
+      return await pendingMeRefresh;
+    } finally {
+      pendingMeRefresh = null;
     }
   }
   function promotions() {
@@ -2465,7 +2496,11 @@
       S.walletStale = false;
       S.savedRecipients = [];
       if (S.settings?.store_name) chrome();
-      if (location.hash !== "#/auth" && location.hash !== "#/register") {
+      // Losing an account must not kick a visitor off a public page.
+      // Explicit logout already navigates to #/auth in its click handler.
+      const currentPage = (location.hash || "#/").split("/")[1] || "";
+      const privatePages = ["profile", "wallet", "orders", "history", "deposits", "verification", "developers", "recipients", "security", "vip", "api-guide"];
+      if (privatePages.includes(currentPage)) {
         location.hash = "#/auth";
       } else if (S.settings?.config) {
         chrome();
