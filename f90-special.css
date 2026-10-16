@@ -303,3 +303,61 @@
 .f90-salary-currency-row>strong{font-size:14px}
 .f90-salary-currency-row .field-row{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
 @media(max-width:650px){.f90-salary-admin-photo{grid-template-columns:1fr}.f90-salary-admin-photo img{max-width:250px}.f90-salary-quote>div{align-items:flex-start;flex-direction:column}}
+
+
+/* Screenshot-inspired deposit layout, kept within the F90 black/red and cream themes.
+   Deposit and Xena sections deliberately render no product or banner images. */
+.f90-deposit-compact{width:min(100%,690px);margin:12px auto 35px;padding:0 10px;box-sizing:border-box;direction:rtl}
+.f90-deposit-navigation{display:flex;gap:14px;justify-content:space-between;margin:10px 0 15px;font-size:13px}
+.f90-deposit-navigation a{color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:11px;padding:8px 12px;background:var(--surface)}
+.f90-deposit-request-card{background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));padding:clamp(16px,4vw,28px);border-radius:23px;box-shadow:0 15px 35px #0002}
+.f90-deposit-request-head{text-align:right;margin:0 0 24px}
+.f90-deposit-request-head h1{font-size:clamp(21px,4.5vw,29px);line-height:1.4;margin:0 0 12px;font-weight:850}
+.f90-deposit-request-head>strong,.f90-deposit-request-head>span{display:block;font-weight:650;font-size:14px;line-height:1.7}
+.f90-deposit-request-head p{white-space:pre-line;line-height:1.85;font-size:14px;margin:12px 0 0;color:var(--muted);overflow-wrap:anywhere}
+.f90-deposit-destination{background:var(--surface2);padding:14px 17px;border:1px solid var(--line);border-radius:15px;margin:0 0 20px;overflow-wrap:anywhere}
+.f90-deposit-destination span{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+.f90-deposit-destination strong{display:block;font-size:15px;line-height:1.6;white-space:pre-line;user-select:text;overflow-wrap:anywhere;unicode-bidi:plaintext}
+.f90-deposit-order-form,.f90-deposit-compact .f90-special-panel form{display:grid;gap:17px}
+.f90-deposit-order-form .field,.f90-deposit-compact .f90-special-panel form .field{display:grid;gap:8px}
+.f90-deposit-order-form .field>span,.f90-deposit-compact .f90-special-panel form .field>span{font-size:13px;font-weight:750}
+.f90-deposit-order-form .field input,
+.f90-deposit-order-form .field select,
+.f90-deposit-order-form .field textarea,
+.f90-deposit-compact .f90-special-panel .field input,
+.f90-deposit-compact .f90-special-panel .field select,
+.f90-deposit-compact .f90-special-panel .field textarea{
+  width:100%;min-height:52px;box-sizing:border-box;border-radius:18px!important;
+  padding:12px 17px!important;border:1px solid var(--line)!important;
+  color:var(--text);background:var(--surface2);font-size:16px;
+}
+.f90-deposit-order-form .field input:focus-visible,
+.f90-deposit-order-form .field select:focus-visible,
+.f90-deposit-compact .f90-special-panel .field input:focus-visible,
+.f90-deposit-compact .f90-special-panel .field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.f90-deposit-order-form .field small,.f90-deposit-compact .f90-deposit-upload small{line-height:1.65;color:var(--muted);font-size:11px}
+.f90-deposit-order-form .f90-deposit-output{padding:15px 18px;margin:1px 0;border-radius:18px;display:grid;gap:8px;background:var(--surface2);border:1px solid var(--line)}
+.f90-deposit-order-form .f90-deposit-output .f90-deposit-net-amount{font-size:clamp(20px,5vw,27px);font-weight:900;color:var(--accent);direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.f90-deposit-order-form .f90-deposit-output .f90-deposit-net-detail{display:flex;flex-wrap:wrap;justify-content:space-between;gap:9px;font-size:12px}
+.f90-deposit-order-form .f90-deposit-output small{font-size:11px;line-height:1.7}
+.f90-deposit-request-footnote{font-size:12px;color:var(--muted);line-height:1.85;margin:0}
+.f90-deposit-order-form .button.full,.f90-deposit-compact .f90-special-panel .button.full{min-height:53px;border-radius:18px;font-weight:800}
+.f90-deposit-upload input[type=file]{min-height:52px;padding:12px!important;border-style:dashed!important;cursor:pointer}
+.f90-deposit-methods-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:11px;margin:16px 0}
+.f90-deposit-method-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 19px;border:1px solid var(--line);border-radius:16px;background:var(--surface);text-decoration:none;color:var(--text)}
+.f90-deposit-method-choice:hover{border-color:var(--accent)}
+.f90-deposit-method-choice strong{font-size:15px;display:block}
+.f90-deposit-method-choice small{font-size:11px;color:var(--muted);display:block;margin-top:6px}
+.f90-deposit-method-choice>span:last-child{font-size:22px;color:var(--accent)}
+.f90-special-page[data-kind="salary"]{margin-top:5px}
+.f90-special-page[data-kind="salary"] .f90-special-panel{width:min(100%,690px);max-width:690px;border-radius:23px;margin:10px auto;padding:clamp(17px,4vw,30px)}
+.f90-special-page[data-kind="salary"] .f90-special-panel h1{margin:0 0 15px}
+.f90-special-page[data-kind="salary"] .f90-special-banner{display:none}
+.f90-deposit-note-top{padding:13px 0 10px;font-size:13px}
+.f90-deposit-note-top strong{font-size:14px;font-weight:800}
+.f90-deposit-note-top p{white-space:pre-line;line-height:1.85;color:var(--muted);margin:9px 0 0;overflow-wrap:anywhere}
+.f90-deposit-extra-info{border-top:1px solid var(--line);padding-top:10px}
+.f90-salary-quote{border-radius:18px}
+.f90-salary-receipt-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}
+.f90-salary-receipt-action a{font-weight:700;color:var(--accent)}
+@media(max-width:560px){.f90-deposit-compact{padding:0 3px}.f90-deposit-request-card{padding:15px;border-radius:17px}.f90-deposit-order-form{gap:13px}.f90-deposit-methods-list{grid-template-columns:1fr}.f90-deposit-request-head p{font-size:13px}}
