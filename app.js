@@ -2499,7 +2499,7 @@
       // Losing an account must not kick a visitor off a public page.
       // Explicit logout already navigates to #/auth in its click handler.
       const currentPage = (location.hash || "#/").split("/")[1] || "";
-      const privatePages = ["profile", "wallet", "orders", "history", "deposits", "verification", "developers", "recipients", "security", "vip", "api-guide"];
+      const privatePages = ["profile", "recipients", "wallet", "deposit", "orders", "order", "history", "deposits", "security", "verification", "reset"];
       if (privatePages.includes(currentPage)) {
         location.hash = "#/auth";
       } else if (S.settings?.config) {
