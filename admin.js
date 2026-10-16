@@ -43,7 +43,7 @@
     ["orders", "إدارة الطلبات", "clock", ["manager", "admin", "support"]],
     ["order-requests", "الاعتراضات والإلغاء", "bell", ["manager", "admin", "support"]],
     ["deposits", "طلبات الإيداع", "wallet", ["manager", "admin"]],
-    ["special-requests", "طلبات التحويل والخدمات", "clock", ["manager"]],
+    ["special-requests", "طلبات Xena والتحويل والخدمات", "clock", ["manager", "admin"]],
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["audit", "سجل الإدارة", "shield", ["manager"]],
@@ -364,6 +364,12 @@
       ) +
       `<div class="toolbar">${filters.length ? select("filter", "الحالة", [["", "كل الحالات"], ...filters.map((x) => [x, C.statuses[x]])], S.filter).replace("<select ", '<select id="listFilter" ') : ""}${kind === "users" ? `<form id="searchUsers" class="actions">${field("search", "بحث", "search", S.search, 'placeholder="البريد أو معرّف العميل"')}<button class="button secondary" type="submit">بحث</button></form>` : ""}</div>` +
       (kind === "ledger" ? `<form id="ledgerFilterForm" class="toolbar ledger-filters">${select("ledger_kind", "نوع الحركة", [["", "كل الحركات"], ["deposit", "إيداع"], ["purchase", "شراء"], ["refund", "استرداد"], ["adjustment", "تسوية"]], S.ledgerFilter.ledger_kind)}${field("customer_id", "رقم العميل", "search", S.ledgerFilter.customer_id, 'placeholder="F90..."')}${field("from", "من تاريخ", "date", S.ledgerFilter.from)}${field("to", "إلى تاريخ", "date", S.ledgerFilter.to)}<button class="button secondary" type="submit">تطبيق</button><button class="button secondary" type="button" data-action="ledger-reset">مسح الفلاتر</button></form>` : "");
+    if (kind === "deposits") {
+      main.insertAdjacentHTML("beforeend",
+        '<section class="panel" id="f90SalaryInbox"><h2>طلبات إيداع رواتب Xena Live</h2>'+
+        '<div data-salary-content role="status">جارٍ جلب طلبات Xena…</div></section>');
+      void window.F90SpecialAdmin?.renderSalaryInbox(main);
+    }
     if (!r.items.length) {
       main.insertAdjacentHTML("beforeend", empty("لا توجد سجلات مطابقة"));
       return;
@@ -2047,7 +2053,7 @@
       main.innerHTML=head("تنبيهات تلجرام","حصل خطأ أثناء قراءة سجل الإرسال")+
         '<div class="notice error">'+e(String(error.message||error))+'</div>';return;
     }
-    const labels={deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",user_new:"عميل جديد",order_manual:"طلب يدوي جديد",manual_request:"طلب خدمة يدوية",test:"رسالة اختبار"};
+    const labels={salary_new:"سحب رواتب Xena Live",deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",user_new:"عميل جديد",order_manual:"طلب يدوي جديد",manual_request:"طلب خدمة يدوية",test:"رسالة اختبار"};
     const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة"};
     const recent=(result.recent||[]).map(x=>
       '<tr><td>'+e(labels[x.event_type]||x.event_type)+'</td><td>'+e(states[x.status]||x.status)+'</td>'+
@@ -2055,6 +2061,7 @@
     main.innerHTML=head("تنبيهات الإدارة عبر Telegram","الإيداعات الجديدة والأحداث المهمة فقط، من خادم المتجر إلى محادثة الإدارة.")+
       '<section class="panel"><h2>اختيار أنواع التنبيهات</h2><form id="telegramAlertsForm">'+
       check("telegram_deposits","إشعار عن كل طلب إيداع جديد",prefs.deposits_enabled!==false)+
+       check("telegram_salary","إشعار جديد عند طلب إيداع رواتب Xena Live",prefs.salary_enabled!==false)+
       check("telegram_verification","إشعار طلب توثيق جديد بدون إرسال وثائق الهوية",prefs.verification_enabled!==false)+
       check("telegram_order_reviews","طلبات اعتراض أو إلغاء تتطلب المراجعة",prefs.order_reviews_enabled!==false)+
       check("telegram_new_users","مستخدم جديد (دون إرسال بيانات شخصية)",prefs.new_users_enabled!==false)+
@@ -2110,6 +2117,7 @@
     const c=S.settings.config||{};
     const telegram_alerts={...c.telegram_alerts,
       deposits_enabled:form.elements.telegram_deposits.checked,
+      salary_enabled:form.elements.telegram_salary.checked,
       verification_enabled:form.elements.telegram_verification.checked,
       order_reviews_enabled:form.elements.telegram_order_reviews.checked,
       new_users_enabled:form.elements.telegram_new_users.checked,
