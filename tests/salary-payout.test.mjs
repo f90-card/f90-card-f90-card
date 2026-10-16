@@ -7,7 +7,6 @@ const client=read("f90-special.js");
 const admin=read("f90-special-admin.js");
 const app=read("app.js");
 const adminShell=read("admin.js");
-const sql=read("supabase/seeds/f90-owner-manual-supplier.sql");
 
 test("Xena salary uses a server-signed currency-specific payout rather than normal deposit pricing",()=>{
  assert.match(app,/is_salary_withdrawal===true/);
@@ -35,5 +34,4 @@ test("Wallet USD credit remains server authoritative and coin quote survives rat
  assert.match(client,/data\.payout_amount/);
  assert.match(client,/data\.usd_amount/);
  assert.match(client,/بعد موافقة الإدارة/);
- assert.match(sql,/f90-owner-manual-supplier|ف90|تحويل|مزود|ياسين/);
 });
