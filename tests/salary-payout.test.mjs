@@ -33,10 +33,10 @@ test("Salary manager controls have separate live image, description and per-curr
 
 test("Wallet USD credit remains server authoritative and coin quote survives rate changes",()=>{
  assert.match(client,/quote=value\/100000\*Number\(option\.per_100k\)/);
- // The payout rate controls the credit in USD; only the visible
- // amount is converted to the customer's stored account currency.
- assert.match(client,/salaryCredit\(Number\(data\.usd_amount\|\|0\)\)/);
+ // Customer must see the exact configured payout for the account currency;
+ // the server stores its own USD-equivalent financial snapshot.
+ assert.match(client,/targetMoney\(value\/100000\*Number\(option\.per_100k\),customerSalaryCurrency\)/);
+ assert.match(client,/targetMoney\(data\.payout_amount, data\.payout_currency\|\|customerSalaryCurrency\)/);
  assert.match(client,/customerSalaryCurrency/);
- assert.match(client,/visibleRates\.find\(x=>x\.currency===customerSalaryCurrency/);
  assert.match(client,/بعد موافقة الإدارة/);
 });
