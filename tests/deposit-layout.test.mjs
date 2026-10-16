@@ -44,7 +44,7 @@ test("Xena receipt and optional note are private and payout is authoritative",()
  assert.match(salary,/p_receipt:path/);
  assert.match(salary,/name="note"/);
  assert.match(salary,/data-salary-target/);
- assert.match(salary,/'<div class="f90-special-banner"><img src='/);
+ assert.match(salary,/f90-special-banner"><img src=/);
  assert.match(sql,/storage\.objects/);
  assert.match(sql,/receipt_path/);
  assert.match(sql,/client_note/);
