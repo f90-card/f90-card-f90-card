@@ -378,8 +378,11 @@ async function buildPublicCatalog() {
   const categories = check(rows[1]);
   const products = check(rows[2]);
   const linked = check(rows[6]);
-  const yassenId = "dd7aed3f-ab2d-4ff2-b4d6-d46493ea174d";
-  const yassenProductIds = new Set(linked.filter((entry: any) => entry.provider_id === yassenId)
+  const allowedProviderIds = new Set(check(rows[7])
+    .filter((p: any) => !p.config?.archived_at && !p.config?.disconnected)
+    .map((p: any) => p.id));
+  const allowedProductIds = new Set(linked
+    .filter((entry: any) => allowedProviderIds.has(entry.provider_id))
     .map((entry: any) => entry.product_id));
   const allowedCategoryIds = new Set<string>();
   const categoriesById = new Map(categories.map((entry:any)=>[entry.id,entry]));
@@ -397,7 +400,7 @@ async function buildPublicCatalog() {
   for (const id of ownerCategoryIds) allowedCategoryIds.add(id);
   const providerProductIds = new Set(linked.map((entry:any)=>entry.product_id));
   for (const product of products) {
-    if (!yassenProductIds.has(product.id)) continue;
+    if (!allowedProductIds.has(product.id)) continue;
     let categoryId = product.category_id;
     const seen = new Set<string>();
     while (categoryId && !seen.has(categoryId)) {
@@ -465,7 +468,7 @@ async function buildPublicCatalog() {
           : c,
       ),
     products: products
-      .filter((p: any) => (yassenProductIds.has(p.id) || (ownerCategoryIds.has(p.category_id) && !providerProductIds.has(p.id))) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
+      .filter((p: any) => (allowedProductIds.has(p.id) || (ownerCategoryIds.has(p.category_id) && !providerProductIds.has(p.id))) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         isCategoryRefilling(p.category_id) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
@@ -474,7 +477,7 @@ async function buildPublicCatalog() {
     banners: check(rows[3]),
     rates: check(rows[4]),
     vip: check(rows[5]),
-    news: check(rows[8]).filter((n: any) => !n.product_id || yassenProductIds.has(n.product_id)),
+    news: check(rows[8]).filter((n: any) => !n.product_id || allowedProductIds.has(n.product_id)),
     version: 3,
   };
 }
@@ -1033,16 +1036,29 @@ async function staff(a: Actor, b: any) {
     const allProviders = check(await db.from("f90_providers")
       .select("id,name,is_enabled,config"));
     const internals = check(await db.from("f90_product_internal").select("*"));
-    const yassenId = "dd7aed3f-ab2d-4ff2-b4d6-d46493ea174d";
-    const yassenProductIds = new Set(internals.filter((i: any) => i.provider_id === yassenId)
+    const managedProviders = allProviders.filter((p: any) => !p.config?.archived_at && !p.config?.disconnected);
+    const managedProviderIds = new Set(managedProviders.map((p: any) => p.id));
+    const managedProductIds = new Set(internals.filter((i: any) => managedProviderIds.has(i.provider_id))
       .map((i: any) => i.product_id));
+    const ownerCategoryIds = new Set(check(rows[0])
+      .filter((c: any) => ["money-transfer", "account-sales", "design-services", "complete-website"].includes(c.slug))
+      .map((c: any) => c.id));
+    let expanded = true;
+    while (expanded) {
+      expanded = false;
+      for (const c of check(rows[0])) if (c.parent_id && ownerCategoryIds.has(c.parent_id) && !ownerCategoryIds.has(c.id)) {
+        ownerCategoryIds.add(c.id); expanded = true;
+      }
+    }
+    const linkedProductIds = new Set(internals.map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]).filter((p: any) => yassenProductIds.has(p.id)),
+      products: check(rows[1]).filter((p: any) => managedProductIds.has(p.id) ||
+        (ownerCategoryIds.has(p.category_id) && !linkedProductIds.has(p.id))),
       banners: check(rows[2]),
-      internal: a.role === "manager" ? internals.filter((i: any) => i.provider_id === yassenId) : [],
-      providers: a.role === "manager" ? allProviders.filter((p: any) => p.id === yassenId && !p.config?.archived_at)
-        .map(({ id, name, is_enabled }: any) => ({ id, name, is_enabled })) : [],
+      internal: a.role === "manager" ? internals.filter((i: any) => managedProviderIds.has(i.provider_id) || !i.provider_id) : [],
+      providers: a.role === "manager" ? managedProviders.map(({ id, name, is_enabled, adapter }: any) =>
+        ({ id, name, is_enabled, adapter })) : [],
     };
   }
   if (action === "catalog.save") return catalogSave(a, b);
@@ -1698,26 +1714,26 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
-    endpointURL(b.endpoint);
+    const adapter = ["local", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    if (adapter !== "local") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
       .eq("id", uuid(b.id)).single()) : null;
     if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
-    if (!old && !b.token) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
-    const adapter = ["smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
-    if (new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
+    if (!old && !b.token && adapter !== "local") throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
+    if (adapter !== "local" && new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
-    const endpoint = text(b.endpoint, 2000);
+    const endpoint = adapter === "local" ? "" : text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
       old.adapter !== adapter);
     if (old && old.currency !== currency)
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
-    if (connectionChanged && !b.token)
+    if (connectionChanged && !b.token && adapter !== "local")
       throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد بعد تغيير رابط أو بروتوكول الاتصال");
-    const autoOrders = b.automatic_orders_enabled == null
+    const autoOrders = adapter === "local" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
     if (autoOrders && adapter === "omega")
@@ -1728,7 +1744,8 @@ async function staff(a: Actor, b: any) {
       adapter,
       currency,
       // Connection changes require a fresh read-only diagnosis before activation.
-      is_enabled: !!old?.is_enabled && !connectionChanged && !b.token,
+      is_enabled: adapter === "local" ? (old ? !!old.is_enabled : true) :
+        !!old?.is_enabled && !connectionChanged && !b.token,
       margin_percent: num(b.margin_percent ?? 20, 0, 10000),
       config: {
         ...(old?.config || {}),
@@ -1765,11 +1782,11 @@ async function staff(a: Actor, b: any) {
   if (action === "provider.toggle") {
     requireRole(a, "manager");
     const id = uuid(b.id);
-    const current = check(await db.from("f90_providers").select("config")
+    const current = check(await db.from("f90_providers").select("adapter,config")
       .eq("id", id).single());
     if (current.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
     if (typeof b.is_enabled !== "boolean") throw new AppError("F90_FIELDS");
-    if (b.is_enabled) {
+    if (b.is_enabled && current.adapter !== "local") {
       const services = await providerAction(id, "services");
       if (!Array.isArray(services))
         throw new AppError("F90_FIELDS", 400, "تعذّر قراءة خدمات المورّد؛ بقي موقوفًا");
