@@ -5,7 +5,7 @@
   "description": "عالمك الرقمي. محفظتك وطلباتك في مكان واحد.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "./index.html#/welcome",
+  "start_url": "./#/welcome",
   "scope": "./",
   "display": "standalone",
   "background_color": "#090b10",
@@ -27,11 +27,11 @@
   "shortcuts": [
     {
       "name": "محفظتي",
-      "url": "./index.html#/wallet"
+      "url": "./#/wallet"
     },
     {
       "name": "طلباتي",
-      "url": "./index.html#/orders"
+      "url": "./#/orders"
     }
   ]
 }

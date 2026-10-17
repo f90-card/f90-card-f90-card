@@ -459,6 +459,28 @@
       }
       try {
         const me = await A.call("me");
+        // Google creates the auth user on callback. Respect a pre-login currency
+        // choice only when the Supabase user was actually created by this flow.
+        let pendingGoogle = null;
+        try { pendingGoogle = JSON.parse(localStorage.getItem("f90-google-currency-pending") || "null"); } catch {}
+        if (pendingGoogle) {
+          const started = Number(pendingGoogle.started_at);
+          const created = Date.parse(authResult.data.session.user?.created_at || "");
+          const isNewGoogleAccount = authResult.data.session.user?.app_metadata?.provider === "google" &&
+            Number.isFinite(started) && Date.now() - started >= 0 && Date.now() - started < 600000 &&
+            Number.isFinite(created) && created >= started - 10000 && created <= Date.now() &&
+            ["USD","ILS","JOD"].includes(pendingGoogle.currency);
+          try {
+            if (isNewGoogleAccount && me?.profile?.account_currency !== pendingGoogle.currency) {
+              const result = await A.call("profile.currency", {currency:pendingGoogle.currency});
+              if (result?.currency === pendingGoogle.currency) me.profile.account_currency = pendingGoogle.currency;
+            }
+          } catch (error) {
+            console.warn("F90 first Google account currency could not be saved", error);
+          } finally {
+            try { localStorage.removeItem("f90-google-currency-pending"); } catch {}
+          }
+        }
         S.me = me;
         const accountCurrency=me?.profile?.account_currency;
         if(["USD","ILS","JOD"].includes(accountCurrency)){
@@ -1031,7 +1053,7 @@
   }
   function auth(mode = S.authMode) {
     S.authMode = mode;
-    main.innerHTML = `<div class="auth-layout"><div class="auth-art">${image("./assets/sections/services.png", "عالم أف تسعين كارد")}</div><section class="panel auth-panel"><div class="eyebrow">رحلتك تبدأ هنا</div><h1>${mode === "register" ? "أهلًا بعالمك الرقمي" : mode === "forgot" ? "استعادة الحساب" : "أهلًا بعودتك"}</h1><div class="auth-tabs"><button data-action="auth-tab" data-mode="login" class="${mode === "login" ? "active" : ""}">تسجيل الدخول</button><button data-action="auth-tab" data-mode="register" class="${mode === "register" ? "active" : ""}">حساب جديد</button></div><form id="authForm" data-mode="${mode}">${mode === "register" ? field("display_name", "اسمك", "text", "", 'required maxlength="100" autocomplete="name"') : ""}${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${mode !== "forgot" ? field("password", "كلمة المرور", "password", "", 'required minlength="' + (mode === "register" ? "10" : "1") + '" autocomplete="' + (mode === "register" ? "new-password" : "current-password") + '" dir="ltr"') : ""}${
+    main.innerHTML = `<div class="auth-layout"><div class="auth-art">${image("./assets/sections/services.png", "عالم أف تسعين كارد")}</div><section class="panel auth-panel"><div class="eyebrow">رحلتك تبدأ هنا</div><h1>${mode === "register" ? "أهلًا بعالمك الرقمي" : mode === "forgot" ? "استعادة الحساب" : "أهلًا بعودتك"}</h1><div class="auth-tabs"><button data-action="auth-tab" data-mode="login" class="${mode === "login" ? "active" : ""}">تسجيل الدخول</button><button data-action="auth-tab" data-mode="register" class="${mode === "register" ? "active" : ""}">حساب جديد</button></div><form id="authForm" data-mode="${mode}">${mode !== "forgot" ? select("account_currency", "عملة حسابك (يمكن تغييرها لاحقًا من القائمة)", [["USD","دولار أمريكي ($)"],["ILS","شيكل (₪)"],["JOD","دينار أردني (د.أ)"]], ["USD","ILS","JOD"].includes(S.currency) ? S.currency : "USD") : ""}${mode === "register" ? field("display_name", "اسمك", "text", "", 'required maxlength="100" autocomplete="name"') : ""}${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${mode !== "forgot" ? field("password", "كلمة المرور", "password", "", 'required minlength="' + (mode === "register" ? "10" : "1") + '" autocomplete="' + (mode === "register" ? "new-password" : "current-password") + '" dir="ltr"') : ""}${
       mode === "register"
         ? `<div class="field-row">${select(
             "phone_country",
@@ -1961,6 +1983,7 @@
             emailRedirectTo: redirect,
             data: {
               display_name: data.display_name,
+              account_currency: ["USD","ILS","JOD"].includes(String(data.account_currency)) ? String(data.account_currency) : "USD",
               phone: data.phone || null,
               phone_country: data.phone_country,
             },
@@ -2414,6 +2437,16 @@
     }
   });
   document.addEventListener("change", (ev) => {
+    if (ev.target.name === "account_currency" && ev.target.closest("#authForm") && !S.me) {
+      const chosen = String(ev.target.value || "");
+      if (!["USD", "ILS", "JOD"].includes(chosen)) return;
+      S.currency = chosen;
+      S.currencyPreference = true;
+      try { localStorage.setItem("f90-currency", chosen); } catch {}
+      const drawerSelect = $("currencySelect");
+      if (drawerSelect?.querySelector('option[value="' + chosen + '"]')) drawerSelect.value = chosen;
+      return;
+    }
     if (ev.target.id !== "savedRecipient") return;
     const item = S.savedRecipients.find((row) => row.id === ev.target.value);
     const form = $("checkoutForm");
@@ -2489,6 +2522,14 @@
         toast("تم النسخ");
       } else if (action === "auth-tab") auth(button.dataset.mode);
       else if (action === "google") {
+        // Carry the guest's currency choice only into a newly created Google account.
+        // Existing accounts always retain their saved profile currency.
+        if (!S.me) {
+          const chosen = String(document.querySelector("#authForm [name=account_currency]")?.value || S.currency);
+          if (["USD","ILS","JOD"].includes(chosen)) {
+            try { localStorage.setItem("f90-google-currency-pending", JSON.stringify({currency:chosen,started_at:Date.now()})); } catch {}
+          }
+        }
         const r = await A.client.auth.signInWithOAuth({
           provider: "google",
           options: { redirectTo: "https://www.f90card.online/" },

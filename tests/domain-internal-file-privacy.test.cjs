@@ -15,8 +15,12 @@ test("production storefront hides internal project paths without protecting publ
   ]) {
     assert.ok(blocked.has(source), source + " must not expose internal sources");
   }
-  for (const publicPath of ["/", "/index.html", "/admin.html", "/api/manifest", "/docs/F90_MERCHANT_API_EN.md", "/assets/icons/icon-192.png"]) {
+  for (const publicPath of ["/", "/admin.html", "/api/manifest", "/docs/F90_MERCHANT_API_EN.md", "/assets/icons/icon-192.png"]) {
     assert.ok(!blocked.has(publicPath), publicPath + " must stay public");
   }
+  // /index.html remains accessible through a permanent canonical redirect to /.
+  const legacyIndex = (configuration.redirects || []).find(x => x.source === "/index.html");
+  assert.ok(legacyIndex && legacyIndex.destination === "/" && legacyIndex.permanent === true,
+    "/index.html must redirect to the public canonical homepage");
   assert.notEqual(configuration.headers?.length, 0, "secure site headers must remain configured");
 });
