@@ -74,7 +74,7 @@ with sync_playwright() as p:
  # Don't submit credentials or send a real reset email in CI.
  page.goto("https://www.f90card.online/admin.html#/media-center",wait_until="domcontentloaded",timeout=60000)
  page.locator('#adminAuth').wait_for(state="visible",timeout=35000)
- assert page.locator('#mainContent').count() == 1
+ assert page.locator('#adminMain').count() == 1
  assert not errors,("Browser JavaScript errors",errors[:5])
  page.screenshot(path="/tmp/f90-navigation-postfix.png")
  print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5],"floating_before":fixed_before,"floating_after":fixed_after},ensure_ascii=False))
