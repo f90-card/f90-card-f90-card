@@ -42,3 +42,64 @@
 .f90-experience-steps article{box-shadow:inset 0 1px rgba(255,255,255,.08),0 12px 27px #0001;border-radius:17px}
 @media(max-width:600px){.f90-experience-products{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.f90-experience-products .f90-experience-product{border-radius:13px}}
 @media(prefers-reduced-motion:reduce){.f90-welcome-lightmarks i{animation:none!important}.f90-experience-products .f90-experience-product img{transition:none!important}}
+
+
+/* Quick entry to F90 CARD: only the welcome page, same original design. */
+.f90-experience-hero > .f90-welcome-skip {
+  position: absolute;
+  z-index: 6;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 155, 180, .62);
+  color: #fff;
+  background: rgba(22, 12, 28, .87);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.f90-experience-hero > .f90-welcome-skip:hover {
+  background: rgba(117, 24, 59, .95);
+}
+.f90-experience-hero > .f90-welcome-skip:focus-visible,
+.f90-experience-actions > .f90-welcome-enter:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.f90-experience-actions > .f90-welcome-enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 900;
+  border: 1px solid #ff8ba6;
+  background: linear-gradient(110deg, #fc315c, #ad113d);
+  box-shadow: 0 8px 23px rgba(242, 37, 87, .25);
+  color: #fff;
+}
+.f90-experience-actions > .f90-welcome-enter:hover {
+  background: linear-gradient(110deg, #fc4b72, #b61f4e);
+}
+@media (max-width: 740px) {
+  .f90-experience-hero { padding-top: 84px; }
+  .f90-experience-hero > .f90-welcome-skip {
+    top: 14px;
+    left: 14px;
+  }
+  .f90-experience-copy > .f90-experience-actions > .f90-welcome-enter {
+    width: 100%;
+    min-height: 54px;
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f90-experience-hero > .f90-welcome-skip { transition: none; }
+}
