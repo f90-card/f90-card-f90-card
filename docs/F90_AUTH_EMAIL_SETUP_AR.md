@@ -41,3 +41,18 @@ Supabase > Authentication > Email Templates > Reset password:
 - صفحة الإدارة تبقى محمية بصلاحيات المدير وMFA؛ الرابط `admin.html#/media-center` مجرد مسار عرض.
 
 **الحالة:** ملفات الإعداد والقوالب جاهزة للنسخ؛ تغييرات Auth URL وSMTP تحتاج حفظها في لوحة Supabase والتحقق من خدمة الإرسال، وهي ليست مفعّلة تلقائيًا بمجرد نشر القالب.
+
+## 6. إعداد قوالب البريد الجديدة
+في Authentication > Email Templates:
+- Confirm signup: subject `تأكيد بريدك الإلكتروني | F90 CARD`, استخدم `docs/email-templates/confirm-signup-ar.html` (متغير `{{ .ConfirmationURL }}`).
+- Reset password: subject `استعادة كلمة مرور حسابك | F90 CARD`, استخدم `docs/email-templates/password-recovery-ar.html`.
+- Password changed notification (إن كانت متاحة في خطة Supabase): استخدم `docs/email-templates/password-changed-ar.html` مع تفعيل إشعار التغيير من إعدادات Auth.
+- Welcome email after verified signup: مسودة `docs/email-templates/welcome-after-confirmation-ar.html`، تحتاج مرسل موثق وآلية إرسال مستقلة تعمل فقط بعد تأكيد البريد. لا تفعّل هذا القالب كبديل عن رسالة التفعيل؛ ولا تُرسل رسائل للمستخدمين الحاليين عشوائيًا.
+- أرسل اختبارًا فقط لحساب تجريبي بموافقة صاحبه، بعد توثيق SMTP.
+
+## 7. Google branding
+في Google Auth Platform > Branding: ضع اسم التطبيق الرسمي F90 CARD وشعار المتجر، ورابط الصفحة الرئيسية `https://www.f90card.online/` وروابط سياسة الخصوصية والشروط الموجودة بالفعل. قد يستمر عرض نطاق Supabase في Google account chooser لأن OAuth endpoint تستضيفه Supabase؛ تغيير الاسم والشعار لا يبدّل endpoint. يحتاج إخفاؤه Custom Domain رسميًا من Supabase (إن كان متاحًا بخطتك) وتعديل OAuth client بصورة منسقة.
+
+## 8. تعليمات الخصوصية
+لا ترفع مفاتيح SMTP أو Google Client Secret إلى GitHub أو HTML.
+ملفات `docs/email-templates` هي قوالب تصميم فقط، وليست خدمة إرسال مفعّلة.

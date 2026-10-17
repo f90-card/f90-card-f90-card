@@ -119,6 +119,16 @@
       "source": "/COPYRIGHT.md",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/docs/email-templates/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/docs/F90_AUTH_EMAIL_SETUP_AR.md",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }
