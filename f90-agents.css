@@ -1,0 +1,75 @@
+/* F90 CARD agents directory - self-contained styles, original branding intact */
+.f90-agent-hero {
+  position:relative; isolation:isolate; overflow:hidden;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  padding:clamp(22px,5vw,48px); margin-bottom:24px;
+  border-radius:25px; border:1px solid rgba(248,54,98,.47);
+  background:radial-gradient(circle at 84% 20%,rgba(230,42,78,.24),transparent 58%),
+    linear-gradient(128deg,#111827,#24121c 76%,#120e18);
+  box-shadow:0 13px 35px #0002; color:#fff;
+}
+.f90-agent-hero::before {
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:-1;
+  background:linear-gradient(110deg,transparent 5%,rgba(255,255,255,.025),transparent 70%);
+}
+.f90-agent-hero-copy{min-width:0;flex:1}
+.f90-agent-hero .eyebrow{color:#ffb6c6}
+.f90-agent-hero h1{font-size:clamp(26px,4.4vw,48px);margin:8px 0 12px;color:#fff}
+.f90-agent-hero p{max-width:630px;line-height:1.9;color:#f3d9e1;font-size:clamp(13px,1.7vw,17px)}
+.f90-agent-hero img{width:clamp(105px,22vw,230px);height:auto;max-height:230px;object-fit:contain;filter:drop-shadow(0 8px 24px #ee335066)}
+.f90-agent-hero .button{margin-top:14px}
+.f90-agent-section{padding:4px 0 25px}
+.f90-agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
+.f90-agent-card{
+  display:flex;align-items:flex-start;gap:15px;min-width:0;
+  border:1px solid color-mix(in srgb,var(--accent) 39%,var(--line));
+  border-radius:20px;padding:20px 16px;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface));
+  box-shadow:0 9px 24px #0002;
+}
+.f90-agent-avatar{
+  width:59px;height:59px;flex:0 0 59px;display:grid;place-items:center;
+  border:1px solid #ff7896;border-radius:18px;
+  background:radial-gradient(circle at 25% 20%,#c42c58,#240a19);
+  box-shadow:0 0 19px #fd41682f;color:white;
+}
+.f90-agent-avatar-text{font-weight:950;font-size:15px;letter-spacing:.08em}
+.f90-agent-details{min-width:0;flex:1}
+.f90-agent-role{color:var(--accent);font-size:11px;font-weight:900}
+.f90-agent-details h3{margin:5px 0 9px;font-size:clamp(17px,2.3vw,21px);overflow-wrap:anywhere;color:var(--text)}
+.f90-agent-location{margin:0 0 9px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere;font-size:13px}
+.f90-agent-location span{font-size:19px;color:var(--accent)}
+.f90-agent-phone{margin:6px 0 13px;font-size:14px;font-weight:800;text-align:start;color:var(--text)}
+.f90-agent-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.f90-agent-actions .button{min-height:39px;font-size:12px;text-align:center}
+.f90-agent-empty{grid-column:1/-1;padding:30px 20px;border:1px dashed var(--line);border-radius:19px;text-align:center;background:var(--surface)}
+.f90-agent-empty h3{margin:0 0 9px}
+.f90-agents-admin{display:grid;gap:16px}
+.f90-agent-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.f90-agent-editor form{display:grid;gap:15px;margin-top:15px}
+.f90-agent-editor-actions{display:flex;flex-wrap:wrap;gap:10px}
+.f90-agent-admin-list h2,.f90-agent-editor h2{margin-top:0}
+.f90-agent-row-list{display:grid;gap:9px}
+.f90-agent-admin-row{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;min-width:0;
+  padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);
+}
+.f90-agent-admin-row strong{overflow-wrap:anywhere}
+.f90-agent-admin-row p{margin:6px 0}
+.f90-agent-row-actions{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.f90-agent-visibility{font-size:11px;font-weight:800;color:var(--accent)}
+.f90-agent-status{margin:0;padding:13px;border-radius:12px;background:color-mix(in srgb,var(--accent) 11%,var(--surface));border:1px solid var(--line)}
+.f90-agent-status[hidden]{display:none}
+.f90-agent-status.f90-agent-error{border-color:#d94360;color:var(--text)}
+:root[data-theme="cream"] .f90-agent-hero{background:linear-gradient(130deg,#5c3046,#32182d);color:white}
+:root[data-theme="cream"] .f90-agent-card{box-shadow:0 5px 16px #30101a12}
+@media(max-width:700px){
+  .f90-agent-hero{gap:11px;align-items:center;padding:21px;border-radius:18px}
+  .f90-agent-hero img{width:75px;max-height:100px}
+  .f90-agent-hero p{font-size:12px}
+  .f90-agent-card{padding:15px 12px}
+  .f90-agent-fields{grid-template-columns:1fr}
+  .f90-agent-admin-row{align-items:flex-start;flex-direction:column}
+  .f90-agent-row-actions{width:100%}
+}
+@media(max-width:400px){.f90-agent-hero img{width:60px}.f90-agent-avatar{width:48px;height:48px;flex-basis:48px}}
