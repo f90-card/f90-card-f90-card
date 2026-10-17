@@ -8,10 +8,11 @@ with sync_playwright() as p:
  errors=[]
  page.on("pageerror",lambda e: errors.append(str(e)))
  page.goto(url,wait_until="domcontentloaded",timeout=60000)
- page.wait_for_timeout(9000)
- # The real store must show its branded mobile bar on all routes.
+ page.wait_for_function("document.documentElement.dataset.f90Ready==='1'",timeout=35000)
+ # The guest account bubble intentionally contains a user icon; signed-in accounts may show an avatar.
  assert page.locator("#mobileDock").count()==1
- assert page.locator('.f90-profile-dock-emblem img').count()==1,"Profile bubble logo missing"
+ assert page.locator('.f90-profile-dock-emblem').count()==1,"Profile bubble missing"
+ assert page.locator('.f90-profile-dock-emblem svg,.f90-profile-dock-emblem img').count()==1,"Profile bubble icon missing"
  assert page.locator("#mainContent").count()==1
  fixed_before=page.evaluate("""() => {
    const ids=["f90ThemeBackdrop","f90MediaDock","mobileDock"];
