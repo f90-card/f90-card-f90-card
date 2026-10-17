@@ -1,0 +1,35 @@
+name: F90 original platform avatars
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'marketing/profile_images.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Prepare fonts and rendering
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-core
+          python -m pip install --quiet pillow
+      - name: Render individual original F90 CARD profile images
+        run: python marketing/profile_images.py
+      - name: Commit rendered PNGs
+        run: |
+          git config user.name 'F90 Campaign Bot'
+          git config user.email 'f90-campaign-bot@users.noreply.github.com'
+          git add marketing/profile-images/*.png
+          if ! git diff --staged --quiet; then
+            git commit -m 'marketing: render seven official-logo social avatars'
+            git pull --rebase origin main
+            git push
+          fi
