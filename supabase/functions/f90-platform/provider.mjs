@@ -201,7 +201,14 @@ export async function callProvider(
     if (yassen && action === "add") {
       if (data?.status !== "OK" || !data?.data?.order_id)
         throw new ProviderError("نتيجة إرسال الطلب تحتاج مراجعة", true);
-      return { order_id: data.data.order_id, status: data.data.status };
+      // Preserve an explicitly returned recipient nickname, if Yassen supplies one.
+      // Do not use generic product names or infer names from account IDs.
+      const nickname = ["account_name","player_name","nickname","username",
+        "user_name","character_name","recipient_name","in_game_name"]
+        .map((key) => data.data[key]).find((value) => typeof value === "string" &&
+          value.trim().length >= 2 && value.trim().length <= 120 && !/^[0-9]+$/.test(value.trim()));
+      return { order_id: data.data.order_id, status: data.data.status,
+        ...(nickname ? { account_name: nickname.trim() } : {}) };
     }
     if (yassen && action === "status") {
       if (data?.status !== "OK" || !Array.isArray(data.data) || data.data.length !== 1)
