@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { parentRefilling } from "./catalog.mjs";
+import { recipientNameFromSupplier } from "./recipient-name.mjs";
 import {
   callProvider,
   endpointURL,
@@ -592,21 +593,7 @@ async function smmCatalogFetch() {
   }
 }
 function supplierRecipientNickname(data:any): string | null {
-  // Supplier-provided names only. Never infer a player nickname from a numeric ID.
-  const keys = ["account_name","player_name","nickname","username",
-    "user_name","character_name","recipient_name","in_game_name"];
-  for(const parent of [data,data?.account,data?.player]){
-    if(!parent || typeof parent!=="object" || Array.isArray(parent)) continue;
-    for(const key of keys){
-      const raw=parent[key];
-      if(typeof raw!=="string")continue;
-      const value=raw.trim();
-      if(value.length>=2 && value.length<=120 &&
-         !/^[0-9]+$/.test(value) && !/[\x00-\x1F\x7F]/.test(value))
-        return value;
-    }
-  }
-  return null;
+  return recipientNameFromSupplier(data);
 }
 async function rememberSupplierNickname(orderId:string,response:any) {
   const nickname=supplierRecipientNickname(response);
@@ -619,6 +606,67 @@ async function rememberSupplierNickname(orderId:string,response:any) {
     if(result.error)console.error("Supplier nickname save failed",result.error.code);
   } catch {
     console.error("Supplier nickname save failed");
+  }
+}
+// Completed orders are checked with the supplier's read-only /check endpoint.
+// This cannot create new orders, re-charge a wallet or alter the order status.
+async function syncCompletedSupplierName(order: any) {
+  if(order.status !== "completed" || !order.provider_order_id || !order.provider_id)
+    throw new AppError("F90_FIELDS",400,"يلزم طلب مكتمل مرتبط بياسين كارد");
+  const checkedAt = new Date().toISOString();
+  const attempts = Math.min(20, Math.max(0,Number(order.supplier_name_check_attempts)||0)+1);
+  let response:any;
+  try {
+    response = await providerAction(order.provider_id,"status",{order:order.provider_order_id});
+  } catch(err) {
+    // Rate-limit failed read-only lookups as well. Never affect paid orders.
+    await db.from("f90_orders").update({
+      supplier_name_checked_at:checkedAt,supplier_name_check_attempts:attempts
+    }).eq("id",order.id).eq("status","completed").is("supplier_account_name",null);
+    throw err;
+  }
+  const nickname = response?.status === "completed" ? supplierRecipientNickname(response) : null;
+  const changes:any = {
+    supplier_name_checked_at:checkedAt,
+    supplier_name_check_attempts:attempts,
+  };
+  if(nickname)changes.supplier_account_name=nickname;
+  const updated=check(await db.from("f90_orders").update(changes)
+    .eq("id",order.id).eq("status","completed").is("supplier_account_name",null)
+    .select("supplier_account_name").maybeSingle());
+  return {
+    saved:!!(updated?.supplier_account_name),
+    name:updated?.supplier_account_name || null,
+    available:response?.status==="completed",
+  };
+}
+async function backfillCompletedSupplierNames() {
+  try {
+    const providers=check(await db.from("f90_providers")
+      .select("id").eq("adapter","yassen").eq("is_enabled",true));
+    if(!providers.length)return 0;
+    const until=new Date(Date.now()-12*3600*1000).toISOString();
+    const rows=check(await db.from("f90_orders")
+      .select("id,status,provider_id,provider_order_id,supplier_name_check_attempts")
+      .eq("status","completed")
+      .in("provider_id",providers.map((p:any)=>p.id))
+      .not("provider_order_id","is",null)
+      .is("supplier_account_name",null)
+      .lt("supplier_name_check_attempts",3)
+      .or("supplier_name_checked_at.is.null,supplier_name_checked_at.lt."+until)
+      .order("created_at",{ascending:false}).limit(2));
+    let found=0;
+    for(const row of rows){
+      try {
+        const synced=await syncCompletedSupplierName(row);
+        if(synced.saved)found++;
+      } catch {
+        // A metadata check never blocks paid order dispatch or status.
+      }
+    }
+    return found;
+  } catch {
+    return 0;
   }
 }
 async function work() {
@@ -720,7 +768,8 @@ async function work() {
     .from("f90_rate_limits")
     .delete()
     .lt("window_start", new Date(Date.now() - 86400000).toISOString());
-  return { processed };
+  const namesSynced = await backfillCompletedSupplierNames();
+  return { processed, names_synced:namesSynced };
 }
 function cleanCommerce(raw: any, existing: any = {}, designer = false) {
   const c = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
@@ -1708,6 +1757,21 @@ async function staff(a: Actor, b: any) {
       p_request: uuid(b.request_id),
       p_expected: num(b.expected_balance,0,1e12),
     });
+  }
+  if (action === "staff.sync_recipient_name") {
+    requireRole(a, "manager", "admin");
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    const id=uuid(b.id);
+    const row=check(await db.from("f90_orders")
+      .select("id,status,provider_id,provider_order_id,supplier_account_name,supplier_name_check_attempts")
+      .eq("id",id).single());
+    const linked=check(await db.from("f90_providers")
+      .select("adapter").eq("id",row.provider_id).single());
+    if(linked.adapter!=="yassen" || row.status!=="completed" || !row.provider_order_id)
+      throw new AppError("F90_FIELDS",400,"اسم الحساب متاح للمزامنة فقط للطلبات المكتملة عند ياسين");
+    if(row.supplier_account_name)
+      return {saved:true,name:row.supplier_account_name,previous:true};
+    return syncCompletedSupplierName(row);
   }
   if (action === "staff.manual_verify") {
     requireRole(a, "manager");

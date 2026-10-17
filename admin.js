@@ -520,7 +520,9 @@
         .map(([t, v]) => `<div><small>${t}</small><b>${e(v || "—")}</b></div>`)
         .join(
           "",
-        )}</div><h3 style="margin-top:22px">بيانات العميل</h3>${Object.entries(
+        )}</div>${can && o.status==="completed" && o.provider_order_id
+        ? '<div class="actions" style="margin-top:15px"><button type="button" class="button secondary small" data-action="sync-recipient-name" data-id="'+e(o.id)+'">مزامنة اسم الحساب من ياسين كارد</button></div>'
+        : ""}<h3 style="margin-top:22px">بيانات العميل</h3>${Object.entries(
         o.customer_fields || {},
       )
         .map(
@@ -2503,6 +2505,28 @@
         const linked = S.list.find((x) => x.id === b.dataset.id)?.order;
         if (!linked?.id) throw new Error("تعذّر تحميل الطلب المرتبط");
         detailOrder(linked);
+      } else if (action === "sync-recipient-name") {
+        if(b.disabled)return;
+        if(!S.detail?.id || S.detail.id!==b.dataset.id)throw new Error("افتح تفاصيل الطلب أولًا");
+        b.disabled=true;
+        const label=b.textContent;
+        b.textContent="جارٍ قراءة رد المورّد…";
+        try {
+          const result=await A.call("staff.sync_recipient_name",{id:S.detail.id});
+          if(result.saved && result.name){
+            S.detail.supplier_account_name=result.name;
+            const record=S.list?.find(row=>row.id===S.detail.id);
+            if(record)record.supplier_account_name=result.name;
+            detailOrder(S.detail);
+            toast("تم حفظ اسم الحساب من ردّ المورد: "+result.name);
+          } else {
+            toast(result.available===false
+              ? "لم يعد المورد يؤكد اكتمال الطلب؛ لم نغيّر حالة الطلب أو الرصيد"
+              : "المورد لم يُرسل اسم حساب يمكن التحقق منه ضمن الرد. لم يُغيّر المتجر أي بيانات مالية.");
+          }
+        }finally{
+          if(b.isConnected){b.disabled=false;b.textContent=label;}
+        }
       } else if (action === "refresh-alerts") {
         await alertsPage();
       } else
