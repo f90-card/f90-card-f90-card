@@ -50,6 +50,7 @@
     ["audit", "سجل الإدارة", "shield", ["manager"]],
     ["users", "العملاء والأرصدة", "user", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
+    ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
@@ -177,7 +178,7 @@
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
       ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit"]],
-      ["العملاء والتجار",["users","traders","leaderboard"]],
+      ["العملاء والتجار",["users","traders","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
       ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
@@ -2193,6 +2194,7 @@
       else if (page === "media-center") await mediaCenter();
       else if (page === "telegram-alerts") await telegramAlerts();
       else if (page === "traders") await traders();
+      else if (page === "agents") await window.F90Agents.adminPage(main);
     } catch (err) {
       main.innerHTML =
         head("تعذّر فتح الأدوات") +
