@@ -46,6 +46,11 @@
   ],
   "redirects": [
     {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/tests/:path*",
       "destination": "/",
       "permanent": false
