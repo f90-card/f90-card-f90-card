@@ -11,9 +11,9 @@ const welcome = app.split("function welcome() {")[1]?.split("function musicPage(
 
 test("welcome includes an early skip button linking directly to store", () => {
   assert.ok(welcome, "welcome screen must exist");
-  assert.match(welcome, /class="f90-welcome-skip" href="#\/"/);
+  assert.match(welcome, /class="f90-welcome-skip" data-f90-store-entry href="\.\/index\.html#\/"/);
   assert.match(welcome, /تخطي الترحيب/);
-  assert.match(welcome, /class="button f90-welcome-enter" href="#\/"/);
+  assert.match(welcome, /class="button f90-welcome-enter" data-f90-store-entry href="\.\/index\.html#\/"/);
   assert.match(welcome, /الدخول إلى المتجر/);
   assert.ok(welcome.indexOf("f90-welcome-enter") < welcome.indexOf('href="#/deposit"'), "store entry must precede deposit");
 });
@@ -32,4 +32,13 @@ test("mobile skip button styling ships with refreshed styles and script", () => 
   assert.match(index, /f90-experience-v3\.css\?v=20261017-welcome-entry1/);
   // The storefront script version changes whenever new features ship.
   assert.match(index, /app\.js\?v=[\w-]+/);
+});
+
+// A new domain has separate browser storage; do not mask welcome with old campaign popups.
+test("welcome entry remains usable on the new custom domain", () => {
+  assert.match(app, /const mayShowLaunchPromotion=initialPage!=="welcome"&&!justEnteredFromWelcome/);
+  assert.match(app, /if \(mayShowLaunchPromotion && channelValid/);
+  assert.match(app, /if \(mayShowLaunchPromotion && popup\?\.enabled/);
+  assert.match(welcome, /data-f90-store-entry href="\.\/index\.html#\/"/);
+  assert.match(app, /sessionStorage\.setItem\("f90-welcome-entry-uninterrupted","1"\)/);
 });

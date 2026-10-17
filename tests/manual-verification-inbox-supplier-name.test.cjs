@@ -62,6 +62,6 @@ test("nickname is never guessed from ID and only shown when supplied",()=>{
 });
 
 test("frontend shell loads all necessary files",()=>{
- assert.match(file("index.html"),/app\.js\?v=20261017-recipient-name1/);
+ assert.match(file("index.html"),/app\.js\?v=[\w-]+/);
  assert.match(file("admin.html"),/admin\.js\?v=[\w-]+/);
 });
