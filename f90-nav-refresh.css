@@ -285,3 +285,70 @@
 #drawer .f90-drawer-quick-grid a:nth-child(n){border-color:rgba(250,47,89,.7)!important;background:linear-gradient(125deg,rgba(248,42,87,.12),rgba(28,20,37,.24))!important}
 :root[data-theme="cream"] #drawer #drawerLinks>a,:root[data-theme="cream"] #drawer #drawerLinks>button,:root[data-theme="cream"] #drawer .f90-drawer-quick-grid a{color:#742341!important;background:rgba(255,232,238,.95)!important}
 @media(prefers-reduced-motion:reduce){#drawer #drawerLinks>a,#drawer #drawerLinks>button{transition:none!important}}
+
+
+/* Compact F90 storefront drawer: existing links, VIP card, logo and themes stay intact. */
+#drawer #drawerLinks .f90-drawer-accordion {
+  margin: 9px 12px;
+  border: 1px solid rgba(247,94,136,.23);
+  border-radius: 15px;
+  background: linear-gradient(120deg,rgba(255,255,255,.035),rgba(202,49,105,.07));
+  overflow: hidden;
+}
+#drawer #drawerLinks .f90-drawer-accordion > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; min-height: 46px; padding: 11px 14px;
+  color: var(--text); font-size: 13px; font-weight: 750;
+  cursor: pointer; list-style: none;
+}
+#drawer #drawerLinks .f90-drawer-accordion > summary::-webkit-details-marker { display: none; }
+#drawer #drawerLinks .f90-drawer-accordion > summary::after {
+  content: "⌄"; font-size: 20px; color: #ff7c9a; line-height: 1;
+  transition: transform .16s ease;
+}
+#drawer #drawerLinks .f90-drawer-accordion[open] > summary::after { transform: rotate(180deg); }
+#drawer #drawerLinks .f90-drawer-accordion > summary:focus-visible,
+#drawer #drawerLinks .f90-drawer-accordion-links a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -2px;
+}
+#drawer #drawerLinks .f90-drawer-accordion-links {
+  display: grid; gap: 4px; padding: 0 6px 8px;
+}
+#drawer #drawerLinks .f90-drawer-accordion-links > a {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0; min-height: 42px; padding: 8px 12px; border-radius: 11px;
+  border: 1px solid transparent; color: var(--text); text-decoration: none;
+  font-size: 13px; font-weight: 650;
+}
+#drawer #drawerLinks .f90-drawer-accordion-links > a:hover {
+  background: rgba(233,71,114,.12); border-color: rgba(247,94,136,.25);
+}
+#drawer #drawerLinks .f90-drawer-accordion-links svg { flex-shrink: 0; }
+:root[data-theme="cream"] #drawer #drawerLinks .f90-drawer-accordion {
+  background: #fff7fa; border-color: #ead0d9;
+}
+:root[data-theme="cream"] #drawer #drawerLinks .f90-drawer-accordion > summary,
+:root[data-theme="cream"] #drawer #drawerLinks .f90-drawer-accordion-links > a {
+  color: #562e42;
+}
+@media (prefers-reduced-motion: reduce) {
+  #drawer #drawerLinks .f90-drawer-accordion > summary::after { transition: none; }
+}
+/* Render offscreen informational panels only when near the viewport. */
+#mainContent .f90-home-social,
+#mainContent .value-strip {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+/* The complete first-visit introduction remains accessible without crowding home. */
+#mainContent .f90-home-intro-fold { margin: 12px 0 18px; }
+#mainContent .f90-home-intro-fold > summary {
+  cursor: pointer; list-style: none; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text);
+  border-radius: 13px; padding: 11px 16px; font-weight: 750;
+}
+#mainContent .f90-home-intro-fold > summary::-webkit-details-marker { display: none; }
+#mainContent .f90-home-intro-fold > summary::before { content: "＋"; color: var(--accent); margin-inline-end: 9px; }
+#mainContent .f90-home-intro-fold[open] > summary::before { content: "−"; }
+#mainContent .f90-home-intro-fold > .f90-home-intro { margin-top: 12px; }

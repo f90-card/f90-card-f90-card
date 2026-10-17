@@ -63,13 +63,26 @@
     .toLocaleLowerCase().replace(/[\u064b-\u065f\u0670\u0640]/g, "")
     .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
     .replace(/[پڤ]/g, "ف").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  // Search aliases and normalized keys are static for a given product name;
+  // memoizing them makes repeat searches fast without altering matching.
+  const generic = new Set(["live", "chat", "party", "mobile", "pool", "game", "card"]);
+  const aliasPairs = pairs.map(([arabic, english]) => ({
+    arabic: normalize(arabic),
+    words: english.split(" ").filter(word => word.length > 3 && !generic.has(word)),
+    label: arabic + " " + english
+  }));
+  const keyCache = new Map();
   function keys(value, aliases = []) {
     const base = normalize([value, ...aliases].join(" "));
-    const generic = new Set(["live", "chat", "party", "mobile", "pool", "game", "card"]);
-    const extra = pairs.filter(([arabic, english]) =>
-      base.includes(normalize(arabic)) || english.split(" ").some(word => word.length > 3 && !generic.has(word) && base.split(" ").includes(word)))
-      .map(([arabic, english]) => arabic + " " + english);
-    return normalize(base + " " + extra.join(" "));
+    if (keyCache.has(base)) return keyCache.get(base);
+    const words = new Set(base.split(" "));
+    const extra = aliasPairs.filter(({arabic, words: terms}) =>
+      base.includes(arabic) || terms.some(word => words.has(word)))
+      .map(pair => pair.label);
+    const output = normalize(base + " " + extra.join(" "));
+    if (keyCache.size >= 1600) keyCache.clear();
+    keyCache.set(base, output);
+    return output;
   }
   function matches(value, query, aliases = []) {
     const haystack = keys(value, aliases);

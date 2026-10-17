@@ -171,6 +171,8 @@
     $("adminIdentity").textContent =
       `${S.me?.profile.display_name || ""} · ${C.roles[S.me?.role] || ""}`;
   }
+  // Keep staff sidebar groups open when staff navigate between pages.
+  const adminOpenGroups = new Set();
   function navigation() {
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
@@ -185,8 +187,8 @@
     $("adminNav").innerHTML=buckets.map(([title,ids])=>{
       const items=ids.map(id=>allowed.find(x=>x[0]===id)).filter(Boolean);
       if(!items.length)return '';
-      const expanded=items.some(x=>x[0]===S.active);
-      return '<details class="f90-admin-group" '+(expanded?'open':'')+'><summary>'+title+'</summary>'+
+      const expanded=items.some(x=>x[0]===S.active) || adminOpenGroups.has(title);
+      return '<details class="f90-admin-group" data-admin-group="'+e(title)+'" '+(expanded?'open':'')+'><summary>'+e(title)+'</summary>'+
         '<div class="f90-admin-group-links">'+items.map(link).join("")+'</div></details>';
     }).join("");
   }
@@ -3220,6 +3222,13 @@
     setAdminMenu(!document.body.classList.contains("admin-menu-open")),
   );
   $("adminNav").addEventListener("click", (event) => {
+    const summary = event.target.closest("summary");
+    const section = summary?.closest("details[data-admin-group]");
+    if (section) {
+      // Click runs before the native details toggle.
+      if (section.open) adminOpenGroups.delete(section.dataset.adminGroup);
+      else adminOpenGroups.add(section.dataset.adminGroup);
+    }
     if (event.target.closest("a")) setAdminMenu(false);
   });
   document.addEventListener("keydown", (event) => {
@@ -3279,6 +3288,10 @@
       }
     }
   });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && S.me && !S.me.needs_mfa)
+      refreshAdminAlerts().catch(() => {});
+  });
   window.addEventListener("hashchange", () => {
     S.offset = 0;
     S.filter = "";
@@ -3335,7 +3348,11 @@
       await route();
       clearInterval(alertsTimer);
       refreshAdminAlerts().catch(() => {});
-      alertsTimer = setInterval(() => refreshAdminAlerts().catch(() => {}), 45000);
+      // Avoid needless network requests while the dashboard is backgrounded.
+      alertsTimer = setInterval(() => {
+        if (document.visibilityState === "visible")
+          refreshAdminAlerts().catch(() => {});
+      }, 45000);
     } catch (err) {
       main.innerHTML =
         head("تعذّر الاتصال") +
