@@ -1,7 +1,7 @@
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 import json
-url="https://f90-card.github.io/f90-card-f90-card/index.html#/"
+url="https://f90card.online/index.html#/"
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
  page=browser.new_page(viewport={"width":390,"height":844},device_scale_factor=1,locale="ar-PS",is_mobile=True,has_touch=True)
@@ -54,6 +54,16 @@ with sync_playwright() as p:
  returned=page.evaluate("window.scrollY")
  assert page.evaluate("location.hash==='#/'"),"Back did not return home"
  assert abs(returned-before)<180,("Back scroll did not restore",before,returned)
+ # Exercise real touch/click navigation on the connected custom domain.
+ # A first-time visitor must never be trapped behind the promotional modal.
+ for selector in (".f90-welcome-skip", ".f90-welcome-enter"):
+   page.goto("https://f90card.online/index.html#/welcome",wait_until="domcontentloaded",timeout=60000)
+   page.locator(selector).wait_for(state="visible",timeout=20000)
+   page.locator(selector).click(timeout=10000)
+   page.wait_for_function("location.hash==='#/'",timeout=20000)
+   page.wait_for_function("document.querySelector('#mainContent')?.dataset.page==='home'",timeout=20000)
+   assert page.locator('#modalRoot .modal').count()==0,selector+" trapped by announcement"
+ assert not errors,("Browser JavaScript errors",errors[:5])
  page.screenshot(path="/tmp/f90-navigation-postfix.png")
  print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5],"floating_before":fixed_before,"floating_after":fixed_after},ensure_ascii=False))
  browser.close()
