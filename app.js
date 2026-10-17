@@ -1438,6 +1438,8 @@
       image(o.product_image,o.product_name,"record-image")+
       '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(o.product_name)+'</h3>'+status(state)+'</div>'+
       '<small>طلب #'+e(o.order_number)+' · '+e(C.date(o.created_at))+'</small>'+
+      (orderRecipientFields(o).accountId?'<small> ID: '+e(orderRecipientFields(o).accountId)+'</small>':'')+
+      (orderRecipientFields(o).accountName?'<small>اسم الحساب'+(orderRecipientFields(o).accountNameSource==="supplier"?" (المورّد)":"")+': '+e(orderRecipientFields(o).accountName)+'</small>':'')+
       '<strong class="f90-history-sum">'+e(accountMoney(o.total_usd))+'</strong></div>'+
       '<span class="f90-history-open" aria-hidden="true">‹</span></a>';
   }
@@ -1533,9 +1535,11 @@
     // param_1 is the supplied service recipient field for many older orders.
     // We never claim an externally verified player name from a numeric ID.
     const accountId=pick(["account_id","player_id","playerid","uid","game_id","user_id","recipient_id","target_id","param_1"]);
-    const accountName=pick(["account_name","player_name","character_name","nickname","username","recipient_name","in_game_name"]);
+    const suppliedName=pick(["account_name","player_name","character_name","nickname","username","recipient_name","in_game_name"]);
+    const supplierName=typeof o.supplier_account_name==="string"?o.supplier_account_name.trim():"";
+    const accountName=supplierName||suppliedName;
     const extras=values.filter(([key])=>!["account_id","player_id","playerid","uid","game_id","user_id","recipient_id","target_id","param_1","account_name","player_name","character_name","nickname","username","recipient_name","in_game_name"].includes(key.toLowerCase()));
-    return {accountId,accountName,extras};
+    return {accountId,accountName,accountNameSource:supplierName?"supplier":suppliedName?"entered":"",extras};
   }
   function orderSummaryFields(o){
     const recipient=orderRecipientFields(o);
@@ -1550,7 +1554,7 @@
       ["السعر الإجمالي",accountMoney(o.total_usd)],
       ["التاريخ والوقت",C.date(o.created_at)],
       ...(recipient.accountId?[["ID الشحن",recipient.accountId]]:[]),
-      ...(recipient.accountName?[["اسم الحساب المسجل",recipient.accountName]]:[])
+      ...(recipient.accountName?[[recipient.accountNameSource==="supplier"?"اسم الحساب من المورّد":"اسم الحساب المسجل",recipient.accountName]]:[])
     ];
   }
   async function order(id) {
