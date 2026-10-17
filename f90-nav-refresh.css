@@ -340,3 +340,15 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 240px;
 }
+
+/* The complete first-visit introduction remains accessible without crowding home. */
+#mainContent .f90-home-intro-fold { margin: 12px 0 18px; }
+#mainContent .f90-home-intro-fold > summary {
+  cursor: pointer; list-style: none; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text);
+  border-radius: 13px; padding: 11px 16px; font-weight: 750;
+}
+#mainContent .f90-home-intro-fold > summary::-webkit-details-marker { display: none; }
+#mainContent .f90-home-intro-fold > summary::before { content: "＋"; color: var(--accent); margin-inline-end: 9px; }
+#mainContent .f90-home-intro-fold[open] > summary::before { content: "−"; }
+#mainContent .f90-home-intro-fold > .f90-home-intro { margin-top: 12px; }
