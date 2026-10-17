@@ -1952,7 +1952,7 @@
         form.dataset.mode === "register"
       )
         throw new Error("استخدم كلمة مرور من عشرة أحرف على الأقل");
-      const redirect = new URL("./index.html", location.href).href;
+      const redirect = "https://www.f90card.online/"; // Verified production origin for Auth email callbacks.
       if (form.dataset.mode === "register") {
         const r = await A.client.auth.signUp({
           email: data.email,
@@ -1979,7 +1979,7 @@
         }
       } else if (form.dataset.mode === "forgot") {
         const r = await A.client.auth.resetPasswordForEmail(data.email, {
-          redirectTo: redirect + "#/reset",
+          redirectTo: redirect, // Supabase recovery event opens #/reset after consuming token.
         });
         if (r.error)
           throw new Error("تعذّر إرسال رسالة الاستعادة. حاول لاحقًا");
@@ -2491,7 +2491,7 @@
       else if (action === "google") {
         const r = await A.client.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: new URL("./index.html", location.href).href },
+          options: { redirectTo: "https://www.f90card.online/" },
         });
         if (r.error)
           throw new Error(

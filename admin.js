@@ -2693,7 +2693,7 @@
       } else if (action === "reset-user") {
         await A.call("staff.reset_password", {
           id: S.detail.id,
-          redirect_to: new URL("./index.html", location.href).href + "#/reset",
+          redirect_to: "https://www.f90card.online/", // recovery event handles #/reset
         });
         toast("أُرسل رابط الاستعادة إلى بريد العميل");
       } else if (action === "trader-keys") {
@@ -3309,7 +3309,7 @@
   });
   $("adminLogout").addEventListener("click", async () => {
     await A.client.auth.signOut();
-    location.href = "./index.html#/auth";
+    location.href = "https://www.f90card.online/#/auth";
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
@@ -3402,7 +3402,7 @@
     } catch (err) {
       main.innerHTML =
         head("تعذّر الاتصال") +
-        `<div class="notice error">${e(errorMessage(err))}</div><div class="actions"><button class="button" id="f90AdminBootRetry" type="button">إعادة محاولة الاتصال</button><a class="button secondary" href="./index.html#/auth">العودة لتسجيل الدخول</a></div>`;
+        `<div class="notice error">${e(errorMessage(err))}</div><div class="actions"><button class="button" id="f90AdminBootRetry" type="button">إعادة محاولة الاتصال</button><a class="button secondary" href="https://www.f90card.online/#/auth">العودة لتسجيل الدخول</a></div>`;
       $("f90AdminBootRetry")?.addEventListener("click", () => boot());
     }
   }
