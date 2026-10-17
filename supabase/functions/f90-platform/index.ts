@@ -591,6 +591,36 @@ async function smmCatalogFetch() {
     throw e;
   }
 }
+function supplierRecipientNickname(data:any): string | null {
+  // Supplier-provided names only. Never infer a player nickname from a numeric ID.
+  const keys = ["account_name","player_name","nickname","username",
+    "user_name","character_name","recipient_name","in_game_name"];
+  for(const parent of [data,data?.account,data?.player]){
+    if(!parent || typeof parent!=="object" || Array.isArray(parent)) continue;
+    for(const key of keys){
+      const raw=parent[key];
+      if(typeof raw!=="string")continue;
+      const value=raw.trim();
+      if(value.length>=2 && value.length<=120 &&
+         !/^[0-9]+$/.test(value) && !/[\x00-\x1F\x7F]/.test(value))
+        return value;
+    }
+  }
+  return null;
+}
+async function rememberSupplierNickname(orderId:string,response:any) {
+  const nickname=supplierRecipientNickname(response);
+  if(!nickname)return;
+  // Optional metadata must never fail a paid order or change its state.
+  try {
+    const result=await db.from("f90_orders")
+      .update({supplier_account_name:nickname})
+      .eq("id",orderId).is("supplier_account_name",null);
+    if(result.error)console.error("Supplier nickname save failed",result.error.code);
+  } catch {
+    console.error("Supplier nickname save failed");
+  }
+}
 async function work() {
   const orders = await rpc("f90_claim_work");
   let processed = 0;
@@ -641,11 +671,13 @@ async function work() {
           p_note: "استلم المورّد الطلب",
           p_external: String(external),
         });
+        await rememberSupplierNickname(o.id,response);
       } else {
         const data = await providerAction(o.provider_id, "status", {
           order: o.provider_order_id,
         });
         const state = normalizeStatus(data, o.total_usd, o.quantity);
+        await rememberSupplierNickname(o.id,data);
         if (state.status !== "processing")
           await rpc("f90_order_transition", {
             p_actor: null,
@@ -997,6 +1029,68 @@ async function staff(a: Actor, b: any) {
     check(await db.from("site_settings").update({config}).eq("id",1).select("id").single());
     await auditSafe(a.id,"radio.configure","radio",{enabled,mode,has_media:!!p,has_direct:!!direct});
     return {saved:true,enabled,revision};
+  }
+  if (action === "staff.inbox") {
+    requireRole(a, "manager", "admin", "support");
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    const canReviewIdentity = a.role !== "support";
+    const canViewUsers = a.role === "manager";
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const [orderReply, requestsReply, depositsReply, verificationReply, usersReply] =
+      await Promise.all([
+        db.from("f90_orders")
+          .select("id,order_number,product_name,status,created_at")
+          .in("status", ["pending","queued","submitting","processing","review"])
+          .order("created_at",{ascending:false}).limit(15),
+        db.from("f90_order_requests")
+          .select("id,order_id,kind,reason,status,created_at")
+          .eq("status","pending").order("created_at",{ascending:false}).limit(10),
+        canReviewIdentity ? db.from("f90_deposits")
+          .select("id,method_name,amount,currency,status,created_at")
+          .eq("status","pending").order("created_at",{ascending:false}).limit(10)
+          : Promise.resolve({ data: [], error:null }),
+        canReviewIdentity ? db.from("f90_verifications")
+          .select("id,status,created_at")
+          .eq("status","pending").order("created_at",{ascending:false}).limit(10)
+          : Promise.resolve({ data: [], error:null }),
+        canViewUsers ? db.from("profiles")
+          .select("id,display_name,created_at")
+          .gte("created_at",since).order("created_at",{ascending:false}).limit(10)
+          : Promise.resolve({ data: [], error:null }),
+      ]);
+    const orders = check(orderReply), requests = check(requestsReply),
+      deposits = check(depositsReply), verifications = check(verificationReply),
+      users = check(usersReply);
+    const items = [
+      ...orders.map((o:any) => ({
+        kind:"orders", id:o.id, created_at:o.created_at,
+        title:"طلب شحن جديد #" + String(o.order_number||""),
+        detail:String(o.product_name||"خدمة رقمية").slice(0,150) +
+          " · الحالة: " + String(o.status||"قيد التنفيذ"),
+      })),
+      ...requests.map((o:any) => ({
+        kind:"order-requests", id:o.id, created_at:o.created_at,
+        title:o.kind==="cancel"?"طلب إلغاء من عميل":"اعتراض على طلب",
+        detail:"طلب مرتبط بالشحن · " + String(o.reason||"").slice(0,170),
+      })),
+      ...deposits.map((o:any) => ({
+        kind:"deposits", id:o.id, created_at:o.created_at,
+        title:"إيداع جديد بانتظار المراجعة",
+        detail:String(o.method_name||"وسيلة دفع") + " · " +
+          String(o.amount||"") + " " + String(o.currency||""),
+      })),
+      ...verifications.map((o:any) => ({
+        kind:"verification", id:o.id, created_at:o.created_at,
+        title:"طلب توثيق هوية جديد",
+        detail:"مستندات الهوية الخاصة تنتظر مراجعة موظف مخوّل",
+      })),
+      ...users.map((o:any) => ({
+        kind:"users", id:o.id, created_at:o.created_at,
+        title:"حساب جديد في المتجر",
+        detail:String(o.display_name||"عميل جديد").slice(0,100),
+      })),
+    ];
+    return { items:items.sort((x,y)=>String(y.created_at).localeCompare(String(x.created_at))).slice(0,45) };
   }
   if (action === "staff.alerts") {
     requireRole(a, "manager", "admin", "support");
@@ -1613,6 +1707,15 @@ async function staff(a: Actor, b: any) {
       p_note: text(b.note, 500),
       p_request: uuid(b.request_id),
       p_expected: num(b.expected_balance,0,1e12),
+    });
+  }
+  if (action === "staff.manual_verify") {
+    requireRole(a, "manager");
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    const reason = text(b.reason, 500).trim();
+    if (reason.length < 8) throw new AppError("F90_FIELDS",400,"اكتب سبب اعتماد الحساب ونتيجة المراجعة (٨ أحرف على الأقل)");
+    return rpc("f90_manual_verify_account", {
+      p_actor:a.id, p_user:uuid(b.id), p_reason:reason
     });
   }
   if (action === "staff.user") {
