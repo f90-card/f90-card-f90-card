@@ -79,6 +79,46 @@
       "source": "/vercel.json",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/marketing/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/assets/app-image-sources.json",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/assets/README.md",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/SETUP.md",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/REVIEW.md",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/F90_REMAINING_WORK.md",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/.gitignore",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/COPYRIGHT.md",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }
