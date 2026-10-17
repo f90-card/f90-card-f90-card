@@ -1,7 +1,6 @@
-# F90 CARD GitHub Pages project site.
-# Note: crawler-wide robots directives apply only from the domain root,
-# not from a subdirectory project URL. This file also advertises the sitemap.
+# Official F90 CARD sitemap for the custom domain.
+# GitHub Pages mirrors may serve this file, but the canonical URLs are on www.f90card.online.
 User-agent: *
 Allow: /
 
-Sitemap: https://f90-card.github.io/f90-card-f90-card/sitemap.xml
+Sitemap: https://www.f90card.online/sitemap.xml
