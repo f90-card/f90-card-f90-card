@@ -629,13 +629,13 @@
     const heroArt=C.safeUrl(w.image_url||c.hero_image||"./assets/sections/hero.png");
     const cards=[["grid","استكشف الأقسام","اختر من الألعاب والتطبيقات والخدمات المتاحة","#/"],["wallet","محفظة واضحة","اعرف رصيدك وتابع الإيداعات والحركات","#/wallet"],["clock","طلباتك خطوة بخطوة","راجع الحالة والتفاصيل من حسابك","#/orders"],["shield","شراء بمعلومات واضحة","تحقق من الخدمة والسعر قبل التأكيد","#/policy/purchase"]];
     main.innerHTML=`<div class="f90-experience" dir="rtl">
-      <section class="f90-experience-hero" aria-labelledby="f90-experience-title"><a class="f90-welcome-skip" href="#/" aria-label="تخطي الترحيب والدخول إلى المتجر">تخطي الترحيب <span aria-hidden="true">←</span></a><div class="f90-welcome-lightmarks" aria-hidden="true"><i>F90</i><i>PLAY</i><i>LIVE</i><i>F90</i><i>CARD</i><i>EXPLORE</i></div>
+      <section class="f90-experience-hero" aria-labelledby="f90-experience-title"><a class="f90-welcome-skip" data-f90-store-entry href="./index.html#/" aria-label="تخطي الترحيب والدخول إلى المتجر">تخطي الترحيب <span aria-hidden="true">←</span></a><div class="f90-welcome-lightmarks" aria-hidden="true"><i>F90</i><i>PLAY</i><i>LIVE</i><i>F90</i><i>CARD</i><i>EXPLORE</i></div>
         <div class="f90-experience-orbit orbit-one" aria-hidden="true"></div><div class="f90-experience-orbit orbit-two" aria-hidden="true"></div>
         <div class="f90-experience-copy"><span class="f90-experience-chip"><span class="f90-live-dot"></span> F90 CARD · أف تسعين كارد</span>
         <p class="f90-experience-pretitle">وجهتك إلى عالم الخدمات الرقمية</p>
         <h1 id="f90-experience-title">${e(w.title_ar || "عالمك الرقمي يبدأ هنا")} <span>F90 CARD.</span></h1>
         <p class="f90-experience-description">${e(w.subtitle_ar||"الألعاب، شحن التطبيقات والخدمات الرقمية في تجربة عربية واحدة. تصفّح، اختر، وتابع كل طلب بوضوح.")}</p>
-        <div class="f90-experience-actions"><a class="button f90-welcome-enter" href="#/">الدخول إلى المتجر ${I("arrow-left")}</a><a class="button secondary f90-welcome-deposit" href="#/deposit">إيداع نقود الآن ${I("wallet")}</a>${f90InstallShortcuts(["ios","android","windows"],"hero")}</div>
+        <div class="f90-experience-actions"><a class="button f90-welcome-enter" data-f90-store-entry href="./index.html#/">الدخول إلى المتجر ${I("arrow-left")}</a><a class="button secondary f90-welcome-deposit" href="#/deposit">إيداع نقود الآن ${I("wallet")}</a>${f90InstallShortcuts(["ios","android","windows"],"hero")}</div>
         <div class="f90-experience-signals"><span>${I("shield")} حساب موثّق للشراء</span><span>${I("clock")} متابعة الطلبات</span><span>${I("wallet")} محفظة بالدولار</span></div><div class="f90-experience-real-stats" aria-label="مؤشرات فعلية من المتجر"><div><strong>${S.categories.filter(c=>c.is_active&&!c.parent_id).length}</strong><span>قسم رئيسي متاح</span></div><div><strong>${available.length}</strong><span>خدمة متاحة بالكتالوج</span></div><div><strong>${methods.length}</strong><span>طريقة إيداع مفعّلة</span></div></div></div>
         <div class="f90-experience-visual"><div class="f90-experience-halo" aria-hidden="true"></div><div class="f90-experience-emblem"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="الشعار الرسمي لمتجر أف تسعين كارد" fetchpriority="high" decoding="async"><strong>F90 CARD</strong><span>PLAY · CONNECT · EXPLORE</span></div><div class="f90-experience-float float-a">${I("grid")} ألعاب وتطبيقات</div><div class="f90-experience-float float-b">${I("wallet")} خدمات رقمية</div></div>
         <a class="f90-experience-scroll" href="#f90-experience-discover">اكتشف المزيد ↓</a>
@@ -645,7 +645,7 @@
       <section class="f90-experience-journey"><div class="f90-experience-section-heading"><span class="f90-experience-overline">من البداية إلى المتابعة</span><h2>ثلاث خطوات <em>واضحة.</em></h2></div><div class="f90-experience-steps"><article><b>01</b><h3>أنشئ حسابك</h3><p>سجّل حسابًا ووثّقه قبل الإيداع والشراء.</p></article><article><b>02</b><h3>اختر خدمتك</h3><p>راجع بيانات الطلب والتكلفة قبل التأكيد.</p></article><article><b>03</b><h3>تابع التنفيذ</h3><p>راقب حالة طلبك وحركات رصيدك داخل حسابك.</p></article></div></section>
       <section class="f90-experience-section"><div class="f90-experience-section-heading"><span class="f90-experience-overline">الدفع والمحفظة</span><h2>خيارات الإيداع <em>المفعّلة.</em></h2><p>طرق الدفع أدناه مأخوذة من إعدادات المتجر الحالية.</p></div>${methods.length?`<div class="f90-experience-methods">${methods.map(m=>`<div class="f90-experience-method">${image(m.image_url,m.name_ar)}<strong>${e(m.name_ar)}</strong></div>`).join("")}</div>`:'<p class="muted">لا توجد طرق إيداع مفعّلة حاليًا.</p>'}<p class="muted small">إضافة الرصيد تتم بعد مراجعة التحويل واعتماده من الإدارة.</p></section>
       <section class="f90-experience-section f90-experience-questions"><div class="f90-experience-section-heading"><span class="f90-experience-overline">إجابات سريعة</span><h2>أسئلة <em>شائعة.</em></h2></div><div class="f90-experience-faq"><details><summary>كيف أبدأ باستخدام المتجر؟</summary><p>أنشئ حسابًا ثم وثّقه إذا أردت الإيداع والشراء، واختر الخدمة المناسبة من الأقسام.</p></details><details><summary>كيف أتابع طلباتي؟</summary><p>افتح صفحة طلباتي من القائمة أو من حسابك للاطلاع على حالة التنفيذ.</p></details><details><summary>متى يظهر الرصيد بعد الإيداع؟</summary><p>يظهر الرصيد بعد اعتماد طلب الإيداع من الإدارة. تابع حالته من سجل الإيداعات.</p></details><details><summary>ماذا لو كانت الخدمة قيد التعبئة؟</summary><p>الخدمة غير متاحة للطلب مؤقتًا، ويمكنك الرجوع لاحقًا لمعرفة حالة توفرها.</p></details></div></section>
-      <section class="f90-experience-end"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="lazy"><div><span class="f90-experience-overline">F90 CARD</span><h2>جاهز تبدأ رحلتك؟</h2><p>اكتشف الأقسام، أو تعرف أكثر على المتجر وخدماته.</p></div><div class="f90-experience-actions"><a class="button" href="#/">دخول المتجر</a><a class="button secondary" href="#/policy/about">عن F90 CARD</a><a class="button secondary" href="#/api-guide">بوابة المبرمجين</a></div></section>
+      <section class="f90-experience-end"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="lazy"><div><span class="f90-experience-overline">F90 CARD</span><h2>جاهز تبدأ رحلتك؟</h2><p>اكتشف الأقسام، أو تعرف أكثر على المتجر وخدماته.</p></div><div class="f90-experience-actions"><a class="button" data-f90-store-entry href="./index.html#/">دخول المتجر</a><a class="button secondary" href="#/policy/about">عن F90 CARD</a><a class="button secondary" href="#/api-guide">بوابة المبرمجين</a></div></section>
       <nav class="f90-experience-legal" aria-label="معلومات المتجر"><a href="#/policy/privacy">الخصوصية</a><a href="#/policy/terms">الشروط</a><a href="#/policy/purchase">الشراء والاسترداد</a><a href="#/support">الدعم الفني</a></nav>
     </div>`;
   }
@@ -2747,6 +2747,11 @@
         f90RouteHash:location.hash||"#/"}, "",location.href);
     }catch{}
   }
+  // Welcome exits are real links, not only hash transitions; keep their first landing unobstructed.
+  document.addEventListener("click",ev=>{
+    if(!ev.target.closest?.("a[data-f90-store-entry]"))return;
+    try{sessionStorage.setItem("f90-welcome-entry-uninterrupted","1")}catch{}
+  },{capture:true});
   // Record the current page *before* a link changes the hash.
   document.addEventListener("click",ev=>{
     const link=ev.target.closest?.('a[href^="#/"]');
@@ -3018,20 +3023,29 @@
           catalogRefreshBusy = false;
         }
       }, 360000);
+      // On the newly connected domain first-time storage is empty. Do not overlay welcome
+      // or interrupt its immediate store-entry transition with promotion dialogs.
+      let justEnteredFromWelcome=false;
+      try{
+        justEnteredFromWelcome=sessionStorage.getItem("f90-welcome-entry-uninterrupted")==="1";
+        sessionStorage.removeItem("f90-welcome-entry-uninterrupted");
+      }catch{}
+      const initialPage=(location.hash||"#/welcome").split("/")[1]||"";
+      const mayShowLaunchPromotion=initialPage!=="welcome"&&!justEnteredFromWelcome;
       const channel = String(S.settings.config?.whatsapp_channel_url || "").trim();
       const channelValid = /^https:\/\/whatsapp\.com\/channel\/[a-zA-Z0-9]+\/?(?:\?.*)?$/.test(channel);
       const channelKey = "f90-channel-invite:" + channel;
       let channelSeen = false;
       try { channelSeen = localStorage.getItem(channelKey) === "1"; } catch {}
       // Never replace an already-open announcement or a customer form.
-      if (channelValid && S.settings.config?.whatsapp_channel_popup !== false &&
+      if (mayShowLaunchPromotion && channelValid && S.settings.config?.whatsapp_channel_popup !== false &&
           !channelSeen && !$("modalRoot")?.children.length &&
           !document.getElementById("checkoutForm") && !document.getElementById("depositForm")) {
         modal("تابع قناة F90 CARD على واتساب",
           `<div class="f90-channel-invite"><span class="f90-channel-mark" aria-hidden="true">◉</span><p>انضم إلى قناتنا الرسمية لمتابعة الإعلانات والعروض والتحديثات المهمة.</p><p class="muted small">ننصح بالانضمام حتى تصلك المستجدات. يمكنك استخدام المتجر دون الاشتراك.</p><a class="button full" href="${e(channel)}" target="_blank" rel="noopener noreferrer">الانتقال إلى قناة واتساب</a><button class="button ghost full" data-action="channel-dismiss" data-key="${e(channelKey)}">متابعة التصفح</button></div>`);
       } else {
       const popup = S.settings.config?.popup_announcement;
-      if (popup?.enabled && popup.text_ar && !popup.every_home_visit) {
+      if (mayShowLaunchPromotion && popup?.enabled && popup.text_ar && !popup.every_home_visit) {
         const key = "f90-popup-read:" + (popup.revision || popup.text_ar);
         let read = false;
         try { read = localStorage.getItem(key) === "1"; } catch {}
