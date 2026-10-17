@@ -204,7 +204,7 @@ function makeMedia(){
  const mode=item?.mode==="video"?"video":state.mode;
  const el=document.createElement(mode==="video"?"video":"audio");
  el.className="f90-radio-hidden-media";el.id="f90RadioMedia";el.controls=false;
- el.preload="auto";el.autoplay=false;el.loop=false;el.playsInline=true;
+ el.preload="metadata";el.autoplay=false;el.loop=false;el.playsInline=true;
  el.setAttribute("playsinline","");el.setAttribute("aria-hidden","true");
  if(mode==="video")el.disablePictureInPicture=true;
  document.body.appendChild(el);media=el;updateVolume();
