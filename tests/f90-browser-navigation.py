@@ -64,6 +64,17 @@ with sync_playwright() as p:
    page.wait_for_function("location.hash==='#/'",timeout=20000)
    page.wait_for_function("document.querySelector('#mainContent')?.dataset.page==='home'",timeout=20000)
    assert page.locator('#modalRoot .modal').count()==0,selector+" trapped by announcement"
+ # Read-only smoke tests for the official branded auth and admin routes.
+ page.goto("https://www.f90card.online/#/auth",wait_until="domcontentloaded",timeout=60000)
+ page.wait_for_function("document.documentElement.dataset.f90Ready==='1'",timeout=35000)
+ page.locator('button[data-action="google"]').wait_for(state="visible",timeout=20000)
+ page.locator('button[data-action="auth-tab"][data-mode="forgot"]').click(timeout=10000)
+ page.locator('form#authForm[data-mode="forgot"]').wait_for(state="visible",timeout=10000)
+ assert page.locator('button[type="submit"]').filter(has_text="أرسل رابط الاستعادة").count()>=1
+ # Don't submit credentials or send a real reset email in CI.
+ page.goto("https://www.f90card.online/admin.html#/media-center",wait_until="domcontentloaded",timeout=60000)
+ page.locator('#adminAuth').wait_for(state="visible",timeout=35000)
+ assert page.locator('#mainContent').count() == 1
  assert not errors,("Browser JavaScript errors",errors[:5])
  page.screenshot(path="/tmp/f90-navigation-postfix.png")
  print(json.dumps({"route":"passed","profile_bubble":True,"homepage_scroll":before,"new_route_scroll":forward,"returned_scroll":returned,"js_errors":errors[:5],"floating_before":fixed_before,"floating_after":fixed_after},ensure_ascii=False))
