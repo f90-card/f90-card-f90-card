@@ -298,6 +298,7 @@
     const links = [
       ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
+      ["search", "ابحث عن خدمة", "search"],
       ["welcome", "التعرّف على F90", "doc"],
       ["quran", "القرآن الكريم", "book"],
       ["favorites", "المفضلة", "heart"],
@@ -319,17 +320,16 @@
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
-    $("drawerLinks").innerHTML =
-      links
-        .map(
-          ([route, label, icon]) =>
-            route.startsWith("@")
-              ? `<div class="f90-drawer-group" role="heading">${e(label)}</div>`
-              : `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}${label}</a>`,
-        )
-        .join("") +
-      (me
-        ? "" : "");
+    // Keep every existing destination; visually collapse secondary groups.
+    let drawerGroup = false;
+    $("drawerLinks").innerHTML = links.map(([route, label, icon]) => {
+      if (route.startsWith("@")) {
+        const close = drawerGroup ? "</div></details>" : "";
+        drawerGroup = true;
+        return close + `<details class="f90-drawer-accordion" ${route === "@store" ? "open" : ""}><summary>${e(label)}</summary><div class="f90-drawer-accordion-links">`;
+      }
+      return `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}<span>${e(label)}</span></a>`;
+    }).join("") + (drawerGroup ? "</div></details>" : "");
     const staff = me && ["manager", "admin", "designer", "support"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
@@ -665,8 +665,13 @@
   // No fake services, no derived purchase prices, and only a small first batch
   // of images to preserve the storefront's mobile loading performance.
   function home() {
-    const c = S.settings.config,
-      slides = S.banners.filter((b) => C.visibleSchedule(b.presentation || {})),
+    const c = S.settings.config;
+    // Show the existing full introduction once per browser, without changing
+    // its markup, settings or artwork. It remains accessible from the drawer.
+    let introAlreadyShown = false;
+    try { introAlreadyShown = localStorage.getItem("f90-home-intro-viewed-v1") === "1"; } catch {}
+    const showHomeIntro = c.show_intro !== false && !introAlreadyShown;
+    const slides = S.banners.filter((b) => C.visibleSchedule(b.presentation || {})),
       hero =
         c.show_banners !== false && slides.length
           ? slides[S.carousel % slides.length]
@@ -675,7 +680,7 @@
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><div class="f90-hero-link"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></div><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  ${window.F90Special?.home(S.settings) || ''}
- ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
+ ${!showHomeIntro ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -697,6 +702,9 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
+    if (showHomeIntro) {
+      try { localStorage.setItem("f90-home-intro-viewed-v1", "1"); } catch {}
+    }
     syncHomePhoneVideo();
     const promoEl=$("promotionBar");
     const heroElForTicker=main.querySelector(".f90-swipe-hero");
@@ -726,7 +734,20 @@
       heroEl.addEventListener("pointerup",ev=>{if(startX===null)return;const dx=ev.clientX-startX;startX=null;if(Math.abs(dx)>45){advance(dx>0?-1:1);heroEl.dataset.swiped="1";setTimeout(()=>delete heroEl.dataset.swiped,400);}}, {passive:true});
       heroEl.querySelector(".f90-hero-link")?.addEventListener("click",ev=>{if(heroEl.dataset.swiped==="1")ev.preventDefault()});
       heroEl.f90Advance=advance;
-      bannerTimer=setInterval(()=>{if(!S.carouselPaused&&(location.hash==="#/"||!location.hash))advance();},Math.max(3,Number(c.banner_seconds)||6)*1000);
+      // Warm only the next image when idle; never preload all seven at once.
+      const warmNextBanner = () => {
+        if (navigator.connection?.saveData || document.visibilityState !== "visible") return;
+        const next = slides[(S.carousel + 1) % slides.length];
+        const src = C.safeUrl(next.image_url || c.hero_image || "./assets/sections/hero.png");
+        if (src) { const imageAhead = new Image(); imageAhead.decoding = "async"; imageAhead.src = src; }
+      };
+      if ("requestIdleCallback" in window) requestIdleCallback(warmNextBanner, {timeout: 2200});
+      else setTimeout(warmNextBanner, 1600);
+      bannerTimer=setInterval(()=>{
+        if(!S.carouselPaused && document.visibilityState === "visible" &&
+           !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches &&
+           (location.hash==="#/"||!location.hash)) advance();
+      },Math.max(3,Number(c.banner_seconds)||6)*1000);
     }
   }
   function category(slug) {
@@ -1810,9 +1831,14 @@
       else if (!page) {
         home();
         const announcement=S.settings.config?.popup_announcement;
+        const alertKey="f90-home-announcement-shown:" + String(announcement?.revision || announcement?.text_ar || "").slice(0,120);
+        let announcedThisSession=false;
+        try { announcedThisSession=sessionStorage.getItem(alertKey)==="1"; } catch {}
         if(announcement?.enabled && announcement.every_home_visit && announcement.text_ar &&
-          !S.homeAnnouncementShown && !S.settings.config?.maintenance?.enabled){
+          !S.homeAnnouncementShown && !announcedThisSession &&
+          !$("modalRoot")?.children.length && !S.settings.config?.maintenance?.enabled){
           S.homeAnnouncementShown=true;
+          try { sessionStorage.setItem(alertKey,"1"); } catch {}
           modal("إشعار F90 CARD",'<p class="f90-popup-copy">'+e(announcement.text_ar)+'</p>'+
             '<button type="button" class="button full" data-action="close-modal">متابعة المتجر</button>');
         }
@@ -2980,7 +3006,10 @@
       const channelKey = "f90-channel-invite:" + channel;
       let channelSeen = false;
       try { channelSeen = localStorage.getItem(channelKey) === "1"; } catch {}
-      if (channelValid && S.settings.config?.whatsapp_channel_popup !== false && !channelSeen) {
+      // Never replace an already-open announcement or a customer form.
+      if (channelValid && S.settings.config?.whatsapp_channel_popup !== false &&
+          !channelSeen && !$("modalRoot")?.children.length &&
+          !document.getElementById("checkoutForm") && !document.getElementById("depositForm")) {
         modal("تابع قناة F90 CARD على واتساب",
           `<div class="f90-channel-invite"><span class="f90-channel-mark" aria-hidden="true">◉</span><p>انضم إلى قناتنا الرسمية لمتابعة الإعلانات والعروض والتحديثات المهمة.</p><p class="muted small">ننصح بالانضمام حتى تصلك المستجدات. يمكنك استخدام المتجر دون الاشتراك.</p><a class="button full" href="${e(channel)}" target="_blank" rel="noopener noreferrer">الانتقال إلى قناة واتساب</a><button class="button ghost full" data-action="channel-dismiss" data-key="${e(channelKey)}">متابعة التصفح</button></div>`);
       } else {
@@ -2989,7 +3018,7 @@
         const key = "f90-popup-read:" + (popup.revision || popup.text_ar);
         let read = false;
         try { read = localStorage.getItem(key) === "1"; } catch {}
-        if (!read) {
+        if (!read && !$("modalRoot")?.children.length) {
           modal("تنبيه من أف تسعين كارد",
             `<p class="f90-popup-copy">${e(popup.text_ar)}</p><button class="button" data-action="popup-read" data-key="${e(key)}">قرأت التنبيه</button>`);
         }
