@@ -1,0 +1,22 @@
+# F90 CARD: local credentials and generated files must never enter Git
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.p12
+*.pfx
+*.key
+*.dump
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.backup
+node_modules/
+.vercel/
+supabase/.temp/
+.DS_Store
+coverage/
