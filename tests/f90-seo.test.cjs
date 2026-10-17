@@ -4,7 +4,7 @@ const fs=require("node:fs");
 const path=require("node:path");
 const root=path.join(__dirname,"..");
 const read=p=>fs.readFileSync(path.join(root,p),"utf8");
-const base="https://f90-card.github.io/f90-card-f90-card/";
+const base="https://www.f90card.online/";
 const urls=["","discover/","discover/games.html","discover/apps.html","discover/cards.html",
 "discover/streaming.html","discover/mobile.html","discover/ai.html","discover/social.html",
 "discover/services.html","discover/transfers.html","discover/accounts.html",
@@ -55,7 +55,7 @@ test("public site links to crawlable directory and all new pages",()=>{
 });
 test("project-level robots file documents real scope and sitemap link",()=>{
  const robots=read("robots.txt");
- assert.match(robots,/Sitemap: https:\/\/f90-card\.github\.io\/f90-card-f90-card\/sitemap\.xml/);
- assert.match(robots,/crawler-wide robots directives apply only from the domain root/);
+ assert.match(robots,/Sitemap: https:\/\/www\.f90card\.online\/sitemap\.xml/);
+ assert.match(robots,/Official F90 CARD sitemap for the custom domain/);
  assert.ok(!robots.includes("Disallow: /"));
 });

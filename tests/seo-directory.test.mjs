@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 const root=process.cwd();
 const read=p=>fs.readFileSync(path.join(root,p),"utf8");
-const base="https://f90-card.github.io/f90-card-f90-card/";
+const base="https://www.f90card.online/";
 const pages=["","discover/","discover/games.html","discover/apps.html","discover/cards.html","discover/streaming.html","discover/mobile.html","discover/ai.html","discover/social.html","discover/services.html","discover/transfers.html","discover/accounts.html","discover/design.html","discover/website.html"];
 const local=x=>x?x==="discover/"?"discover/index.html":x:"index.html";
 test("F90 sitemap contains only published canonical URLs without duplicates",()=>{
@@ -41,5 +41,5 @@ test("Indexability and sitemap are discoverable, while admin pages remain noinde
  assert.match(read("index.html"),/rel="sitemap"/);
  assert.match(read("index.html"),/f90-seo-directory-link/);
  assert.match(read("admin.html"),/content="noindex"/);
- assert.match(read("robots.txt"),/Sitemap: https:\/\/f90-card\.github\.io\/f90-card-f90-card\/sitemap\.xml/);
+ assert.match(read("robots.txt"),/Sitemap: https:\/\/www\.f90card\.online\/sitemap\.xml/);
 });
