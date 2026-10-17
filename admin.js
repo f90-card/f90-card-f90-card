@@ -221,6 +221,8 @@
     const badge = $("adminBellCount");
     badge.hidden = !count;
     badge.textContent = count > 99 ? "99+" : String(count);
+    // A separate, role-scoped inbox supplies actual notification records.
+    window.F90AdminInbox?.refresh().catch(()=>{});
     return r;
   }
   async function alertsPage() {
@@ -513,6 +515,7 @@
         ["التنفيذ", o.fulfillment === "automatic" ? "آلي" : "يدوي"],
         ["مدة التنفيذ", C.duration(o)],
         ["مرجع المورّد", o.provider_order_id || "—"],
+        ...(o.supplier_account_name ? [["اسم الحساب من المورّد", o.supplier_account_name]] : []),
       ]
         .map(([t, v]) => `<div><small>${t}</small><b>${e(v || "—")}</b></div>`)
         .join(
@@ -591,6 +594,11 @@
       (ledger.length ? ledger.map(x=>'<tr><td>'+e(C.date(x.created_at))+'</td><td>'+e(x.description||x.kind)+'</td><td class="'+(Number(x.amount_usd)>=0?'ledger-plus':'ledger-minus')+'">'+e(C.money(x.amount_usd,"USD",true))+'</td><td>'+e(C.money(x.balance_after,"USD",true))+'</td></tr>').join("") : '<tr><td colspan="4">لا توجد حركات رصيد بعد</td></tr>')+
       '</tbody></table></div><p class="muted small">آخر 50 حركة. السجل الكامل متاح في قسم السجل المالي.</p></section>'+
       '<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
+      (u.is_verified
+        ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p></section>'
+        : '<section class="panel"><h3>اعتماد الحساب يدويًا للإيداع والشراء</h3><p class="muted small">هذا اعتماد داخلي بالمتجر، وليس إثبات هوية قانونيًا. لا تستخدمه إلا بعد مراجعة بيانات العميل. سيُسجّل اسم المدير وسبب الاعتماد في سجل الإدارة.</p>'+
+          '<form id="f90ManualVerificationForm">'+field("reason","سبب الاعتماد وما الذي تمت مراجعته","textarea","",'required minlength="8" maxlength="500"')+
+          '<button class="button" type="submit">اعتماد الحساب للإيداع والشراء</button></form></section>')+
       '<form id="userForm">'+select("role","الصلاحية",Object.entries(C.roles),u.role)+
       select("status","حالة الحساب",[["active","تفعيل الحساب"],["suspended","إيقاف مؤقت"],["banned","حظر الحساب"]],u.account_status)+
       select("vip","المستوى",[["","تلقائي بحسب الإنفاق"],...S.vip.map(t=>[t.level,"تخصيص المستوى "+t.level])],u.vip_override||"")+
@@ -2276,6 +2284,17 @@
       toast("تم تسجيل حركة الرصيد");
       return detailUser(S.detail);
     }
+    if (form.id === "f90ManualVerificationForm") {
+      if (!manager() || !S.detail?.id || S.detail.is_verified)
+        throw new Error("هذا الاعتماد متاح للمدير فقط وللحسابات غير المعتمدة");
+      const reason=String(d.reason||"").trim();
+      if(reason.length<8)throw new Error("اكتب سبب الاعتماد بعد مراجعة بيانات العميل");
+      if(!confirm("اعتماد حساب "+(S.detail.display_name||S.detail.customer_id||"العميل")+" للإيداع والشراء؟ سيتم حفظ القرار والسبب في سجل الإدارة."))return;
+      await A.call("staff.manual_verify",{id:S.detail.id,reason});
+      S.detail.is_verified=true;
+      toast("تم اعتماد الحساب داخليًا للإيداع والشراء وتسجيل العملية");
+      return detailUser(S.detail);
+    }
     if (form.id === "userForm") {
       await A.call("staff.user", {
         id: S.detail.id,
@@ -3340,6 +3359,7 @@
         main.innerHTML = `<section class="panel admin-empty-auth"><h1>تحقق من هويتك</h1><form id="adminMfa">${field("code", "رمز المصادقة", "text", "", 'required pattern="[0-9]{6}" inputmode="numeric" maxlength="6"')}<button class="button full" type="submit">تحقق</button></form></section>`;
         return;
       }
+      window.F90AdminInbox?.init(S.me.role,S.me.profile?.id||S.me.id);
       const allowed = sections.filter((s) => s[3].includes(S.me.role));
       if (!allowed.length) {
         permissions();
