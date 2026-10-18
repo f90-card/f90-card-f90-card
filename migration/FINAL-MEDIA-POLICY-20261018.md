@@ -11,3 +11,5 @@ The store owner clarified: **DO NOT mirror the old supplier/category/product pro
 - Files use immutable SHA-256 URL suffixes, so manual replacements produce a new URL and can be updated deliberately.
 - Only change the **new** Supabase staging catalog after checking live Cloudflare build results. Never overwrite manually adjusted prices, stock, supplier mapping, display ordering, or original production images.
 - Site and commercial backend cutover is a separate decision. **Auth remains incomplete in staging; DO NOT change DNS or point customers there yet.**
+
+GitHub trigger: official one-time asset build now enabled; project must be disabled again immediately after successful build.
