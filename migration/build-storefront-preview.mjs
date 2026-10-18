@@ -41,8 +41,14 @@ async function copyTree(src, relativePath='') {
     if(['.html','.css','.js','.json','.webmanifest','.xml','.txt'].includes(ext)){
       let content=await readFile(origin,'utf8');
       content=content.split(oldUrl).join(newUrl);
-      if(ext==='.html'&&['index.html','admin.html'].includes(rel)){
-        content=content.replace('</head>',protectiveMarkup+'\n</head>');
+      if(ext==='.html'){
+        // The live index advertises index,follow. Strip it so the staging
+        // domain never inherits production SEO directives.
+        content=content.replace(/<meta\\s+name=["']robots["']\\s+content=["'][^"']*["']\\s*\\/?>/gi,'');
+        content=content.replace(/<head>/i,'<head>\\n<meta name="robots" content="noindex,nofollow,noarchive"/>');
+        if(['index.html','admin.html'].includes(rel)){
+          content=content.replace('</head>',protectiveMarkup+'\\n</head>');
+        }
       }
       await writeFile(target,content);
     }else await copyFile(origin,target);
