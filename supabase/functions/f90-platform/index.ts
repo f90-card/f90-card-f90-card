@@ -2316,10 +2316,31 @@ async function staff(a: Actor, b: any) {
       byId.set(key, service);
     }
     const productIds = rows.map((row: any) => row.product_id);
-    const products = productIds.length
-      ? check(await db.from("products").select("id,commerce,price,is_active").in("id", productIds))
-      : [];
+    // Keep the REST query URL well below reverse-proxy limits on large catalogs.
+    const products: any[] = [];
+    for (let offset = 0; offset < productIds.length; offset += 75) {
+      const batch = check(await db.from("products")
+        .select("id,category_id,commerce,price,is_active")
+        .in("id", productIds.slice(offset, offset + 75)));
+      products.push(...batch);
+    }
     const productsById = new Map(products.map((product: any) => [product.id, product]));
+    const categories = check(await db.from("categories")
+      .select("id,parent_id,presentation"));
+    const categoryById = new Map(categories.map((category: any) => [category.id, category]));
+    const categoryMargin = (categoryId: string | null) => {
+      let sum = 0;
+      const seen = new Set<string>();
+      let current = categoryId;
+      while (current && !seen.has(current)) {
+        seen.add(current);
+        const category: any = categoryById.get(current);
+        if (!category) break;
+        sum += Number(category.presentation?.extra_margin_percent || 0);
+        current = category.parent_id || null;
+      }
+      return sum;
+    };
     const planned: any[] = [];
     const skipped: any[] = [];
     let missing = 0;
@@ -2328,8 +2349,12 @@ async function staff(a: Actor, b: any) {
       if (!service) { missing++; continue; }
       const supplierRate = Number(service.rate);
       const cost = supplierRate / perUSD;
-      const proposed = Math.round(cost * (1 + margin / 100) * 1e6) / 1e6;
       const product: any = productsById.get(row.product_id);
+      const extraMargin = product
+        ? categoryMargin(product.category_id || null) +
+          Number(product.commerce?.extra_margin_percent || 0)
+        : 0;
+      const proposed = Math.round(cost * (1 + (margin + extraMargin) / 100) * 1e6) / 1e6;
       if (!product || !Number.isFinite(supplierRate) || supplierRate <= 0 ||
           !Number.isFinite(cost) || cost <= 0 || cost > 1000000 ||
           !Number.isFinite(proposed) || proposed <= 0 || proposed > 1000000) {
@@ -2344,6 +2369,7 @@ async function staff(a: Actor, b: any) {
         continue;
       }
       planned.push({ id: row.product_id, product, cost, price: proposed,
+        previousCost: row.cost_usd == null ? null : Number(row.cost_usd),
         oldPrice, autoMargin: !!row.auto_margin, isActive: !!product.is_active });
     }
     const changing = planned.filter((item) => item.autoMargin && item.price !== item.oldPrice);
@@ -2364,7 +2390,7 @@ async function staff(a: Actor, b: any) {
     // Include cost-only updates and source pricing so unchanged change-counts cannot hide price differences.
     const snapshotRows = planned.map((item) => ({
       id: item.id,
-      previous_cost: Number(rows.find((row: any) => row.product_id === item.id)?.cost_usd ?? 0),
+      previous_cost: item.previousCost,
       next_cost: item.cost,
       previous_price: item.oldPrice,
       next_price: item.price,
@@ -2392,18 +2418,18 @@ async function staff(a: Actor, b: any) {
         text(b.confirm_count, 15) !== String(preview.changing) ||
         text(b.confirm_ready, 15) !== String(preview.ready))
       throw new AppError("F90_FIELDS", 409, "بيانات المزامنة تغيّرت. عاين الأسعار من جديد قبل التأكيد");
-    for (const item of planned) {
-      check(await db.from("f90_product_internal")
-        .update({ cost_usd: item.cost }).eq("product_id", item.id).eq("provider_id", id));
-      if (item.autoMargin) {
-        check(await db.from("products")
-          .update({ price: item.price,
-            commerce: { ...item.product.commerce,
-              prices: { ...(item.product.commerce?.prices || {}), USD: item.price } } })
-          .eq("id", item.id));
-      }
-    }
-    return { updated: planned.length, ...preview };
+    // One database transaction replaces hundreds of sequential writes.
+    // The RPC revalidates the price snapshot and the manual/automatic flag.
+    const applied = await rpc("f90_provider_sync_bulk", {
+      p_actor: a.id, p_provider: id, p_margin: margin,
+      p_entries: planned.map((item: any) => ({
+        id: item.id, cost: item.cost, previous_cost: item.previousCost,
+        previous_price: item.oldPrice, auto_margin: item.autoMargin,
+        expected_price: item.price,
+      })),
+    });
+    return { updated: Number(applied.price_updated || 0),
+      costUpdated: Number(applied.cost_updated || 0), ...preview };
   }
   if (action === "staff.worker") {
     requireRole(a, "manager");
