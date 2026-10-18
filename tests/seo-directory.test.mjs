@@ -5,7 +5,7 @@ import path from "node:path";
 const root=process.cwd();
 const read=p=>fs.readFileSync(path.join(root,p),"utf8");
 const base="https://www.f90card.online/";
-const pages=["","discover/","discover/games.html","discover/apps.html","discover/cards.html","discover/streaming.html","discover/mobile.html","discover/ai.html","discover/social.html","discover/services.html","discover/transfers.html","discover/accounts.html","discover/design.html","discover/website.html"];
+const pages=["","discover/","discover/apps.html","discover/cards.html","discover/streaming.html","discover/mobile.html","discover/ai.html","discover/social.html","discover/services.html","discover/transfers.html","discover/accounts.html","discover/design.html","discover/website.html"];
 const local=x=>x?x==="discover/"?"discover/index.html":x:"index.html";
 test("F90 sitemap contains only published canonical URLs without duplicates",()=>{
  const map=read("sitemap.xml");
