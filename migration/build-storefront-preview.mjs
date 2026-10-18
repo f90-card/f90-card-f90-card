@@ -14,7 +14,7 @@ const newUrl='https://ogkipkavlywgwhtomoca.supabase.co';
 const publicKey="sb_publishable_hhEc0Rw4r_V-sLpC82KLdw_mcoWNSec";
 if(!publicKey.startsWith('sb_publishable_'))throw Error('Staging key missing');
 
-const protectiveMarkup = String.raw"<meta name=\"robots\" content=\"noindex,nofollow,noarchive\">\n<style id=\"f90-staging-shield\">\nbody{pointer-events:none!important;user-select:none!important}\nhtml::after{content:\"معاينة F90 CARD فقط | الشراء وتسجيل الدخول معطّلان حتى يكتمل نقل الحسابات والأرصدة\";position:fixed;z-index:2147483647;top:0;left:0;right:0;padding:13px 12px;background:#991b1b;color:white;text-align:center;direction:rtl;font:700 13px system-ui,Arial,sans-serif;box-shadow:0 6px 24px #0008;pointer-events:none}\n</style>";
+const protectiveMarkup = "<meta name=\"robots\" content=\"noindex,nofollow,noarchive\">\n<style id=\"f90-staging-shield\">\nbody{pointer-events:none!important;user-select:none!important}\nhtml::after{content:\"معاينة F90 CARD فقط | الشراء وتسجيل الدخول معطّلان حتى يكتمل نقل الحسابات والأرصدة\";position:fixed;z-index:2147483647;top:0;left:0;right:0;padding:13px 12px;background:#991b1b;color:white;text-align:center;direction:rtl;font:700 13px system-ui,Arial,sans-serif;box-shadow:0 6px 24px #0008;pointer-events:none}\n</style>";
 let copied=0,byteCount=0;
 async function copyTree(src, relativePath='') {
   const entries=await readdir(src,{withFileTypes:true});
@@ -54,6 +54,6 @@ await copyTree(root);
 const cfg='(function(){ "use strict";const u='+JSON.stringify('https://ogkipkavlywgwhtomoca.supabase.co')+';const k='+JSON.stringify(publicKey)+';window.F90_CONFIG={SUPABASE_URL:u,SUPABASE_KEY:k};window.F90_READ_ONLY_PREVIEW=true;try{window.f90Supabase=window.supabase?.createClient?.(u,k,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})||null}catch{window.f90Supabase=null}})();';
 await writeFile(resolve(dest,'config.js'),cfg);
 await writeFile(resolve(dest,'manifest.webmanifest'),JSON.stringify({name:'F90 CARD Read Only Preview',short_name:'F90 preview',start_url:'/',display:'browser',icons:[]}));
-await writeFile(resolve(dest,'_headers'),String.raw"/*\n  X-Robots-Tag: noindex, nofollow\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n/config.js\n  Cache-Control: no-store\n/*.html\n  Cache-Control: no-store\n");
+await writeFile(resolve(dest,'_headers'),"/*\n  X-Robots-Tag: noindex, nofollow\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n/config.js\n  Cache-Control: no-store\n/*.html\n  Cache-Control: no-store\n");
 await writeFile(resolve(dest,'_redirects'),'/discover/games.html /discover/ 301\n');
 console.log('F90_STAGING_READ_ONLY '+JSON.stringify({copied,megabytes:+(byteCount/1048576).toFixed(2),target:'new-supabase',actions:'disabled'}));
