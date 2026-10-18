@@ -5,7 +5,7 @@ const path=require("node:path");
 const root=path.join(__dirname,"..");
 const read=p=>fs.readFileSync(path.join(root,p),"utf8");
 const base="https://www.f90card.online/";
-const urls=["","discover/","discover/games.html","discover/apps.html","discover/cards.html",
+const urls=["","discover/","discover/apps.html","discover/cards.html",
 "discover/streaming.html","discover/mobile.html","discover/ai.html","discover/social.html",
 "discover/services.html","discover/transfers.html","discover/accounts.html",
 "discover/design.html","discover/website.html"];
