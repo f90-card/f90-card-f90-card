@@ -9,14 +9,17 @@ if (entries.source_project !== 'xzqnrpycjxfbyrfaolud' ||
     entries.bucket !== 'f90-images' || entries.public_only !== true) {
   throw new Error('Unexpected or private source manifest');
 }
-const cap = Number(process.env.F90_MEDIA_LIMIT || '25');
+const cap = Number(process.env.F90_MEDIA_LIMIT || '200');
 if (!Number.isSafeInteger(cap) || cap < 1 || cap > 2000) {
   throw new Error('F90_MEDIA_LIMIT must be an integer between 1 and 2000');
 }
 const order = (p) => p.startsWith('app-icons/') ? 0 :
   p.startsWith('app-verified/') ? 1 :
-  p.startsWith('category/') ? 2 :
-  p.startsWith('products/') ? 3 : 4;
+  p.startsWith('admin-icons/') ? 2 :
+  p.startsWith('notifications/') ? 3 :
+  p.startsWith('app-placeholders/') ? 4 :
+  p.startsWith('category/') ? 5 :
+  p.startsWith('products/') ? 6 : 7;
 const selected = [...entries.assets]
   .sort((a,b) => order(a.path)-order(b.path) || a.path.localeCompare(b.path))
   .slice(0,cap);
