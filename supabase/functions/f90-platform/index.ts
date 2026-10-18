@@ -945,7 +945,7 @@ async function catalogSave(a: Actor, b: any) {
       const chosenPrice=Number(data.commerce?.prices?.USD??data.price);
       editedYassenPrice=selectedProvider.adapter==="yassen" &&
         Number.isFinite(previousPrice)&&Number.isFinite(chosenPrice) &&
-        Math.abs(chosenPrice-previousPrice)>0.005;
+        Math.abs(chosenPrice-previousPrice)>0.0000005;
     }
     check(
       await db.from("f90_product_internal").upsert({
@@ -2037,6 +2037,14 @@ async function staff(a: Actor, b: any) {
         automatic_orders_enabled: autoOrders,
       },
     };
+    // Reprice before saving the settings. An invalid margin must not leave
+    // the provider showing a new percentage with old product prices.
+    let marginUpdated: number | null = null;
+    if (old && Number(old.margin_percent) !== Number(d.margin_percent)) {
+      marginUpdated = await rpc("f90_provider_margin", {
+        p_actor: a.id, p_provider: old.id, p_margin: d.margin_percent,
+      });
+    }
     const p = check(
       b.id
         ? await db
@@ -2053,15 +2061,11 @@ async function staff(a: Actor, b: any) {
         p_provider: p.id,
         p_secret: text(b.token, 10000),
       });
-    if (old && Number(old.margin_percent) !== Number(d.margin_percent))
-      await rpc("f90_provider_margin", {
-        p_actor: a.id, p_provider: p.id, p_margin: d.margin_percent,
-      });
     await auditSafe(a.id, "provider.save", p.id,
       { connection_changed: connectionChanged, disabled: !d.is_enabled,
         adapter, automatic_orders_enabled: autoOrders });
     delete p.secret_id;
-    return p;
+    return { ...p, margin_price_updates: marginUpdated };
   }
   if (action === "provider.toggle") {
     requireRole(a, "manager");
@@ -2317,6 +2321,7 @@ async function staff(a: Actor, b: any) {
       : [];
     const productsById = new Map(products.map((product: any) => [product.id, product]));
     const planned: any[] = [];
+    const skipped: any[] = [];
     let missing = 0;
     for (const row of rows) {
       const service = byId.get(String(row.provider_service));
@@ -2327,11 +2332,17 @@ async function staff(a: Actor, b: any) {
       const product: any = productsById.get(row.product_id);
       if (!product || !Number.isFinite(supplierRate) || supplierRate <= 0 ||
           !Number.isFinite(cost) || cost <= 0 || cost > 1000000 ||
-          !Number.isFinite(proposed) || proposed <= 0 || proposed > 1000000)
-        throw new AppError("F90_FIELDS", 400, "سعر غير صالح أو منتج مفقود. لم تتغير الأسعار");
+          !Number.isFinite(proposed) || proposed <= 0 || proposed > 1000000) {
+        skipped.push({ product_id: row.product_id, provider_service: String(row.provider_service || ""),
+          reason: !product ? "المنتج غير موجود" : "سعر المورّد خارج الحدود المسموحة" });
+        continue;
+      }
       const oldPrice = Number(product.commerce?.prices?.USD ?? product.price);
-      if (row.auto_margin && (!Number.isFinite(oldPrice) || oldPrice < 0))
-        throw new AppError("F90_FIELDS", 400, "سعر المنتج الحالي غير صالح. لم تتغير الأسعار");
+      if (row.auto_margin && (!Number.isFinite(oldPrice) || oldPrice < 0)) {
+        skipped.push({ product_id: row.product_id, provider_service: String(row.provider_service || ""),
+          reason: "السعر الحالي غير صالح" });
+        continue;
+      }
       planned.push({ id: row.product_id, product, cost, price: proposed,
         oldPrice, autoMargin: !!row.auto_margin, isActive: !!product.is_active });
     }
@@ -2340,6 +2351,9 @@ async function staff(a: Actor, b: any) {
       mapped: rows.length,
       ready: planned.length,
       missing,
+      skipped: skipped.length,
+      skippedSamples: skipped.slice(0, 10),
+      manualPreserved: planned.filter((item) => !item.autoMargin).length,
       changing: changing.length,
       activeChanging: changing.filter((item) => item.isActive).length,
       samples: changing.slice(0, 15).map((item) => ({
@@ -2364,6 +2378,7 @@ async function staff(a: Actor, b: any) {
       margin,
       missing: rows.filter((row: any) => !byId.has(String(row.provider_service)))
         .map((row: any) => String(row.product_id)).sort(),
+      skipped: skipped.map((item: any) => item.product_id).sort(),
       rows: snapshotRows,
     });
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(snapshotData));
