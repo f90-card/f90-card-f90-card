@@ -1,0 +1,617 @@
+{
+  "version": 1,
+  "policy": "Apple App Store exact brand-name verified lookups only; skip non-matches",
+  "lookups": [
+    {
+      "kind": "category",
+      "id": "566d941f-1237-49a4-9f6c-2a01c4c1798d",
+      "name": "إيمو",
+      "searchTerm": "imo",
+      "acceptedNames": [
+        "imo"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "34604a0d-8b69-4e97-8917-8f68b2278965",
+      "name": "ببجي موبايل العالمية",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "c6e8b01b-892a-41d7-90ff-80ebd38fd2c6",
+      "name": "ببجي موبايل يدوي",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "0c68acca-4898-47cc-b1d1-a6a0a8514005",
+      "name": "يلا",
+      "searchTerm": "Yalla",
+      "acceptedNames": [
+        "Yalla"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "10f32538-c5c6-4300-a810-0dbbb78104a3",
+      "name": "ستار ميكر",
+      "searchTerm": "StarMaker",
+      "acceptedNames": [
+        "StarMaker"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "33c8bbf3-3586-495c-91b9-721c5c150f87",
+      "name": "ببجي تركي",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "6f13b9ff-6d9c-498b-a167-b35f8a91b7b7",
+      "name": "ببجي لايت",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "086a3f87-88a2-4c59-a439-87d8b0a492b4",
+      "name": "بي لايف",
+      "searchTerm": "B Live",
+      "acceptedNames": [
+        "B Live"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "413c2ba1-f755-48f0-b596-c4fbf53602d0",
+      "name": "ببجي موبايل اكواد عالمية",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "cca80cee-a6b3-4741-981d-63abc65fd02a",
+      "name": "ببجي نيو تسيت",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "fa246db7-f16d-4045-a386-329fafd6d140",
+      "name": "كول اوف ديوتي",
+      "searchTerm": "Call of Duty Mobile",
+      "acceptedNames": [
+        "Call of Duty: Mobile"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "d0545d28-e093-4b40-b3fe-dfcc9d7a4c5a",
+      "name": "فري فاير",
+      "searchTerm": "Free Fire",
+      "acceptedNames": [
+        "Free Fire"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "4629d059-c4c2-474b-b6d1-36f9f91a70bb",
+      "name": "دلتا فورس",
+      "searchTerm": "Delta Force",
+      "acceptedNames": [
+        "Delta Force"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "0ab344b2-fc66-48b3-8d22-55d7fc3445d4",
+      "name": "روبلكس",
+      "searchTerm": "Roblox",
+      "acceptedNames": [
+        "Roblox"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "2e15437c-c297-4d86-8d10-9490b6ad8858",
+      "name": "بلود سترايك",
+      "searchTerm": "Blood Strike",
+      "acceptedNames": [
+        "Blood Strike"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "d1770a65-ea43-41b6-9f79-a8f0632d5263",
+      "name": "وي بلاي",
+      "searchTerm": "WePlay",
+      "acceptedNames": [
+        "WePlay"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "eaaed005-8bad-4a9c-9636-2d6057241afb",
+      "name": "وار روبوتس",
+      "searchTerm": "War Robots",
+      "acceptedNames": [
+        "War Robots"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "e5b378bd-aa9b-4d5a-b7ed-952dbc06ddbc",
+      "name": "كلاش اوف كلانس",
+      "searchTerm": "Clash of Clans",
+      "acceptedNames": [
+        "Clash of Clans"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "2b1ea7fe-164f-48e9-8647-d9133ab0e040",
+      "name": "موبايل ليجندز",
+      "searchTerm": "Mobile Legends",
+      "acceptedNames": [
+        "Mobile Legends: Bang Bang"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "048e2748-5415-49d8-a5e9-3bbdbcc73d44",
+      "name": "لورد موبايل",
+      "searchTerm": "Lords Mobile",
+      "acceptedNames": [
+        "Lords Mobile"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "8d3e34e3-7b26-43bd-a17a-7689eb483e69",
+      "name": "يلا لودو",
+      "searchTerm": "Yalla Ludo",
+      "acceptedNames": [
+        "Yalla Ludo"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "ba7f3848-381f-40f8-85f9-5658260cce9a",
+      "name": "انتقام السلاطين",
+      "searchTerm": "Revenge of Sultans",
+      "acceptedNames": [
+        "Revenge of Sultans"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "208eac6e-b2f0-4ab0-a5ee-17f20d40541c",
+      "name": "دلتا فورس غارينا",
+      "searchTerm": "Delta Force",
+      "acceptedNames": [
+        "Delta Force"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "6cc1b27a-4057-4e64-a28e-119b603efc70",
+      "name": "وير ويندز ميت",
+      "searchTerm": "Where Winds Meet",
+      "acceptedNames": [
+        "Where Winds Meet"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "638b07f2-4dd7-4a45-a671-fcb11a7fec43",
+      "name": "كلاش رويال",
+      "searchTerm": "Clash Royale",
+      "acceptedNames": [
+        "Clash Royale"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "8c69a1a0-6515-4765-a354-944df2270f76",
+      "name": "هونر أوف كينغز",
+      "searchTerm": "Honor of Kings",
+      "acceptedNames": [
+        "Honor of Kings"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "c2049da7-30d2-4a9a-89f4-f1220f2fd965",
+      "name": "إف سي موبايل",
+      "searchTerm": "EA SPORTS FC Mobile",
+      "acceptedNames": [
+        "EA SPORTS FC Mobile"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "6be99f78-2424-4b14-9db9-5ab0a7b5381e",
+      "name": "آيدنتيتي فايف",
+      "searchTerm": "Identity V",
+      "acceptedNames": [
+        "Identity V"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "7a8e3850-edb4-4c9b-9c62-963c6bcd66e9",
+      "name": "ببجي اتوماتيك",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "aaae055d-4006-4170-9a6f-98f67e9b9f67",
+      "name": "عضويات ببجي",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "ba4c431e-f141-46f5-bd0f-bbdf476233bd",
+      "name": "عروض ببجي موبايل عالمية",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "412cfdad-49e4-4b1a-916b-1d30ff62eaf0",
+      "name": "وايت آوت سرفايفل",
+      "searchTerm": "Whiteout Survival",
+      "acceptedNames": [
+        "Whiteout Survival"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "41658722-0078-4286-86d9-5c8d1541c436",
+      "name": "هيرو كلاش",
+      "searchTerm": "Hero Clash",
+      "acceptedNames": [
+        "Hero Clash"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "f80603bd-a642-4407-bc64-3fae2b428809",
+      "name": "الممالك الخالدة",
+      "searchTerm": "Immortal Kingdoms",
+      "acceptedNames": [
+        "Immortal Kingdoms"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "ee73b8b2-843c-4aa3-b3da-3a327cb2d208",
+      "name": "عصر الأساطير",
+      "searchTerm": "Age of Legends",
+      "acceptedNames": [
+        "Age of Legends"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "9dea4cc7-a7e4-4b3a-a8d7-a8d04f4bd60c",
+      "name": "مو أوريجين 2",
+      "searchTerm": "MU Origin 2",
+      "acceptedNames": [
+        "MU Origin 2"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "d2a03571-0eb9-4154-b55b-f59f389140ce",
+      "name": "مو أوريجين 2 شارات",
+      "searchTerm": "MU Origin 2",
+      "acceptedNames": [
+        "MU Origin 2"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "93655639-2aee-48c5-a7ee-d5b3f37d3404",
+      "name": "أنداون",
+      "searchTerm": "Undawn",
+      "acceptedNames": [
+        "Undawn"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "e8aeb38f-ef27-4c10-8943-d68c4f900d16",
+      "name": "فالورانت",
+      "searchTerm": "VALORANT",
+      "acceptedNames": [
+        "VALORANT"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "675accaf-1339-4e77-a84e-737f8f7a1275",
+      "name": "هونر أوف كينغز",
+      "searchTerm": "Honor of Kings",
+      "acceptedNames": [
+        "Honor of Kings"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "446df63e-6c65-4cb5-8fc0-f8064b1bd348",
+      "name": "لايف أفتر",
+      "searchTerm": "LifeAfter",
+      "acceptedNames": [
+        "LifeAfter"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "a482aed8-ce05-4cd7-b213-8194d8f6ed96",
+      "name": "بروجكت إنتروبي",
+      "searchTerm": "Project Entropy",
+      "acceptedNames": [
+        "Project Entropy"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "34b2b902-a09c-451e-9334-f3d1c0f512a0",
+      "name": "ملك أفالون",
+      "searchTerm": "King of Avalon",
+      "acceptedNames": [
+        "King of Avalon"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "75bf45d1-699a-42f5-870c-75b4f361d46b",
+      "name": "مملكة إنفينيتي",
+      "searchTerm": "Infinity Kingdom",
+      "acceptedNames": [
+        "Infinity Kingdom"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "091168e3-3f55-4e9d-ba32-bc9584badb3a",
+      "name": "ميرج كينغدوم",
+      "searchTerm": "Merge Kingdom",
+      "acceptedNames": [
+        "Merge Kingdom"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "d69f5bae-8464-4641-82f0-117ef9112582",
+      "name": "فارلايت",
+      "searchTerm": "Farlight 84",
+      "acceptedNames": [
+        "Farlight 84",
+        "Farlight"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "ce4d9fc1-35b1-4b38-9a8b-00be7ea39d2b",
+      "name": "أرينا بريك آوت",
+      "searchTerm": "Arena Breakout",
+      "acceptedNames": [
+        "Arena Breakout"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "7765de1a-c82d-412d-bce2-55aff5074233",
+      "name": "غانز أوف غلوري",
+      "searchTerm": "Guns of Glory",
+      "acceptedNames": [
+        "Guns of Glory"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "9c5503a0-6715-46dc-b000-b4471b23011e",
+      "name": "زينلس زون زيرو",
+      "searchTerm": "Zenless Zone Zero",
+      "acceptedNames": [
+        "Zenless Zone Zero"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "0a8e0411-3f25-4dc7-b6e0-b24841b5b224",
+      "name": "ستيت أوف سرفايفل",
+      "searchTerm": "State of Survival",
+      "acceptedNames": [
+        "State of Survival"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "7d284824-420f-4913-b7e7-ec5eea81052d",
+      "name": "جينشن إمباكت",
+      "searchTerm": "Genshin Impact",
+      "acceptedNames": [
+        "Genshin Impact"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "category",
+      "id": "b9bdb55b-369a-4f48-a3d3-9b4bc2d86170",
+      "name": "ببجي موبايل اكواد",
+      "searchTerm": "PUBG MOBILE",
+      "acceptedNames": [
+        "PUBG MOBILE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "dfecffad-c4ee-4454-891d-173dbbb35fd3",
+      "name": "بيجو لايف",
+      "searchTerm": "BIGO LIVE",
+      "acceptedNames": [
+        "BIGO LIVE"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "69ab6dad-c999-4688-8d10-c3cbfae9307a",
+      "name": "تيك توك",
+      "searchTerm": "TikTok",
+      "acceptedNames": [
+        "TikTok"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "acdd1a3c-4b51-4608-9bf4-df5aef227f1d",
+      "name": "نيمو تي في",
+      "searchTerm": "Nimo TV",
+      "acceptedNames": [
+        "Nimo TV"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "861f3e01-70c3-4db7-90d0-d3a5e6927ebc",
+      "name": "كواي",
+      "searchTerm": "Kwai",
+      "acceptedNames": [
+        "Kwai"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "5f3e0488-d1ba-405c-a538-25eafc1e9384",
+      "name": "سايا لايكي",
+      "searchTerm": "Likee",
+      "acceptedNames": [
+        "Likee"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "08105928-7315-4b77-b0f2-f007c5e6cfff",
+      "name": "هاغو",
+      "searchTerm": "Hago",
+      "acceptedNames": [
+        "Hago"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "8ee86b8a-6eff-40e1-819c-ba010c29e50c",
+      "name": "لايكي لايف",
+      "searchTerm": "Likee",
+      "acceptedNames": [
+        "Likee"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "46b6469c-d333-4388-9323-47f955037d75",
+      "name": "يوبو",
+      "searchTerm": "Yubo",
+      "acceptedNames": [
+        "Yubo"
+      ],
+      "country": "us"
+    },
+    {
+      "kind": "product",
+      "id": "6df1ecf0-48d9-4f44-96bf-d0b28c184ae7",
+      "name": "توب توب",
+      "searchTerm": "TopTop",
+      "acceptedNames": [
+        "TopTop"
+      ],
+      "country": "us"
+    }
+  ]
+}
