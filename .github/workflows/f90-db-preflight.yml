@@ -1,0 +1,66 @@
+name: F90 - Read-only Database Migration Preflight
+
+# Intentionally manual and disabled until installed on an approved default branch.
+# Does not copy, edit or upload customer data.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: f90-db-migration-preflight
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify database access without changing data
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      F90_SOURCE_DATABASE_URL: ${{ secrets.F90_SOURCE_DATABASE_URL }}
+      F90_TARGET_DATABASE_URL: ${{ secrets.F90_TARGET_DATABASE_URL }}
+    steps:
+      - name: Check required secrets without revealing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$F90_SOURCE_DATABASE_URL" || { echo "Missing source connection secret"; exit 1; }
+          test -n "$F90_TARGET_DATABASE_URL" || { echo "Missing target connection secret"; exit 1; }
+          if [ "$F90_SOURCE_DATABASE_URL" = "$F90_TARGET_DATABASE_URL" ]; then
+            echo "Database URLs must be different."
+            exit 1
+          fi
+          case "$F90_SOURCE_DATABASE_URL" in
+            *xzqnrpycjxfbyrfaolud*) ;;
+            *) echo "Source secret is not for the expected source project."; exit 1 ;;
+          esac
+          case "$F90_TARGET_DATABASE_URL" in
+            *ogkipkavlywgwhtomoca*) ;;
+            *) echo "Target secret is not for the expected new project."; exit 1 ;;
+          esac
+      - name: Read-only counts and export capability test
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network host \
+            -e F90_SOURCE_DATABASE_URL \
+            -e F90_TARGET_DATABASE_URL \
+            -e PGSSLMODE=require \
+            postgres:17-alpine sh -euc '
+              # No set -x; no connection strings or customer information in logs.
+              src_users=$(psql "$F90_SOURCE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from auth.users")
+              dst_users=$(psql "$F90_TARGET_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from auth.users")
+              src_products=$(psql "$F90_SOURCE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from public.products")
+              dst_products=$(psql "$F90_TARGET_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from public.products")
+              src_wallets=$(psql "$F90_SOURCE_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from public.f90_wallets")
+              dst_wallets=$(psql "$F90_TARGET_DATABASE_URL" -XAtq -v ON_ERROR_STOP=1 -c "select count(*) from public.f90_wallets")
+              printf "Source auth users: %s; target auth users: %s\n" "$src_users" "$dst_users"
+              printf "Source products: %s; target products: %s\n" "$src_products" "$dst_products"
+              printf "Source wallets: %s; target wallets: %s\n" "$src_wallets" "$dst_wallets"
+              printf "Checking read-only export access for Auth users and identities...\n"
+              pg_dump --dbname="$F90_SOURCE_DATABASE_URL" \
+                --format=custom --data-only --no-owner --no-acl \
+                --table=auth.users --table=auth.identities \
+                --file=/dev/null
+              echo "Read-only Auth export test completed. No records transferred."
+            '
