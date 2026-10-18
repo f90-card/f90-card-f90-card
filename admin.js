@@ -2348,7 +2348,7 @@
       return;
     }
     if (form.id === "providerForm") {
-      await A.call("provider.save", {
+      const savedProvider = await A.call("provider.save", {
         id: S.edit?.id,
         name: d.name,
         endpoint: d.endpoint,
@@ -2360,7 +2360,8 @@
         automatic_orders_enabled: form.elements.automatic_orders_enabled.checked,
       });
       closeModal();
-      toast("تم حفظ المورّد");
+      toast(savedProvider.margin_price_updates === null || savedProvider.margin_price_updates === undefined
+        ? "تم حفظ المورّد" : "تم حفظ المورّد وتحديث " + savedProvider.margin_price_updates + " سعر تلقائي، والأسعار اليدوية محفوظة");
       return providers();
     }
     if (form.id === "importForm") {
@@ -2936,7 +2937,7 @@
           const preview = await A.call("provider.sync_prices", { id: provider.id, dry_run: true });
           S.priceSyncPreview = { providerId: provider.id, preview };
           modal("معاينة مزامنة أسعار " + provider.name,
-            `<div class="notice warning">هذا فحص للقراءة فقط. لا تتغير أسعار المنتجات إلا بعد تأكيدك. إذا تغيّرت بيانات المورّد قبل التأكيد سيعيد الخادم التحقق.</div><div class="f90-import-confirm-stats"><div><small>منتجات مرتبطة</small><strong>${e(preview.mapped)}</strong></div><div><small>خدمات متاحة</small><strong>${e(preview.ready)}</strong></div><div><small>أسعار ستتغير</small><strong>${e(preview.changing)}</strong></div><div><small>منتجات منشورة متأثرة</small><strong>${e(preview.activeChanging)}</strong></div></div>${preview.missing ? `<div class="notice warning">هناك ${e(preview.missing)} خدمات لم يُعثر عليها لدى المورّد، وسيتم تخطيها.</div>` : ""}<div class="table-wrap f90-import-confirm-table"><table><thead><tr><th>معرّف المنتج</th><th>السعر الحالي $</th><th>السعر الجديد $</th></tr></thead><tbody>${(preview.samples || []).map((item) => `<tr><td dir="ltr">${e(item.id)}</td><td>${e(C.money(item.old_price_usd))}</td><td>${e(C.money(item.new_price_usd))}</td></tr>`).join("") || '<tr><td colspan="3">لا توجد فروقات في الأسعار</td></tr>'}</tbody></table></div><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-sync" data-id="${e(provider.id)}">تأكيد المزامنة بعد مراجعة الأسعار</button></div>`);
+            `<div class="notice warning">هذا فحص للقراءة فقط. لا تتغير أسعار المنتجات إلا بعد تأكيدك. إذا تغيّرت بيانات المورّد قبل التأكيد سيعيد الخادم التحقق.</div><div class="f90-import-confirm-stats"><div><small>منتجات مرتبطة</small><strong>${e(preview.mapped)}</strong></div><div><small>خدمات متاحة</small><strong>${e(preview.ready)}</strong></div><div><small>أسعار ستتغير</small><strong>${e(preview.changing)}</strong></div><div><small>منتجات منشورة متأثرة</small><strong>${e(preview.activeChanging)}</strong></div></div>${preview.missing ? `<div class="notice warning">هناك ${e(preview.missing)} خدمات لم يُعثر عليها لدى المورّد، وسيتم تخطيها.</div>` : ""}${preview.manualPreserved ? `<div class="notice">سيتم الحفاظ على أسعار ${e(preview.manualPreserved)} خدمات معدّلة يدويًا دون تغيير.</div>` : ""}${preview.skipped ? `<div class="notice warning">سيتم تخطي ${e(preview.skipped)} خدمات بسبب أسعار غير صالحة: ${(preview.skippedSamples || []).map((item) => e(item.provider_service || item.product_id) + " (" + e(item.reason) + ")").join("، ")}</div>` : ""}<div class="table-wrap f90-import-confirm-table"><table><thead><tr><th>معرّف المنتج</th><th>السعر الحالي $</th><th>السعر الجديد $</th></tr></thead><tbody>${(preview.samples || []).map((item) => `<tr><td dir="ltr">${e(item.id)}</td><td>${e(C.money(item.old_price_usd))}</td><td>${e(C.money(item.new_price_usd))}</td></tr>`).join("") || '<tr><td colspan="3">لا توجد فروقات في الأسعار</td></tr>'}</tbody></table></div><div class="actions"><button type="button" class="button secondary" data-action="close-modal">إلغاء</button><button type="button" class="button danger" data-action="confirm-provider-sync" data-id="${e(provider.id)}">تأكيد المزامنة بعد مراجعة الأسعار</button></div>`);
         } finally {
           if (b.isConnected) b.disabled = false;
         }
