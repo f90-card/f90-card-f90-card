@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "policy": "Official Apple/Google Play app icons and approved F90 banners only, manual site-authorized staging references",
+  "policy": "Official application icons and visually reviewed original public F90 CARD storefront artwork; no customer files or placeholders.",
   "created": "2026-10-18",
   "source": "Google Play and Apple App Store artwork URLs already used in catalog; current banner media",
   "assets": [
@@ -8,25 +8,29 @@
       "kind": "banner",
       "id": "1730b5f2-f1b2-449a-b845-f914ae817d1b",
       "name": "",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/8570fe28-658d-4aa5-9f63-1f17c4941388.png"
+      "url": "https://f90-card-media.pages.dev/media/official/banner/1730b5f2-f1b2-449a-b845-f914ae817d1b-5f206c512f1b249b.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "banner",
       "id": "8ad90eb6-843b-4442-a46b-2604cf468b4f",
       "name": "",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/34909558-6fe9-4c00-9689-7bcda8b17e0f.png"
+      "url": "https://f90-card-media.pages.dev/media/official/banner/8ad90eb6-843b-4442-a46b-2604cf468b4f-f0b7d446f2566963.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "banner",
       "id": "d81c26fd-66c0-4c61-82af-d098495db467",
       "name": "",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/9097f11e-be31-4ad5-8856-e86e9554cd9d.png"
+      "url": "https://f90-card-media.pages.dev/media/official/banner/d81c26fd-66c0-4c61-82af-d098495db467-69ebc6c0825a8447.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "banner",
       "id": "d87b698d-96ec-4e3e-8c40-f23954517a4d",
       "name": "احصل على تصميم",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/d1c0da4d-013e-4a1c-965f-f0b4dc4787d8.png"
+      "url": "https://f90-card-media.pages.dev/media/official/banner/d87b698d-96ec-4e3e-8c40-f23954517a4d-6b037f015834bf65.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "category",
@@ -812,365 +816,365 @@
       "kind": "product",
       "id": "0ceb352e-520b-4bce-96b7-98fb86b61657",
       "name": "تسليم رواتب عبر فودفون كاش",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/79e71bea-9dd0-4006-be5c-baf67d987c3f.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/0ceb352e-520b-4bce-96b7-98fb86b61657-32632cc92360406c.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "19ae3b8b-8e8d-4633-8685-2361e4a3d2c6",
       "name": "تحويل اورنج مني",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/43f1f85f-5261-4c66-84b3-b66d33eb3781.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/19ae3b8b-8e8d-4633-8685-2361e4a3d2c6-e1f9dd8463977fd4.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "2535b379-93f3-44d0-86e0-4f738b068447",
       "name": "ميرج كينغدوم 1",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/fb946985-75f0-4b9a-b09f-cbd5533dfd24.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/2535b379-93f3-44d0-86e0-4f738b068447-a21b69a0f3286b1c.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "25f1cfcd-0b1b-4642-8b4a-462b0282daa1",
       "name": "اكزينا لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/0348626f-d9b8-4b15-b1f8-a3476c6cab3f.webp",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/25f1cfcd-0b1b-4642-8b4a-462b0282daa1-0c3a2f0ba0108204.webp",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "2f0b4cc5-c023-4501-84f0-bad92deed339",
       "name": "ببجي موبايل 3850 شدات",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/37d88520-ebd8-4fcc-9e3d-639ecd419b84.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/2f0b4cc5-c023-4501-84f0-bad92deed339-7a5bb12052282e0f.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "48ff2c9d-e546-48ee-b818-9e886757ce79",
       "name": "تحويل بنك فلسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/55d844cf-1ce1-4892-ac7d-94d8337b24b1.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/48ff2c9d-e546-48ee-b818-9e886757ce79-4beccaa2a54edba5.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "4ce8868d-e92f-45eb-bc62-6be601b50a9e",
       "name": "الممالك الخالدة ألماسة4800",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/4ce8868d-e92f-45eb-bc62-6be601b50a9e-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "568cd67e-9d98-420a-9d25-6be2772ec10f",
       "name": "ميرج كينغدوم 30",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/fb946985-75f0-4b9a-b09f-cbd5533dfd24.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/568cd67e-9d98-420a-9d25-6be2772ec10f-a21b69a0f3286b1c.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "6ac63bdf-04db-44c1-8051-d31a35edd879",
       "name": "ITUNES 15$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/6ac63bdf-04db-44c1-8051-d31a35edd879-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "6ae3c683-a980-45d4-8b17-2eaceaffe9dd",
       "name": "رصيد جوال فلسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/eada084b-8e02-48ae-bcb9-b7a760a11642.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/6ae3c683-a980-45d4-8b17-2eaceaffe9dd-a9f1cce32c67dc0b.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "731a717e-341e-4b5b-8902-96c13fb40011",
       "name": "عصر الأساطير -دولار 5",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/8d95b5cf-794c-4ea2-adc7-126b27616760.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/731a717e-341e-4b5b-8902-96c13fb40011-567fdaec6607cfed.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "78d61fda-20e2-409f-9520-0683764dbd11",
       "name": "تحويل شام كاش دولار",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/ee6a4bef-7204-436f-bffa-0c46a2a51c8c.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/78d61fda-20e2-409f-9520-0683764dbd11-fd04aa19459583b7.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "7c6c5d07-e0fc-4c53-8c5c-6b40e995981b",
       "name": "جيمي لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/6e2b2f12-7ca3-47a1-be43-e3b52a26acee.webp",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/7c6c5d07-e0fc-4c53-8c5c-6b40e995981b-0ec3726ead240054.webp",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "7dfde09a-af9a-431d-9607-ce8efb2cb5bb",
       "name": "تحويل بنك فىسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/4daada5f-29c0-4752-80da-af7272d78049.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/7dfde09a-af9a-431d-9607-ce8efb2cb5bb-4beccaa2a54edba5.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "81add8a4-dd2f-4982-88aa-1f873c8a477d",
       "name": "ميرج كينغدوم 5",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/fb946985-75f0-4b9a-b09f-cbd5533dfd24.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/81add8a4-dd2f-4982-88aa-1f873c8a477d-a21b69a0f3286b1c.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "82c901b3-225c-4e2e-a67a-352e96b95fe6",
       "name": "تحويل كليك",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/a22b8e46-8417-47d7-b3f0-5e5f5c70142a.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/82c901b3-225c-4e2e-a67a-352e96b95fe6-9d7cd87afb444781.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "8870733e-c815-4959-abfe-8573554adaa2",
       "name": "رصيد اوريدو فلسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/aa1ca376-0e8d-4cf3-b4ae-8d7cef5ded6d.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/8870733e-c815-4959-abfe-8573554adaa2-d8ec49248cb05dfe.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "89ffd5a2-39f8-4e58-b7ab-df443db7f848",
       "name": "الممالك الخالدة ألماسة2350",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/89ffd5a2-39f8-4e58-b7ab-df443db7f848-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "98c749a2-7af6-47c6-b120-3d29f021f91f",
       "name": "تحويل بنك فلسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/f357643b-9634-4ef6-9535-82948fc00a1f.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/98c749a2-7af6-47c6-b120-3d29f021f91f-4beccaa2a54edba5.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "9d296229-f7ea-446e-914a-030b65ee1142",
       "name": "تحويل بنك فلسطين",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/5fe27b07-cc04-4100-acb6-f3489ceddeff.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/9d296229-f7ea-446e-914a-030b65ee1142-4beccaa2a54edba5.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "9ded5772-b790-4a58-973a-75a89407977e",
       "name": "ITUNES 100$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/9ded5772-b790-4a58-973a-75a89407977e-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "a8ac7700-3c15-47e7-ba10-e31dbaa3e4e6",
       "name": "ITUNES 25$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/a8ac7700-3c15-47e7-ba10-e31dbaa3e4e6-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "acaec4e2-aeb3-4c8c-b228-6022e6ca9983",
       "name": "تسليم رواتب عبر  شام كاش",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/62082703-9259-435d-a285-dcd39fc4e8c1.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/acaec4e2-aeb3-4c8c-b228-6022e6ca9983-fd04aa19459583b7.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "b0a640d5-67cf-4caa-8478-61f2d77912c4",
       "name": "ITUNES 25 TL",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/b0a640d5-67cf-4caa-8478-61f2d77912c4-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "b8ab24e6-6500-4afa-9c23-78717f3f6f93",
       "name": "ITUNES 5$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/b8ab24e6-6500-4afa-9c23-78717f3f6f93-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "c0e101fc-d341-46f7-aefd-570ae1c3ee34",
       "name": "الممالك الخالدة ألماسة7500",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/c0e101fc-d341-46f7-aefd-570ae1c3ee34-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "c2b7a65c-04dc-43eb-84ed-65609e56ba1b",
       "name": "عصر الأساطير -دولار 15",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/8d95b5cf-794c-4ea2-adc7-126b27616760.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/c2b7a65c-04dc-43eb-84ed-65609e56ba1b-567fdaec6607cfed.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "c5d64307-5cf9-4f6f-b756-10a4fa68516d",
       "name": "ITUNES 10$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/c5d64307-5cf9-4f6f-b756-10a4fa68516d-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "cdb196a0-4ed4-4070-9ae4-30da4faa6aa8",
       "name": "الممالك الخالدة ألماسة 470",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/cdb196a0-4ed4-4070-9ae4-30da4faa6aa8-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "d480d0ea-c7e9-4e31-9f09-195f51899825",
       "name": "الممالك الخالدة ألماسة3900",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/d480d0ea-c7e9-4e31-9f09-195f51899825-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "ddf290db-ab14-47fb-b5ff-935d9c7c2a20",
       "name": "عصر الأساطير -دولار 1",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/8d95b5cf-794c-4ea2-adc7-126b27616760.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/ddf290db-ab14-47fb-b5ff-935d9c7c2a20-567fdaec6607cfed.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "e12f615b-7723-4fb9-bc12-5e2ee8ef7de0",
       "name": "ITUNES 50$",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/0da22144-7269-49af-91fe-c5b313630ec9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/e12f615b-7723-4fb9-bc12-5e2ee8ef7de0-b7703e89df3c9821.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "fa0aff73-1dda-492a-b51f-49a65bec66cc",
       "name": "جونكو",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/dfb1423e-8044-4b72-8fd9-2fe52884ec4d.webp",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/fa0aff73-1dda-492a-b51f-49a65bec66cc-c6f22f0a593dc36f.webp",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "f825ca9d-2a72-434e-9fbb-34ce500b53aa",
       "name": "الممالك الخالدة ألماسة 910",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/products/dd59ce93-a35b-42fe-a5e5-1fb142a5cdb9.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/f825ca9d-2a72-434e-9fbb-34ce500b53aa-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "fb2d4ee6-d340-4769-aa2d-740ae6b470bd",
       "name": "تحويل ريفلكت",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/f63c2450-bb88-4da3-a207-2e0c88133618.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/fb2d4ee6-d340-4769-aa2d-740ae6b470bd-29f8aa55d908d1ee.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "ff572ee2-a310-4198-9d5c-720fc54f23bf",
       "name": "تحويل USDT",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product/f3846626-c31b-4997-825e-f11dbf0427b3.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/ff572ee2-a310-4198-9d5c-720fc54f23bf-1043ae8a54eab592.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "02d35d1b-5a7f-40eb-9565-6ae8ca4f494b",
       "name": "سو ماتش",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/somatch.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/02d35d1b-5a7f-40eb-9565-6ae8ca4f494b-cb4d7588213254e6.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "111d00ae-d4e3-4252-a8f5-2bb02cf87a1e",
       "name": "يوهو ستار",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/yoho.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/111d00ae-d4e3-4252-a8f5-2bb02cf87a1e-d5f8129446921d3b.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "1c8c2501-8c6b-4cd9-87e0-253824936e6e",
       "name": "بوتا لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/pota.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/1c8c2501-8c6b-4cd9-87e0-253824936e6e-715cf2b434449567.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "395e990f-de2e-49dd-b49e-d6ac937d71ec",
       "name": "مانجو ستار",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-01.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/395e990f-de2e-49dd-b49e-d6ac937d71ec-2d94773531f868cd.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "3c57ac7b-f8ee-411e-b4c1-927735294df1",
       "name": "هلا مي",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-04.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/3c57ac7b-f8ee-411e-b4c1-927735294df1-afee257588853f83.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "512034cd-4a13-4b8f-ab5b-ec24ad230bd5",
       "name": "لاما شات",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/lama.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/512034cd-4a13-4b8f-ab5b-ec24ad230bd5-b5ddf79ae5a95763.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "5d370fed-4609-46ec-bbae-820c56819c09",
       "name": "كوكو لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/coco.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/5d370fed-4609-46ec-bbae-820c56819c09-15410b47b8307a8c.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "8b3376bb-a190-4d26-9046-5c869ea4b4d2",
       "name": "يويو شات",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/yoyo.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/8b3376bb-a190-4d26-9046-5c869ea4b4d2-646cb35b34f854db.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "9507513e-5ff7-4682-8293-94acf99b052c",
       "name": "بوتا لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/pota.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/9507513e-5ff7-4682-8293-94acf99b052c-715cf2b434449567.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "b55ed17f-9afa-4dea-81ce-b48cec0153e3",
       "name": "فانسي لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-verified/f90-03.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/b55ed17f-9afa-4dea-81ce-b48cec0153e3-311606ae30bf8098.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "d3f0829b-a8dd-4b51-8f8b-57f01323d806",
       "name": "روكا لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/roka.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/d3f0829b-a8dd-4b51-8f8b-57f01323d806-40a5ccc309542919.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",
       "id": "fc3891c6-6bf0-4c8a-846a-175e6552557a",
       "name": "ميغو لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/migo.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/product/fc3891c6-6bf0-4c8a-846a-175e6552557a-dd09fbbf2019864a.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "category",
       "id": "091168e3-3f55-4e9d-ba32-bc9584badb3a",
       "name": "ميرج كينغدوم",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category/1ee8a78e-e437-4ed1-a741-ea213935e84d.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/category/091168e3-3f55-4e9d-ba32-bc9584badb3a-a21b69a0f3286b1c.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "category",
       "id": "b27fe7aa-578d-4af3-94e5-0a5f50950c17",
       "name": "بوتا لايف",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/pota.jpg",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/category/b27fe7aa-578d-4af3-94e5-0a5f50950c17-715cf2b434449567.jpg",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "category",
       "id": "ee73b8b2-843c-4aa3-b3da-3a327cb2d208",
       "name": "عصر الأساطير",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category/b87b8cb6-ca24-40d9-b0b0-5f5f48efbeb1.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/category/ee73b8b2-843c-4aa3-b3da-3a327cb2d208-567fdaec6607cfed.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "category",
       "id": "f80603bd-a642-4407-bc64-3fae2b428809",
       "name": "الممالك الخالدة",
-      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category/4d382b53-2f26-456c-a290-d685539e0c46.png",
-      "source": "reviewed-store-original"
+      "url": "https://f90-card-media.pages.dev/media/official/category/f80603bd-a642-4407-bc64-3fae2b428809-c63e2ed780075139.png",
+      "source": "cloudflare-immutable-copy"
     },
     {
       "kind": "product",

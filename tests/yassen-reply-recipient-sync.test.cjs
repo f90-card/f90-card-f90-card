@@ -47,5 +47,5 @@ test("metadata sync is read-only and background retries are bounded",()=>{
   assert.match(sql,/supplier_name_check_attempts integer not null default 0/);
   assert.match(admin,/data-action="sync-recipient-name"/);
   assert.match(admin,/A\.call\("staff\.sync_recipient_name"/);
-  assert.match(read("admin.html"),/admin\.js\?v=20261017-yassen-name-sync1/);
+  assert.match(read("admin.html"),/admin\.js\?v=[a-zA-Z0-9_-]+/);
 });

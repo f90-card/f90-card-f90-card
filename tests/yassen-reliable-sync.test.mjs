@@ -24,7 +24,7 @@ test("prior and future manager pricing edits remain protected",()=>{
     assert.ok(sql.includes(x),x);
   for(const x of ["let editedYassenPrice = false",
     'selectedProvider.adapter==="yassen"',
-    "Math.abs(chosenPrice-previousPrice)>0.005",
+    "Math.abs(chosenPrice-previousPrice)>0.0000005",
     "auto_margin: !!i.auto_margin && !editedYassenPrice"])
     assert.ok(api.includes(x),x);
 });

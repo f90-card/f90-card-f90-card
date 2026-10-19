@@ -8,7 +8,8 @@ test("Official domain is canonical in store and sitemap", () => {
   const home = read("index.html");
   assert.match(home, /rel="canonical" href="https:\/\/www\.f90card\.online\/"/);
   assert.match(home, /"alternateName":\["F90 CARD"/);
-  assert.match(home, /assets\/icons\/icon-192\.png/);
+  assert.match(home, /rel="icon"[^>]+href="\/favicon\.png"/);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'favicon.png')));
   const map = read("sitemap.xml");
   assert.match(map, /https:\/\/www\.f90card\.online\/discover\//);
   assert.doesNotMatch(map, /https:\/\/f90-card\.github\.io/);

@@ -24,6 +24,8 @@ const hostAllowed=(entry,url)=>{
   try {
     const u=new URL(url);
     if(u.protocol!=='https:') return false;
+    if(entry.source==='cloudflare-immutable-copy') return u.hostname==='f90-card-media.pages.dev' &&
+      new RegExp('^/media/official/'+entry.kind+'/'+entry.id+'-[a-f0-9]{16}\\.(?:png|jpg|webp|avif|gif)$').test(u.pathname);
     if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
     // Explicitly reviewed public storefront artwork, never customer buckets.
     // Preserve existing F90 designs while removing the old hosting dependency.
@@ -118,6 +120,8 @@ async function processImage(e) {
       const blob=Buffer.from(await res.arrayBuffer());
       if(blob.length<200||blob.length>5*1024*1024) throw Error('unexpected image length');
       const digest=createHash('sha256').update(blob).digest('hex').slice(0,16);
+      if(e.source==='cloudflare-immutable-copy' && !new URL(e.url).pathname.endsWith('-'+digest+'.'+ext))
+        throw Error('Immutable source content mismatch');
       const relative='media/official/'+e.kind+'/'+e.id+'-'+digest+'.'+ext;
       const target=resolve(root,relative);
       if(!target.startsWith(root+sep))throw Error('unsafe target file');
