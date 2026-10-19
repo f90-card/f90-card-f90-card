@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "policy": "official-content-only",
+  "policy": "official-content-only; 13 additional official Google Play icon URLs verified by store page metadata; no customer media",
   "created": "2026-10-18",
   "source": "Google Play and Apple App Store artwork URLs already used in catalog; current banner media",
   "assets": [
@@ -369,6 +369,84 @@
       "id": "ff67ec55-f8f1-449a-b9cb-4c63671e0fc8",
       "name": "هامي بارتي",
       "url": "https://play-lh.googleusercontent.com/mUvnqI_fHnK_1lHJbWFdniBgisO9MN83FelPuTjJkMEnMgmcRA0JMnK-fMjjtmKP-w1VZhnfAedUcejcd3Ih=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "10f32538-c5c6-4300-a810-0dbbb78104a3",
+      "name": "ستار ميكر",
+      "url": "https://play-lh.googleusercontent.com/fcFo4Yt5XaiKetmDIjbx0C2IiJT1lNzRvqBrEO4LbgQB_jYJksaNwvvLvWltJAuBCPprCmPEwTpbrJl_6TEOlXM=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "33c8bbf3-3586-495c-91b9-721c5c150f87",
+      "name": "ببجي تركي",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "34604a0d-8b69-4e97-8917-8f68b2278965",
+      "name": "ببجي موبايل العالمية",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "413c2ba1-f755-48f0-b596-c4fbf53602d0",
+      "name": "ببجي موبايل اكواد عالمية",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "7a8e3850-edb4-4c9b-9c62-963c6bcd66e9",
+      "name": "ببجي اتوماتيك",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "aaae055d-4006-4170-9a6f-98f67e9b9f67",
+      "name": "عضويات ببجي",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "b4538cdf-fa49-4453-997c-00f5289ab7d1",
+      "name": "8 بول بول كوينز",
+      "url": "https://play-lh.googleusercontent.com/F2_Kbn1-vQePDh_Y0qNCDhkmpEK5qdEyPwcJqwXho54ZVG4w6Szt32VHsyPzeVLPR2kfYI62-hGmNpQoDxS-wQ=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "b9bdb55b-369a-4f48-a3d3-9b4bc2d86170",
+      "name": "ببجي موبايل اكواد",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "ba4c431e-f141-46f5-bd0f-bbdf476233bd",
+      "name": "عروض ببجي موبايل عالمية",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "c2049da7-30d2-4a9a-89f4-f1220f2fd965",
+      "name": "إف سي موبايل",
+      "url": "https://play-lh.googleusercontent.com/uT1JkXWK9pv1DWWOuVebnsbATHMZmhG4LUDkvoXne9H2MDF1im00_-U4taZPifIBpJ47sA0i8IoCh5aEVuUG5JI=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "c6e8b01b-892a-41d7-90ff-80ebd38fd2c6",
+      "name": "ببجي موبايل يدوي",
+      "url": "https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "d0545d28-e093-4b40-b3fe-dfcc9d7a4c5a",
+      "name": "فري فاير",
+      "url": "https://play-lh.googleusercontent.com/cK-U0_B9GrnSy26SNISDuvU_hL4VggyqJ1J5V2oiuyVEfiGo7fzegdBjk0ejXPg3PKK5sPwumdLBbWv8KkBKLQ=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "f955a361-ea48-49c7-a266-afa6d0b34fe8",
+      "name": "8 بول بول كاش",
+      "url": "https://play-lh.googleusercontent.com/F2_Kbn1-vQePDh_Y0qNCDhkmpEK5qdEyPwcJqwXho54ZVG4w6Szt32VHsyPzeVLPR2kfYI62-hGmNpQoDxS-wQ=s0-br30"
     }
   ]
 }
