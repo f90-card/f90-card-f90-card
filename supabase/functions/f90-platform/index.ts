@@ -44,6 +44,7 @@ const roleNames = [
   "designer",
   "trader",
   "support",
+  "amin_card",
 ];
 const errors: Record<string, [number, string]> = {
   F90_FORBIDDEN: [403, "لا تملك الصلاحية المطلوبة أو حسابك موقوف"],
@@ -836,8 +837,16 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     .slice(0, 30)
     .map((t: any) => ({
       min: integer(t.min),
+      ...(t.max == null || t.max === "" ? {} : {max:integer(t.max)}),
       prices: { USD: num(t.prices?.USD, 0.000001, 1000000) },
     }));
+  result.pricing_tiers.sort((x: any,y: any)=>x.min-y.min);
+  for(let n=0;n<result.pricing_tiers.length;n++) {
+    const tier=result.pricing_tiers[n],prev=result.pricing_tiers[n-1];
+    if(tier.min<1 || (tier.max!=null && tier.max<tier.min) ||
+       (prev && (prev.min===tier.min || (prev.max!=null && prev.max>=tier.min))))
+      throw new AppError("F90_QUANTITY");
+  }
   return result;
 }
 async function catalogSave(a: Actor, b: any) {

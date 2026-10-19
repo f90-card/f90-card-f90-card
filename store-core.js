@@ -11,6 +11,7 @@
     designer: "مصمم",
     trader: "تاجر",
     support: "الدعم الفني",
+    amin_card: "الأمين كارد",
   };
   const statuses = {
     pending: "بانتظار التنفيذ",
@@ -125,7 +126,7 @@
     for (const t of [...(c.pricing_tiers || [])].sort(
       (a, b) => Number(a.min) - Number(b.min),
     ))
-      if (q >= Number(t.min)) price = Number(t.prices?.USD ?? price);
+      if (q >= Number(t.min) && (t.max == null || t.max === "" || q <= Number(t.max))) price = Number(t.prices?.USD ?? price);
     return c.type === "quantity"
       ? (price * q) / Number(c.unit_quantity || 1)
       : price;

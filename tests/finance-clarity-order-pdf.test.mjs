@@ -31,7 +31,7 @@ test("Order detail shows only factual saved recipient details and core financial
  assert.match(app,/function orderRecipientFields/);
  assert.match(app,/function orderSummaryFields/);
  assert.match(app,/ID الشحن/);
- assert.match(app,/اسم الحساب المسجل/);
+ assert.match(app,/اسم الحساب/);
  assert.match(app,/customer_fields/);
  assert.match(app,/["']?param_1["']?/);
  assert.match(app,/["']?account_name["']?/);

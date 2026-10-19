@@ -29,7 +29,7 @@ const hostAllowed=(entry,url)=>{
     // Explicitly reviewed public storefront artwork, never customer buckets.
     // Preserve existing F90 designs while removing the old hosting dependency.
     if(entry.source==='reviewed-store-original') return u.hostname==='xzqnrpycjxfbyrfaolud.supabase.co' &&
-      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified|admin-icons|banners|backgrounds|category-banners)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
+      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified|admin-icons|banners|backgrounds|category-banners|product-gallery|branding)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
     if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
     return officialHost.test(u.hostname);
   } catch {return false;}
@@ -119,7 +119,9 @@ async function processImage(e) {
       if(!ext)throw Error('not a supported image');
       const blob=Buffer.from(await res.arrayBuffer());
       if(blob.length<200||blob.length>5*1024*1024) throw Error('unexpected image length');
-      const digest=createHash('sha256').update(blob).digest('hex').slice(0,16);
+      const fullDigest=createHash('sha256').update(blob).digest('hex');
+      if(e.sha256 && e.sha256!==fullDigest)throw Error('Reviewed image content changed');
+      const digest=fullDigest.slice(0,16);
       if(e.source==='cloudflare-immutable-copy' && !new URL(e.url).pathname.endsWith('-'+digest+'.'+ext))
         throw Error('Immutable source content mismatch');
       const relative='media/official/'+e.kind+'/'+e.id+'-'+digest+'.'+ext;

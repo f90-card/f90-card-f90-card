@@ -28,11 +28,8 @@ test("a funded manual service buys from wallet, without WhatsApp checkout", asyn
     new h.window.Event("submit", { bubbles: true, cancelable: true }),
   );
   await h.settle();
-  assert.equal(h.calls.filter((c) => c.action === "checkout").length, 0);
-  const confirm = h.document.querySelector('[data-action="confirm-wallet-checkout"]');
-  assert.ok(confirm, "a separate review must precede the wallet charge");
-  confirm.dispatchEvent(new h.window.Event("click", { bubbles: true }));
-  await h.settle();
+  assert.equal(h.document.querySelector('[data-action="confirm-wallet-checkout"]'), null,
+    "direct purchase does not open a second confirmation");
   const call = h.calls.find((c) => c.action === "checkout");
   assert.ok(call);
   assert.equal(call.args.fields.account_id, "42");
@@ -106,7 +103,7 @@ test("untrusted catalog text is displayed without executable markup", async () =
 });
 
 
-test("premium card shows a server-quoted total and remaining wallet before the final action", async () => {
+test("compact card shows the authoritative total without wallet snapshots", async () => {
   const h = await harness("index.html", { hash: "#/product/coins", balance: 20 });
   try {
     const card = h.document.querySelector(".f90-premium-checkout");
@@ -116,11 +113,9 @@ test("premium card shows a server-quoted total and remaining wallet before the f
     const summary = card.querySelector(".f90-premium-summary");
     assert.ok(summary);
     assert.match(summary.textContent, /السعر النهائي/);
-    assert.match(summary.textContent, /رصيدك الحالي/);
-    assert.match(summary.textContent, /رصيدك بعد الشراء/);
-    const remaining = h.document.getElementById("f90CheckoutTopRemaining").textContent;
-    assert.ok(/\d/.test(remaining), "remaining wallet has a numerical USD amount");
-    assert.match(remaining, /\$|USD/, "new visitors use the historical USD display");
+    assert.doesNotMatch(summary.textContent, /رصيدك الحالي|رصيدك بعد الشراء/);
+    assert.equal(h.document.getElementById("f90CheckoutTopRemaining"), null);
+    assert.match(h.document.getElementById("f90CheckoutTopTotal").textContent, /5/);
     assert.ok(h.calls.some((call) => call.action === "quote"));
     const form = h.document.getElementById("checkoutForm");
     const buy = h.document.getElementById("buyButton");
@@ -190,4 +185,16 @@ test("welcome action launches deposit screen and shows platform icon shortcuts",
     assert.ok(h.document.querySelector('.f90-experience-actions a[href="#/deposit"]'));
     assert.equal(h.document.querySelectorAll(".f90-install-hero .f90-install-icon-btn").length,3);
   } finally {h.cleanup();}
+});
+
+test("expired maintenance returns to the store without a page refresh",async()=>{
+ const catalog=fixture();catalog.settings.config.maintenance={enabled:true,until:"2020-01-01T00:00:00Z"};
+ const h=await harness("index.html",{catalog,guest:true});
+ assert.equal(h.document.querySelector(".f90-maintenance-screen"),null);
+ assert.ok(h.document.querySelector(".image-grid"));h.cleanup();
+});
+test("category banners stay absent even when a saved banner is configured",async()=>{
+ const catalog=fixture();catalog.categories[1].presentation.banner_url="https://example.invalid/banner.png";
+ const h=await harness("index.html",{catalog,hash:"#/category/pubg"});
+ assert.equal(h.document.querySelector(".category-art"),null);h.cleanup();
 });

@@ -326,3 +326,19 @@ body.f90-checkout-open .f90-premium-checkout #checkoutForm #buyButton.f90-visa-b
  .f90-install-shortcuts.f90-install-about .f90-install-icon-btn{width:46px;height:46px;flex-basis:46px}
 }
 @media(prefers-reduced-motion:reduce){.f90-install-icon-btn{transition:none}.f90-install-icon-btn:hover{transform:none}}
+
+/* Compact direct checkout: quantity and authoritative price share one row. */
+body .f90-premium-checkout.product-page {max-width:360px!important;gap:8px!important;padding:12px!important}
+body .f90-premium-checkout .f90-visa-watermark,
+body .f90-premium-checkout .f90-premium-chip,
+body .f90-premium-checkout .f90-visa-subtitle,
+body .f90-premium-checkout .f90-visa-statuses,
+body .f90-premium-checkout .f90-favorite-icon,
+body .f90-premium-checkout .f90-visa-note {display:none!important}
+body .f90-premium-checkout .f90-visa-product {min-height:0!important;padding:0!important}
+body .f90-premium-checkout .product-art {width:40px!important;height:40px!important;min-width:40px!important}
+body .f90-premium-checkout #checkoutForm .f90-quantity-with-price {display:grid!important;grid-template-columns:minmax(0,1fr) minmax(75px,auto)!important;gap:8px!important}
+body .f90-premium-checkout #checkoutForm .f90-quantity-with-price>.f90-visa-inputicon {display:none!important}
+body .f90-premium-checkout #checkoutForm .f90-quantity-with-price>.f90-premium-summary {align-self:end;min-width:0;border:0!important;padding:0!important;background:none!important}
+body .f90-premium-checkout #checkoutForm .f90-quantity-with-price .f90-visa-price {display:flex!important;flex-direction:column!important;gap:4px!important;min-height:45px!important;justify-content:center!important}
+body .f90-premium-checkout #checkoutForm .f90-quantity-with-price #f90CheckoutTopTotal {font-size:16px!important;max-width:120px!important;overflow-wrap:anywhere}

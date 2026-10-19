@@ -52,6 +52,8 @@
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
+    ["trader-commissions", "عمولات التجار", "wallet", ["manager"]],
+    ["amin-card", "الأمين كارد", "grid", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
     ["banners", "الإعلانات", "bell", ["manager", "designer"]],
@@ -731,7 +733,7 @@
     return (rows || [])
       .map(
         (t, n) =>
-          `<div class="dynamic-row" data-tier-row><div class="field-row">${field("tier_min_" + n, "من كمية", "number", t.min, 'min="1" step="1"')}${field("tier_price_" + n, "السعر لكل وحدة تسعير بالدولار", "number", t.prices?.USD, 'min="0.000001" step="0.000001"')}</div><button type="button" class="button ghost small" data-action="remove-row">حذف الشريحة</button></div>`,
+          `<div class="dynamic-row" data-tier-row><div class="field-row">${field("tier_min_" + n, "من كمية", "number", t.min, 'min="1" step="1"')}${field("tier_max_" + n, "إلى كمية <small>فارغ = دون حد</small>", "number", t.max ?? "", 'min="1" step="1"')}${field("tier_price_" + n, "السعر لكل وحدة تسعير بالدولار", "number", t.prices?.USD, 'min="0.000001" step="0.000001"')}</div><button type="button" class="button ghost small" data-action="remove-row">حذف الشريحة</button></div>`,
       )
       .join("");
   }
@@ -1310,11 +1312,23 @@
     }));
   }
   function parseTiers(form) {
-    return [...form.querySelectorAll("[data-tier-row]")].map((row) => ({
-      min: Number(row.querySelector("[name^=tier_min]").value),
-      prices: { USD: Number(row.querySelector("[name^=tier_price]").value) },
-    }));
+    const tiers = [...form.querySelectorAll("[data-tier-row]")].map((row) => {
+      const min=Number(row.querySelector("[name^=tier_min]").value);
+      const raw=row.querySelector("[name^=tier_max]").value;
+      const max=raw===""?null:Number(raw);
+      const price=Number(row.querySelector("[name^=tier_price]").value);
+      if(!Number.isSafeInteger(min)||min<1||(max!==null&&(!Number.isSafeInteger(max)||max<min))||!Number.isFinite(price)||price<=0)
+        throw new Error("تحقق من حدود الشريحة وسعرها");
+      return {min,...(max===null?{}:{max}),prices:{USD:price}};
+    }).sort((a,b)=>a.min-b.min);
+    for(let n=1;n<tiers.length;n++) {
+      const prev=tiers[n-1];
+      if(prev.min===tiers[n].min||(prev.max!=null&&prev.max>=tiers[n].min))
+        throw new Error("شرائح الكميات متداخلة");
+    }
+    return tiers;
   }
+
   function dateValue(v) {
     return v ? new Date(v).toISOString() : null;
   }
@@ -2173,6 +2187,8 @@
     }
     main.innerHTML = '<div class="loading">جارٍ تحميل أدوات الإدارة…</div>';
     try {
+      if (page === "trader-commissions") {location.href="./trader-commissions.html";return;}
+      if (page === "amin-card") {location.href="./amin-card.html";return;}
       if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
@@ -3384,6 +3400,7 @@
         main.innerHTML = `<section class="panel admin-empty-auth"><h1>تحقق من هويتك</h1><form id="adminMfa">${field("code", "رمز المصادقة", "text", "", 'required pattern="[0-9]{6}" inputmode="numeric" maxlength="6"')}<button class="button full" type="submit">تحقق</button></form></section>`;
         return;
       }
+      if(S.me.role==="amin_card"){location.replace("./amin-card.html");return;}
       window.F90AdminInbox?.init(S.me.role,S.me.profile?.id||S.me.id);
       const allowed = sections.filter((s) => s[3].includes(S.me.role));
       if (!allowed.length) {

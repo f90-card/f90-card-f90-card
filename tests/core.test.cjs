@@ -48,3 +48,8 @@ test("render helpers escape markup and reject executable URLs", () => {
 test("amount formatting preserves tiny financial discounts when requested", () => {
   assert.match(C.money(0.00005, "USD", true), /0\.00005|٠\.٠٠٠٠٥/);
 });
+
+test("bounded volume tiers honor inclusive endpoints and revert to base outside them",()=>{
+ const p={currency:"USD",price:115,commerce:{type:"quantity",unit_quantity:1000000,prices:{USD:115},pricing_tiers:[{min:1,max:999999,prices:{USD:120}},{min:1000000,max:50000000,prices:{USD:110}}]}};
+ for(const [q,expected] of [[1,0.00012],[999999,119.99988],[1000000,110],[50000000,5500],[50000001,5750.000115]])assert.ok(Math.abs(C.previewPrice(p,q)-expected)<0.0000001);
+});

@@ -56,7 +56,7 @@ test("nickname is never guessed from ID and only shown when supplied",()=>{
  assert.match(supplier,/if \(yassen && action === "add"\)/);
  assert.match(supplier,/account_name: nickname\.trim\(\)/);
  assert.match(app,/const supplierName=typeof o\.supplier_account_name/);
- assert.match(app,/اسم الحساب من المورّد/);
+ assert.match(app,/اسم الحساب/);
  assert.match(app,/orderRecipientFields\(o\)\.accountId/);
  assert.match(migration,/add column if not exists supplier_account_name text/);
 });

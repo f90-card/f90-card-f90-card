@@ -50,7 +50,7 @@ test("services work on mobile with five unique banner visuals",()=>{
  assert.match(css,/@media\(max-width:740px\)/);
  assert.match(css,/scroll-snap-type:x mandatory/);
  assert.match(app,/f90-category-top/);
- assert.match(app,/categoryBanner/);
+ assert.doesNotMatch(app,/const categoryBanner=/);
  assert.match(app,/page === "special"/);
 });
 test("paired laptop and phone preserve user-controlled display sizing",()=>{

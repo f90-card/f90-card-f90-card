@@ -73,6 +73,10 @@
     `<div class="empty">${I(icon)}<p>${e(text)}</p></div>`;
   const status = (s) =>
     `<span class="badge status-${e(s)}">${e(C.statuses[s] || s)}</span>`;
+  function customerOrderStatus(value) {
+    const labels={completed:"مكتمل",partial:"مكتمل جزئيًا",failed:"لم يكتمل",refunded:"مسترد"};
+    return '<span class="badge status-'+e(value)+'">'+e(labels[value]||"قيد التنفيذ")+'</span>';
+  }
   function toast(text) {
     $("toast").textContent = text;
     $("toast").hidden = false;
@@ -91,7 +95,6 @@
     $("modalRoot").querySelector("input,button")?.focus();
   }
   function closeModal() {
-    pendingCheckout = null;
     $("modalRoot").innerHTML = "";
     document.body.style.overflow = "";
   }
@@ -260,7 +263,7 @@
     const symbol=symbols[code]||code;
     const printed=balance?Math.trunc(value):value;
     return symbol+" "+new Intl.NumberFormat("en-US",{
-      minimumFractionDigits:0,maximumFractionDigits:balance?0:1
+      minimumFractionDigits:0,maximumFractionDigits:balance?0:(Math.abs(value)<1?6:2)
     }).format(printed);
   }
   function f90ShortLimit(value){
@@ -331,7 +334,9 @@
       }
       return `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}<span>${e(label)}</span></a>`;
     }).join("") + (drawerGroup ? "</div></details>" : "");
-    const staff = me && ["manager", "admin", "designer", "support"].includes(me.role);
+    document.getElementById('f90TraderCommissionsLink')?.remove();
+    if(me?.role==='trader')$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عمولات عملائي</a>');
+    const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
       adminShortcut = document.createElement("a");
@@ -694,7 +699,7 @@
     let introAlreadyShown = false;
     try { introAlreadyShown = localStorage.getItem("f90-home-intro-viewed-v1") === "1"; } catch {}
     const showHomeIntro = c.show_intro !== false && !introAlreadyShown;
-    const slides = S.banners.filter((b) => C.visibleSchedule(b.presentation || {})),
+    const slides = [...S.banners,...(window.F90Partners?.mainBanners()||[])].filter((b) => C.visibleSchedule(b.presentation || {})),
       hero =
         c.show_banners !== false && slides.length
           ? slides[S.carousel % slides.length]
@@ -703,6 +708,7 @@
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><div class="f90-hero-link"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></div><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  ${window.F90Special?.home(S.settings) || ''}
+ ${window.F90Partners?.aboveIntro() || ''}
  ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
@@ -713,6 +719,8 @@
          .join("")}</div>`
      : empty("تُجهّز أقسام المتجر حاليًا")
  }
+ ${window.F90Partners?.home() || ""}
+ ${window.F90Partners?.contacts() || ""}
  ${f90SocialLinks().length ? `<section class="f90-home-social"><div class="section-head"><h2>تواصل معنا وتابع جديدنا</h2><span>روابط منصات F90 CARD الرسمية</span></div><div class="f90-social-card-grid">${f90SocialCards()}</div></section>` : ""}
  <div class="value-strip">${[
    ["wallet", "شراء من محفظتك", "سعر واضح قبل التأكيد"],
@@ -816,20 +824,7 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div><section class="f90-category-top"><button class="button secondary small" data-action="share" aria-label="نسخ رابط القسم">${I("copy")} نسخ رابط القسم</button></section>${c.presentation?.banner_url ? image(c.presentation.banner_url, c.name, "category-art") : ""}${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
-    // Every section receives an independent banner, never a reused global hero.
-    const banners={games:"./assets/sections/f90-games.webp",apps:"./assets/sections/f90-apps.webp",
-      streaming:"./assets/sections/f90-streaming.webp",ai:"./assets/sections/f90-ai.webp",
-      cards:"./assets/sections/f90-cards.webp",social:"./assets/sections/f90-social.webp",
-      mobile:"./assets/sections/f90-mobile.webp",services:"./assets/sections/f90-services.webp"};
-    const categoryBanner=C.safeUrl(c.presentation?.banner_url || banners[c.slug] || c.image_url);
-    let bannerEl=main.querySelector(".category-art");
-    if(categoryBanner){
-      if(bannerEl)bannerEl.src=categoryBanner;
-      else main.insertAdjacentHTML("afterbegin",'<img class="category-art" src="'+e(categoryBanner)+'" alt="'+e(c.name)+'" loading="eager">');
-      bannerEl=main.querySelector(".category-art");
-      if(bannerEl)main.prepend(bannerEl);
-    }
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div><section class="f90-category-top"><button class="button secondary small" data-action="share" aria-label="نسخ رابط القسم">${I("copy")} نسخ رابط القسم</button></section>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
     const copySection=main.querySelector(".f90-category-top button");
     if(copySection){copySection.innerHTML=I("copy");copySection.title="نسخ رابط القسم";}
     if ($("categoryFilter")) $("categoryFilter").closest("label")?.insertAdjacentHTML("afterend", '<p id="categoryNoResults" class="muted" hidden>لا توجد نتائج مطابقة داخل هذا القسم.</p>');
@@ -922,7 +917,7 @@
       $("checkoutTotal").textContent = C.money(
         C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
       );
-      $("f90CheckoutTopBalance").textContent = S.me ?
+      if ($("f90CheckoutTopBalance")) $("f90CheckoutTopBalance").textContent = S.me ?
         f90CheckoutMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
       const remainingLabel = $("f90CheckoutTopRemaining");
       if (remainingLabel) {
@@ -1017,8 +1012,6 @@
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
           <div class="f90-visa-price"><span>السعر النهائي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-busy="true">جارٍ حساب السعر…</strong></div>
-          <div class="f90-visa-balance"><span>رصيدك الحالي</span><strong id="f90CheckoutTopBalance">${S.me ? e(f90CheckoutMoney(S.me.wallet?.balance_usd,true)) : "سجّل الدخول"}</strong></div>
-          <div class="f90-visa-remaining"><span>رصيدك بعد الشراء</span><strong id="f90CheckoutTopRemaining">—</strong></div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
@@ -1026,7 +1019,7 @@
         <strong id="checkoutTotal" hidden>—</strong>
         <div class="f90-visa-footer">
           <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
-          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "تأكيد الشراء" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
+          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
         </div>
       </form>
     </div>`;
@@ -1046,6 +1039,9 @@
     } else {
       main.innerHTML = productHtml;
     }
+    const quantityRow=$("checkoutForm")?.querySelector('[name="quantity"]:not([type="hidden"])')?.closest('.f90-visa-inputrow');
+    const totalBox=$("checkoutForm")?.querySelector('.f90-premium-summary');
+    if(quantityRow && totalBox){quantityRow.classList.add('f90-quantity-with-price');quantityRow.appendChild(totalBox);}
     if (S.me) loadCheckoutRecipients($("checkoutForm"));
     if (!disabled) quoteProduct(p);
     else
@@ -1459,9 +1455,9 @@
     return '<a class="record f90-history-entry f90-history-order" data-state="'+e(state)+'" href="'+href("order",o.id)+'">'+
       image(o.product_image,o.product_name,"record-image")+
       '<div class="f90-history-entry-main"><div class="f90-history-entry-title"><h3>'+e(o.product_name)+'</h3>'+status(state)+'</div>'+
-      '<small>طلب #'+e(o.order_number)+' · '+e(C.date(o.created_at))+'</small>'+
+      '<small>'+e(C.date(o.created_at))+'</small>'+
       (orderRecipientFields(o).accountId?'<small> ID: '+e(orderRecipientFields(o).accountId)+'</small>':'')+
-      (orderRecipientFields(o).accountName?'<small>اسم الحساب'+(orderRecipientFields(o).accountNameSource==="supplier"?" (المورّد)":"")+': '+e(orderRecipientFields(o).accountName)+'</small>':'')+
+      (orderRecipientFields(o).accountName?'<small>اسم الحساب'+""+': '+e(orderRecipientFields(o).accountName)+'</small>':'')+
       '<strong class="f90-history-sum">'+e(accountMoney(o.total_usd))+'</strong></div>'+
       '<span class="f90-history-open" aria-hidden="true">‹</span></a>';
   }
@@ -1569,14 +1565,13 @@
     const subtotal=Number(o.subtotal_usd);
     const unit=quantity>0&&Number.isFinite(subtotal)?subtotal/quantity:quantity>0?Number(o.total_usd)/quantity:0;
     return [
-      ["رقم العملية",String(o.order_number||o.id)],
       ["اسم المنتج",String(o.product_name||"—")],
       ["الكمية",String(o.quantity??"—")],
       ["السعر",accountMoney(unit)],
       ["السعر الإجمالي",accountMoney(o.total_usd)],
       ["التاريخ والوقت",C.date(o.created_at)],
       ...(recipient.accountId?[["ID الشحن",recipient.accountId]]:[]),
-      ...(recipient.accountName?[[recipient.accountNameSource==="supplier"?"اسم الحساب من المورّد":"اسم الحساب المسجل",recipient.accountName]]:[])
+      ...(recipient.accountName?[["اسم الحساب",recipient.accountName]]:[])
     ];
   }
   async function order(id) {
@@ -1602,13 +1597,13 @@
     const more=recipient.extras.length?
       '<details class="f90-order-extra"><summary>بيانات الشحن الإضافية</summary>'+
       recipient.extras.map(([key,val])=>'<p><span>'+e(key)+'</span><strong dir="auto">'+e(typeof val==="object"?JSON.stringify(val):val)+'</strong></p>').join("")+'</details>':"";
-    const eventsHtml=events.map(ev=>'<div class="timeline-item"><h3>'+e(C.statuses[ev.status]||ev.status)+'</h3>'+
-      '<p>'+e(ev.note||"")+'</p><small>'+e(C.date(ev.created_at))+'</small></div>').join("");
-    main.innerHTML=pageHead("تفاصيل الطلب #"+o.order_number,"",
+    // Customer-facing progress excludes provider diagnostics and internal notes.
+    const eventsHtml='<div class="timeline-item">'+customerOrderStatus(o.status)+'</div>';
+    main.innerHTML=pageHead("تفاصيل الطلب","",
       '<button class="button secondary small" data-action="order-pdf">'+I("download")+' تنزيل PDF</button>')+
       '<div class="f90-order-summary-layout"><section class="panel f90-order-summary-card">'+
       '<div class="f90-order-summary-heading"><img src="'+e(C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png")+'" alt="F90 CARD" loading="lazy">'+
-      '<div><h2>ملخص الطلب</h2>'+status(o.status)+'</div></div>'+
+      '<div><h2>ملخص الطلب</h2>'+customerOrderStatus(o.status)+'</div></div>'+
       '<div class="f90-order-summary-rows">'+rows+'</div>'+
       (Number(o.refunded_usd)>0?'<p class="notice success">قيمة مستردة: '+e(accountMoney(o.refunded_usd))+'</p>':"")+
       more+'<div class="f90-order-summary-actions">'+
@@ -1835,6 +1830,7 @@
     try {
       if (
         S.settings.config.maintenance?.enabled &&
+        !(S.settings.config.maintenance.until && Number.isFinite(Date.parse(S.settings.config.maintenance.until)) && Date.parse(S.settings.config.maintenance.until) <= Date.now()) &&
         !["manager", "admin"].includes(S.me?.role) &&
         !["auth", "security", "support"].includes(page)
       ) {
@@ -1857,15 +1853,16 @@
             el.innerHTML = [[days, "يوم"], [hours, "ساعة"], [minutes, "دقيقة"], [seconds, "ثانية"]].map(([n, name]) => `<div><strong>${format(n)}</strong><span>${name}</span></div>`).join("");
             if (!remaining) {
               clearInterval(maintenanceTimer);
-              el.insertAdjacentHTML("beforeend", '<p class="f90-maintenance-ended">وصلنا إلى موعد العودة المتوقع. حدّث الصفحة للتحقق من انتهاء الصيانة.</p>');
+              route();
             }
           };
           tick();
-          maintenanceTimer = setInterval(tick, 1000);
+          if (until > Date.now()) maintenanceTimer = setInterval(tick, 1000);
         }
         return;
       }
       if (page === "welcome") welcome();
+      else if (page === "partner") await window.F90Partners?.render(main,id);
       else if (!page) {
         home();
         const announcement=S.settings.config?.popup_announcement;
@@ -1964,8 +1961,7 @@
           `<div class="notice error">${e(message(err))}</div><button class="button" data-action="refresh-route">حاول مجددًا</button>`;
     }
   }
-  let pendingCheckout = null;
-  async function submit(form, confirmed = false) {
+  async function submit(form) {
     const data = Object.fromEntries(new FormData(form));
     if (form.id === "authForm") {
       if (
@@ -2103,8 +2099,8 @@
       }
       if (Number(S.me.wallet.balance_usd) < Number(S.quote.total_usd))
         throw new Error("رصيد محفظتك غير كافٍ. قدّم إيداعًا وانتظر اعتماده");
-      // The quote is computed by the server. Review the exact amount before any
-      // checkout request; a second explicit click is required to spend wallet funds.
+      // The submit button spends the visible authoritative quote directly.
+      // Server expected-total validation and idempotency remain mandatory.
       const total = Number(S.quote.total_usd);
       if (!Number.isFinite(total) || total <= 0) throw new Error("تعذّر التحقق من سعر الطلب");
       const p = S.products.find((p) => p.id === form.dataset.product),
@@ -2112,14 +2108,6 @@
       for (const [k, v] of Object.entries(data))
         if (k.startsWith("customer_")) fields[k.slice(9)] = String(v);
       const reference = S.checkoutKey;
-      if (!confirmed) {
-        pendingCheckout = {
-          form, productId: p.id, quoteSeq: S.quoteSeq, key: reference, total,
-          fingerprint: JSON.stringify(data),
-        };
-        modal("مراجعة طلب الشراء", `<div class="f90-visa-confirm"><div class="f90-visa-confirm-row"><span>الخدمة</span><strong>${e(p.name)}</strong></div><div class="f90-visa-confirm-row"><span>الكمية</span><strong>${e(data.quantity)}</strong></div><div class="f90-visa-confirm-row f90-visa-confirm-amount"><span>التكلفة النهائية</span><strong>${e(displayMoney(total,true))}</strong></div><p class="f90-visa-confirm-note">راجع بيانات الحساب والسعر قبل تأكيد الخصم. لا تُخصم المحفظة قبل الخطوة التالية.</p><button type="button" class="button full f90-visa-confirm-buy" data-action="confirm-wallet-checkout">تأكيد الشراء من المحفظة</button></div>`);
-        return;
-      }
       let o;
       try {
         o = await A.call("checkout", {
@@ -2538,25 +2526,6 @@
           throw new Error(
             "تعذّر دخول جوجل. يحتاج الربط إلى تفعيل مزوّد جوجل من الإدارة",
           );
-      } else if (action === "confirm-wallet-checkout") {
-        const pending = pendingCheckout;
-        pendingCheckout = null;
-        if (!pending || !pending.form.isConnected ||
-            pending.form.dataset.product !== pending.productId ||
-            pending.quoteSeq !== S.quoteSeq ||
-            pending.key !== S.checkoutKey ||
-            Number(S.quote?.total_usd) !== pending.total ||
-            JSON.stringify(Object.fromEntries(new FormData(pending.form))) !== pending.fingerprint) {
-          closeModal();
-          throw new Error("تغيّر الطلب أو السعر. راجع التفاصيل ثم أكّد من جديد.");
-        }
-        button.disabled = true;
-        try {
-          closeModal();
-          await submit(pending.form, true);
-        } finally {
-          button.disabled = false;
-        }
       } else if (action === "quick-product") {
         ev.preventDefault();
         if (!button.dataset.id) return;
@@ -2956,7 +2925,9 @@
       const catalogRequest=warmCatalog?Promise.resolve(warmCatalog):networkCatalog;
       if(!warmCatalog)networkCatalog.then(saveWarmCatalog).catch(()=>{});
       const accountRequest = refreshMe().catch((error) => error);
+      const partnerLoad=window.F90Partners?.load();
       Object.assign(S, await catalogRequest);
+      if(partnerLoad)await partnerLoad;
       if (!S.currencyPreference) S.currency = S.settings.currency || "USD";
       // Render authenticated navigation only after restoring the account.
       // Previously chrome() ran while S.me was still null, leaving the drawer

@@ -1,0 +1,248 @@
+[
+  {
+    "row_key": "product:98c749a2-7af6-47c6-b120-3d29f021f91f",
+    "path": [
+      "gallery",
+      "0"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/6253d403-1913-4319-8a94-321fa53de775.png"
+  },
+  {
+    "row_key": "product:98c749a2-7af6-47c6-b120-3d29f021f91f",
+    "path": [
+      "gallery",
+      "1"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/1327d27d-16a8-43fb-a575-f9b2b5a64820.png"
+  },
+  {
+    "row_key": "product:98c749a2-7af6-47c6-b120-3d29f021f91f",
+    "path": [
+      "gallery",
+      "2"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/0d728e50-5ebd-4c36-b4ff-e333d81eafe5.png"
+  },
+  {
+    "row_key": "product:9d296229-f7ea-446e-914a-030b65ee1142",
+    "path": [
+      "gallery",
+      "0"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/56f7a3c9-764d-413b-b452-30be8121cf70.png"
+  },
+  {
+    "row_key": "product:9d296229-f7ea-446e-914a-030b65ee1142",
+    "path": [
+      "gallery",
+      "1"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/a4839dee-ac31-4a0d-b72d-f572ae529226.png"
+  },
+  {
+    "row_key": "product:9d296229-f7ea-446e-914a-030b65ee1142",
+    "path": [
+      "gallery",
+      "2"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/product-gallery/f4dc0ccd-2b20-4bfd-ac39-ab195c2602e9.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "promo_video",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banners/8c149c5d-902c-4aee-8f50-72779b1498bf.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "salary_withdrawal",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/branding/585546e9-73d3-4df6-bc28-feca0fc3a4e4.webp"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "promo_video",
+      "laptop",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banners/5c1edd6a-e1e8-46fb-bfd8-baeaae01d721.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "0",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/9f98adf2-488a-43a1-afbd-61f5970d8a2c.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "1",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/68dd030d-c446-4f35-b8d8-774b68cb7522.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "2",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/f098cca9-8d61-4a28-b9dc-a8afd625f181.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "3",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/438ebe1d-fd29-4f41-97bd-3d15cf793b91.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "4",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/84f36fa6-2d31-43e5-a50f-5eac66287286.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "5",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/37103019-acff-4799-9a3d-bffb3a9909d9.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "6",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/00e29cc7-a16d-4f50-af5d-c2d1f713c81d.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "7",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/84cf0172-b29a-41f6-ae8d-cdd887e233fb.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "8",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/be26a6eb-c30a-48e7-b0d9-513bd0e4a790.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "9",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/f6f523ae-179e-4d22-8cf4-b003a5c795e8.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "10",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/4b335180-7349-4121-846c-496abf2581a3.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "11",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/4b87a424-7a35-4ff2-baeb-cb507808ce47.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "12",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/71973580-3723-4f92-b3f2-85cf1ef3a538.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "13",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/99523f50-a991-410a-bbc2-5eb0cf7503f7.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "14",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/01618d5d-2ca1-4584-a999-fc6f0929adac.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "15",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banner/b234c348-cc90-4579-a74f-7f25df008446.png"
+  },
+  {
+    "row_key": "settings",
+    "path": [
+      "config",
+      "payment_methods",
+      "16",
+      "image_url"
+    ],
+    "val": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/branding/585546e9-73d3-4df6-bc28-feca0fc3a4e4.webp"
+  }
+]

@@ -34,7 +34,7 @@ test("API key pages are trader-only in client router", () => {
 test("Price UI shows only server quotes, one-digit cost, no decimal wallet, and compact limits",()=>{
   const skin=read("f90-checkout-redesign.css");
   assert.match(app,/function f90CheckoutMoney\(usd, balance = false\)/);
-  assert.match(app,/maximumFractionDigits:balance\?0:1/);
+  assert.match(app,/maximumFractionDigits:balance\?0:\(Math\.abs\(value\)<1\?6:2\)/);
   assert.match(app,/Math\.trunc\(value\)/);
   assert.match(app,/function f90ShortLimit\(value\)/);
   assert.match(app,/\+"M"/);
@@ -87,8 +87,8 @@ test("Gold checkout matches approved icon fields, badges and price-only layout",
     "f90-visa-buy-arrow","f90-visa-watermark","f90-visa-logo","S.settings.logo_url"]){
     assert.ok(product.includes(token)|| (token==="S.settings.logo_url"&&app.includes(token)),token);
   }
-  assert.match(product,/f90CheckoutTopRemaining|رصيدك بعد الشراء/);
-  assert.match(app,/f90CheckoutMoney\(balance-Number\(quote\.total_usd\),true\)/);
+  assert.doesNotMatch(product,/f90CheckoutTopRemaining|رصيدك بعد الشراء/);
+  assert.match(app,/expected_total_usd: S\.quote\.total_usd/);
   assert.match(css,/\.f90-visa-inputrow\{direction:ltr;order:1\}/);
   assert.match(css,/\.f90-visa-buy-arrow\{right:10px;left:auto\}/);
   assert.match(css,/flex-direction:row-reverse!important/);
@@ -162,7 +162,7 @@ test("Safe 45s warm catalog only caches public data and revalidates before anoth
   assert.doesNotMatch(app.slice(app.indexOf('function saveWarmCatalog('),app.indexOf('async function boot()')),/S\.me|wallet_balance|access_token/);
   assert.match(app,/await A\.call\("quote"/);
 });
-test("Gold purchase card is compact and shows only final cost plus small current balance", () => {
+test("Gold purchase card shows the final cost without wallet snapshots", () => {
   const visa=read("f90-visa-checkout.css");
   const purchase=app.slice(app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";'),app.indexOf('    if (inline) {',app.indexOf('    const officialLogo = C.safeUrl(S.settings.logo_url) || "./f90-logo.png";')));
   assert.match(mainHtml,/f90-visa-checkout\.css/);
@@ -170,9 +170,9 @@ test("Gold purchase card is compact and shows only final cost plus small current
   assert.match(purchase,/f90-visa-watermark/);
   assert.match(purchase,/f90-visa-logo/);
   assert.match(purchase,/f90CheckoutTopTotal/);
-  assert.match(purchase,/f90CheckoutTopBalance/);
-  assert.match(purchase,/f90CheckoutTopRemaining/);
-  assert.match(purchase,/رصيدك بعد الشراء/);
+  assert.doesNotMatch(purchase,/f90CheckoutTopBalance/);
+  assert.doesNotMatch(purchase,/f90CheckoutTopRemaining/);
+  assert.doesNotMatch(purchase,/رصيدك بعد الشراء/);
   assert.match(mainHtml,/f90-premium-checkout-install\.css/);
   for(const id of ["checkoutForm","priceBoard","checkoutTotal","quoteError","buyButton","walletHint"]){
     assert.ok(purchase.includes('id="'+id+'"'),id+" still needed for server-quote checkout");
@@ -180,7 +180,7 @@ test("Gold purchase card is compact and shows only final cost plus small current
   assert.match(app,/await A\.call\("quote", \{/);
   assert.match(app,/expected_total_usd: S\.quote\.total_usd/);
   assert.match(app,/idempotency_key: reference/);
-  assert.match(app,/data-action="confirm-wallet-checkout"/);
+  assert.doesNotMatch(app,/data-action="confirm-wallet-checkout"/);
   assert.match(visa,/width:min\(390px,calc\(100vw - 18px\)\)/);
   assert.match(visa,/--f90-visa-gold/);
   assert.match(visa,/#modalRoot \.modal-backdrop\{z-index:1200!important\}/);

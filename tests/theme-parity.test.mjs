@@ -109,14 +109,12 @@ test("category tiles open the existing product form in place without another rou
   assert.match(styles, /\.f90-quick-product/);
 });
 
-test("wallet checkout rechecks the server quote and pending form before charging", () => {
-  assert.match(app, /if \(!confirmed\) \{/);
-  assert.match(app, /modal\("مراجعة طلب الشراء"/);
-  assert.match(app, /data-action="confirm-wallet-checkout"/);
-  assert.match(app, /pending\.quoteSeq !== S\.quoteSeq/);
-  assert.match(app, /pending\.key !== S\.checkoutKey/);
-  assert.match(app, /JSON\.stringify\(Object\.fromEntries\(new FormData\(pending\.form\)\)\) !== pending\.fingerprint/);
-  assert.match(app, /await submit\(pending\.form, true\)/);
+test("direct wallet checkout validates the visible quote and keeps idempotency", () => {
+  assert.doesNotMatch(app, /modal\("مراجعة طلب الشراء"/);
+  assert.doesNotMatch(app, /data-action="confirm-wallet-checkout"/);
+  assert.match(app, /form\.dataset\.quotedQuantity !== String\(Number\(form\.elements\.quantity/);
+  assert.match(app, /idempotency_key: reference/);
+  assert.match(app, /expected_total_usd: S\.quote\.total_usd/);
 });
 
 
