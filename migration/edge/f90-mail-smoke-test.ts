@@ -64,7 +64,24 @@ Deno.serve(async (req:Request) => {
     });
   }catch{return respond({error:"EMAIL_PROVIDER_TIMEOUT"},502)}
   const payload=await result.json().catch(()=>({}));
-  if(!result.ok||typeof payload?.id!=="string")
-    return respond({error:"EMAIL_PROVIDER_REJECTED",provider_status:result.status},502);
+  if(!result.ok||typeof payload?.id!=="string"){
+    // Return only provider status and a recognized Resend error code.
+    // Raw response messages may contain secret/account info and are not returned.
+    const errorName=typeof payload?.name==="string"?payload.name:"";
+    const validNames=new Set([
+      "invalid_api_key","invalid_request","validation_error",
+      "permission_denied","restricted_api_key","invalid_from_address",
+      "invalid_domain","domain_not_verified","rate_limit_exceeded",
+      "daily_quota_exceeded","not_found","application_error","internal_server_error",
+      "missing_required_field","missing_api_key","invalid_access"
+    ]);
+    const providerError=validNames.has(errorName)?errorName:"unrecognized";
+    return respond({
+      error:"EMAIL_PROVIDER_REJECTED",
+      provider_status:result.status,
+      provider_error:providerError,
+      // Absolutely no raw provider message, token, sender, or recipient in response.
+    },502);
+  }
   return respond({status:"accepted",message:"Staging email accepted by Resend; check your own inbox.",queue_changed:false,live_store_changed:false});
 });
