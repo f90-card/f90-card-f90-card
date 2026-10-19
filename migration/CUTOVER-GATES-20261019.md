@@ -52,3 +52,10 @@ _Validated in the October 19, 2026 migration continuation._
 - Read-only wallet comparison performed on 2026-10-19: **21/22 source customer wallets exactly match** target by opaque hashed user identifier and balance. Only **one** source wallet differs, as already identified in the historical order/debit case; target additionally has **one stage-only test wallet**. No wallet value or identifying information recorded here.
 - New target had **zero cron jobs**, Yassen provider `is_enabled=false`, and **zero active orders**. Existing source-only workers should not be flipped until an approved single-writer handover.
 - User explicitly deprioritized old personal order history. That decision does not establish source/target wallet parity or authorize an unverified wallet balance to be used for production.
+
+## Supplier handover operational checklist
+- The operator accepts short planned downtime and defers comprehensive testing until after setup. This does not authorize activation with mismatched wallet balances or duplicate supplier workers.
+- Original source currently handles Yassen order fetch/import and order worker. Target has zero active cron jobs and zero in-flight orders at the latest successful readback.
+- A safe switch requires: maintenance mode for **new orders**, a fresh source snapshot and wallet reconciliation, stop original cron, confirm zero in-flight jobs, activate target cron and Yassen only once, validate callbacks and frontend, then domain cutover. Do not replay old deposit notifications.
+- Preserve all manual retail price overrides and supplier Vault credentials. Rollback must stop target jobs before starting old jobs.
+- At latest check, old-project combined cron read was rejected by a connector safety check, so source shutdown has NOT been executed or verified.
