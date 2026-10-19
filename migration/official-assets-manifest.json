@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "policy": "official-content-only; 13 additional official Google Play icon URLs verified by store page metadata; no customer media",
+  "policy": "Official Apple/Google Play app icons and approved F90 banners only, manual site-authorized staging references",
   "created": "2026-10-18",
   "source": "Google Play and Apple App Store artwork URLs already used in catalog; current banner media",
   "assets": [
@@ -513,6 +513,240 @@
       "id": "6f13b9ff-6d9c-498b-a167-b35f8a91b7b7",
       "name": "ببجي لايت",
       "url": "https://play-lh.googleusercontent.com/j6eO7FQLWcg6RGmt22WY8QZlTgFiHftJzmefMnGV12ZzImYM9oHGzI9blJYZdAFK_l4z3feBaTnyrx9LFROo4Ys=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "086a3f87-88a2-4c59-a439-87d8b0a492b4",
+      "name": "بي لايف",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "category",
+      "id": "69d222fd-cefb-4b9e-a452203e988b",
+      "name": "ميو لايف",
+      "url": "https://play-lh.googleusercontent.com/76_WNda643YDJetI57DAjKgXBa47MhCapIc1he00q7XDgelQcACsa0-Pu1LeJakt76jcoeOyIqt59XEOl3DD=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "465c432c-cbb1-40a0-9fac-5301fb3d73ef",
+      "name": "بي لايف 50000",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "09e16e6c-166e-4cff-938a-e40dafedec92",
+      "name": "تفاعل على منشور واتساب",
+      "url": "https://play-lh.googleusercontent.com/Gqxk4T0uZsDwFp07DE-508hkyvcNmgFuRwPiwTEfF7D7OzGv1FdHDzEyMxNsSBZLOJlGpe3ULvVM2RgrRAlBqA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "0d7ca3f8-f4a8-4c9b-9d1c-53b527493fc5",
+      "name": "لايكات انستقرام",
+      "url": "https://play-lh.googleusercontent.com/yHi59jmO_lVamcyJ1i3rM1_E8bAiAspShnGjjURq05ipQQSUksO3QVEsXTegRSqul038-4YNA7O644XAcx251Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "1cf9afb4-3bfc-4ab4-a105-de08453a1f5b",
+      "name": "متابعين انستقرام",
+      "url": "https://play-lh.googleusercontent.com/yHi59jmO_lVamcyJ1i3rM1_E8bAiAspShnGjjURq05ipQQSUksO3QVEsXTegRSqul038-4YNA7O644XAcx251Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "1e39aded-a338-433e-a20a-b2c28373355c",
+      "name": "SHAHID 3 MONTHS",
+      "url": "https://play-lh.googleusercontent.com/OX_8Lxi6zQdeob7G9t45jHK889TOrfULfn4vf6MP6a3lx4U26naAbim14BIIKOmt1_5AbUpqgCFqldWzpp-LMro=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "3b9b9f7b-f36f-47d5-b44c-0d437c960f66",
+      "name": "حساب  فيسبوك",
+      "url": "https://play-lh.googleusercontent.com/12KEJDhgk6oyE1VgmfCuFzFrQripZ_endElbvEhU1rZawQgV3RI-v3II8fDslI1sdC_WKBkmtxS3jxuIihk33Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "3d433bc5-c080-4a0a-9162-85497403c519",
+      "name": "SHAHID 12 MONTHS",
+      "url": "https://play-lh.googleusercontent.com/OX_8Lxi6zQdeob7G9t45jHK889TOrfULfn4vf6MP6a3lx4U26naAbim14BIIKOmt1_5AbUpqgCFqldWzpp-LMro=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "443754fe-64a1-4b8d-bf72-122f92940cee",
+      "name": "متابعين تويتر",
+      "url": "https://play-lh.googleusercontent.com/IsLsCD4eLC2CYvlkgTI6Z5TROj0BJIBgUF7BZ5eliTzyyTjqG_mbofeG4kw2s7oG_JZMSi5ErLz_qsDi169C8w=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "43c2388e-18ef-426d-a222-7077452eb56b",
+      "name": "لايكات يوتيوب",
+      "url": "https://play-lh.googleusercontent.com/QNmuZQc9I6Zbe3mWnSr0hycnENqGFCI5p3yE29Hkxtf22T0IWS6zTrpxULLyyjWpB7ONAXDsDQXnXcVWokl3eg=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "44617c7f-123f-4d5f-b6a4-a5b095866bf5",
+      "name": "اعضاء تيليجرام الجروبات",
+      "url": "https://play-lh.googleusercontent.com/PyZ3akMGXPV0tKKirKNwfO--PSQW3FHR6rD_H9mAaukZ8LiHyYFuBLeU8UZ2ok6r5SP79-3prkfybWKh98AZAD0=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "518b6f0a-290c-4968-9bcf-9c6d20a811aa",
+      "name": "رقم وتس اب",
+      "url": "https://play-lh.googleusercontent.com/Gqxk4T0uZsDwFp07DE-508hkyvcNmgFuRwPiwTEfF7D7OzGv1FdHDzEyMxNsSBZLOJlGpe3ULvVM2RgrRAlBqA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "505d65ad-8584-4dd6-9ef4-4f96a2bd6fdf",
+      "name": "لايكات لمنشور فيسبوك",
+      "url": "https://play-lh.googleusercontent.com/12KEJDhgk6oyE1VgmfCuFzFrQripZ_endElbvEhU1rZawQgV3RI-v3II8fDslI1sdC_WKBkmtxS3jxuIihk33Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "5941554a-1a29-4bd9-93e9-49b240562a1a",
+      "name": "Gemini - دعوة على ايميلك - مدة شهر",
+      "url": "https://play-lh.googleusercontent.com/C64IqPWyFoCZzXVxXVl0Y6mliiNlG_sZJsqul-SBvk9ZL0wJHlU0Eho2wvsBHhho0FT5XQtH55RVGerIwXF_MA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "8cfa028e-92a5-4c36-924a-ae3041d43ea2",
+      "name": "Disney Plus حساب سنوي شخصي",
+      "url": "https://play-lh.googleusercontent.com/AEX_3Bk5_SEZfR4fUcJsWiyqW_RRVcLED9AM2HMUVHAPVTZhZHfP2q3M35mRe4LtCXlb712DtkKwkZa_nJ-0=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "62e7c05c-45b4-481d-8c82-43e3fa87ad30",
+      "name": "لايكات لصفحة فيسبوك",
+      "url": "https://play-lh.googleusercontent.com/12KEJDhgk6oyE1VgmfCuFzFrQripZ_endElbvEhU1rZawQgV3RI-v3II8fDslI1sdC_WKBkmtxS3jxuIihk33Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "71ab65f0-dd4c-417c-9f5c-3ee7ae5c063e",
+      "name": "اعضاء تيليجرام للقنوات",
+      "url": "https://play-lh.googleusercontent.com/PyZ3akMGXPV0tKKirKNwfO--PSQW3FHR6rD_H9mAaukZ8LiHyYFuBLeU8UZ2ok6r5SP79-3prkfybWKh98AZAD0=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "84f76e08-216f-4dcd-b673-5ae3aaa2fc43",
+      "name": "Disney Plus حساب شهري شخصي",
+      "url": "https://play-lh.googleusercontent.com/AEX_3Bk5_SEZfR4fUcJsWiyqW_RRVcLED9AM2HMUVHAPVTZhZHfP2q3M35mRe4LtCXlb712DtkKwkZa_nJ-0=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "8ac4efc4-5ad3-4a5f-a4ba-7a254838d87e",
+      "name": "متابعين لصفحة فيسبوك",
+      "url": "https://play-lh.googleusercontent.com/12KEJDhgk6oyE1VgmfCuFzFrQripZ_endElbvEhU1rZawQgV3RI-v3II8fDslI1sdC_WKBkmtxS3jxuIihk33Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "968368e2-a37f-4f24-b3fe-c323a8497d49",
+      "name": "اعضاء قنوات واتساب",
+      "url": "https://play-lh.googleusercontent.com/Gqxk4T0uZsDwFp07DE-508hkyvcNmgFuRwPiwTEfF7D7OzGv1FdHDzEyMxNsSBZLOJlGpe3ULvVM2RgrRAlBqA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "9b545998-2e2c-4638-a0dc-cade28f8b232",
+      "name": "لايكات تيك توك",
+      "url": "https://play-lh.googleusercontent.com/2o7iuqPe-0msP3DvNhzoOgNo4eZ6GkL_RtGVeKyBn5UBQAW5cw-GW5V3wDOHB1yTQuqWzrFLFOv2u4_5ea1uhg=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "a5871032-645f-40f3-9359-9196c4893b24",
+      "name": "متابعين تيك توك",
+      "url": "https://play-lh.googleusercontent.com/2o7iuqPe-0msP3DvNhzoOgNo4eZ6GkL_RtGVeKyBn5UBQAW5cw-GW5V3wDOHB1yTQuqWzrFLFOv2u4_5ea1uhg=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "b22fbcaf-ac1f-4584-ab64-05097ab4944c",
+      "name": "ChatGPT Plus - حساب خاص - مدة شهر",
+      "url": "https://play-lh.googleusercontent.com/T9J8e9oxxPd600j_KPM4KK2GHfNpUpGBdTy8lHPXBXpOUfGusRuZXj0UMgFNrP8we6LVt9V-AibEgcLootE6VK4=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "b367a957-6415-432b-9566-0953ddc4a6db",
+      "name": "متابعين حساب فيسبوك",
+      "url": "https://play-lh.googleusercontent.com/12KEJDhgk6oyE1VgmfCuFzFrQripZ_endElbvEhU1rZawQgV3RI-v3II8fDslI1sdC_WKBkmtxS3jxuIihk33Q=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "e2332f00-e99f-4293-ab09-4341e14c0598",
+      "name": "Gemini - دعوة على ايميلك - مدة 6 اشهر",
+      "url": "https://play-lh.googleusercontent.com/C64IqPWyFoCZzXVxXVl0Y6mliiNlG_sZJsqul-SBvk9ZL0wJHlU0Eho2wvsBHhho0FT5XQtH55RVGerIwXF_MA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "e2e358f1-be2c-4892-8661-824c5e8bafa0",
+      "name": "Gemini - دعوة على ايميلك - مدة 3 اشهر",
+      "url": "https://play-lh.googleusercontent.com/C64IqPWyFoCZzXVxXVl0Y6mliiNlG_sZJsqul-SBvk9ZL0wJHlU0Eho2wvsBHhho0FT5XQtH55RVGerIwXF_MA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "e889b043-56f7-4dd1-8556-5299aba0e104",
+      "name": "whatsapp فيتنام 84+",
+      "url": "https://play-lh.googleusercontent.com/Gqxk4T0uZsDwFp07DE-508hkyvcNmgFuRwPiwTEfF7D7OzGv1FdHDzEyMxNsSBZLOJlGpe3ULvVM2RgrRAlBqA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "ea1aaafe-b7fa-472e-b0c4-a4631b3b2ab7",
+      "name": "لايكات تويتر",
+      "url": "https://play-lh.googleusercontent.com/IsLsCD4eLC2CYvlkgTI6Z5TROj0BJIBgUF7BZ5eliTzyyTjqG_mbofeG4kw2s7oG_JZMSi5ErLz_qsDi169C8w=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "f5bdcf53-f2c1-4e9a-9f71-8c9c83ad1e76",
+      "name": "متابعين يوتيوب",
+      "url": "https://play-lh.googleusercontent.com/QNmuZQc9I6Zbe3mWnSr0hycnENqGFCI5p3yE29Hkxtf22T0IWS6zTrpxULLyyjWpB7ONAXDsDQXnXcVWokl3eg=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "fae25e4c-9185-4ba9-802f-cf0c6e1247bb",
+      "name": "Gemini Pro - دعوة على ايميلك - مدة 12 شهر",
+      "url": "https://play-lh.googleusercontent.com/C64IqPWyFoCZzXVxXVl0Y6mliiNlG_sZJsqul-SBvk9ZL0wJHlU0Eho2wvsBHhho0FT5XQtH55RVGerIwXF_MA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "ff6b8da9-ca42-4dd0-92d5-f277006754ab",
+      "name": "Perplexity Pro - 12 Month",
+      "url": "https://play-lh.googleusercontent.com/vg7sPhgWiPr0L2cK_NLLcCl0mrkEmNNv7C-aUkBdIUEa-9uSnCi5x4z_3Mw0vNYWKoSVWHfgri7THMOsOZKQuA=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "08105928-7315-4b77-b0f2-f007c5e6cfff",
+      "name": "هاغو",
+      "url": "https://play-lh.googleusercontent.com/igfqct-vw4I87Eg9Mi8CMbQh2XzOyFfE551sFdx2ZOcz0Bv-ZBX9ChXRdBvrqJq8QUcE8nZOhMRjReiNy1CeQw=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "228f414a-5087-4943-88ef-3f76f76c7f90",
+      "name": "بي لايف 4500",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "802bad8d-2003-4f97-ad45-eca2713d9df4",
+      "name": "بي لايف 9000",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "826e3a2f-837f-4f9f-9bdf-f341f912a8f3",
+      "name": "بي لايف 2250",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "861f3e01-70c3-4db7-90d0-d3a5e6927ebc",
+      "name": "كواي",
+      "url": "https://play-lh.googleusercontent.com/fYRCfq3YzxNIx06_m6q9WufcNhoY0udYhgVOGGLIkoVmsZe7Shob0845Q1krwkisWzat7-oDLiAm84E86yIYRg=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "8b0fd918-3c16-46bf-bea5-1f2c001e04a8",
+      "name": "بي لايف 13800",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
+    },
+    {
+      "kind": "product",
+      "id": "940c7364-db71-49ee-86b8-77a1d7eb82d1",
+      "name": "بي لايف 24000",
+      "url": "https://play-lh.googleusercontent.com/Sm3XuNJAH2CVHf2G2-QH5O_4syKaRoAkTPTBwZL9zQXSl_DWPq_wjqrdj4uahoPG2ZoXUIGV_LxCQiU4zUeA4A=s0-br30"
     }
   ]
 }
