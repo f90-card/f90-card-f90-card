@@ -41,3 +41,9 @@ _Validated in the October 19, 2026 migration continuation._
 - Six site/PWA/admin assets and nine section/welcome assets were published and verified (15/15 hashes); associated exact target config/banner paths updated, without activation changes.
 - Compare audit/news/outbox deltas and discounts/settings. Do not replay notifications or restore removed radio entries. One missing public agent was safely copied; target now has two.
 - Keep the financial review specification mandatory; target still has 27 orders / 69 events / 55 ledger rows, not source parity.
+
+## Cloudflare full-store acceptance build created
+- Created separate Cloudflare Pages project `f90-card-acceptance` under the **new Cloudflare account** and connected existing migration GitHub branch. Automatic production deployments disabled; no custom domain.
+- Builder: `node migration/build-storefront-production.mjs`, default mode **acceptance** (not `production`), output `dist-f90-storefront-production`. It references **new Supabase**, strips production robots indexing, and does NOT authorize cutover. This project is isolated from the intentionally read-only preview and the live Vercel store.
+- First deployment `6f5c5b9f-b351-4d14-b545-290e83cfc469` reached Cloudflare stage `deploy:success`; URL `https://f90-card-acceptance.pages.dev`. **Build success is not checkout/admin acceptance.** Do not invite customers to use this test project: it may expose real stage checkout interfaces.
+- Mandatory next gate: verify original UI/auth/owner admin and nonfinancial requests, then controlled testing of checkout/deposit with dedicated isolated test account and idempotency checks; never run supplier production processing on stage. The new stage still has an unreconciled completed order #32, so absolutely no DNS cutover.
