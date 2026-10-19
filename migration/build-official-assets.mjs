@@ -26,11 +26,11 @@ const hostAllowed=(entry,url)=>{
     if(u.protocol!=='https:') return false;
     if(entry.source==='cloudflare-immutable-copy') return u.hostname==='f90-card-media.pages.dev' &&
       new RegExp('^/media/official/'+entry.kind+'/'+entry.id+'-[a-f0-9]{16}\\.(?:png|jpg|webp|avif|gif)$').test(u.pathname);
-    if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
     // Explicitly reviewed public storefront artwork, never customer buckets.
     // Preserve existing F90 designs while removing the old hosting dependency.
     if(entry.source==='reviewed-store-original') return u.hostname==='xzqnrpycjxfbyrfaolud.supabase.co' &&
-      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
+      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified|admin-icons|banners|backgrounds)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
+    if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
     return officialHost.test(u.hostname);
   } catch {return false;}
 };

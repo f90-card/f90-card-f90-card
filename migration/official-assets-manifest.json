@@ -1200,6 +1200,48 @@
       "name": "هابي لايف عربي",
       "url": "https://play-lh.googleusercontent.com/aszLLQbrLaLjbAsI3UYJAxx2LutxC4z2d596VfFEqlLwoVGoHxmzUd8Wf3o00ougckO9527BI8Un1Ddu9EqOjp8=s0-br30",
       "provenance": "https://play.google.com/store/apps/details?id=com.mejoy.hapiarab"
+    },
+    {
+      "kind": "banner",
+      "id": "951ef7b7-4956-4ec4-a6ac-1858fd6a2d07",
+      "name": "F90 original hero_image",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banners/951ef7b7-4956-4ec4-a6ac-1858fd6a2d07.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "e013416a-8e36-400c-9132-ae551550d4f2",
+      "name": "F90 original app_icon_url",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/e013416a-8e36-400c-9132-ae551550d4f2.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "71250fd5-a351-4645-adb3-24441b47ed95",
+      "name": "F90 original site_background",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/backgrounds/71250fd5-a351-4645-adb3-24441b47ed95.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "3851218f-a57d-4535-bf4d-2ed7f93cc1d0",
+      "name": "F90 original app_icon_192_url",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/app-icons/3851218f-a57d-4535-bf4d-2ed7f93cc1d0.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "18fd1c3f-2d44-422f-b70d-d51dcb395008",
+      "name": "F90 original admin_app_icon_url",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/admin-icons/18fd1c3f-2d44-422f-b70d-d51dcb395008.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "0ea498f7-c5ef-41e1-898b-e9d1b588abc5",
+      "name": "F90 original admin_app_icon_192_url",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/admin-icons/0ea498f7-c5ef-41e1-898b-e9d1b588abc5.png",
+      "source": "reviewed-store-original"
     }
   ]
 }
