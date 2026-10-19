@@ -64,8 +64,8 @@ button.onclick=async()=>{
         409:"تعارض في معرّف الطلب المكرر لدى Resend."
       };
       const hint=result?.error==="EMAIL_PROVIDER_REJECTED"?
-        "\\nرد Resend: HTTP "+(Number.isInteger(providerStatus)?providerStatus:"غير معروف")+" | "+providerReason+
-        "\\n"+(providerHints[providerStatus]||"السبب يحتاج فحص إعدادات Resend."): "";
+        "\nرد Resend: HTTP "+(Number.isInteger(providerStatus)?providerStatus:"غير معروف")+" | "+providerReason+
+        "\n"+(providerHints[providerStatus]||"السبب يحتاج فحص إعدادات Resend."): "";
       throw Error((messages[result?.error]||"تعذّر الإرسال")+" (HTTP "+response.status+")"+hint);
     }
     say("✅ استقبل Resend طلب إرسال الرسالة الاختبارية إلى بريد حسابك المسجّل.\nافتح Gmail وابحث عن عنوان: F90 CARD | اختبار إشعارات الإيداع.\nلا توجد عملية إيداع حقيقية أو أي تغيير في الأرصدة.");
