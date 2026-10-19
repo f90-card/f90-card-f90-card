@@ -129,14 +129,60 @@ async function processImage(e) {
 await Promise.all(Array.from({length:6},async()=>{
   while(next<unique.length){const e=unique[next++];await processImage(e);}
 }));
+// F90_MEDIA_IMMUTABLE_BACKFILL: preserve previously published content-addressed files.
+// A changed official app icon must not make old URLs disappear from Cloudflare.
+// Failure to fetch and authenticate existing immutable media prevents deployment.
+const canonicalMedia='https://f90-card-media.pages.dev';
+const previousResponse=await fetch(canonicalMedia+'/official-index.json',{
+  signal:AbortSignal.timeout(24000),headers:{Accept:'application/json'}
+});
+if(!previousResponse.ok)throw Error('Cannot verify previous Cloudflare media index');
+const previousIndex=await previousResponse.json();
+if(previousIndex.schema!==1||!Array.isArray(previousIndex.assets)||
+   previousIndex.assets.length<30||previousIndex.assets.length>500||
+   (previousIndex.legacy_assets!==undefined&&!Array.isArray(previousIndex.legacy_assets))||
+   (previousIndex.legacy_assets||[]).length>700)throw Error('Previous media index invalid');
+const previouslyPublished=[...previousIndex.assets,...(previousIndex.legacy_assets||[])];
+const freshPaths=new Set(successes.map(x=>x.path));
+const validPublishedPath=/^\/media\/official\/(?:category|product|banner)\/[0-9a-f-]{36}-[0-9a-f]{16}\.(?:png|jpg|webp|avif|gif)$/;
+const byPreviousPath=new Map();
+for(const image of previouslyPublished){
+  if(!image||typeof image.path!=='string'||!validPublishedPath.test(image.path)||
+     !Number.isInteger(image.bytes)||image.bytes<200||image.bytes>5*1024*1024)
+    throw Error('Untrusted previous media path or size');
+  byPreviousPath.set(image.path,image);
+}
+const keep=[...byPreviousPath.values()].filter(x=>!freshPaths.has(x.path));
+const legacy_assets=[];
+let archiveCursor=0;
+await Promise.all(Array.from({length:6},async()=>{
+  while(archiveCursor<keep.length){
+    const item=keep[archiveCursor++];
+    const uri=canonicalMedia+item.path;
+    const res=await fetch(uri,{signal:AbortSignal.timeout(25000),
+      headers:{Accept:'image/png,image/webp,image/jpeg,image/avif,image/gif'}});
+    if(!res.ok)throw Error('Previously published media disappeared: '+item.path);
+    const blob=Buffer.from(await res.arrayBuffer());
+    const digest=createHash('sha256').update(blob).digest('hex').slice(0,16);
+    const filenameHash=item.path.match(/-([a-f0-9]{16})\.[^.]+$/)?.[1];
+    if(blob.length!==item.bytes||digest!==filenameHash)
+      throw Error('Previous media content changed or tampered: '+item.path);
+    const target=resolve(root,item.path.slice(1));
+    if(!target.startsWith(root+sep))throw Error('Unsafe archive path');
+    await mkdir(dirname(target),{recursive:true});
+    await writeFile(target,blob);
+    legacy_assets.push({...item,source:'cloudflare-immutable-archive'});
+  }
+}));
+legacy_assets.sort((a,b)=>a.path.localeCompare(b.path));
 if(successes.length<30)throw Error('Refusing to deploy incomplete official media ('+successes.length+')');
 successes.sort((a,b)=>a.kind.localeCompare(b.kind)||a.id.localeCompare(b.id));
 const summary={verified:successes.length,unresolved:skipped.length,
   by_kind:Object.fromEntries(['banner','category','product'].map(k=>[k,successes.filter(x=>x.kind===k).length])),
   total_mib:+(successes.reduce((s,x)=>s+x.bytes,0)/1048576).toFixed(2)};
-const payload={schema:1,...summary,assets:successes,skipped};
+const payload={schema:1,...summary,retained:legacy_assets.length,assets:successes,legacy_assets,skipped};
 await writeFile(resolve(root,'official-index.json'),JSON.stringify(payload,null,2));
 await writeFile(resolve(root,'index.html'),
   '<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>F90 CARD media</title><body><h1>F90 CARD</h1><p>أصول الصور العامة فقط</p></body></html>');
 await writeFile(resolve(root,'_headers'),'/media/*\n  Cache-Control: public, max-age=31536000, immutable\n  X-Content-Type-Options: nosniff\n/official-index.json\n  Cache-Control: public, max-age=300\n');
-console.log('F90_OFFICIAL_MEDIA_RESULT '+JSON.stringify(summary));
+console.log('F90_OFFICIAL_MEDIA_RESULT '+JSON.stringify({...summary,retained:legacy_assets.length}));
