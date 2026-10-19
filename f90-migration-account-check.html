@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#0b0d12">
+<title>F90 CARD | اختبار حساب العميل والإدارة</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:radial-gradient(circle at top,#3c1724,#101119 40%,#090b0e);color:#eee;font:16px/1.8 system-ui,Tahoma,Arial,sans-serif}
+main{max-width:660px;padding:24px 17px;margin:auto}h1{font-size:25px;margin:0 0 6px}
+.brand{font-size:20px;font-weight:900;color:#ff4966;letter-spacing:1px}
+p{color:#bdbfc7}.notice{border:1px solid #8d4050;background:#23141a;padding:12px;border-radius:12px}
+.card{background:#161923;border:1px solid #353948;border-radius:15px;padding:17px;margin:14px 0}
+button{background:#ee3d5a;color:#fff;border:0;border-radius:11px;padding:12px 18px;font:700 15px system-ui,Tahoma;cursor:pointer;margin:5px 0}
+button.secondary{background:#343a46}button:disabled{opacity:.5;cursor:wait}
+a{color:#ff8698}dl{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}dt{color:#bec1c9}dd{margin:0;font-weight:700;text-align:left;overflow-wrap:anywhere}
+#result{white-space:pre-line;background:#0c0d12;padding:11px;border-radius:10px;font-size:14px;color:#ddd;min-height:50px}
+small{color:#a6a7b1}
+</style>
+</head><body><main>
+<div class="brand">F90 CARD</div>
+<h1>فحص الحساب ولوحة الإدارة</h1>
+<p class="notice">فحص للقراءة فقط على Supabase الجديد. لا يتم إرسال أي طلب شراء أو إيداع أو تعديل أرصدة أو تحميل ملفات.</p>
+<section class="card"><h2>حسابك على قاعدة النقل</h2>
+<p>استخدم نفس المتصفح الذي سجلت الدخول فيه عبر <a href="/f90-migration-auth-test">صفحة Google التجريبية</a>. لا حاجة إلى إدخال بريد أو كلمة مرور في هذه الصفحة.</p>
+<button type="button" id="account">فحص الحساب والرصيد</button>
+<button type="button" id="staff" class="secondary">فحص صلاحيات الإدارة</button>
+<dl>
+<dt>جلسة Google</dt><dd id="auth">لم تُفحص</dd>
+<dt>ملف العميل</dt><dd id="profile">لم يُفحص</dd>
+<dt>استجابة الرصيد</dt><dd id="wallet">لم تُفحص</dd>
+<dt>صلاحيات الإدارة</dt><dd id="privilege">لم تُفحص</dd>
+</dl><div id="result" role="status" aria-live="polite">اضغط أحد أزرار الفحص.</div>
+</section>
+<small>نطاق المعاينة: f90-card-migration.pages.dev. إذا رفض الخادم صلاحيات الإدارة لحساب عادي، فهذا متوقع ولا يعني وجود خلل. نتائج هذه الصفحة لا تحتوي على أسماء أو بيانات العملاء الآخرين.</small>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script>
+(function(){"use strict";
+const root="https://f90-card-migration.pages.dev";
+const base="https://ogkipkavlywgwhtomoca.supabase.co";
+const key="sb_publishable_hhEc0Rw4r_V-sLpC82KLdw_mcoWNSec";
+const output=document.getElementById("result");
+const btnAccount=document.getElementById("account"),btnStaff=document.getElementById("staff");
+const byId=id=>document.getElementById(id);
+function set(id,text){byId(id).textContent=text}
+function report(text){output.textContent=text}
+if(location.origin!==root){report("هذه الصفحة مخصصة لنطاق المعاينة الأصلي فقط.");btnAccount.disabled=true;btnStaff.disabled=true;return}
+if(!window.supabase?.createClient){report("تعذّر تحميل مكتبة الاتصال. تأكد من الإنترنت.");btnAccount.disabled=true;btnStaff.disabled=true;return}
+const client=window.supabase.createClient(base,key,{auth:{storageKey:"f90-migration-stage-auth",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce"}});
+async function session(){const a=await client.auth.getUser();if(a.error||!a.data?.user){set("auth","غير مسجل");throw Error("افتح صفحة تسجيل الدخول التجريبية أولًا ثم ارجع إلى هنا.")}const s=await client.auth.getSession();if(!s.data?.session?.access_token)throw Error("جلسة تسجيل الدخول غير متاحة.");set("auth","ناجحة");return s.data.session.access_token}
+async function call(token,action){const response=await fetch(base+"/functions/v1/f90-platform",{method:"POST",headers:{"content-type":"application/json",apikey:key,Authorization:"Bearer "+token},body:JSON.stringify({action}),cache:"no-store",signal:AbortSignal.timeout(15000)});const body=await response.json().catch(()=>null);if(!response.ok||body?.error){const err=Error("الخادم رفض "+action+" (HTTP "+response.status+")");err.status=response.status;throw err}return body?.data}
+btnAccount.onclick=async()=>{btnAccount.disabled=true;report("جارٍ فحص جلسة Google...");try{const token=await session(),me=await call(token,"me");set("profile",me&&typeof me==="object"?"موجود":"استجابة غير مكتملة");try{const balance=await call(token,"balance");set("wallet",balance&&typeof balance==="object"?"نجحت القراءة":"استجابة غير مكتملة")}catch(e){set("wallet","لم ينجح الفحص");throw e}report("✅ نجح تسجيل الدخول وقراءة ملف الحساب والرصيد على Supabase الجديد.\nلم يتم تنفيذ أي تعديل أو خصم.")}catch(e){report("لم يكتمل فحص الحساب: "+e.message)}finally{btnAccount.disabled=false}};
+btnStaff.onclick=async()=>{btnStaff.disabled=true;report("جارٍ فحص صلاحيات لوحة الإدارة...");try{const token=await session();let found=0,denied=0;for(const action of ["staff.inbox","staff.catalog"]){try{const d=await call(token,action);if(d&&typeof d==="object")found++;}catch(e){if(e.status===403)denied++;else throw e}}if(found){set("privilege","مصرّح ("+found+"/2)");report("✅ استجاب الخادم الجديد لطلبات الإدارة للقراءة فقط.\nنجحت "+found+" استجابة، ورُفضت "+denied+" حسب الصلاحيات.\nلم تُعرض بيانات العملاء.")}else{set("privilege","غير مصرّح");report("تم رفض فحص الإدارة لهذا الحساب. هذا متوقع إذا كان الحساب عاديًا أو تجريبيًا.")}}catch(e){report("تعذّر فحص الإدارة: "+e.message)}finally{btnStaff.disabled=false}};
+})();
+</script>
+</body></html>
