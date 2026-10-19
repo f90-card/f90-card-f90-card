@@ -35,3 +35,9 @@
 - Current live site remains on Vercel and old Supabase; a successful read-only test or SMTP test alone is **not** go-live approval.
 
 _Validated in the October 19, 2026 migration continuation._
+
+## Broader gate discovered in latest 39-table reconciliation
+- Review nested old-host URLs in promo_video/payment_methods/salary_withdrawal and historical order/deposit/notification snapshots; product primary-image count alone is not proof of media independence.
+- Six site/PWA/admin assets and nine section/welcome assets were published and verified (15/15 hashes); associated exact target config/banner paths updated, without activation changes.
+- Compare audit/news/outbox deltas and discounts/settings. Do not replay notifications or restore removed radio entries. One missing public agent was safely copied; target now has two.
+- Keep the financial review specification mandatory; target still has 27 orders / 69 events / 55 ledger rows, not source parity.
