@@ -64,3 +64,8 @@ _Validated in the October 19, 2026 migration continuation._
 - Target Supabase has **all five expected cron entries staged and inactive**: orders worker, Yassen fetch/import, Telegram and deposit mail. Target deposit notification queue still holds **14 pending historical entries**; no release/replay performed.
 - The target Vault has `f90-worker` but **lacks** `f90_mail_bearer_jwt` and `f90_mail_dispatch_secret`. The email job is therefore **not ready to send**, even if cron is enabled; do not mark it operational. Edge function `f90-deposit-mail` v9 has a named mail cutover guard and `f90_mail_claim_after` logic; keep them intact.
 - Separate staging Resend send-only test was operator-confirmed, but automatic deposit delivery is an independent pending gate. Approved secure dispatcher credential provisioning plus post-cutover-only message test are still required.
+
+## Verified private cutover readiness diagnostic
+- Executed `select f90_private.cutover_readiness()` successfully against the **new Supabase**: `jobs_total=5`, `jobs_enabled=0`, `active_orders=0`, `yassen_enabled=false`, `legacy_active_images=1`, `pending_historical_mail=14`, `mail_dispatch_vault_ready=false`.
+- The diagnostic returns only aggregate readiness data; it is restricted from public/anon/authenticated invocation. No workers were activated, no mail was sent, and neither source nor target wallets were changed.
+- Continue work on remaining official TokTok image and approved dispatcher provisioning; a valid readiness diagnostic is **not** production go-live approval.
