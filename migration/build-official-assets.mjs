@@ -137,6 +137,14 @@ async function processImage(e) {
 await Promise.all(Array.from({length:6},async()=>{
   while(next<unique.length){const e=unique[next++];await processImage(e);}
 }));
+// Exact recovered public product artwork, checked by full SHA-256. No source-host dependency.
+const recoveredTokTok = await readFile('assets/migration/toktok-original.png');
+if(createHash('sha256').update(recoveredTokTok).digest('hex') !== '33df2d9491b1590fc10e6994681b43b7e17a7e66c26bd64811d533c51900fa14')
+  throw Error('Recovered TokTok artwork changed');
+const recoveredPath='/media/official/product/3c9e7608-ae2f-40f3-a584-3a324d281fde-33df2d9491b1590f.png';
+await mkdir(dirname(resolve(root,recoveredPath.slice(1))),{recursive:true});
+await writeFile(resolve(root,recoveredPath.slice(1)),recoveredTokTok);
+successes.push({kind:'product',id:'3c9e7608-ae2f-40f3-a584-3a324d281fde',name:'توك توك',path:recoveredPath,bytes:recoveredTokTok.length,source:'recovered-store-original',source_title:null});
 // F90_MEDIA_IMMUTABLE_BACKFILL: preserve previously published content-addressed files.
 // A changed official app icon must not make old URLs disappear from Cloudflare.
 // Failure to fetch and authenticate existing immutable media prevents deployment.
