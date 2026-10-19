@@ -76,6 +76,21 @@ const rescue={products:catalog.products.map(p=>Object.fromEntries(displayFields.
 const oldImageDependencies=[...rescue.products,...rescue.categories].filter(p=>String(p.image_url).includes(oldHost)).length;
 if(mode==='production'&&oldImageDependencies)throw Error('Target rescue catalog still depends on old storage');
 await writeFile(resolve(dest,'f90-catalog-rescue.json'),JSON.stringify(rescue));
+if(mode==='acceptance'){
+  const quality={
+    mode:'acceptance',
+    target:newHost,
+    checkoutTested:false,
+    depositTested:false,
+    supplierSingleWriter:false,
+    financialReconciled:false,
+    cutoverAuthorized:false,
+    legacyProductOrCategoryImageDependencies:oldImageDependencies,
+    productionReady:false
+  };
+  await writeFile(resolve(dest,'f90-release-gates.json'),JSON.stringify(quality));
+}
+
 const headers='/*\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n'+(mode==='acceptance'?'  X-Robots-Tag: noindex, nofollow, noarchive\n':'')+'/config.js\n  Cache-Control: no-store\n/sw.js\n  Cache-Control: no-cache\n/*.html\n  Cache-Control: no-cache\n';
 await writeFile(resolve(dest,'_headers'),headers);
 await writeFile(resolve(dest,'_redirects'),'/discover/games.html /discover/ 301\n/index.html / 301\n');
