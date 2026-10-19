@@ -14,6 +14,12 @@ const newUrl='https://ogkipkavlywgwhtomoca.supabase.co';
 const publicKey="sb_publishable_hhEc0Rw4r_V-sLpC82KLdw_mcoWNSec";
 if(!publicKey.startsWith('sb_publishable_'))throw Error('Staging key missing');
 
+// Stage-only runtime guard: abort the build if public settings are accidentally
+// pointed to the real payment backend. Never let test pages become a writable shop.
+if(oldUrl===newUrl || !newUrl.includes('ogkipkavlywgwhtomoca.supabase.co')) {
+  throw Error('Refusing unsafe preview target');
+}
+
 const protectiveMarkup = "<meta name=\"robots\" content=\"noindex,nofollow,noarchive\">\n<style id=\"f90-staging-shield\">\nbody{scroll-behavior:smooth}\nhtml::after{content:\"معاينة F90 CARD | تصفح الأقسام متاح، الشراء وتسجيل الدخول والإيداع معطّلان\";position:fixed;z-index:2147483647;top:0;left:0;right:0;padding:13px 12px;background:#991b1b;color:white;text-align:center;direction:rtl;font:700 13px system-ui,Arial,sans-serif;box-shadow:0 6px 24px #0008;pointer-events:none}\n</style>";
 let copied=0,byteCount=0;
 async function copyTree(src, relativePath='') {
