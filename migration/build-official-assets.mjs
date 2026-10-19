@@ -25,6 +25,10 @@ const hostAllowed=(entry,url)=>{
     const u=new URL(url);
     if(u.protocol!=='https:') return false;
     if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
+    // Explicitly reviewed public storefront artwork, never customer buckets.
+    // Preserve existing F90 designs while removing the old hosting dependency.
+    if(entry.source==='reviewed-store-original') return u.hostname==='xzqnrpycjxfbyrfaolud.supabase.co' &&
+      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
     return officialHost.test(u.hostname);
   } catch {return false;}
 };
@@ -46,7 +50,7 @@ for(const e of direct.assets) {
   sanitize(e);
   if(!hostAllowed(e,e.url)) throw Error('Unapproved direct image source');
 }
-const queue=direct.assets.map(e=>({...e,source:'approved-catalog',url:e.url}));
+const queue=direct.assets.map(e=>({...e,source:e.source||'approved-catalog',url:e.url}));
 const itunesCache=new Map();
 const searches=[...new Map(looked.lookups
   .filter(e=>!direct.assets.some(d=>d.kind===e.kind && d.id===e.id))
