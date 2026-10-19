@@ -69,3 +69,7 @@ _Validated in the October 19, 2026 migration continuation._
 - Executed `select f90_private.cutover_readiness()` successfully against the **new Supabase**: `jobs_total=5`, `jobs_enabled=0`, `active_orders=0`, `yassen_enabled=false`, `legacy_active_images=1`, `pending_historical_mail=14`, `mail_dispatch_vault_ready=false`.
 - The diagnostic returns only aggregate readiness data; it is restricted from public/anon/authenticated invocation. No workers were activated, no mail was sent, and neither source nor target wallets were changed.
 - Continue work on remaining official TokTok image and approved dispatcher provisioning; a valid readiness diagnostic is **not** production go-live approval.
+
+## Exact last active product image dependency
+- The only target product still using original Supabase public storage is **توك توك**, product UUID `3c9e7608-ae2f-40f3-a584-3a324d281fde`. Original object path: `f90-images/app-placeholders/a83af63eff8c24d1e37bfaf5.png` (not the destination). Do not substitute a generic image or change source product. Copy the verified image into new independent static media hosting and update only this target product URL; re-run `f90_private.cutover_readiness()` expecting `legacy_active_images=0`.
+- A direct read of the original media URL through the available web retrieval endpoint was unavailable, so no unverified image migration or SQL URL update was performed.
