@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#0a0d13">
+<title>F90 CARD | كتالوج التجربة الآمنة</title>
+<style>
+:root{color-scheme:dark;--red:#ef3b58;--border:#373944;--surface:#15171f}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;font-family:system-ui,Tahoma,Arial,sans-serif;background:radial-gradient(ellipse at 50% 0,#43131e 0,#101116 44%,#090b0f 80%);color:#f4f4f7}
+header{position:sticky;top:0;z-index:5;background:#0b0c12ec;backdrop-filter:blur(12px);border-bottom:1px solid #3a2730;padding:12px max(16px,calc((100vw - 1160px)/2))}
+.header{display:flex;align-items:center;gap:12px}.header img{width:54px;height:54px;object-fit:contain}.brand{font-weight:900;font-size:21px;letter-spacing:1px}.brand span{color:var(--red)}.subtitle{font-size:12px;color:#b8b9be}
+.wrapper{width:min(1160px,calc(100% - 28px));margin:24px auto 80px}
+.notice{padding:13px 16px;border:1px solid #8a3546;background:#26151b;border-radius:14px;font-weight:600;margin:0 0 20px}
+.panel{border:1px solid var(--border);border-radius:17px;background:#14161dd9;padding:16px;margin-bottom:20px}
+h1{margin:0 0 14px;font-size:clamp(22px,4vw,32px)}p{line-height:1.7}.muted{color:#b6b7c2}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.filters input{flex:1 1 220px;min-width:0;border:1px solid #51525e;background:#08090e;color:#fff;border-radius:11px;font:inherit;padding:13px}
+button{font:inherit;cursor:pointer}.filters button,#more,.recheck{background:var(--red);color:white;border:0;border-radius:11px;padding:12px 18px;font-weight:700}
+.chips{display:flex;overflow-x:auto;gap:8px;padding:6px 0 12px;scrollbar-width:thin}
+.chip{background:#22242e;border:1px solid #393c47;color:#eee;border-radius:30px;padding:9px 13px;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--red);background:#4d1c2c;color:#fff}
+.summary{font-size:14px;color:#e6cbd0;margin:10px 0 16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.card{min-width:0;background:linear-gradient(150deg,#1d202b,#0c0e15);border:1px solid #30333e;border-radius:16px;padding:13px;display:flex;flex-direction:column;gap:7px}
+.visual{aspect-ratio:1;border-radius:13px;display:grid;place-items:center;background:radial-gradient(circle,#482036,#10121a 72%);overflow:hidden;border:1px solid #333441}
+.visual img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;display:block}.placeholder{font-size:36px}
+.name{font-size:14px;font-weight:700;line-height:1.5;min-height:42px;overflow-wrap:anywhere}
+.category{font-size:12px;color:#bebdc5}.price{font-weight:750;color:#ff97a7;margin-top:auto;font-size:16px}
+.empty{padding:24px;text-align:center;border:1px dashed #454651;border-radius:12px;color:#c2c4ca}
+.actions{text-align:center;margin:24px 0 10px}.footer{text-align:center;color:#9a9eaa;font-size:13px;margin:30px 0}
+a{color:#ff8796}#more[hidden],#mainContent[hidden]{display:none}
+@media(max-width:440px){.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{padding:10px}.wrapper{width:calc(100% - 20px)}}
+</style>
+</head>
+<body>
+<header><div class="header"><img src="/f90-logo.png" alt="شعار F90 CARD" width="54" height="54"><div><div class="brand">F90 <span>CARD</span></div><div class="subtitle">معاينة الكتالوج من Supabase الجديد</div></div></div></header>
+<main class="wrapper">
+<p class="notice">نسخة تجريبية للعرض والبحث فقط. الشراء والإيداع وتغيير الرصيد غير متاحة هنا، والموقع الرسمي مستمر بالعمل كما هو.</p>
+<section class="panel">
+<h1>خدمات المتجر</h1>
+<p class="muted">المنتجات والأقسام والأسعار المعروضة تُقرأ مباشرة من قاعدة النقل. لتجربة دخول Google استخدم <a href="/f90-migration-auth-test">صفحة تسجيل الدخول المنفصلة</a>.</p>
+<div class="filters"><input id="search" type="search" placeholder="ابحث عن خدمة أو قسم..." autocomplete="off" aria-label="البحث في الخدمات"><button class="recheck" id="refresh" type="button">تحديث</button></div>
+<div id="cats" class="chips" aria-label="اختيار القسم"></div>
+<div id="status" role="status" aria-live="polite" class="summary">جاري تحميل بيانات الكتالوج...</div>
+</section>
+<section id="mainContent" aria-label="نتائج الكتالوج">
+<div id="cards" class="cards"></div>
+<div class="actions"><button id="more" type="button" hidden>عرض المزيد</button></div>
+</section>
+<div class="footer">F90 CARD | فحص Cloudflare الآمن | <a href="https://www.f90card.online/">المتجر الرسمي</a></div>
+</main>
+<script>
+(function(){
+"use strict";
+var ROOT="https://ogkipkavlywgwhtomoca.supabase.co",all=[],categories=[],selected="",page=0,pageSize=60,failedImages=0;
+var search=document.getElementById("search"),cats=document.getElementById("cats"),status=document.getElementById("status"),cards=document.getElementById("cards"),more=document.getElementById("more"),refresh=document.getElementById("refresh");
+var nf=new Intl.NumberFormat("ar",{maximumFractionDigits:2});
+function safeUrl(url){try{var u=new URL(String(url||""));return u.protocol==="https:"?u.href:""}catch{return ""}}
+function say(s){status.textContent=s}
+function categoryName(p){var c=categories.find(function(c){return c.id===p.category_id});return c?String(c.name||""):"";}
+function formatPrice(p){var n=Number(p.price);if(!Number.isFinite(n)||n<0)return "";var currency=String(p.currency||"USD").toUpperCase();var sym=currency==="USD"?"$":currency==="ILS"?"₪":currency==="JOD"?"د.أ":currency;return nf.format(n)+" "+sym}
+function make(tag,className,text){var x=document.createElement(tag);if(className)x.className=className;if(text!=null)x.textContent=text;return x}
+function eligible(){var q=search.value.trim().toLocaleLowerCase();return all.filter(function(p){return (!selected||p.category_id===selected)&&(!q||String(p.name||"").toLocaleLowerCase().includes(q)||categoryName(p).toLocaleLowerCase().includes(q))})}
+function renderCats(){cats.replaceChildren();function chip(id,name){var b=make("button","chip",name);b.type="button";b.setAttribute("aria-pressed",String(id===selected));b.addEventListener("click",function(){selected=id;page=0;renderCats();render()});cats.append(b)}
+chip("","كل الأقسام");categories.forEach(function(c){if(all.some(function(p){return p.category_id===c.id}))chip(c.id,String(c.name||"قسم"))})}
+function render(){var list=eligible(),visible=list.slice(0,(page+1)*pageSize),frag=document.createDocumentFragment();cards.replaceChildren();for(var i=0;i<visible.length;i++){var p=visible[i],card=make("article","card"),visual=make("div","visual"),url=safeUrl(p.image_url);if(url){var img=document.createElement("img");img.src=url;img.alt=String(p.name||"صورة الخدمة");img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";img.addEventListener("error",function(){this.replaceWith(make("span","placeholder","▣"));failedImages++});visual.append(img)}else visual.append(make("span","placeholder","▣"));card.append(visual,make("div","name",String(p.name||"خدمة")),make("div","category",categoryName(p)),make("div","price",formatPrice(p)));frag.append(card)}cards.append(frag);more.hidden=visible.length>=list.length;more.textContent="عرض المزيد ("+nf.format(list.length-visible.length)+")";say("تم تحميل "+nf.format(all.length)+" منتج و"+nf.format(categories.length)+" قسم. نتائج البحث: "+nf.format(list.length)+". المعاينة لا تقبل الطلبات.");if(!list.length)cards.append(make("p","empty","لا توجد خدمات مطابقة للبحث."))}
+async function load(){refresh.disabled=true;say("جاري جلب الكتالوج من الخادم الجديد...");try{var controller=new AbortController(),timeout=setTimeout(function(){controller.abort()},14000);try{var response=await fetch(ROOT+"/functions/v1/f90-platform",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"catalog"}),cache:"no-store",signal:controller.signal});var json=await response.json();if(!response.ok||json.error)throw Error("HTTP "+response.status);if(!json||!json.data||!Array.isArray(json.data.products)||!Array.isArray(json.data.categories))throw Error("الكتالوج غير مكتمل");all=json.data.products;categories=json.data.categories;selected="";page=0;renderCats();render()}finally{clearTimeout(timeout)}}catch(e){say("تعذّر تحميل الكتالوج من Supabase الجديد. تأكد من الاتصال، ثم اضغط تحديث. "+String(e.message||""))}finally{refresh.disabled=false}}
+search.addEventListener("input",function(){page=0;render()});more.addEventListener("click",function(){page++;render()});refresh.addEventListener("click",load);load();
+})();
+</script>
+</body>
+</html>
