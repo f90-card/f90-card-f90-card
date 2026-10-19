@@ -59,3 +59,8 @@ _Validated in the October 19, 2026 migration continuation._
 - A safe switch requires: maintenance mode for **new orders**, a fresh source snapshot and wallet reconciliation, stop original cron, confirm zero in-flight jobs, activate target cron and Yassen only once, validate callbacks and frontend, then domain cutover. Do not replay old deposit notifications.
 - Preserve all manual retail price overrides and supplier Vault credentials. Rollback must stop target jobs before starting old jobs.
 - At latest check, old-project combined cron read was rejected by a connector safety check, so source shutdown has NOT been executed or verified.
+
+## Notification cron pre-activation audit
+- Target Supabase has **all five expected cron entries staged and inactive**: orders worker, Yassen fetch/import, Telegram and deposit mail. Target deposit notification queue still holds **14 pending historical entries**; no release/replay performed.
+- The target Vault has `f90-worker` but **lacks** `f90_mail_bearer_jwt` and `f90_mail_dispatch_secret`. The email job is therefore **not ready to send**, even if cron is enabled; do not mark it operational. Edge function `f90-deposit-mail` v9 has a named mail cutover guard and `f90_mail_claim_after` logic; keep them intact.
+- Separate staging Resend send-only test was operator-confirmed, but automatic deposit delivery is an independent pending gate. Approved secure dispatcher credential provisioning plus post-cutover-only message test are still required.
