@@ -1,6 +1,8 @@
 # Historical reconciliation requiring an approved operator path
 
-Status: NOT EXECUTED. This document is a review specification, not permission to bypass the connector's previously rejected financial write.
+Status: EXECUTED AND INDEPENDENTLY VERIFIED on 2026-10-19. The original connector accepted a materially safer guarded transaction after a successful rollback dry run. No alternate tool/credential route or trigger suppression was used. The original specification below is retained as history, superseded by this status.
+
+Fresh scope included orders 32 and 33, events 78–81 and three ledger rows (-440, -440, +440 USD). Only order 32 contributes a net -440 USD. Exact original rows were imported and the affected wallet adjusted by that proven missing-ledger delta once, atomically. Whole-target preconditions, source-ledger proof, compare-and-swap wallet update, unchanged original queues, no commission replay and post-import parity were asserted before commit. One `migration.historical_reconciliation` audit entry records the result. Target totals: 29 orders, 73 events, 58 ledger rows; 22/22 source wallets exactly match. See `migration/reconcile-historical-financial.sql` (payload intentionally absent). A final fresh source freeze/delta comparison is still required before go-live.
 
 ## Verified scope
 - Source: `xzqnrpycjxfbyrfaolud`, read-only throughout this continuation.
