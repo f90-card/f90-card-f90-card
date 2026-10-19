@@ -54,7 +54,19 @@ button.onclick=async()=>{
     const result=await response.json().catch(()=>({}));
     if(!response.ok||result?.status!=="accepted"){
       const messages={STAFF_ONLY:"هذا الحساب ليس مديرًا أو أدمن في قاعدة النقل.",VERIFIED_LOGIN_REQUIRED:"يجب تسجيل الدخول بحساب Google مؤكد.",ROLE_CHECK_UNAVAILABLE:"تعذّر فحص الصلاحيات مؤقتًا.",EMAIL_SETTINGS_INCOMPLETE:"إعدادات Resend غير مكتملة.",EMAIL_PROVIDER_REJECTED:"رفض Resend إرسال الرسالة. نحتاج فحص صلاحية المفتاح أو المرسل.",EMAIL_PROVIDER_TIMEOUT:"لم يستجب Resend خلال المهلة.",STAGING_ORIGIN_REQUIRED:"افتح الصفحة على نطاق Cloudflare الصحيح.",LOGIN_REQUIRED:"سجّل دخولك أولًا."};
-      throw Error((messages[result?.error]||"تعذّر الإرسال")+" (HTTP "+response.status+")");
+      const providerStatus=Number(result?.provider_status);
+      const providerReason=typeof result?.provider_error==="string"?result.provider_error:"unrecognized";
+      const providerHints={
+        401:"رمز Resend غير صالح أو غير نشط. راجع قيمة RESEND_API_KEY في Supabase الجديد.",
+        403:"Resend يرفض صلاحية المفتاح أو صلاحية إرسال البريد من هذا النطاق. راجع مفتاح Sending access وتحقق من الدومين.",
+        422:"Resend رفض بيانات الإرسال. راجع تأكيد الدومين وبريد F90_EMAIL_FROM.",
+        429:"تم تجاوز حد الإرسال مؤقتًا في Resend.",
+        409:"تعارض في معرّف الطلب المكرر لدى Resend."
+      };
+      const hint=result?.error==="EMAIL_PROVIDER_REJECTED"?
+        "\\nرد Resend: HTTP "+(Number.isInteger(providerStatus)?providerStatus:"غير معروف")+" | "+providerReason+
+        "\\n"+(providerHints[providerStatus]||"السبب يحتاج فحص إعدادات Resend."): "";
+      throw Error((messages[result?.error]||"تعذّر الإرسال")+" (HTTP "+response.status+")"+hint);
     }
     say("✅ استقبل Resend طلب إرسال الرسالة الاختبارية إلى بريد حسابك المسجّل.\nافتح Gmail وابحث عن عنوان: F90 CARD | اختبار إشعارات الإيداع.\nلا توجد عملية إيداع حقيقية أو أي تغيير في الأرصدة.");
   }catch(err){say("لم ينجح الاختبار: "+(err?.message||"خطأ غير معروف"));}
