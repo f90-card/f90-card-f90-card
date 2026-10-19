@@ -1242,6 +1242,69 @@
       "name": "F90 original admin_app_icon_192_url",
       "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/admin-icons/0ea498f7-c5ef-41e1-898b-e9d1b588abc5.png",
       "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "2cc2073f-6c24-465d-b765-57002857210a",
+      "name": "خدمات الموقع - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/7034ebcc-4dcb-447d-8c1b-4a366831fb3e.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "7bd999f6-a135-4239-84c1-d96a1983ee85",
+      "name": "أرصدة الجوال - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/8d0772a4-af6d-4010-be53-8bd66811750a.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "b011d181-4edb-4783-be11-8f4e013da9ff",
+      "name": "قسم الالعاب - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/ddb9ea39-02d5-4838-bef4-b8bf29e58c20.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "c1ec3134-18dc-421c-b775-121855f01735",
+      "name": "البطاقات الرقمية - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/f96fd32f-6765-46f1-96ee-98e13493c01d.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "d2bd97c8-5f7a-4292-a16d-32de6155884b",
+      "name": "الذكاء الاصطناعي - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/dcc72fe0-e849-40f4-b7ba-77fa761781b2.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "d988bad0-8183-4425-872d-c021a36a7902",
+      "name": "شحن التطبيقات - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/c3703f09-715c-48b5-80e3-b7b583d1738e.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "e8df5d34-6e20-432c-acc4-7482208a5f91",
+      "name": "اشتراكات المشاهدة - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/d1d3ed10-1bc5-4999-a96e-85491ac7873f.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "ea2934de-6c0b-4d24-851b-050c93e1c150",
+      "name": "خدمات السوشيال ميديا - original section banner",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/category-banners/7d83ae19-56a6-4ae2-974f-07e526461541.png",
+      "source": "reviewed-store-original"
+    },
+    {
+      "kind": "banner",
+      "id": "69c1b560-d630-4087-8f22-172a7630728b",
+      "name": "F90 original welcome artwork",
+      "url": "https://xzqnrpycjxfbyrfaolud.supabase.co/storage/v1/object/public/f90-images/banners/69c1b560-d630-4087-8f22-172a7630728b.png",
+      "source": "reviewed-store-original"
     }
   ]
 }

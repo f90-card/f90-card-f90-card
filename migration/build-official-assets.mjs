@@ -29,7 +29,7 @@ const hostAllowed=(entry,url)=>{
     // Explicitly reviewed public storefront artwork, never customer buckets.
     // Preserve existing F90 designs while removing the old hosting dependency.
     if(entry.source==='reviewed-store-original') return u.hostname==='xzqnrpycjxfbyrfaolud.supabase.co' &&
-      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified|admin-icons|banners|backgrounds)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
+      /^\/storage\/v1\/object\/public\/f90-images\/(?:product|products|category|app-icons|app-verified|admin-icons|banners|backgrounds|category-banners)\/[a-zA-Z0-9._-]+$/.test(u.pathname);
     if(entry.kind==='banner') return u.href.startsWith(bannerPrefix);
     return officialHost.test(u.hostname);
   } catch {return false;}
