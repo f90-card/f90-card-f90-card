@@ -340,7 +340,7 @@
     if(me && ['manager','admin','amin_card'].includes(me.role))extra.push('<a class="f90-drawer-standalone f90-amin-admin-link" href="./amin-card.html">'+I("grid")+'<span>'+(me.role==='amin_card'?'لوحة تحكم الامين كارد':'قسم الامين كارد')+'</span></a>');
     $('drawerLinks').insertAdjacentHTML('beforeend',extra.join('')+'<section class="f90-drawer-social" style="margin:14px 8px 24px"><div class="f90-drawer-social-title">تابع قنواتنا الرسمية</div><div class="f90-social-card-grid">'+(f90SocialCards()||'<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>')+'</div></section>');
     document.getElementById('f90TraderCommissionsLink')?.remove();
-    if(['trader','charging_agent'].includes(me?.role))$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عملائي وعمولاتي</a>');
+    if(me?.role==='trader')$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عملائي وعمولاتي</a>');
     const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
