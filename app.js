@@ -562,7 +562,7 @@
       '<div class="f90-ticker-copy" dir="rtl">'+content+'</div><div class="f90-ticker-copy" dir="rtl" aria-hidden="true">'+content+'</div></div></div>';
   }
   let f90PriorityTileCount = 0;
-  const f90Fallback = () C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
+  const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = (src, name) => image(C.safeUrl(src) || f90Fallback(), name || "قيد التعبئة", "f90-refill-image");
   function f90TileArt(src, name, disabled) {
     // One real thumbnail per product/category; the old two-face animation
