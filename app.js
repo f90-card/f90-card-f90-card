@@ -319,8 +319,8 @@
       ["notifications", "الإشعارات", "bell"],
       ["@help", "المزيد"],
       ["install", "تثبيت التطبيق", "plus"],
-      ...(me?.role === "trader" ? [["developers", "صفحة التاجر", "link"]] : []),
-      ...(me?.role === "trader" ? [["api-guide", "دليل ربط التاجر", "doc"]] : []),
+      ...(me?.role === "trader" ? [["developers", "إنشاء مفتاح API", "link"]] : []),
+      ...(me?.role === "trader" ? [["api-guide", "دليل المطور وربط المتاجر", "doc"]] : []),
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
@@ -2282,9 +2282,9 @@
       return;
     }
     if (form.id === "keyForm" || form.id === "keySettingsForm") {
-      const scopes = ["catalog", "balance", "orders"].filter((scope) => form.elements["scope_" + scope]?.checked);
+      const scopes = form.id === "keyForm" ? ["catalog", "balance", "orders"] : ["catalog", "balance", "orders"].filter((scope) => form.elements["scope_" + scope]?.checked);
       if (!scopes.length) throw new Error("اختر صلاحية واحدة على الأقل");
-      const values = {name:data.name,scopes,requests_per_minute:Number(data.requests_per_minute),
+      const values = {name:data.name,scopes,requests_per_minute:Number(data.requests_per_minute)||60,
         expires_at:data.expires_at||null,allow_all_ips:form.elements.allow_all_ips?.checked===true,
         allowed_ips:String(form.elements.allowed_ips?.value||"").split(/[\r\n,]+/).map(x=>x.trim()).filter(Boolean),
         replace_existing:!!S.me?.keys?.some(k=>k.is_active)};
