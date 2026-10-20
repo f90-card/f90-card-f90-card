@@ -1011,7 +1011,7 @@
         "هويتك، على طريقتك",
         "الشعار، التطبيق، المظهر الليلي والنهاري، وواجهة المتجر.",
       ) +
-      `<form id="settingsForm" novalidate><div class="editor"><section class="panel"><div class="form-section"><h3>توثيق الحساب قبل الإيداع</h3>${check("deposit_requires_verification","اشتراط توثيق هوية العميل قبل إرسال طلب الإيداع",c.deposit_requires_verification===true)}<p class="muted small">معطّل حاليًا: يستطيع العميل المسجّل بحساب نشط إرسال طلب إيداع للمراجعة دون توثيق. لا يغيّر هذا شرط توثيق الشراء أو اعتماد الإيداعات يدويًا.</p></div>${field("store_name", "اسم الموقع", "text", d.store_name, 'required maxlength="100"')}${field("contact_email", "بريد التواصل", "email", d.contact_email || "")}${field("whatsapp", "رقم واتساب للدعم <small>اختياري</small>", "tel", c.whatsapp || "", 'dir="ltr"')}${field("primary_color", "لون الهوية", "color", d.primary_color || "#fa2444")}${select(
+      `<form id="settingsForm" novalidate><div class="editor"><section class="panel"><div class="form-section"><h3>توثيق الحساب قبل الإيداع</h3>${check("deposit_requires_verification","اشتراط توثيق هوية العميل قبل إرسال طلب الإيداع",c.deposit_requires_verification===true)}${check("purchase_requires_verification","اشتراط التوثيق قبل الشراء",c.purchase_requires_verification===true)}<p class="muted small">معطّل حاليًا: يستطيع العميل المسجّل بحساب نشط إرسال طلب إيداع للمراجعة دون توثيق. لا يغيّر هذا شرط توثيق الشراء أو اعتماد الإيداعات يدويًا.</p></div>${field("store_name", "اسم الموقع", "text", d.store_name, 'required maxlength="100"')}${field("contact_email", "بريد التواصل", "email", d.contact_email || "")}${field("whatsapp", "رقم واتساب للدعم <small>اختياري</small>", "tel", c.whatsapp || "", 'dir="ltr"')}${field("primary_color", "لون الهوية", "color", d.primary_color || "#fa2444")}${select(
         "default_theme",
         "المظهر الافتراضي",
         [
@@ -1539,6 +1539,7 @@
         config: {
           ...c,
           deposit_requires_verification:form.elements.deposit_requires_verification.checked,
+          purchase_requires_verification:form.elements.purchase_requires_verification.checked,
           whatsapp: d.whatsapp,
           whatsapp_channel_url: String(d.whatsapp_channel_url || "").trim().slice(0, 500),
           whatsapp_channel_popup: form.elements.whatsapp_channel_popup.checked,
