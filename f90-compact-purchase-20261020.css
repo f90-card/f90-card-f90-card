@@ -74,3 +74,34 @@ border-radius:0!important;background:transparent!important;padding:3px 0!importa
 .f90-premium-checkout .f90-visa-buy{min-height:39px!important;background:#d8213b!important;border:0!important;box-shadow:none!important}
 .f90-premium-checkout .f90-visa-inputrow input[name="quantity"]{height:38px!important;min-height:38px!important}
 .f90-premium-checkout .f90-qty-button{width:31px!important;height:31px!important;bottom:4px!important}
+
+/* v5: one input-sized price field, never a two-line card. */
+.f90-premium-checkout #checkoutForm>.f90-premium-summary,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f90-premium-summary{
+ box-sizing:border-box!important;order:10!important;width:100%!important;
+ height:40px!important;min-height:40px!important;max-height:40px!important;
+ padding:0 11px!important;margin:0!important;display:flex!important;align-items:center!important;
+ border:1px solid var(--f90p-line,#48404a)!important;
+ border-radius:11px!important;background:var(--f90p-input,#1a1a1f)!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary .f90-visa-price,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f90-premium-summary .f90-visa-price{
+ height:100%!important;min-height:0!important;max-height:40px!important;
+ flex:1!important;display:flex!important;flex-direction:row!important;
+ justify-content:space-between!important;align-items:center!important;
+ padding:0!important;margin:0!important;gap:8px!important;white-space:nowrap!important;min-width:0!important;
+}
+.f90-premium-checkout .f90-visa-price>span{font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
+.f90-premium-checkout #f90CheckoutTopTotal{
+ display:inline-block!important;min-width:0!important;max-width:70%!important;
+ font-size:17px!important;font-weight:850!important;line-height:1.2!important;
+ text-align:left!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ color:var(--f90p-ink,#fff)!important;direction:ltr!important;unicode-bidi:isolate!important;
+}
+.f90-premium-checkout #f90CheckoutTopTotal[aria-busy="true"]{opacity:.84!important}
+:root[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-premium-summary{background:#fff8f7!important}
+.image-grid .f90-flip-tile .f90-flip-inner,
+.image-grid .f90-flip-tile .f90-flip-face,
+.image-grid .f90-flip-tile .f90-flip-front,
+.image-grid .f90-flip-tile img{opacity:1!important;visibility:visible!important;animation:none!important;transition:none!important;transform:none!important}
+.image-grid .f90-flip-tile img{content-visibility:visible!important;filter:none!important}
