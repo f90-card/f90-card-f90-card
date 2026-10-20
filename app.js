@@ -708,7 +708,7 @@
     const target = hero?.link_url || "#/";
     main.innerHTML = `${c.show_banners === false ? "" : `<section class="home-hero f90-swipe-hero" aria-label="إعلانات المتجر" data-slides="${slides.length}"><div class="f90-hero-link"><img src="${e(C.safeUrl(art))}" alt="${e(hero?.title || "أف تسعين كارد — اكتشف خدماتنا")}" fetchpriority="high" decoding="async" draggable="false"></div><div class="hero-overlay" ${hero?.presentation?.overlay_enabled ? "" : "hidden"}><h2>${e(hero?.title || "")}</h2><p>${e(hero?.subtitle || "")}</p></div>${slides.length > 1 ? `<div class="f90-hero-controls"><span class="f90-hero-dots" aria-label="مؤشر الإعلان الحالي">${slides.map((_,i)=>`<i class="${i===S.carousel%slides.length?"active":""}"></i>`).join("")}</span></div>` : ""}</section>`}
  ${window.F90Special?.home(S.settings) || ''}
- ${(window.F90Partners?.secondaryBanners()||[]).length ? '<div class="f90-secondary-ad-strip" aria-label="إعلانات أسفل البنر الرئيسي">'+window.F90Partners.secondaryBanners().map(b=>'<a class="partner-small-banner" href="'+e(C.safeUrl(b.link_url)||'#/')+'" target="_blank" rel="noopener noreferrer"><img loading="lazy" decoding="async" alt="'+e(b.title||'إعلان الأمين كارد')+'" src="'+e(C.safeUrl(b.image_url))+'"></a>').join('')+'</div>':''}
+
  ${window.F90Partners?.aboveIntro() || ''}
  ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
@@ -721,7 +721,6 @@
      : empty("تُجهّز أقسام المتجر حاليًا")
  }
  ${window.F90Partners?.home() || ""}
- ${window.F90Partners?.contacts() || ""}
  ${f90SocialLinks().length ? `<section class="f90-home-social"><div class="section-head"><h2>تواصل معنا وتابع جديدنا</h2><span>روابط منصات F90 CARD الرسمية</span></div><div class="f90-social-card-grid">${f90SocialCards()}</div></section>` : ""}
  <div class="value-strip">${[
    ["wallet", "شراء من محفظتك", "سعر واضح قبل التأكيد"],
@@ -734,6 +733,16 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
+    // Partner ads share the existing secondary banner carousel; never the main hero.
+    const partnerStrip=main.querySelector('.f90-special-ad-strip');
+    for(const banner of (window.F90Partners?.secondaryBanners()||[])){
+      if(!partnerStrip||!C.safeUrl(banner.image_url))continue;
+      const card=document.createElement('div');card.className='f90-special-ad f90-amin-ad';
+      const pic=document.createElement('img');pic.src=C.safeUrl(banner.image_url);pic.alt=banner.title||'إعلان الأمين كارد';pic.loading='lazy';
+      const safeLink=C.safeUrl(banner.link_url);
+      if(safeLink){const a=document.createElement('a');a.href=safeLink;a.target='_blank';a.rel='noopener noreferrer';a.append(pic);card.append(a);}else card.append(pic);
+      partnerStrip.append(card);
+    }
     // After the first view the exact original introduction is still available
     // in a small expandable section; its image and markup are never removed.
     const introSection = main.querySelector(".f90-home-intro");
