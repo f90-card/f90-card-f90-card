@@ -1,0 +1,20 @@
+name: Merchant live external acceptance
+on:
+  push:
+    branches: ["fix/merchant-api-acceptance-followup-20261020"]
+    paths:
+      - "tests/merchant-live-acceptance.mjs"
+      - ".github/workflows/merchant-live-external.yml"
+permissions:
+  contents: read
+jobs:
+  external:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Read-only production transport and images
+        run: node tests/merchant-live-acceptance.mjs
