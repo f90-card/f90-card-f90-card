@@ -44,3 +44,33 @@ body.f90-checkout-open #quickProductPanel:not([hidden]){width:min(325px,calc(100
 .f90-premium-checkout #checkoutForm{gap:6px!important}
 .f90-premium-checkout .f90-visa-footer{margin-top:0!important}
 .f90-premium-checkout .f90-visa-buy{min-height:40px!important}
+
+/* v4: flat minimal purchase sheet, separate from previous boxed design */
+body.f90-checkout-open #quickProductPanel:not([hidden]){width:min(310px,calc(100vw - 24px))!important;padding:0!important}
+.f90-premium-checkout.product-page,body.f90-checkout-open #quickProductPanel .f90-premium-checkout.product-page{
+max-width:310px!important;padding:12px!important;gap:8px!important;border-radius:16px!important;
+background:#101114!important;border:1px solid #343439!important;box-shadow:0 16px 35px #0008!important}
+:root[data-theme="cream"] .f90-premium-checkout.product-page{background:#fffafa!important}
+.f90-premium-checkout .f90-visa-card-header{height:32px!important;min-height:32px!important}
+.f90-premium-checkout .f90-visa-logo{height:30px!important;filter:none!important}
+.f90-premium-checkout .f90-visa-product,body.f90-checkout-open .f90-premium-checkout .f90-visa-product{
+min-height:54px!important;grid-template-columns:43px minmax(0,1fr)!important;
+border:0!important;border-bottom:1px solid #34343a!important;border-radius:0!important;
+background:transparent!important;box-shadow:none!important;padding:3px 0 8px!important}
+.f90-premium-checkout .f90-visa-product .product-art,body.f90-checkout-open .f90-premium-checkout .f90-visa-product .product-art{width:42px!important;height:42px!important;border:0!important;box-shadow:none!important}
+.f90-premium-checkout .f90-visa-product .product-info h1{font-size:13px!important;font-weight:800!important}
+.f90-premium-checkout .f90-visa-statuses{display:flex!important;gap:5px!important;margin-top:3px!important}
+.f90-premium-checkout .f90-visa-status,.f90-premium-checkout .f90-visa-available{font-size:10px!important;padding:1px 5px!important;border:0!important;border-radius:5px!important}
+.f90-premium-checkout .f90-visa-available.is-unavailable{color:#ff8b91!important;background:#44212a!important}
+.f90-premium-checkout .f90-visa-status{background:#27262b!important;color:#e3dce0!important}
+.f90-premium-checkout .f90-visa-inputrow input[name="quantity"]{background:#191a20!important}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary,body.f90-checkout-open .f90-premium-checkout #checkoutForm>.f90-premium-summary{
+border:0!important;border-top:1px solid #444047!important;border-bottom:1px solid #444047!important;
+border-radius:0!important;background:transparent!important;padding:3px 0!important;box-shadow:none!important}
+:root[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-premium-summary{background:transparent!important}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary .f90-visa-price{min-height:28px!important}
+.f90-premium-checkout .f90-visa-price>span{font-size:11px!important}
+.f90-premium-checkout #f90CheckoutTopTotal{font-size:16px!important;color:#ff5265!important}
+.f90-premium-checkout .f90-visa-buy{min-height:39px!important;background:#d8213b!important;border:0!important;box-shadow:none!important}
+.f90-premium-checkout .f90-visa-inputrow input[name="quantity"]{height:38px!important;min-height:38px!important}
+.f90-premium-checkout .f90-qty-button{width:31px!important;height:31px!important;bottom:4px!important}
