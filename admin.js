@@ -2190,8 +2190,12 @@
     }
     main.innerHTML = '<div class="loading">جارٍ تحميل أدوات الإدارة…</div>';
     try {
-      if (page === "trader-commissions") {location.href="./trader-commissions.html";return;}
-      if (page === "amin-card") {location.href="./amin-card.html";return;}
+      if (page === "trader-commissions" || page === "amin-card") {
+        const partner=page==="amin-card";
+        const address=partner?"./amin-card.html":"./trader-commissions.html";
+        main.innerHTML='<section class="panel f90-embedded-admin"><h1>'+(partner?'قسم الأمين كارد':'وكلاء الموقع')+'</h1><p>'+(partner?'إدارة أقسام الأمين وخدماته وروابط التواصل والصور':'إدارة رتب وكلاء الشحن وربط العملاء ونسب العمولة وسجل التسويات')+'</p><iframe title="'+(partner?'قسم الأمين كارد':'وكلاء الموقع')+'" src="'+address+'" loading="eager" style="display:block;width:100%;min-height:78vh;height:1100px;border:0;border-radius:14px;background:transparent" referrerpolicy="same-origin"></iframe></section>';
+        return;
+      }
       if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
