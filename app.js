@@ -335,7 +335,7 @@
       return `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}<span>${e(label)}</span></a>`;
     }).join("") + (drawerGroup ? "</div></details>" : "");
     document.getElementById('f90TraderCommissionsLink')?.remove();
-    if(me?.role==='trader')$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عمولات عملائي</a>');
+    if(['trader','charging_agent'].includes(me?.role))$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عملائي وعمولاتي</a>');
     const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
