@@ -35,7 +35,7 @@ function editor(kind,row={}){
 }
 async function render(){
  if(page==='settings'){
- main.innerHTML=`<form id="partnerSettings"><h2>التواصل والتعاون</h2>${field('name','اسم المساحة',space.name,'text','required maxlength="100"')}<label class="check-field"><input name="is_active" type="checkbox" ${space.is_active?'checked':''}>عرض المساحة للجمهور</label><h3>لوغو التعاون</h3><p>يظهر لوغو واحد بدون نصوص أو روابط، أسفل البنرات وفوق التعريف بـF90 CARD.</p>${imageField(space.collaboration_image)}<h3>تواصل مع الأمين كارد</h3><p>أضف رابطًا أو بريدًا أو رقمًا في كل سطر، بهذا الشكل: واتساب | https://wa.me/962...</p><label class="field"><span>روابط التواصل</span><textarea name="contacts" rows="8" maxlength="12000">${e((space.contacts||[]).map(x=>x.label+' | '+x.url).join('\n'))}</textarea></label><button class="button" type="submit">حفظ</button></form>`;
+ main.innerHTML=`<form id="partnerSettings"><h2>روابط التواصل</h2>${['manager','admin'].includes(role)?field('name','اسم المساحة',space.name,'text','required maxlength="100"')+'<label class="check-field"><input name="is_active" type="checkbox" '+(space.is_active?'checked':'')+'>عرض المساحة للجمهور</label><h3>لوغو التعاون</h3>'+imageField(space.collaboration_image):''}<h3>تواصل مع الأمين كارد</h3><p>أضف رابطًا أو بريدًا أو رقمًا في كل سطر، بهذا الشكل: واتساب | https://wa.me/962...</p><label class="field"><span>روابط التواصل</span><textarea name="contacts" rows="8" maxlength="12000">${e((space.contacts||[]).map(x=>x.label+' | '+x.url).join('\n'))}</textarea></label><button class="button" type="submit">حفظ</button></form>`;
  $('partnerSettings').onsubmit=saveSettings;return;
  }
  if(page==='banners'&&!['manager','admin'].includes(role)){main.textContent='إدارة البنرات متاحة لمدير الموقع فقط';return;}
@@ -80,8 +80,9 @@ async function saveSettings(ev){
  const url=/^\+?[0-9 ()-]{7,25}$/.test(raw)?'tel:'+raw.replace(/[ ()-]/g,''):/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)?'mailto:'+raw:raw;
  if(!label||!(/^(https:\/\/|mailto:|tel:)/.test(url))||/[\r\n]/.test(url))throw new Error('تحقق من تسمية وروابط التواصل');return {label:label.slice(0,80),url:url.slice(0,1200)};
  });if(links.length>30)throw new Error('الحد الأقصى 30 رابط تواصل');
- newImage=await upload(f.elements.image_file.files[0]);
- const data={name:f.elements.name.value,is_active:f.elements.is_active.checked,contacts:links,collaboration_image:newImage||space.collaboration_image};
+ const isManager=['manager','admin'].includes(role);
+ if(isManager)newImage=await upload(f.elements.image_file?.files[0]);
+ const data=isManager?{name:f.elements.name.value,is_active:f.elements.is_active.checked,contacts:links,collaboration_image:newImage||space.collaboration_image}:{contacts:links};
  check(await db.from('f90_partner_spaces').update(data).eq('id',space.id).select('id').single());Object.assign(space,data);say('حُفظت إعدادات الأمين كارد');await refresh();
  }catch(err){if(newImage)await db.storage.from('f90-partner-images').remove([newImage]);say(err.message);}finally{busy=false;button.disabled=false;}
 }
