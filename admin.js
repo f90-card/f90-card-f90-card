@@ -677,6 +677,8 @@
     ).join('')+'</div><h3>بنر التعريف</h3><label><input type="checkbox" name="show_intro" '+(config.show_intro===false?'':'checked')+'> إظهار بنر التعريف</label>'+
     '<label class="field">صورة بنر التعريف<input name="hero_image" type="url" value="'+e(config.hero_image?.startsWith("https://")?config.hero_image:"")+'" placeholder="https://..."></label>'+
     '<label class="field">أو رفع صورة بنر التعريف<input name="hero_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>'+
+    '<label class="field">الصورة المتناوبة الثانية لبنر التعريف (اختياري)<input name="intro_extra_url" type="url" value="'+e((config.intro_banner_images||[])[0]||"")+'" placeholder="https://..."></label>'+ 
+    '<label class="field">أو رفع الصورة المتناوبة الثانية<input name="intro_extra_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>'+ 
     '<button class="button" type="submit">حفظ صور الإعلانات وبنر التعريف</button></form>';
     main.append(panel);
     panel.querySelector("form").onsubmit=async ev=>{
@@ -696,7 +698,10 @@
         let hero=form.elements.hero_image.value.trim()||config.hero_image||"";
         if(form.elements.hero_file.files[0])hero=(await A.upload(form.elements.hero_file.files[0],"f90-images","banners")).url;
         if(hero&&!/^https:\/\//.test(hero)&&!/^\.\/assets\//.test(hero))throw new Error("رابط بنر التعريف غير صالح");
-        const updated=await A.call("settings.save",{data:{...S.settings,config:{...config,special_services:next,show_intro:form.elements.show_intro.checked,hero_image:hero}}});
+        let extra=form.elements.intro_extra_url.value.trim(); 
+        if(form.elements.intro_extra_file.files[0])extra=(await A.upload(form.elements.intro_extra_file.files[0],"f90-images","banners")).url;
+        if(extra){try{if(new URL(extra).protocol!=="https:")throw Error("bad");}catch{throw new Error("رابط الصورة الثانية يجب أن يبدأ بـ HTTPS");}}
+        const updated=await A.call("settings.save",{data:{...S.settings,config:{...config,special_services:next,show_intro:form.elements.show_intro.checked,hero_image:hero,intro_banner_images:extra?[extra]:[]}}});
         S.settings=updated;toast("تم تحديث الإعلانات");await catalogPage("banners");
       }catch(err){toast(err.message||"تعذر الحفظ");}finally{button.disabled=false;}
     };
