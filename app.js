@@ -1717,7 +1717,7 @@
 
   function apiGuide() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
-    main.innerHTML=window.F90MerchantViews.docs(A.endpoint,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
+    main.innerHTML=window.F90MerchantViews.docs("https://www.f90card.online/api/merchant",C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
   }
   function developers() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
@@ -1727,7 +1727,7 @@
       return;
     }
     main.innerHTML=window.F90MerchantViews.tokens((S.me.keys||[]).filter(k=>k.is_active),
-      S.me.profile?.is_verified,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png",A.endpoint);
+      S.me.profile?.is_verified,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png","https://www.f90card.online/api/merchant");
   }
   async function mfaChallenge() {
     const { data, error } = await A.client.auth.mfa.listFactors();
