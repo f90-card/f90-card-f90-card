@@ -24,12 +24,12 @@ async function load(){
  })();return loading;
 }
 function aboveIntro(){
- return banners.filter(b=>b.placement==='small').map(b=>{const img=image(b.image_path,b.title);return b.link_url&&C.safeUrl(b.link_url)?`<a class="partner-small-banner" href="${e(C.safeUrl(b.link_url))}" target="_blank" rel="noopener noreferrer">${img}</a>`:`<div class="partner-small-banner">${img}</div>`;}).join('')+
- spaces.filter(s=>s.collaboration_image).map(s=>`<div class="partner-collaboration">${image(s.collaboration_image,'تعاون F90 CARD والأمين كارد')}</div>`).join('');
+ return spaces.filter(s=>s.collaboration_image).map(s=>`<div class="partner-collaboration">${image(s.collaboration_image,'تعاون F90 CARD والأمين كارد')}</div>`).join('');
 }
 function home(){return categories.length?`<section class="partner-catalog"><div class="section-head"><h2>الأمين كارد</h2></div><div class="image-grid">${categories.map(c=>`<a class="image-tile" href="#/partner/${encodeURIComponent(c.id)}" aria-label="${e(c.name)}">${image(c.image_path,c.name)}<span>${e(c.name)}</span></a>`).join('')}</div></section>`:'';}
 function contacts(){return spaces.map(s=>{const links=(s.contacts||[]).filter(x=>safeContact(x.url));return links.length?`<section class="partner-contact"><h2>تواصل مع الأمين كارد</h2><div class="actions">${links.map(x=>`<a class="button secondary" href="${e(safeContact(x.url))}" target="_blank" rel="noopener noreferrer">${e(x.label)}</a>`).join('')}</div></section>`:'';}).join('');}
-function mainBanners(){return banners.filter(b=>b.placement==='main').map(b=>({id:b.id,title:b.title,image_url:media(b.image_path),link_url:C.safeUrl(b.link_url)||'#/',presentation:{}}));}
+function mainBanners(){return [];} 
+function secondaryBanners(){return banners.filter(b=>b.placement==='small').map(b=>({id:b.id,title:b.title,image_url:media(b.image_path),link_url:C.safeUrl(b.link_url)||'#/',presentation:{}}));}
 async function render(main,id){
  main.innerHTML='<p role="status">جارٍ تحميل خدمات الأمين كارد…</p>';await load();
  if(decodeURIComponent((location.hash||'').split('/')[2]||'')!==id)return;
@@ -39,5 +39,5 @@ async function render(main,id){
  const url=purchaseUrl(p.purchase_url);return `<article class="partner-product">${image(p.image_path,p.name)}<h3>${e(p.name)}</h3>${p.description?`<p>${e(p.description)}</p>`:''}<strong class="partner-price">${e(new Intl.NumberFormat('ar',{style:'currency',currency:p.currency,maximumFractionDigits:6}).format(p.price))}</strong>${url?`<a class="button" href="${e(url)}" target="_blank" rel="noopener noreferrer">شراء عبر واتساب</a>`:''}</article>`;
  }).join('')}</div>${contacts()}`;
 }
-window.F90Partners={load,aboveIntro,home,contacts,mainBanners,render};
+window.F90Partners={load,aboveIntro,home,contacts,mainBanners,secondaryBanners,render};
 })();
