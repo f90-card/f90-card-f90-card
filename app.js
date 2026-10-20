@@ -1637,12 +1637,10 @@
       '<div><h2>ملخص الطلب</h2><p id="f90OrderSeconds" class="f90-order-elapsed" aria-live="off">مدة التنفيذ: جارٍ الحساب…</p>'+customerOrderStatus(o.status)+'</div></div>'+
       '<div class="f90-order-summary-rows">'+rows+'</div>'+
       (Number(o.refunded_usd)>0?'<p class="notice success">قيمة مستردة: '+e(accountMoney(o.refunded_usd))+'</p>':"")+
-      more+'<div class="f90-order-summary-actions">'+
-      ''+
-      supportLink("مساعدة في الطلب "+o.order_number)+'</div></section>'+
-      '<details class="panel f90-order-secondary"><summary>متابعة الطلب أو تقديم اعتراض</summary>'+
-      '<h3>حالة التنفيذ</h3><div class="timeline">'+eventsHtml+'</div>'+requestPanel+
-      '</details></div>';
+      more+'</section>'+
+      '<section class="panel f90-order-secondary"><h3>متابعة الطلب أو تقديم اعتراض</h3>'+
+      '<div class="timeline">'+eventsHtml+'</div>'+requestPanel+
+      '</section></div>';
     const startedAt=Date.parse(o.started_at||o.created_at)||Date.now();
     const terminal=['completed','partial','failed','rejected','refunded','cancelled','canceled'].includes(o.status);
     const finalAt=terminal?(Date.parse(o.completed_at||o.updated_at)||Date.now()):null;
@@ -1652,7 +1650,15 @@
     clearInterval(orderSecondsTimer);updateSeconds();
     if(!terminal)orderSecondsTimer=setInterval(updateSeconds,1000);
     clearTimeout(orderPollTimer);
-    if(!terminal)orderPollTimer=setTimeout(()=>{if(S.route===seq&&main.dataset.page==='order')order(id).catch(()=>{});},12000);
+    if(!terminal){
+      const poll=()=>{
+        if(S.route!==seq||main.dataset.page!=='order')return;
+        const note=main.querySelector('#orderRequestForm textarea');
+        if(note&&(document.activeElement===note||note.value.trim())){orderPollTimer=setTimeout(poll,12000);return;}
+        order(id).catch(()=>{});
+      };
+      orderPollTimer=setTimeout(poll,12000);
+    }
   }
   function vip() {
     const me = S.me,
