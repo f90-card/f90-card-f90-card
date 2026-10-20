@@ -61,6 +61,14 @@
 - Old Vercel deployment and domain attachments are retained as rollback; no deletion or old-site data removal.
 - **Remaining:** confirm Cloudflare domain status becomes active and live HTTPS requests succeed on both hostnames; verify content/backend and post-publication checkout/deposit under owner's supervision, then remove temporary financial lock deliberately. Historical mail queue still must not replay.
 
+
+## Verified custom-domain activation — 2026-10-20
+
+- Both `www.f90card.online` and `f90card.online` have Cloudflare Pages custom-domain status **active**, ownership verification **active**, certificate validation **active** on direct API readback.
+- Both Cloudflare DNS records have proxied CNAME target `f90-card-acceptance.pages.dev`; latest production Pages deployment `c34015b5-c846-4ca0-98b2-40a8e190ecec` status **success**.
+- These are Cloudflare origin/control-plane confirmations, not an independently completed browser end-to-end checkout/deposit test. Customer-facing financial writes remain gated in Supabase Edge Function v15 until owner acceptance.
+- Vercel deployment is preserved for rollback; DNS no longer directs the two public hostnames to Vercel.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
