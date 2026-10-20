@@ -194,6 +194,8 @@
       return '<details class="f90-admin-group" data-admin-group="'+e(title)+'" '+(expanded?'open':'')+'><summary>'+e(title)+'</summary>'+
         '<div class="f90-admin-group-links">'+items.map(link).join("")+'</div></details>';
     }).join("");
+    const amin=allowed.find(x=>x[0]==='amin-card');
+    if(amin)$("adminNav").insertAdjacentHTML('beforeend','<div class="f90-admin-separate-link">'+link([amin[0],"لوحة تحكم الامين كارد",amin[2],amin[3]])+'</div>');
   }
   async function catalogs() {
     const data = await A.call("staff.catalog");
