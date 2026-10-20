@@ -6,7 +6,7 @@ const section=(id,verb,title,desc,request,response)=>'<section class="f90-api-re
 function docs(endpoint,logo){
 const base=JSON.stringify({action:"services"},null,2);
 const currency='All monetary values in this API use USD. Product IDs are UUID strings. Supply customer fields exactly as returned by the service.';
-const sample='curl -X POST '+endpoint+'\\n  -H "Content-Type: application/json"\\n  -H "x-f90-key: YOUR_F90_TOKEN"\\n  -d \'{"action":"services"}\'';
+const sample='curl -X POST "'+endpoint+'" -H "Content-Type: application/json" -H "x-f90-key: YOUR_F90_TOKEN" -d \'{"action":"services"}\'';
 let intro='<section class="f90-api-doc-head"><img src="'+esc(logo)+'" alt="F90 CARD" loading="lazy"><div><span>F90 CARD · OFFICIAL MERCHANT API</span><h1>دليل المطور وربط المتاجر</h1><p>بوابة ربط المتاجر: استخدم مفتاح API من خادم متجرك لجلب الخدمات والأسعار وإنشاء الطلبات وتتبعها. رتبة «وكيل شحن» مخصصة لعمولات إحالة العملاء داخل F90، وليست مفتاح API. This guide documents the F90 production API, not the supplier API.</p><a href="#/developers" class="button secondary">إنشاء مفتاح التوكن</a></div></section>';
 let nav='<nav class="f90-api-doc-nav" aria-label="فهرس دليل المطور">'+[["overview","نظرة عامة"],["authentication","المصادقة"],["categories","الأقسام"],["products","الخدمات"],["product-details","تفاصيل الخدمة"],["balance","الرصيد"],["quote","حساب السعر"],["create-order","إنشاء الطلب"],["order-status","حالة الطلب"],["history","الطلبات"],["errors","الأخطاء"],["security","الأمان"]].map(([id,label])=>'<a href="#api-'+id+'">'+label+'</a>').join("")+'</nav>';
 const request=(data)=>'POST '+endpoint+'\nContent-Type: application/json\nx-f90-key: YOUR_F90_API_TOKEN\n\n'+JSON.stringify(data,null,2);
