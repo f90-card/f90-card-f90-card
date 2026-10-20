@@ -1,6 +1,6 @@
 // مثال خادم فقط. لا تضع مفتاحك في تطبيق العميل.
 const endpoint =
-  "https://xzqnrpycjxfbyrfaolud.supabase.co/functions/v1/f90-platform";
+  "https://www.f90card.online/api/v1";
 
 export async function request(action, payload = {}) {
   const token = process.env.F90_API_KEY;
