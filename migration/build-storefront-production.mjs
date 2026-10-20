@@ -12,9 +12,13 @@ if(!['acceptance','production'].includes(mode))throw Error('Invalid build mode')
 // The reviewed report must be generated from final reconciliations, not estimates.
 if(mode==='production'){
   const report=JSON.parse(await readFile(process.env.F90_RELEASE_REPORT||'migration/release-acceptance.json','utf8'));
-  const required=['financialParity','privateStorageAccess','mediaIndependent','checkoutIdempotency','depositAcceptance','supplierSingleWriter','mailCutoffTest','authAcceptance','ownerCutoverApproved'];
+  const required=['financialParity','privateStorageAccess','mediaIndependent','checkoutIdempotency','supplierSingleWriter','mailCutoffTest','authAcceptance','ownerCutoverApproved'];
   const age=Date.now()-Date.parse(report.verifiedAt);
-  if(report.target!==newHost||!Number.isFinite(age)||age<0||age>15*60*1000||required.some(k=>report[k]!==true))
+  // Owner-deferred browser deposit acceptance is NOT a passing test. It is allowed
+  // only while server-side financial writes are independently proven gated.
+  const depositAccepted=report.depositAcceptance===true ||
+    (report.depositAcceptance===false && report.ownerDeferredDepositTest===true && report.financialWritesGatedUntilTest===true);
+  if(report.target!==newHost||!Number.isFinite(age)||age<0||age>15*60*1000||required.some(k=>report[k]!==true)||!depositAccepted)
     throw Error('Production release gates incomplete or stale');
 }
 const allowedDirs=new Set(['assets','public','discover']);
