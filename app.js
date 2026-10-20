@@ -319,7 +319,7 @@
       ["@help", "المزيد"],
       ["install", "تثبيت التطبيق", "plus"],
       ...(me?.role === "trader" ? [["developers", "إنشاء مفتاح API", "link"]] : []),
-      ...(me?.role === "trader" ? [["api-guide", "دليل المطور وربط المتاجر", "doc"]] : []),
+      ...(me?.role === "trader" ? [["api-guide", "دليل التاجر وربط المتاجر", "doc"]] : []),
       ["policy/about", "من نحن", "doc"],
       ["support", "الدعم الفني", "support"],
     ];
@@ -1750,7 +1750,7 @@
 
   function apiGuide() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
-    main.innerHTML=window.F90MerchantViews.docs("https://www.f90card.online/api/merchant",C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
+    main.innerHTML=window.F90MerchantViews.docs("https://www.f90card.online/api/v1",C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png");
   }
   function developers() {
     if(S.me?.role!=="trader"){location.hash="#/";return;}
@@ -1760,7 +1760,7 @@
       return;
     }
     main.innerHTML=window.F90MerchantViews.tokens((S.me.keys||[]).filter(k=>k.is_active),
-      S.me.profile?.is_verified,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png","https://www.f90card.online/api/merchant");
+      S.me.profile?.is_verified,C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png","https://www.f90card.online/api/v1");
   }
   async function mfaChallenge() {
     const { data, error } = await A.client.auth.mfa.listFactors();
@@ -2326,7 +2326,7 @@
         closeModal();
         await refreshMe();
         developers();
-        toast("API token settings saved");
+        toast("تم حفظ صلاحيات مفتاح التاجر");
         return;
       }
       const key = await A.call("key.create", values);
@@ -2334,7 +2334,7 @@
       try {
         const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),12000);
         try {
-          const response=await fetch("https://www.f90card.online/api/merchant",{
+          const response=await fetch("https://www.f90card.online/api/v1",{
             method:"POST",headers:{"Content-Type":"application/json","x-f90-key":key.token},
             body:JSON.stringify({action:"services"}),cache:"no-store",signal:ctrl.signal
           });
@@ -2347,8 +2347,8 @@
       await refreshMe();
       developers();
       modal(
-        "SAVE YOUR API TOKEN",
-        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">Copy API TOKEN</button>`,
+        "احفظ مفتاح التاجر",
+        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
       );
       return;
     }

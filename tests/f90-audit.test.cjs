@@ -31,10 +31,10 @@ test("API key pages are trader-only in client router", () => {
   assert.match(app,/page === "api-guide"/);
   assert.match(app,/page === "developers"/);
 });
-test("Price UI shows only server quotes, one-digit cost, no decimal wallet, and compact limits",()=>{
+test("Price UI shows only server quotes, precise cost, no decimal wallet, and compact limits",()=>{
   const skin=read("f90-checkout-redesign.css");
   assert.match(app,/function f90CheckoutMoney\(usd, balance = false\)/);
-  assert.match(app,/maximumFractionDigits:balance\?0:\(Math\.abs\(value\)<1\?6:2\)/);
+  assert.match(app,/maximumFractionDigits:balance\?0:\(Math\.abs\(value\)<1\?6:3\)/);
   assert.match(app,/Math\.trunc\(value\)/);
   assert.match(app,/function f90ShortLimit\(value\)/);
   assert.match(app,/\+"M"/);
@@ -208,12 +208,15 @@ test("Welcome information page is restored and owner-only home phone media stays
   assert.doesNotMatch(phone,/id="authForm"/);
   assert.match(admin,/promo_video_image_file/);
 });
-test("Real English API guide and single-token UI are available", () => {
+test("Arabic API guide and single-token UI are available", () => {
   const docs=read("f90-merchant-v2.js");
   assert.match(docs,/x-f90-key/);
   assert.match(docs,/action:"checkout"/);
   assert.match(docs,/idempotency_key/);
-  assert.match(docs,/Allowed IP addresses/);
+  assert.match(docs,/دليل التاجر وربط المتاجر/);
+  assert.match(docs,/catalog/);
+  assert.match(docs,/balance/);
+  assert.match(docs,/orders/);
 });
 test("Admin audio player and GIF background settings are present", () => {
   assert.match(admin,/mediaCenterForm/);
@@ -260,8 +263,8 @@ test("Each theme has independent, readable 50–150% brightness controls", () =>
   assert.doesNotMatch(scene, /document\.body\.style\.filter/);
   assert.match(style, /--surface:color-mix/);
   assert.match(style, /--bg:color-mix/);
-  assert.match(mainHtml, /f90-theme-background\.js\?v=20261015-brightness1/);
-  assert.match(mainHtml, /f90-theme-background\.css\?v=20261015-brightness1/);
+  assert.match(mainHtml, /f90-theme-background\.js\?v=[^"]+/);
+  assert.match(mainHtml, /f90-theme-background\.css\?v=[^"]+/);
   assert.match(adminHtml, /admin\.js\?v=[^"]+/);
 });
 
