@@ -105,3 +105,85 @@ body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f
 .image-grid .f90-flip-tile .f90-flip-front,
 .image-grid .f90-flip-tile img{opacity:1!important;visibility:visible!important;animation:none!important;transition:none!important;transform:none!important}
 .image-grid .f90-flip-tile img{content-visibility:visible!important;filter:none!important}
+
+/* v6 final: price spans full width, compact favorite, limits and status. */
+.f90-premium-checkout #checkoutForm,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm{
+  display:flex!important;flex-direction:column!important;gap:7px!important;min-width:0!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f90-premium-summary{
+  display:flex!important;align-items:center!important;justify-content:stretch!important;
+  flex:0 0 auto!important;align-self:stretch!important;order:10!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;height:40px!important;min-height:40px!important;max-height:40px!important;
+  padding:0 11px!important;margin:0!important;overflow:hidden!important;
+  border:1px solid var(--f90p-line,#48404a)!important;border-radius:11px!important;
+  background:var(--f90p-input,#1a1a1f)!important;box-shadow:none!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary>.f90-visa-price,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f90-premium-summary>.f90-visa-price{
+  width:100%!important;height:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;
+  display:flex!important;flex-direction:row!important;justify-content:space-between!important;
+  align-items:center!important;flex-wrap:nowrap!important;gap:8px!important;
+  overflow:hidden!important;white-space:nowrap!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary .f90-visa-price>span{
+  flex:0 0 auto!important;font-size:12px!important;font-weight:750!important;white-space:nowrap!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary #f90CheckoutTopTotal{
+  display:block!important;position:static!important;flex:1 1 auto!important;
+  width:auto!important;min-width:0!important;max-width:none!important;
+  font-size:17px!important;font-weight:850!important;line-height:1.3!important;
+  white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important;
+  text-align:left!important;direction:ltr!important;unicode-bidi:isolate!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-quantity-limits{
+  order:0!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+  justify-content:space-between!important;align-items:center!important;gap:7px!important;
+  padding:2px 3px!important;margin:-3px 0 0!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+  font-size:10px!important;line-height:1.4!important;color:var(--f90p-muted,#b5abb2)!important;
+}
+.f90-premium-checkout #checkoutForm>.f90-quantity-limits span{white-space:nowrap!important}
+.f90-premium-checkout #checkoutForm>.f90-quantity-limits strong{color:var(--f90p-ink,#fff)!important;font-size:10px!important}
+.f90-premium-checkout .f90-visa-product,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout .f90-visa-product{
+  display:grid!important;grid-template-columns:42px minmax(0,1fr) 27px!important;
+  align-items:center!important;gap:6px!important;min-width:0!important;
+}
+.f90-premium-checkout .f90-visa-product .product-info{min-width:0!important;overflow:visible!important}
+.f90-premium-checkout .f90-visa-product .product-info h1{font-size:13px!important;line-height:1.35!important}
+.f90-premium-checkout .f90-visa-product .f90-visa-statuses{
+  display:flex!important;visibility:visible!important;gap:4px!important;flex-wrap:wrap!important;
+  margin-top:3px!important;line-height:1.2!important;
+}
+.f90-premium-checkout .f90-visa-product .f90-visa-status,
+.f90-premium-checkout .f90-visa-product .f90-visa-available{
+  display:inline-flex!important;visibility:visible!important;align-items:center!important;
+  gap:3px!important;padding:2px 4px!important;border-radius:6px!important;
+  font-size:9px!important;font-weight:700!important;white-space:nowrap!important;
+}
+.f90-premium-checkout .f90-visa-product .f90-visa-available.is-unavailable{
+  color:#ff858a!important;background:#472029!important;
+}
+.f90-premium-checkout .f90-visa-product .f90-visa-favorite,
+body.f90-checkout-open #quickProductPanel .f90-premium-checkout .f90-visa-product .f90-visa-favorite{
+  display:grid!important;visibility:visible!important;opacity:1!important;align-self:start!important;justify-self:end!important;
+  position:static!important;width:26px!important;height:26px!important;min-width:26px!important;
+  padding:3px!important;border-radius:50%!important;
+  background:#24202a!important;border:1px solid #884254!important;color:#ef718b!important;
+  cursor:pointer!important;z-index:2!important;
+}
+.f90-premium-checkout .f90-visa-favorite svg{height:13px!important;width:13px!important}
+.f90-premium-checkout .f90-visa-favorite.is-saved{color:#ff4265!important;border-color:#ff4265!important;background:#44202b!important}
+.f90-premium-checkout .f90-visa-favorite.is-saved svg{fill:currentColor!important}
+:root[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-premium-summary{background:#fff8f7!important}
+:root[data-theme="cream"] .f90-premium-checkout .f90-visa-product .f90-visa-favorite{background:#fff5f5!important;color:#ab1c43!important}
+@media(max-width:360px){
+ .f90-premium-checkout .f90-visa-product .f90-visa-status,
+ .f90-premium-checkout .f90-visa-product .f90-visa-available{font-size:8.5px!important;padding:1px 3px!important}
+ .f90-premium-checkout #checkoutForm>.f90-premium-summary #f90CheckoutTopTotal{font-size:16px!important}
+}
