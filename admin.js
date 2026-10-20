@@ -2192,11 +2192,16 @@
     try {
       if (page === "trader-commissions" || page === "amin-card") {
         const partner=page==="amin-card";
-        const address=partner?"./amin-card.html":"./trader-commissions.html";
-        main.innerHTML='<section class="panel f90-embedded-admin"><h1>'+(partner?'قسم الأمين كارد':'وكلاء الموقع')+'</h1><p>'+(partner?'إدارة أقسام الأمين وخدماته وروابط التواصل والصور':'إدارة رتب وكلاء الشحن وربط العملاء ونسب العمولة وسجل التسويات')+'</p><iframe title="'+(partner?'قسم الأمين كارد':'وكلاء الموقع')+'" src="'+address+'" loading="eager" style="display:block;width:100%;min-height:78vh;height:1100px;border:0;border-radius:14px;background:transparent" referrerpolicy="same-origin"></iframe></section>';
+        main.innerHTML=partner
+          ? '<section class="panel f90-inline-admin"><h1>قسم الأمين كارد</h1><p id="partnerMessage" role="status" aria-live="polite"></p><div id="partnerControls"></div><section id="partnerMain" aria-live="polite">جارٍ تحميل الأدوات…</section></section>'
+          : '<section class="panel f90-inline-admin"><h1>وكلاء الموقع</h1><p id="commissionMessage" role="status" aria-live="polite"></p><section id="commissionManager"></section><section id="commissionMain">جارٍ تحميل الأدوات…</section></section>';
+        const script=document.createElement("script");
+        script.src=partner?"./f90-partner-admin.js?v=20261020-native5":"./f90-trader-commissions.js?v=20261020-native5";
+        await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=()=>reject(new Error("تعذر تحميل قسم الإدارة"));document.body.append(script);});
+        script.remove();
         return;
       }
-      if (["dashboard", "leaderboard"].includes(page))
+            if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
       else if (page === "order-requests") await orderRequestsPage();
