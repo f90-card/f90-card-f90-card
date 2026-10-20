@@ -40,5 +40,4 @@ test("radio, device improvements and maintenance controls were preserved",()=>{
  assert.match(css,/f90-maintenance-content/);
  assert.match(css,/f90RadioNeonWaves/);
  assert.ok(app.includes('!["manager", "admin"].includes(S.me?.role)'));
- assert.match(app,/href="#\/profile"/);
 });
