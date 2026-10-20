@@ -1,0 +1,16 @@
+{
+  "target": "ogkipkavlywgwhtomoca.supabase.co",
+  "verifiedAt": "2026-10-20T07:34:50.666Z",
+  "financialParity": true,
+  "privateStorageAccess": true,
+  "mediaIndependent": true,
+  "checkoutIdempotency": true,
+  "depositAcceptance": false,
+  "ownerDeferredDepositTest": true,
+  "financialWritesGatedUntilTest": true,
+  "supplierSingleWriter": true,
+  "mailCutoffTest": true,
+  "authAcceptance": true,
+  "ownerCutoverApproved": true,
+  "notes": "Owner explicitly approved official Cloudflare publication before live purchase/deposit tests. Checkout/add/deposit.submit blocked server-side by f90-platform v15. Financial customer count parity rechecked; 22 original wallet balances and roles verified in previous checkpoint; private historical files and media verified in migration report. Historic 14 mails must remain un-replayed. This attestation does NOT certify live checkout/deposit success."
+}
