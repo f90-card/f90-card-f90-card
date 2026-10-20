@@ -1174,19 +1174,20 @@
         "بروتوكول الاتصال",
         [
           ["f90", "مورد يدوي (بدون API)"],
-          ["f90_merchant", "F90 Merchant API v1 (JSON / x-f90-key)"],
+          ["f90_merchant", "F90 Merchant API v1 (POST / JSON / x-f90-key)"],
+          ["f90_merchant_get", "F90 Card API (api-token / GET)"],
           ["smm", "بروتوكول الخدمات الموحد"],
           ["json", "طلبات JSON بمفتاح Bearer"],
           ["omega", "أوميغا ستور (قراءة الخدمات والرصيد)"],
           ["yassen", "Yassen Card API (api-token / GET)"],
         ],
-        p?.adapter || "smm",
+        p?.adapter === "f90_merchant" && p?.config?.f90_transport === "get" ? "f90_merchant_get" : (p?.adapter || "smm"),
       )}${select(
         "currency",
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div id="f90MerchantProtocolGuide" class="admin-note" hidden><strong>بروتوكول F90 Merchant API v1:</strong> الرابط https://www.f90card.online/api/v1 · طريقة الطلب POST وJSON · مفتاح التاجر في x-f90-key · العملة USD. يمكن فحص الرصيد واستيراد الخدمات كمسودات، لكن يُحظر إرسال طلبات آلية لنفس المتجر لتجنّب الشراء الدائري. استخرج المفتاح من حساب تاجر موثق في «مفتاح ربط المتاجر»؛ لا تضعه في الرابط أو تشاركه.</div><div id="f90YassenProtocolGuide" class="admin-note" hidden><strong>بروتوكول Yassen Card API:</strong> الرابط https://api.yassen-card.com · طلبات GET · المفتاح في api-token · استعراض المنتجات والرصيد، والشحن التلقائي عند السماح به بعد الفحص. لا يعمل مفتاح f90_live_ مع هذا البروتوكول.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div id="f90MerchantProtocolGuide" class="admin-note" hidden><strong>بروتوكول F90 Merchant API v1:</strong> الرابط https://www.f90card.online/api/v1 · طريقة الطلب POST وJSON · مفتاح التاجر في x-f90-key · العملة USD. يمكن فحص الرصيد واستيراد الخدمات كمسودات، لكن يُحظر إرسال طلبات آلية لنفس المتجر لتجنّب الشراء الدائري. استخرج المفتاح من حساب تاجر موثق في «مفتاح ربط المتاجر»؛ لا تضعه في الرابط أو تشاركه.</div><div id="f90GetProtocolGuide" class="admin-note" hidden><strong>F90 Card API (api-token / GET):</strong> نفس مفتاح f90_live_ · الرابط https://www.f90card.online/api/v1 · الطلبات القرائية GET: /client/api/products و/client/api/profile و/client/api/check · الترويسة api-token · العملة USD. الشحن POST فقط، والربط بنفس المتجر للقراءة والمسودات دون طلبات تلقائية.</div><div id="f90YassenProtocolGuide" class="admin-note" hidden><strong>بروتوكول Yassen Card API:</strong> الرابط https://api.yassen-card.com · طلبات GET · المفتاح في api-token · استعراض المنتجات والرصيد، والشحن التلقائي عند السماح به بعد الفحص. لا يعمل مفتاح f90_live_ مع هذا البروتوكول.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
@@ -1196,7 +1197,7 @@
     const updateProviderMode = () => {
       const mode = adapterInput?.value;
       const local = mode === "f90";
-      const merchant = mode === "f90_merchant";
+      const merchant = mode === "f90_merchant" || mode === "f90_merchant_get";
       const yassen = mode === "yassen";
       const u = (() => { try { return new URL(endpointInput?.value || ""); } catch { return null; } })();
       const host = u?.hostname.toLowerCase() || "";
@@ -1205,8 +1206,10 @@
         || host.endsWith(".f90-card-acceptance.pages.dev")
       );
       const merchantGuide = $("modalRoot").querySelector("#f90MerchantProtocolGuide");
+      const getGuide = $("modalRoot").querySelector("#f90GetProtocolGuide");
       const yassenGuide = $("modalRoot").querySelector("#f90YassenProtocolGuide");
-      if (merchantGuide) merchantGuide.hidden = !merchant;
+      if (merchantGuide) merchantGuide.hidden = mode !== "f90_merchant";
+      if (getGuide) getGuide.hidden = mode !== "f90_merchant_get";
       if (yassenGuide) yassenGuide.hidden = !yassen;
       const currencyInput = $("modalRoot").querySelector('#providerForm [name="currency"]');
       if (merchant && currencyInput) currencyInput.value = "USD";
@@ -1225,7 +1228,7 @@
       const mode = adapterInput.value;
       if (!p && endpointInput) {
         const value = endpointInput.value.trim();
-        if (mode === "f90_merchant" && (!value || value === "https://api.yassen-card.com"))
+        if (["f90_merchant","f90_merchant_get"].includes(mode) && (!value || value === "https://api.yassen-card.com"))
           endpointInput.value = "https://www.f90card.online/api/v1";
         if (mode === "yassen" && (!value || value === "https://www.f90card.online/api/v1"))
           endpointInput.value = "https://api.yassen-card.com";
@@ -1245,9 +1248,9 @@
           updateProviderMode();
           toast("تم اختيار Yassen Card API؛ افحص الاتصال قبل التفعيل");
         } else if (["www.f90card.online","f90card.online"].includes(hostname) && new URL(endpointInput.value).pathname.replace(/\/$/,"") === "/api/v1") {
-          adapterInput.value = "f90_merchant";
+          if (adapterInput.value !== "f90_merchant_get") adapterInput.value = "f90_merchant";
           updateProviderMode();
-          toast("تم اختيار F90 Merchant API v1؛ فحص المتجر بنفسه للقراءة فقط");
+          toast("تم تحديد ربط F90؛ الاتصال بالمتجر نفسه للقراءة فقط");
         }
       });
     }
@@ -2491,6 +2494,7 @@
         name: d.name,
         endpoint: d.endpoint,
         adapter: d.adapter,
+        f90_transport: d.adapter === "f90_merchant_get" ? "get" : d.adapter === "f90_merchant" ? "post" : undefined,
         currency: d.currency,
         token: d.token || undefined,
         margin_percent: Number(d.margin_percent),
