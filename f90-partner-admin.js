@@ -28,7 +28,7 @@ function editor(kind,row={}){
  field('description','وصف الخدمة',row.description||'','text','maxlength="3000"')+
  `<div class="field-row">${field('price','السعر',row.price??'','number','required min="0.000001" step="0.000001"')}<label class="field"><span>العملة الخاصة بالخدمة</span><select name="currency">${[['USD','دولار'],['ILS','شيقل'],['JOD','دينار'],['EGP','جنيه'],['EUR','يورو']].map(([k,v])=>`<option value="${k}" ${(row.currency||'USD')===k?'selected':''}>${v}</option>`).join('')}</select></label></div>`+
  field('purchase_url','رابط شراء واتساب',row.purchase_url||'','url','required placeholder="https://wa.me/962..." dir="ltr"'):'')+
- (kind==='banners'?`<label class="field"><span>مكان الإعلان</span><select name="placement"><option value="main">ضمن البنرات الرئيسية</option><option value="small" ${row.placement==='small'?'selected':''}>بنر صغير أسفلها</option></select></label>`+field('link_url','رابط الإعلان (اختياري)',row.link_url||'','url','dir="ltr"'):'')+
+ (kind==='banners'?`<p class="notice">يظهر الإعلان ضمن شريط البنرات أسفل الإعلان الرئيسي فقط، ولا يمكن إضافته للسلايدر الرئيسي.</p><input type="hidden" name="placement" value="small">`+field('link_url','رابط الإعلان (اختياري)',row.link_url||'','url','dir="ltr"'):'')+
  imageField(row.image_path)+field('sort_order','الترتيب',row.sort_order||0,'number','required step="1"')+
  `<label class="check-field"><input name="is_active" type="checkbox" ${row.is_active!==false?'checked':''}>فعّال</label><div class="actions"><button class="button" type="submit">حفظ</button><button class="button secondary" type="button" data-cancel>إلغاء</button></div>`;
  main.replaceChildren(form);form.addEventListener('submit',ev=>save(ev,kind,row));form.querySelector('[data-cancel]').onclick=render;
@@ -60,7 +60,7 @@ async function save(ev,kind,row){
  ev.preventDefault();if(busy)return;busy=true;const f=ev.target,button=f.querySelector('[type=submit]');button.disabled=true;let newImage;
  try{
  const d=Object.fromEntries(new FormData(f));const data={sort_order:Number(d.sort_order),is_active:f.elements.is_active.checked};
- if(kind==='banners')Object.assign(data,{title:d.title,placement:d.placement,link_url:d.link_url||''});else data.name=d.name;
+ if(kind==='banners')Object.assign(data,{title:d.title,placement:'small',link_url:d.link_url||''});else data.name=d.name;
  if(kind==='products'){
  if(!/^https:\/\/(?:wa\.me\/[1-9][0-9]{6,14}(?:\?text=\S*)?|api\.whatsapp\.com\/send\?phone=[1-9][0-9]{6,14}(?:&text=\S*)?)$/.test(d.purchase_url))throw new Error('استخدم رابط واتساب صحيحًا يبدأ بـ https://wa.me/');
  Object.assign(data,{category_id:d.category_id,description:d.description,currency:d.currency,price:Number(d.price),purchase_url:d.purchase_url});
