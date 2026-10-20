@@ -2262,7 +2262,7 @@
           ? '<section class="panel f90-inline-admin"><h1>قسم الأمين كارد</h1><p id="partnerMessage" role="status" aria-live="polite"></p><div id="partnerControls"></div><section id="partnerMain" aria-live="polite">جارٍ تحميل الأدوات…</section></section>'
           : '<section class="panel f90-inline-admin"><h1>وكلاء الموقع</h1><p id="commissionMessage" role="status" aria-live="polite"></p><section id="commissionManager"></section><section id="commissionMain">جارٍ تحميل الأدوات…</section></section>';
         const script=document.createElement("script");
-        script.src=partner?"./f90-partner-admin.js?v=20261020-native5":"./f90-trader-commissions.js?v=20261020-native5";
+        script.src=partner?"./f90-partner-admin.js?v=20261020-native5":"./f90-trader-commissions.js?v=20261020-allservices11";
         await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=()=>reject(new Error("تعذر تحميل قسم الإدارة"));document.body.append(script);});
         script.remove();
         return;
