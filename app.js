@@ -2349,21 +2349,28 @@
         return;
       }
       const creationScreen = keyDisplayGeneration;
+      const preferredProtocol=form.elements.protocol?.value==="merchant_post"?"merchant_post":"api_token_get";
       const key = await A.call("key.create", values);
-      let apiTestMessage="لم يكتمل اختبار الاتصال؛ المفتاح أُنشئ ويمكن استخدامه من خادم متجرك.";
+      let apiTestMessage="المفتاح أُنشئ بنجاح؛ لم يكتمل التحقق من الاتصال بعد.";
       try {
         const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),12000);
         try {
-          const response=await fetch("https://www.f90card.online/api/v1",{
-            method:"POST",headers:{"Content-Type":"application/json","x-f90-key":key.token},
-            body:JSON.stringify({action:"services"}),cache:"no-store",signal:ctrl.signal
+          const readGET=preferredProtocol==="api_token_get";
+          const response=await fetch(readGET
+              ?"https://www.f90card.online/client/api/products"
+              :"https://www.f90card.online/api/v1",{
+            method:readGET?"GET":"POST",
+            headers:readGET?{"api-token":key.token}:{"Content-Type":"application/json","x-f90-key":key.token},
+            ...(readGET?{}:{body:JSON.stringify({action:"services"})}),
+            cache:"no-store",signal:ctrl.signal
           });
           const payload=await response.json();
-          apiTestMessage=response.ok&&Array.isArray(payload?.data)
-            ?"تم التحقق من الاتصال وجلب "+payload.data.length+" خدمة بالمفتاح الجديد."
+          const items=readGET?payload?.data?.products:payload?.data;
+          apiTestMessage=response.ok&&Array.isArray(items)
+            ?"نجح اختبار "+(readGET?"api-token / GET":"POST / JSON")+" وتم جلب "+items.length+" خدمة."
             :"تعذر التحقق من API: "+String(payload?.error?.code||response.status);
         } finally {clearTimeout(timeout);}
-      } catch {apiTestMessage="المفتاح أنشئ بنجاح، لكن لم يُحسم اختبار الاتصال التلقائي.";}
+      } catch {apiTestMessage="المفتاح أُنشئ، لكن اختبار الاتصال التلقائي لم يُحسم. جرّبه من خادم المتجر.";}
       await refreshMe();
       if (creationScreen !== keyDisplayGeneration) {
         toast("أُنشئ المفتاح دون عرضه بعد مغادرة الصفحة. أنشئ بديلًا من صفحة مفاتيح التجار عند الحاجة.");
@@ -2372,7 +2379,7 @@
       developers();
       modal(
         "احفظ مفتاح التاجر",
-        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" data-f90-api-secret dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
+        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><p><strong>GET / api-token:</strong> <code dir="ltr">https://www.f90card.online/client/api/products</code></p><p><strong>POST / JSON:</strong> <code dir="ltr">https://www.f90card.online/api/v1</code></p><p class="muted small">نفس المفتاح يعمل في الطريقتين؛ أرسله في الترويسة وليس الرابط، ولا تستخدم GET لإنشاء طلب شحن.</p><div class="key-token" data-f90-api-secret dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
       );
       return;
     }
