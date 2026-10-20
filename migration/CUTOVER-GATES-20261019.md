@@ -2,6 +2,13 @@
 
 > The *existing* live store is `https://www.f90card.online` (Vercel). Keep it untouched until every mandatory gate has passed. This document does not authorize any production switch, financial mutation or supplier double-processing.
 
+
+## Owner acceptance decision — 2026-10-20
+
+- The owner explicitly **defers live purchase and deposit testing until after publishing the new version** and accepts responsibility for performing these tests then. Mark as **owner-deferred / not verified**, never as technically passed.
+- Before publication, still require source/target data reconciliation, single-writer Yassen/cron handover, authentication and admin operational readiness, production Cloudflare release and routing checks. Preserve manual pricing and customer balances.
+- At go-live, keep financial processing gated or under controlled maintenance until its post-publication verification, and retain rollback. The owner-deferred tests do not establish that live checkout/deposit succeeds.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
