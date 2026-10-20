@@ -21,6 +21,7 @@ const insertion = `    const action = text(b.action, 80);
       "recipients.list", "categories", "services", "service",
       "staff.catalog", "staff.list", "staff.inbox", "staff.order_requests",
       "staff.salary.list", "staff.finance", "staff.providers",
+      "staff.alerts", "staff.traders", "staff.trader_keys",
     ]);
     if (!stageAllowed.has(action))
       throw new AppError("F90_MIGRATION_READONLY", 423, "نسخة النقل للقراءة فقط حتى اكتمال نقل العملاء والتحقق من العمليات");
