@@ -53,7 +53,7 @@
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["trader-commissions", "وكلاء الموقع", "wallet", ["manager"]],
-    ["amin-card", "الأمين كارد", "grid", ["manager", "admin"]],
+    ["amin-card", "قسم الامين كارد", "grid", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
     ["banners", "الإعلانات", "bell", ["manager", "designer"]],
@@ -195,7 +195,7 @@
         '<div class="f90-admin-group-links">'+items.map(link).join("")+'</div></details>';
     }).join("");
     const amin=allowed.find(x=>x[0]==='amin-card');
-    if(amin)$("adminNav").insertAdjacentHTML('beforeend','<div class="f90-admin-separate-link">'+link([amin[0],"لوحة تحكم الامين كارد",amin[2],amin[3]])+'</div>');
+    if(amin)$("adminNav").insertAdjacentHTML('beforeend','<div class="f90-admin-separate-link">'+link([amin[0],"قسم الامين كارد",amin[2],amin[3]])+'</div>');
   }
   async function catalogs() {
     const data = await A.call("staff.catalog");
