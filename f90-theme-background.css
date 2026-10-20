@@ -3,7 +3,7 @@
 #f90ThemeBackdrop .f90-theme-photo,#f90ThemeBackdrop .f90-theme-shade{position:absolute;inset:0;pointer-events:none}
 #f90ThemeBackdrop .f90-theme-photo{background-size:cover;background-repeat:no-repeat;transition:opacity .4s ease}
 #f90ThemeBackdrop .f90-theme-shade{transition:background-color .3s ease}
-#f90ThemeBackdrop .f90-theme-watermark{position:absolute;top:48%;left:50%;display:grid;place-items:center;width:min(78vw,var(--f90-wm-size,360px));aspect-ratio:1;opacity:var(--f90-wm-opacity,.13);transform:translate3d(-50%,-50%,0);animation:f90-watermark-drift var(--f90-wm-duration,35s) ease-in-out infinite alternate;will-change:transform;filter:drop-shadow(0 0 27px rgba(238,37,78,.2))}
+#f90ThemeBackdrop .f90-theme-watermark{position:absolute;top:48%;left:50%;display:grid;place-items:center;width:min(78vw,var(--f90-wm-size,360px));aspect-ratio:1;opacity:var(--f90-wm-opacity,.13);transform:translate3d(-50%,-50%,0);animation:none!important;will-change:auto;filter:drop-shadow(0 0 27px rgba(238,37,78,.2))}
 #f90ThemeBackdrop .f90-theme-watermark[hidden]{display:none}
 #f90ThemeBackdrop .f90-theme-watermark img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 20px rgba(240,48,86,.43))}
 #f90ThemeBackdrop .f90-theme-watermark-glow{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,rgba(246,42,84,.14),transparent 71%);filter:blur(28px);animation:f90-watermark-breathe 9s ease-in-out infinite alternate}
@@ -49,3 +49,9 @@ body:has(#f90ThemeBackdrop) #mainContent,body:has(#f90ThemeBackdrop) .site-foote
 .f90-brightness-control>span{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .f90-brightness-control output{font-variant-numeric:tabular-nums;font-weight:800;color:var(--accent)}
 .f90-brightness-control input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer;min-height:30px}
+
+/* Keep the emblem fixed while its red/burgundy outline gently glows. */
+#f90ThemeBackdrop .f90-theme-watermark{position:absolute!important;transform:translate3d(-50%,-50%,0)!important}
+#f90ThemeBackdrop .f90-theme-watermark::after{content:"";position:absolute;inset:1.5%;border-radius:25%;pointer-events:none;border:2px solid #d62c50;box-shadow:0 0 9px #f1255588,inset 0 0 12px #7d163650,0 0 22px #ad164670;animation:f90-static-emblem-glow 5s ease-in-out infinite alternate}
+@keyframes f90-static-emblem-glow{from{border-color:#a31943;box-shadow:0 0 7px #a51e4544,inset 0 0 7px #6c103330,0 0 14px #96244855}to{border-color:#fa3b58;box-shadow:0 0 14px #fa2444bb,inset 0 0 13px #be193b88,0 0 33px #e21c5380}}
+@media (prefers-reduced-motion:reduce){#f90ThemeBackdrop .f90-theme-watermark::after{animation:none}}
