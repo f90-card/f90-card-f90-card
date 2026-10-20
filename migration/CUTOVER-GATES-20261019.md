@@ -41,6 +41,15 @@
 - Latest independent count parity readback: source/target 601 products, 29 orders, 10 deposits, 58 ledger entries. Old Yassen/order cron jobs 0 active; new 3 active.
 - The owner successfully edited via the target admin UI, but this does not by itself certify every release gate.
 
+
+## Cloudflare production build failure — 2026-10-20 07:25 UTC
+
+- A genuine automatic production deployment was attempted: deployment `15d2121a-6dbf-43b6-86ad-2835a3c96c95`, commit `0fcbc2162034e3264e6d70518fff4fe84043d1c6`.
+- Retrieved Cloudflare's deployment logs. npm clean-install succeeded; Node build exited with `ENOENT: no such file or directory, open 'migration/release-acceptance.json'` at build script line 14. This is a **release acceptance gate**, not a DNS failure or npm dependency failure.
+- No verified release acceptance artifact exists; do not create a fabricated successful certificate. The last successful Pages deployment is the older acceptance build, not production-ready.
+- Both custom domains registered in Pages remain pending, because apex A record still points to `76.76.21.21` and www CNAME to `cname.vercel-dns.com`. **DNS and Vercel were not changed**: preserve functioning storefront until independently validated production release can replace it.
+- Admin edit acceptance has been confirmed by the owner; authenticated live purchase/deposit have not been tested and are explicitly deferred by the owner. Remaining production gates must be truthfully checked or explicitly safely gated.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
