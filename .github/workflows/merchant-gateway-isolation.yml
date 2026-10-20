@@ -1,0 +1,21 @@
+name: Merchant gateway isolation
+on:
+  push:
+    branches: ["fix/merchant-api-v1-20261020"]
+    paths:
+      - "functions/api/**"
+      - "tests/merchant-gateway-v1.test.mjs"
+      - ".github/workflows/merchant-gateway-isolation.yml"
+permissions:
+  contents: read
+jobs:
+  gateway:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test transport with mocked upstream; no secrets or production mutations
+        run: node --test tests/merchant-gateway-v1.test.mjs
