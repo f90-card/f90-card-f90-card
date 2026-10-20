@@ -1174,10 +1174,11 @@
         "بروتوكول الاتصال",
         [
           ["f90", "مورد يدوي (بدون API)"],
+          ["f90_merchant", "F90 Merchant API v1 (JSON / x-f90-key)"],
           ["smm", "بروتوكول الخدمات الموحد"],
           ["json", "طلبات JSON بمفتاح Bearer"],
           ["omega", "أوميغا ستور (قراءة الخدمات والرصيد)"],
-          ["yassen", "ياسين كارد (api-token)"],
+          ["yassen", "Yassen Card API (api-token / GET)"],
         ],
         p?.adapter || "smm",
       )}${select(
@@ -1185,7 +1186,7 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div id="f90MerchantProtocolGuide" class="admin-note" hidden><strong>بروتوكول F90 Merchant API v1:</strong> الرابط https://www.f90card.online/api/v1 · طريقة الطلب POST وJSON · مفتاح التاجر في x-f90-key · العملة USD. يمكن فحص الرصيد واستيراد الخدمات كمسودات، لكن يُحظر إرسال طلبات آلية لنفس المتجر لتجنّب الشراء الدائري. استخرج المفتاح من حساب تاجر موثق في «مفتاح ربط المتاجر»؛ لا تضعه في الرابط أو تشاركه.</div><div id="f90YassenProtocolGuide" class="admin-note" hidden><strong>بروتوكول Yassen Card API:</strong> الرابط https://api.yassen-card.com · طلبات GET · المفتاح في api-token · استعراض المنتجات والرصيد، والشحن التلقائي عند السماح به بعد الفحص. لا يعمل مفتاح f90_live_ مع هذا البروتوكول.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
@@ -1193,12 +1194,45 @@
     const adapterInput = $("modalRoot").querySelector('#providerForm [name="adapter"]');
     const tokenInput = $("modalRoot").querySelector('#providerForm [name="token"]');
     const updateProviderMode = () => {
-      const local = adapterInput?.value === "f90";
-      if (endpointInput) { endpointInput.required = !local; endpointInput.disabled = local; if (local) endpointInput.value = ""; }
+      const mode = adapterInput?.value;
+      const local = mode === "f90";
+      const merchant = mode === "f90_merchant";
+      const yassen = mode === "yassen";
+      const u = (() => { try { return new URL(endpointInput?.value || ""); } catch { return null; } })();
+      const host = u?.hostname.toLowerCase() || "";
+      const self = merchant && (
+        ["www.f90card.online","f90card.online","f90-card-acceptance.pages.dev","ogkipkavlywgwhtomoca.supabase.co"].includes(host)
+        || host.endsWith(".f90-card-acceptance.pages.dev")
+      );
+      const merchantGuide = $("modalRoot").querySelector("#f90MerchantProtocolGuide");
+      const yassenGuide = $("modalRoot").querySelector("#f90YassenProtocolGuide");
+      if (merchantGuide) merchantGuide.hidden = !merchant;
+      if (yassenGuide) yassenGuide.hidden = !yassen;
+      const currencyInput = $("modalRoot").querySelector('#providerForm [name="currency"]');
+      if (merchant && currencyInput) currencyInput.value = "USD";
+      if (endpointInput) {
+        endpointInput.required = !local;
+        endpointInput.disabled = local;
+        if (local) endpointInput.value = "";
+      }
       if (tokenInput) { tokenInput.required = !local && !p; tokenInput.disabled = local; }
-      if (automatic) { automatic.disabled = local || adapterInput?.value === "omega"; if (automatic.disabled) automatic.checked = false; }
+      if (automatic) {
+        automatic.disabled = local || mode === "omega" || self;
+        if (automatic.disabled) automatic.checked = false;
+      }
     };
-    adapterInput?.addEventListener("change", updateProviderMode);
+    adapterInput?.addEventListener("change", () => {
+      const mode = adapterInput.value;
+      if (!p && endpointInput) {
+        const value = endpointInput.value.trim();
+        if (mode === "f90_merchant" && (!value || value === "https://api.yassen-card.com"))
+          endpointInput.value = "https://www.f90card.online/api/v1";
+        if (mode === "yassen" && (!value || value === "https://www.f90card.online/api/v1"))
+          endpointInput.value = "https://api.yassen-card.com";
+      }
+      updateProviderMode();
+    });
+    endpointInput?.addEventListener("input", updateProviderMode);
     updateProviderMode();
     // Advisory only: suggest a known adapter based on a VERIFIED known hostname.
     // Unknown supplier APIs require documentation and explicit administrator review.
@@ -1206,10 +1240,14 @@
       endpointInput.addEventListener("change", () => {
         let hostname = "";
         try { hostname = new URL(endpointInput.value).hostname.toLowerCase(); } catch { return; }
-        if (hostname === "api.yassen-card.com" || hostname === "yassen-card.com") {
+        if (hostname === "api.yassen-card.com") {
           adapterInput.value = "yassen";
           updateProviderMode();
-          toast("تم اقتراح بروتوكول ياسين كارد؛ افحص الاتصال قبل التفعيل");
+          toast("تم اختيار Yassen Card API؛ افحص الاتصال قبل التفعيل");
+        } else if (["www.f90card.online","f90card.online"].includes(hostname) && new URL(endpointInput.value).pathname.replace(/\/$/,"") === "/api/v1") {
+          adapterInput.value = "f90_merchant";
+          updateProviderMode();
+          toast("تم اختيار F90 Merchant API v1؛ فحص المتجر بنفسه للقراءة فقط");
         }
       });
     }
@@ -1223,7 +1261,7 @@
     S.importServices = services;
     const visibleServices = services.slice(0, 1000);
     const omega = p.adapter === "omega";
-    const bulk = ["omega", "yassen", "smm"].includes(p.adapter);
+    const bulk = ["omega", "yassen", "smm", "f90_merchant"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
     const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
     const priceNotice = ratePerUSD
@@ -1235,7 +1273,7 @@
         "هذه الصفحة تستعلم عن القائمة فقط. لا يحدث خصم أو شراء أو نشر تلقائي.",
         `<a class="button secondary small" href="#/providers">رجوع إلى المورّدين</a>`,
       ) +
-      `<section class="panel"><div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة هنا؛ استخدم الاستيراد الشامل لبقية الخدمات." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
+      `<section class="panel">${p.adapter === "f90_merchant" && /^(?:https:\/\/)?(?:www\.)?f90card\.online\//i.test(p.endpoint) ? '<div class="notice warning">الربط بنفس متجر F90 للتجربة والقراءة فقط: لا تفعّل طلبات آلية ولا تنشر نسخة من الخدمات المستوردة حتى لا تنشئ حلقة طلبات أو تكرارًا.</div>' : ""}<div class="notice">${e(services.length)} خدمة صالحة لدى المورّد. ${services.length > 1000 ? "نعرض أول 1000 خدمة هنا؛ استخدم الاستيراد الشامل لبقية الخدمات." : "يمكن البحث واختيار الخدمات قبل الاستيراد."}</div>${omega ? '<div class="notice warning"><strong>أوميغا: مسودات فقط.</strong> الاستيراد لا ينشر المنتجات ولا يرسل طلبات تلقائية. راجع اسم كل خدمة وقسمها وحقولها قبل النشر.</div>' : ""}${priceNotice}<form id="importForm"><div class="field-row">${select("category_id", "القسم الذي تُضاف إليه", categoryOptions(false), "")}${field("margin_percent", "هامش الربح على التكلفة", "number", p.margin_percent, 'required min="0" max="10000" step="0.01"')}</div><div class="f90-import-toolbar"><label class="field"><span>بحث عن خدمة أو رقمها</span><input id="providerServiceSearch" type="search" placeholder="اكتب اسم الخدمة أو المعرّف" autocomplete="off"></label><div class="actions"><button type="button" class="button secondary small" data-action="import-select-visible">اختيار النتائج الظاهرة</button><button type="button" class="button ghost small" data-action="import-clear-selection">إلغاء الاختيار</button></div></div><p id="providerImportCount" class="muted small" role="status" aria-live="polite">المحدد: 0 من 100 كحد أقصى · المعروض: ${visibleServices.length}</p><div class="table-wrap service-select"><table><thead><tr><th>اختيار</th><th>رقم الخدمة</th><th>الاسم عند المورّد</th><th>اسم المنتج في F90</th><th>القسم</th><th>سعر المورّد</th><th>سعر بيع تقديري USD</th><th>الحدود</th></tr></thead><tbody>${visibleServices.map((service, n) =>
             `<tr data-provider-service-row data-search="${e((String(service.id) + " " + String(service.name) + " " + String(service.category || "")).toLocaleLowerCase("ar"))}"><td><input type="checkbox" name="service_${n}" value="${e(service.id)}" aria-label="اختيار خدمة ${e(service.name)}"></td><td dir="ltr">${e(service.id)}</td><td>${e(service.name)}</td><td><input type="text" name="name_${n}" maxlength="200" value="${e(service.name)}" placeholder="الاسم المعروض داخل F90" aria-label="اسم الخدمة في F90"></td><td>${`<label class="field"><span>${e(service.category || "اختر قسم الخدمة")}${omega && providerServiceCategory(service).review ? " · يحتاج مراجعة" : ""}</span><select name="category_${n}" aria-label="قسم ${e(service.name)}"><option value="">اختر القسم</option>${S.categories.map((c) => `<option value="${e(c.id)}" ${omega ? (!providerServiceCategory(service).review && providerServiceCategory(service).id === c.id ? "selected" : "") : (c.name === service.category ? "selected" : "")}>${e(c.name)}</option>`).join("")}</select></label>`}</td><td>${e(service.rate)} / ${e(service.unit_quantity)}</td><td data-import-preview data-supplier-rate="${e(service.rate)}">${ratePerUSD ? e(C.money(Math.round((Number(service.rate) / ratePerUSD) * (1 + (Number(p.margin_percent) || 0) / 100) * 1e6) / 1e6)) : "سعر الصرف غير متاح"}</td><td>${e(service.min)}–${e(service.max)}</td></tr>`
           ).join("")}</tbody></table></div><div class="f90-import-actions"><p class="muted small">الاستيراد يحفظ المنتجات كمسودات مخفية للمراجعة. لا تنشرها قبل التأكد من الاسم والسعر والحقول المطلوبة.</p><button class="button" id="providerImportSubmit" type="submit" disabled>استيراد الخدمات المحددة كمسودات</button>${bulk ? '<button class="button secondary" type="button" data-action="omega-import-all">استيراد جميع خدمات المورّد كمسودات</button>' : ""}</div></form></section>`;
   }
