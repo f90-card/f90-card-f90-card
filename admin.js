@@ -641,19 +641,21 @@
   async function refillingPage() {
     await catalogs();
     const unavailable=S.products.filter(p=>p.commerce?.availability==='refilling'||p.stock===0);
-    let view=unavailable;
+    let view=unavailable,showAll=false;
     const draw=(term='')=>{
-      view=unavailable.filter(p=>(p.name||'').toLowerCase().includes(term.toLowerCase())||String(p.id).includes(term));
+      view=(showAll?S.products:unavailable).filter(p=>(p.name||'').toLowerCase().includes(term.toLowerCase())||String(p.id).includes(term));
       main.innerHTML='<section class="panel"><h1>خدمات قيد التعبئة</h1><p>كل الخدمات المتوقفة حاليًا من جميع الموردين والخدمات اليدوية. النشر يختلف عن التوفر. اختيار «متوفرة» يدويًا يحفظ قرار الإدارة حتى بعد تحديث المورد.</p><p>عدد الخدمات قيد التعبئة: <strong>'+unavailable.length+'</strong></p><label class="field">بحث عن خدمة<input id="refillSearch" placeholder="اسم الخدمة أو المعرّف" value="'+e(term)+'"></label><div class="actions"><button class="button secondary" id="refillAll">تحديد المعروض</button><button class="button" id="refillAvailable">جعل المحدد متوفرًا</button><button class="button secondary" id="refillAutomatic">إعادة تحكم المورد</button></div><div class="records">'+view.map(p=>'<label class="record"><input type="checkbox" data-refill-id="'+e(p.id)+'"><span>'+e(p.name)+'</span><small>'+(p.commerce?.manual_availability_override?' · تعيين يدوي':' · حالة المورد/المخزون')+'</small></label>').join('')+'</div></section>';
       main.querySelector('#refillSearch').addEventListener('input',ev=>{const pos=ev.target.selectionStart;draw(ev.target.value);const input=main.querySelector('#refillSearch');input.focus();input.setSelectionRange(pos,pos);});
+      main.querySelector('#refillShowAll').onclick=()=>{showAll=!showAll;draw(main.querySelector('#refillSearch').value);};
       main.querySelector('#refillAll').onclick=()=>main.querySelectorAll('[data-refill-id]').forEach(x=>x.checked=true);
       const change=async state=>{
         const ids=[...main.querySelectorAll('[data-refill-id]:checked')].map(x=>x.dataset.refillId);
         if(!ids.length){toast('حدد خدمة واحدة على الأقل');return;}
-        if(!confirm('تغيير حالة '+ids.length+' خدمة إلى '+(state==='available'?'متوفرة':'التحكم التلقائي')+'؟'))return;
+        if(!confirm('تغيير حالة '+ids.length+' خدمة إلى '+(state==='available'?'متوفرة':state==='refilling'?'قيد التعبئة':'التحكم التلقائي')+'؟'))return;
         try {for(let i=0;i<ids.length;i+=100)await A.call('staff.availability.set',{ids:ids.slice(i,i+100),availability:state});toast('تم تحديث '+ids.length+' خدمة');await refillingPage();}catch(err){toast(err.message);}
       };
       main.querySelector('#refillAvailable').onclick=()=>change('available');
+      main.querySelector('#refillSetRefilling').onclick=()=>change('refilling');
       main.querySelector('#refillAutomatic').onclick=()=>change('automatic');
     };
     draw();
