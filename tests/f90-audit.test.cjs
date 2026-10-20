@@ -39,7 +39,7 @@ test("Price UI shows only server quotes, precise cost, no decimal wallet, and co
   assert.match(app,/function f90ShortLimit\(value\)/);
   assert.match(app,/\+"M"/);
   assert.match(app,/f90-quantity-limits/);
-  assert.match(app,/price\.textContent=f90CheckoutMoney\(quote\.total_usd\)/);
+  assert.match(app,/price\.textContent=f90CheckoutNumeric\(quote\.total_usd\)/);
   assert.doesNotMatch(app.slice(app.indexOf('if (ev.target.closest("#checkoutForm") && ev.target.name === "quantity")'),app.indexOf('if (ev.target.closest("#depositForm"))')),/≈|تقديري/);
   assert.match(app,/await A\.call\("quote"/);
   assert.match(skin,/:root\[data-theme="cream"\]/);

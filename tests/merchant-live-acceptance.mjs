@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 const endpoint="https://www.f90card.online/api/v1";
-const get=async(url,options={})=>fetch(url,{...options,redirect:"error",signal:AbortSignal.timeout(20000)});
+const get=async(url,options={})=>fetch(url,{redirect:"manual",...options,signal:AbortSignal.timeout(20000)});
 const health=await get(endpoint);
 assert.equal(health.status,200);
 assert.match(health.headers.get("content-type"),/application\/json/);
@@ -20,12 +20,18 @@ assert.equal((await legacy.json()).name,"F90 CARD Merchant API");
 const page=await get("https://www.f90card.online/");
 const html=await page.text();
 assert.equal(page.status,200);
-assert.ok(html.includes("f90-compact-purchase-20261020.css?v=4"),"preserve concurrent checkout v4");
+assert.match(html,/f90-compact-purchase-20261020\.css\?v=\d+/,"preserve the current checkout stylesheet");
 const docs=await get("https://www.f90card.online/f90-merchant-v2.js?v=20261020-api-v1-verified");
 const js=await docs.text();
 assert.ok(js.includes("دليل التاجر وربط المتاجر"));
 assert.ok(js.includes(endpoint));
-const admin=await get("https://www.f90card.online/admin.html");
+let admin=await get("https://www.f90card.online/admin.html",{redirect:"manual"});
+if([301,302,307,308].includes(admin.status)){
+ const target=new URL(admin.headers.get("location"),admin.url);
+ assert.equal(target.origin,"https://www.f90card.online");
+ assert.equal(target.pathname,"/admin");
+ admin=await get(target);
+}
 assert.equal(admin.status,200);
 for(const [path,hash] of [
 ["345c2e5c-f40c-5b8c-8e30-91384b21b68e-1271d1f6c5f9557a.png","1271d1f6c5f9557a"],
@@ -39,4 +45,4 @@ for(const [path,hash] of [
  assert.equal(bytes.subarray(0,8).toString("hex"),"89504e470d0a1a0a");
  assert.ok(bytes.readUInt32BE(16)>=64&&bytes.readUInt32BE(20)>=64);
 }
-console.log(JSON.stringify({https:true,json_endpoint:true,cors_preflight:true,invalid_key_rejected:true,method_rejected:true,legacy_route:true,arabic_guide:true,storefront:true,admin_html:true,checkout_v4_preserved:true,verified_original_images:3,real_orders_created:0}));
+console.log(JSON.stringify({https:true,json_endpoint:true,cors_preflight:true,invalid_key_rejected:true,method_rejected:true,legacy_route:true,arabic_guide:true,storefront:true,admin_canonical:true,current_checkout_preserved:true,verified_original_images:3,real_orders_created:0}));

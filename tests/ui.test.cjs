@@ -114,7 +114,7 @@ test("compact card shows the authoritative total without wallet snapshots", asyn
     assert.ok(card.querySelector('[name="quantity"]'));
     const summary = card.querySelector(".f90-premium-summary");
     assert.ok(summary);
-    assert.match(summary.textContent, /السعر النهائي/);
+    assert.match(summary.textContent, /الإجمالي/);
     assert.doesNotMatch(summary.textContent, /رصيدك الحالي|رصيدك بعد الشراء/);
     assert.equal(h.document.getElementById("f90CheckoutTopRemaining"), null);
     assert.match(h.document.getElementById("f90CheckoutTopTotal").textContent, /5/);

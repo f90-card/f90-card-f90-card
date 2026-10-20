@@ -62,8 +62,9 @@
     const fallback = C.safeUrl(S.settings?.config?.card_fallback_image || S.settings?.config?.card_back_image || "./assets/sections/services.png");
     const use = valid && !String(valid).includes("/app-placeholders/") ? valid : fallback;
     const checkout=String(cls).includes("f90-checkout-image");
+    const critical=checkout||String(cls).includes("f90-eager-image");
     return use
-      ? `<img src="${e(use)}" alt="${e(alt)}" class="${e(cls)}" width="256" height="256" loading="${checkout?"eager":"lazy"}" fetchpriority="${checkout?"high":"low"}" decoding="async" onerror="this.onerror=null;this.src='${e(fallback)}';">`
+      ? `<img src="${e(use)}" alt="${e(alt)}" class="${e(cls)}" width="256" height="256" loading="${critical?"eager":"lazy"}" fetchpriority="${critical?"high":"auto"}" decoding="async" onerror="this.onerror=null;this.src='${e(fallback)}';">`
       : `<div class="image-placeholder">${I("grid")}<span>${e(alt)}</span></div>`;
   };
   const field = (name, label, type = "text", value = "", attrs = "") =>
@@ -268,6 +269,17 @@
     return symbol+" "+new Intl.NumberFormat("en-US",{
       minimumFractionDigits:0,maximumFractionDigits:balance?0:(Math.abs(value)<1?6:3)
     }).format(printed);
+  }
+  // Preview is non-binding; only a confirmed server quote unlocks checkout.
+  function f90CheckoutNumeric(usd){
+    const currency=S.rates.find(r=>r.currency===S.currency&&r.is_enabled&&Number(r.per_usd)>0)?.currency||"USD";
+    const amount=currency==="USD"?Number(usd):C.convert(usd,currency,S.rates);
+    if(amount===null||!Number.isFinite(Number(amount)))return "—";
+    return new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:4}).format(Number(amount));
+  }
+  function f90CheckoutPreview(p,qty){
+    const n=C.previewPrice(p,qty);
+    return Number.isFinite(n)&&n>=0?f90CheckoutNumeric(n):"—";
   }
   function f90ShortLimit(value){
     const n=Number(value);
@@ -549,12 +561,13 @@
     el.innerHTML='<div class="f90-ticker-window" dir="ltr"><div class="promotion-track" style="--promo-duration:'+duration+'s">'+
       '<div class="f90-ticker-copy" dir="rtl">'+content+'</div><div class="f90-ticker-copy" dir="rtl" aria-hidden="true">'+content+'</div></div></div>';
   }
+  let f90PriorityTileCount = 0;
   const f90Fallback = () => C.safeUrl(S.settings.config?.card_fallback_image || S.settings.config?.card_back_image || "./assets/sections/services.png");
   const f90RefillArt = (src, name) => image(C.safeUrl(src) || f90Fallback(), name || "قيد التعبئة", "f90-refill-image");
   function f90TileArt(src, name, disabled) {
     // One real thumbnail per product/category; the old two-face animation
     // doubled image downloads and delayed visible catalog icons.
-    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(),name);
+    const front = image(C.safeUrl(src) && !String(src).includes("/app-placeholders/") ? src : f90Fallback(),name, ++f90PriorityTileCount <= 8 ? "f90-eager-image" : "");
     return `<span class="f90-flip-inner"><span class="f90-flip-face f90-flip-front">${front}</span></span>`;
   }
   const f90SeenTiles = new Set();
@@ -942,7 +955,7 @@
       f.dataset.quotedQuantity = String(qty);
       delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
-      if (price) {price.removeAttribute("aria-busy");price.textContent=f90CheckoutMoney(quote.total_usd);}
+      if (price) {price.removeAttribute("aria-busy");price.textContent=f90CheckoutNumeric(quote.total_usd);}
       $("checkoutTotal").textContent = C.money(
         C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
       );
@@ -969,7 +982,7 @@
       delete f.dataset.quotedQuantity;
       delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
-      if (price) {price.removeAttribute("aria-busy");price.textContent="السعر غير متاح";}
+      if (price) {price.removeAttribute("aria-busy");price.textContent="—";}
       if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       $("checkoutTotal").textContent = "السعر غير متاح";
       $("walletHint").textContent = "";
@@ -1029,7 +1042,7 @@
         <div class="product-info">
           <h1>${e(p.name)}</h1>
           <p class="f90-visa-subtitle">${e(c.fulfillment === "automatic" ? "شحن إلكتروني مباشر" : "خدمة رقمية عبر F90 CARD")}</p>
-          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "تلقائي" : "يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "غير متوفر" : "متوفر"}</span></div>
+          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "الشحن: آلي" : "الشحن: يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "الحالة: غير متوفر" : "الحالة: متوفر"}</span></div>
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
@@ -1037,12 +1050,10 @@
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
         ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
-        <div class="f90-purchase-qty-price">
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
-          <div class="f90-visa-price"><span>السعر النهائي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-busy="true">جارٍ حساب السعر…</strong></div>
-        </div>
+          <div class="f90-visa-price"><span>الإجمالي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong></div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
@@ -1774,6 +1785,7 @@
     );
   }
   async function route() {
+    f90PriorityTileCount=0;
     const seq = ++S.route;
     const oldPromoVideo=main.querySelector(".f90-home-phone-video");
     if(oldPromoVideo)oldPromoVideo.pause();
@@ -2437,20 +2449,20 @@
       const board=$("priceBoard");
       board?.setAttribute("aria-busy","true");
       const total=$("checkoutTotal");
-      if(total)total.textContent="جارٍ تحديث السعر…";
+      if(total)total.textContent="—";
       const shown=$("f90CheckoutTopTotal");
-      // Never display a speculative price. The first visible amount must
-      // come from the confirmed quote API for the current quantity.
+      // Immediate catalog amount, but purchase stays disabled until confirmed.
       if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       if(shown){
-        shown.textContent="جارٍ تحديث السعر…";
+        shown.textContent=raw!==""&&Number.isFinite(qty)&&qty>0
+          ? f90CheckoutPreview(p,qty) : "—";
         shown.setAttribute("aria-busy","true");
       }
       clearTimeout(quoteTimer);
       if(raw===""||!Number.isFinite(qty)||qty<=0||
         qty<Number(p.commerce?.quantity_min||1)||
         qty>Number(p.commerce?.quantity_max||1000000000)){
-        if(shown){shown.textContent="أدخل كمية صحيحة";shown.removeAttribute("aria-busy");}
+        if(shown){shown.textContent="—";shown.removeAttribute("aria-busy");}
         return;
       }
       quoteTimer=setTimeout(()=>quoteProduct(p),85);
