@@ -1388,7 +1388,7 @@
       (d.review_note?'<p>'+e(d.review_note)+'</p>':'')+'</details></div></article>';
   }
   function deposit(methodId) {
-    if (!S.me?.profile?.is_verified) {
+    if (S.settings?.config?.deposit_requires_verification===true && !S.me?.profile?.is_verified) {
       main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") +
         '<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>';
       return;
