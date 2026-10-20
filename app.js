@@ -2330,11 +2330,25 @@
         return;
       }
       const key = await A.call("key.create", values);
+      let apiTestMessage="لم يكتمل اختبار الاتصال؛ المفتاح أُنشئ ويمكن استخدامه من خادم متجرك.";
+      try {
+        const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),12000);
+        try {
+          const response=await fetch("https://www.f90card.online/api/merchant",{
+            method:"POST",headers:{"Content-Type":"application/json","x-f90-key":key.token},
+            body:JSON.stringify({action:"services"}),cache:"no-store",signal:ctrl.signal
+          });
+          const payload=await response.json();
+          apiTestMessage=response.ok&&Array.isArray(payload?.data)
+            ?"تم التحقق من الاتصال وجلب "+payload.data.length+" خدمة بالمفتاح الجديد."
+            :"تعذر التحقق من API: "+String(payload?.error?.code||response.status);
+        } finally {clearTimeout(timeout);}
+      } catch {apiTestMessage="المفتاح أنشئ بنجاح، لكن لم يُحسم اختبار الاتصال التلقائي.";}
       await refreshMe();
       developers();
       modal(
         "SAVE YOUR API TOKEN",
-        `<p>Copy this token now. It is shown once. Store it on your backend only. If rotated, the previous token is immediately revoked.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">Copy API TOKEN</button>`,
+        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">Copy API TOKEN</button>`,
       );
       return;
     }
