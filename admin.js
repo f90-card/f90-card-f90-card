@@ -56,6 +56,7 @@
     ["amin-card", "قسم الامين كارد", "grid", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
+    ["refilling", "خدمات قيد التعبئة", "clock", ["manager"]],
     ["banners", "الإعلانات", "bell", ["manager", "designer"]],
     ["providers", "المورّدون والربط", "link", ["manager"]],
     ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
@@ -181,7 +182,7 @@
     const buckets=[
       ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit"]],
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
-      ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
+      ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
       ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
       ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
@@ -636,6 +637,26 @@
       id = S.categories.find((c) => c.id === id)?.parent_id;
     }
     return false;
+  }
+  async function refillingPage() {
+    await catalogs();
+    const unavailable=S.products.filter(p=>p.commerce?.availability==='refilling'||p.stock===0);
+    let view=unavailable;
+    const draw=(term='')=>{
+      view=unavailable.filter(p=>(p.name||'').toLowerCase().includes(term.toLowerCase())||String(p.id).includes(term));
+      main.innerHTML='<section class="panel"><h1>خدمات قيد التعبئة</h1><p>كل الخدمات المتوقفة حاليًا من جميع الموردين والخدمات اليدوية. النشر يختلف عن التوفر. اختيار «متوفرة» يدويًا يحفظ قرار الإدارة حتى بعد تحديث المورد.</p><p>عدد الخدمات قيد التعبئة: <strong>'+unavailable.length+'</strong></p><label class="field">بحث عن خدمة<input id="refillSearch" placeholder="اسم الخدمة أو المعرّف" value="'+e(term)+'"></label><div class="actions"><button class="button secondary" id="refillAll">تحديد المعروض</button><button class="button" id="refillAvailable">جعل المحدد متوفرًا</button><button class="button secondary" id="refillAutomatic">إعادة تحكم المورد</button></div><div class="records">'+view.map(p=>'<label class="record"><input type="checkbox" data-refill-id="'+e(p.id)+'"><span>'+e(p.name)+'</span><small>'+(p.commerce?.manual_availability_override?' · تعيين يدوي':' · حالة المورد/المخزون')+'</small></label>').join('')+'</div></section>';
+      main.querySelector('#refillSearch').addEventListener('input',ev=>{const pos=ev.target.selectionStart;draw(ev.target.value);const input=main.querySelector('#refillSearch');input.focus();input.setSelectionRange(pos,pos);});
+      main.querySelector('#refillAll').onclick=()=>main.querySelectorAll('[data-refill-id]').forEach(x=>x.checked=true);
+      const change=async state=>{
+        const ids=[...main.querySelectorAll('[data-refill-id]:checked')].map(x=>x.dataset.refillId);
+        if(!ids.length){toast('حدد خدمة واحدة على الأقل');return;}
+        if(!confirm('تغيير حالة '+ids.length+' خدمة إلى '+(state==='available'?'متوفرة':'التحكم التلقائي')+'؟'))return;
+        try {for(let i=0;i<ids.length;i+=100)await A.call('staff.availability.set',{ids:ids.slice(i,i+100),availability:state});toast('تم تحديث '+ids.length+' خدمة');await refillingPage();}catch(err){toast(err.message);}
+      };
+      main.querySelector('#refillAvailable').onclick=()=>change('available');
+      main.querySelector('#refillAutomatic').onclick=()=>change('automatic');
+    };
+    draw();
   }
   async function catalogPage(kind) {
     await catalogs();
@@ -2202,7 +2223,8 @@
         script.remove();
         return;
       }
-            if (["dashboard", "leaderboard"].includes(page))
+            if(page==="refilling") await refillingPage();
+      else if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
       else if (page === "order-requests") await orderRequestsPage();
