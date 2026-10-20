@@ -25,11 +25,20 @@ begin
  if (select balance_usd from public.f90_wallets where user_id=u)<>100-expected then raise exception 'Wrong wallet debit';end if;
  if (select stock from public.products where id=p)<>1 then raise exception 'Duplicate stock reservation';end if;
  if a->>'status'<>'pending' or a->>'fulfillment'<>'manual' or a->>'provider_order_id' is not null then raise exception 'Unexpected supplier dispatch';end if;
+ begin
+  perform public.f90_checkout(u,p,1,'{"account_id":"different-recipient"}','isolated-checkout-test',expected,'');
+  raise exception 'Idempotency conflict accepted';
+ exception when raise_exception then if sqlerrm<>'F90_IDEMPOTENCY_CONFLICT' then raise;end if;end;
+ perform public.f90_order_transition(null,(a->>'id')::uuid,'failed','isolated acceptance rollback');
+ perform public.f90_order_transition(null,(a->>'id')::uuid,'failed','isolated acceptance retry');
+ if (select balance_usd from public.f90_wallets where user_id=u)<>100 then raise exception 'Wrong refund';end if;
+ if (select count(*) from public.f90_wallet_ledger where user_id=u and kind='refund')<>1 then raise exception 'Duplicate refund';end if;
+ if (select stock from public.products where id=p)<>2 then raise exception 'Wrong stock restoration';end if;
  update public.f90_wallets set balance_usd=0 where user_id=u;
  begin
   perform public.f90_checkout(u,p,1,'{"account_id":"isolated-test"}','isolated-balance-test',expected,'');
   raise exception 'Overdraft accepted';
  exception when raise_exception then if sqlerrm<>'F90_INSUFFICIENT_BALANCE' then raise;end if;end;
 end;$$;
-select jsonb_build_object('authoritative_quote',true,'price_mismatch_rejected',true,'required_account_rejected',true,'single_order_on_retry',true,'single_debit_on_retry',true,'single_stock_reservation',true,'insufficient_balance_rejected',true,'supplier_called',false,'transaction','ROLLBACK ONLY') as tests;
+select jsonb_build_object('authoritative_quote',true,'price_mismatch_rejected',true,'required_account_rejected',true,'single_order_on_retry',true,'single_debit_on_retry',true,'single_stock_reservation',true,'insufficient_balance_rejected',true,'idempotency_conflict_rejected',true,'refund_once',true,'stock_restored_once',true,'supplier_called',false,'transaction','ROLLBACK ONLY') as tests;
 rollback;
