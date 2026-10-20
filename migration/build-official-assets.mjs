@@ -25,7 +25,7 @@ const hostAllowed=(entry,url)=>{
     const u=new URL(url);
     if(u.protocol!=='https:') return false;
     if(entry.source==='cloudflare-immutable-copy') return u.hostname==='f90-card-media.pages.dev' &&
-      new RegExp('^/media/official/'+entry.kind+'/'+entry.id+'-[a-f0-9]{16}\\.(?:png|jpg|webp|avif|gif)$').test(u.pathname);
+      new RegExp('^/media/official/'+entry.kind+'/'+entry.id+'-[a-f0-9]{16}\\.(?:png|jpg|webp|avif|gif|svg)$').test(u.pathname);
     // Explicitly reviewed public storefront artwork, never customer buckets.
     // Preserve existing F90 designs while removing the old hosting dependency.
     if(entry.source==='reviewed-store-original') return u.hostname==='xzqnrpycjxfbyrfaolud.supabase.co' &&
@@ -162,7 +162,7 @@ if(previousIndex.schema!==1||!Array.isArray(previousIndex.assets)||
    (previousIndex.legacy_assets||[]).length>700)throw Error('Previous media index invalid');
 const previouslyPublished=[...previousIndex.assets,...(previousIndex.legacy_assets||[])];
 const freshPaths=new Set(successes.map(x=>x.path));
-const validPublishedPath=/^\/media\/official\/(?:category|product|banner)\/[0-9a-f-]{36}-[0-9a-f]{16}\.(?:png|jpg|webp|avif|gif)$/;
+const validPublishedPath=/^\/media\/official\/(?:category|product|banner)\/[0-9a-f-]{36}-[0-9a-f]{16}\.(?:png|jpg|webp|avif|gif|svg)$/;
 const byPreviousPath=new Map();
 for(const image of previouslyPublished){
   if(!image||typeof image.path!=='string'||!validPublishedPath.test(image.path)||
@@ -204,3 +204,6 @@ await writeFile(resolve(root,'index.html'),
   '<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>F90 CARD media</title><body><h1>F90 CARD</h1><p>أصول الصور العامة فقط</p></body></html>');
 await writeFile(resolve(root,'_headers'),'/media/*\n  Cache-Control: public, max-age=31536000, immutable\n  X-Content-Type-Options: nosniff\n/official-index.json\n  Cache-Control: public, max-age=300\n');
 console.log('F90_OFFICIAL_MEDIA_RESULT '+JSON.stringify({...summary,retained:legacy_assets.length}));
+
+// Publish the owner's reviewed original images; retain previous immutable files.
+await import('./build-authentic-images.mjs');

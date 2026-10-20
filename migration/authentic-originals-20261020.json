@@ -1,0 +1,600 @@
+{
+  "version": 1,
+  "date": "2026-10-20",
+  "purpose": "Owner-authorized replacement of promotional graphics with authentic brand/app images. Names/images/grouping only; no commercial fields.",
+  "assets": [
+    {
+      "key": "Asha Live",
+      "id": "482bac32-5ee9-5e18-95a5-987d08f73505",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4b/14/df/4b14df63-4b80-7091-c548-52ce9854c561/AppIcon-1x_U007ephone-0-1-0-sRGB-0-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/asha-live-group-chat-room/id1619288992?uo=4",
+      "product_ids": [
+        "3dba1243-9300-4034-b935-a5105af5994b"
+      ]
+    },
+    {
+      "key": "Upfun",
+      "id": "84758608-e79f-5ce1-bbe4-7ae4dce6d4eb",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d6/f5/1b/d6f51bc1-0313-47e0-9d17-915ddf6a3204/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/upfun/id6670534776?uo=4",
+      "product_ids": [
+        "e0c4ead1-a7f2-4b14-b1d0-acedefa4d944"
+      ]
+    },
+    {
+      "key": "Azal Live",
+      "id": "4a62ff23-2a76-5b1c-8b1d-11d84ed59ea7",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/04/7b/00/047b00bf-0087-917b-42c7-4ac06e404131/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/azal-voice-chat-group/id1546607031?uo=4",
+      "product_ids": [
+        "20cbd419-0c0c-4c9e-8806-a54fb4556566"
+      ]
+    },
+    {
+      "key": "Ahlan Chat",
+      "id": "5b4e1489-66fe-526f-ab55-fd3bd81fb1a7",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/de/4a/14/de4a14eb-8ac8-451e-89f6-e2eca24d7004/AppIcon-0-0-1x_U007emarketing-0-6-0-sRGB-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/ahlan-topone-group-voice-chat/id1607501804?uo=4",
+      "product_ids": [
+        "a7b822a9-0203-4d8b-abfa-77a9c850b96f",
+        "61134f51-d76c-487b-8bcf-1532596d1ebe"
+      ]
+    },
+    {
+      "key": "OurTalk",
+      "id": "be4fa69b-3ec2-5449-9d71-88c2a9f2af1b",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/89/3d/0f893dea-94e4-68e9-e325-72f691e47bac/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/ourtalk/id6503342744?uo=4",
+      "product_ids": [
+        "5abf7e9c-f1f5-4d49-a1cc-e96d0f2d9c23"
+      ]
+    },
+    {
+      "key": "OLOO",
+      "id": "3cc39c7c-e95d-59dc-9cac-9b0734117f70",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/62/9a/3a/629a3a59-1b7e-ad36-8329-91962b2a5807/AppIcon-0-0-1x_U007ephone-0-1-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/oloo-your-group-your-vibe/id6755228011?uo=4",
+      "product_ids": [
+        "2e2d8d4d-4a33-4869-aabf-de3af1259992"
+      ]
+    },
+    {
+      "key": "Ayome",
+      "id": "a5d0bca8-fc61-575e-9c8d-bf8f975df5a6",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/db/b0/89/dbb089ad-a76a-029f-150f-351916d4a1f6/AppIcon-0-0-1x_U007emarketing-0-5-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/ayome-more-than-voicechat/id6446161440?uo=4",
+      "product_ids": [
+        "130e45f7-ef9c-4059-bf92-d3d9690f4da4"
+      ]
+    },
+    {
+      "key": "imo",
+      "id": "0ea064a6-4447-5ede-a149-ceb1b886a0b8",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/99/1f/5a/991f5a62-5ef2-bc92-afee-f55c4b8f8407/AppIcon-1x_U007emarketing-0-5-0-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/imo-video-calls-and-chat-hd/id1400579543?uo=4",
+      "product_ids": [
+        "8b2a4da1-6749-49d2-a3ca-d95b78b0bc86"
+      ]
+    },
+    {
+      "key": "Bat Live",
+      "id": "1671fa6b-06af-5954-aeb5-a557c073deeb",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/74/c1/a1/74c1a1dc-5b7d-24ac-a77a-00db80440f63/AppIcon-0-0-1x_U007ephone-0-1-0-P3-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/baat-live/id6639610322?uo=4",
+      "product_ids": [
+        "b0165212-f91f-4d40-a745-7838b9fef515"
+      ]
+    },
+    {
+      "key": "Party Star",
+      "id": "5c2e8315-c564-5404-9233-52a4e592a20e",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/00/e3/c4/00e3c47a-2d4f-5900-95d2-5b65d9113df7/AppIcon-0-0-1x_U007ephone-0-11-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/party-star-live-chat-games/id1571242274?uo=4",
+      "product_ids": [
+        "4ac866f4-0d8a-49d9-8ff2-bc14a5ca64b8"
+      ]
+    },
+    {
+      "key": "PartyGo",
+      "id": "70695cc1-48e6-5f2f-b9cc-755e7546fa25",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/b0/cc/4f/b0cc4f5b-fdc9-8bd8-fbf4-9f5122c4cbe1/AppIcon-0-0-1x_U007emarketing-0-0-0-7-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/partygo-chat-meet-new-people/id1663471769?uo=4",
+      "product_ids": [
+        "b0c67e5e-9f8b-47a7-a4e7-74888c55d2d6"
+      ]
+    },
+    {
+      "key": "Party Hero",
+      "id": "f56041b6-d31a-5335-85d5-aef85c085cf3",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ce/9d/2c/ce9d2ce5-5296-d8c4-7b03-aa0b0abb24e7/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/partyhero-live-party-chat/id1521638378?uo=4",
+      "product_ids": [
+        "1d0dc243-d3a3-419b-a28b-4f9e8eb13647"
+      ]
+    },
+    {
+      "key": "Bobo Chat",
+      "id": "df3ee158-4ffc-548f-b97e-e1d2b2a20991",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/9f/93/69/9f9369f2-9cc3-c361-2d84-3a04abef23c6/AppIcon-1x_U007emarketing-0-8-0-0-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/bobo-group-voice-chat-rooms/id1489566586?uo=4",
+      "product_ids": [
+        "d64f4777-52bd-4dbc-9557-a4550a5fae5a"
+      ]
+    },
+    {
+      "key": "Best Live",
+      "id": "632aec82-4c85-52d4-9932-0bf1f94be73c",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/83/96/69/83966958-0c1d-b91c-99f5-521ec7ef3797/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/best-live/id6762040226?uo=4",
+      "product_ids": [
+        "a3abed3b-3cc0-4c1c-a1b4-539f81c926e0"
+      ]
+    },
+    {
+      "key": "Beela",
+      "id": "5e334e33-8c61-566b-8265-d273f5a85cc5",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/a8/2f/04/a82f0472-0106-a207-1ba2-ea790d8335bd/AppIcon-0-0-1x_U007emarketing-0-6-0-0-85-220.jpeg/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/beela-chat-group-vocie-rooms/id1643117709?uo=4",
+      "product_ids": [
+        "436ca532-5307-4abc-9f2d-67420ca9e0f7"
+      ]
+    },
+    {
+      "key": "Tada Chat",
+      "id": "3998a371-70d6-578f-82aa-9c5b1f46295b",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/dc/09/28/dc092891-dfa3-4c62-2e82-a6c803f7b273/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/tada-group-voice-chat-rooms/id6443983678?uo=4",
+      "product_ids": [
+        "7b625197-8680-4771-8ab2-6a0818095b87"
+      ]
+    },
+    {
+      "key": "Taka Live",
+      "id": "f4cd9bf1-fd5b-5cce-a016-c140c9c11a02",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/0d/26/77/0d267716-432c-f3e7-42b8-260a5d010228/AppIcon-0-1x_U007epad-0-1-0-sRGB-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/taka-chat-room-live-stream/id6465892507?uo=4",
+      "product_ids": [
+        "113b726f-3a77-4790-a5e1-3b5cdf683c51"
+      ]
+    },
+    {
+      "key": "Tami Voice Chat",
+      "id": "270edae6-5176-508a-a7d6-c7d2e59d785b",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/84/13/df/8413df2e-c44a-b7d1-435b-c80f89ecdc2e/AppIcon-1x_U007emarketing-0-5-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/tami-voice-chat-party/id6478942884?uo=4",
+      "product_ids": [
+        "86825951-610b-49cf-ae6a-46a4a4943aef"
+      ]
+    },
+    {
+      "key": "Taya",
+      "id": "20f01d6c-f2f7-548a-9ce7-3eac17a30890",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/3c/52/62/3c52628a-7ccc-992a-ffca-42e5914a2e0e/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/taya-group-voice-party/id6446084780?uo=4",
+      "product_ids": [
+        "9bccf6fb-e076-4d1b-915d-57ff9967f774"
+      ]
+    },
+    {
+      "key": "TopTop",
+      "id": "ee004fb6-60f5-5e9a-b236-874bd7c03ab2",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fe/c0/aa/fec0aa81-3152-2189-ead6-56fb44d228ad/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/toptop-games-party/id6748342498?uo=4",
+      "product_ids": [
+        "6df1ecf0-48d9-4f44-96bf-d0b28c184ae7"
+      ]
+    },
+    {
+      "key": "tiktok",
+      "id": "59620b20-a922-5288-a079-971f8beda33d",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/99/33/74/99337468-d03a-5efc-d436-67c0f4d918e1/TikTok_AppIcon26-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/tiktok-videos-shop-live/id835599320?uo=4",
+      "product_ids": [
+        "69ab6dad-c999-4688-8d10-c3cbfae9307a"
+      ]
+    },
+    {
+      "key": "jaco",
+      "id": "d2b3a03b-137c-50c3-83f5-301ed8d3fbf9",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/17/4d/d8/174dd8ef-5b93-81e1-7917-084c46c00ccc/JacoIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/jaco-%D8%AC%D8%A7%D9%83%D9%88-live-streaming/id6447761097?uo=4",
+      "product_ids": [
+        "d7c090db-f845-4802-9ffa-389072085009"
+      ]
+    },
+    {
+      "key": "Habba",
+      "id": "6dfe2b57-3e01-53a0-b707-707a026cfa09",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/53/5b/7b/535b7b7c-b783-4181-4474-108946092d21/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/habba-voice-chat-party/id6754493436?uo=4",
+      "product_ids": [
+        "dd14142f-3827-4019-b5df-e922b5ba61f0"
+      ]
+    },
+    {
+      "key": "Hayakom",
+      "id": "85d2be74-15f1-585d-a247-d0d8e9968cb9",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/6d/f6/65/6df66582-4ef5-c046-e1b8-a0524c734d4b/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/hayakom-%D8%AD%D9%8A%D8%A7%D9%83%D9%85/id6738199649?uo=4",
+      "product_ids": [
+        "9d1a19ef-003b-40fc-b38c-b36b21b47af4"
+      ]
+    },
+    {
+      "key": "Dana",
+      "id": "c2165f3c-018f-5628-a77b-ee4098ba210c",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/6a/19/91/6a199175-67c5-737b-d380-c51429f5e437/AppIcon-0-0-1x_U007ephone-0-1-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/dana-group-voice-chat-rooms/id6523428445?uo=4",
+      "product_ids": [
+        "d74bd937-157d-41d8-9ebe-0ae99f17c036"
+      ]
+    },
+    {
+      "key": "HiCat",
+      "id": "cf0683a5-912f-5012-ae61-b2be33704f94",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d9/c3/80/d9c380c4-4b75-f572-aabc-e3c447113b97/AppIcon-0-0-1x_U007ephone-0-1-0-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/hicat-chat/id1513122909?uo=4",
+      "product_ids": [
+        "7832431a-7494-46de-a064-78251129555f",
+        "a0f46a06-3d4f-46d9-bf28-3e770f698f57",
+        "e937dcc0-b8db-4cec-887d-b1b244fb9c95",
+        "f3c03c92-e2c3-483c-8ed1-ff6b859bc861",
+        "6e8a2893-7a65-4468-95d4-dbb399e7f7f5",
+        "5cabc79c-29ee-4bab-9bc0-52c7398d9044",
+        "a4ebf902-ed27-4193-9d7b-aae5e69b21f6"
+      ]
+    },
+    {
+      "key": "Fomi Party",
+      "id": "a3297232-fbfe-5880-8ff1-8d5bd44b1904",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ea/59/ab/ea59ab5a-b8d6-0046-9214-0b1e0c8b9243/AppIcon-1x_U007ephone-0-3-85-220-0.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/fomi-party/id6748681364?uo=4",
+      "product_ids": [
+        "960b2ef0-e4be-4ee5-9077-90fa7ba4b2e4"
+      ]
+    },
+    {
+      "key": "Knives Out",
+      "id": "3079250a-83df-5e20-91d1-c988f815cf56",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/92/bd/1c/92bd1c3b-bcd0-dbe2-e5e2-d0552f4913f3/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/knives-out/id1312031248?uo=4",
+      "product_ids": [
+        "b99e359d-9899-4ddb-9c6c-6cec4be5c8a6",
+        "00a10f91-b82e-4318-9d85-ce001929d179"
+      ]
+    },
+    {
+      "key": "SUGO",
+      "id": "e54ab583-4c81-5eaf-ad49-acb7d5edcb94",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/94/9c/c6/949cc674-431b-f30c-ae7a-9e2a8744bb44/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/sugo-online-chat-party/id1574436604?uo=4",
+      "product_ids": [
+        "8d3a500a-6315-4aec-9854-2632ed0de306"
+      ]
+    },
+    {
+      "key": "Bank of Palestine",
+      "id": "589f745e-fbc0-5285-8f37-c0e4e4cf271a",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/3e/91/15/3e911513-8cf4-81bc-09bd-fff10cc8e44a/AppIcon-0-0-1x_U007emarketing-0-5-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/bank-of-palestine/id1038772801?uo=4",
+      "product_ids": [
+        "48ff2c9d-e546-48ee-b818-9e886757ce79",
+        "9d296229-f7ea-446e-914a-030b65ee1142"
+      ]
+    },
+    {
+      "key": "Reflect bank",
+      "id": "39b6cdda-17e9-5ae9-82b7-867db69938cb",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/27/49/66/27496663-bfaf-f418-05c0-e2c6ee4e96ec/AppIcon-0-0-1x_U007emarketing-0-11-0-sRGB-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/reflect-banking-made-personal/id1585813708?uo=4",
+      "product_ids": [
+        "fb2d4ee6-d340-4769-aa2d-740ae6b470bd"
+      ]
+    },
+    {
+      "key": "Zain Cash Jordan",
+      "id": "dff010fa-950a-593a-8179-9fe7a24de462",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/ee/f6/74/eef674fe-7087-648c-a495-f61308d03f55/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/zain-cash-jordan/id1472544421?uo=4",
+      "product_ids": []
+    },
+    {
+      "key": "Orange Money Jordan",
+      "id": "c61a1f83-d3c3-5d46-97ad-a226068ea555",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/c2/34/27/c23427f2-f598-ee8a-b36a-c426ae7040eb/AppIcon-0-0-1x_U007ephone-0-8-0-sRGB-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/orange-money-jordan/id1480149405?uo=4",
+      "product_ids": [
+        "19ae3b8b-8e8d-4633-8685-2361e4a3d2c6"
+      ]
+    },
+    {
+      "key": "InstaPay Egypt",
+      "id": "e38c9a9c-5fa6-5b41-a894-a9ed5f85897c",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b9/dd/c3/b9ddc3bb-2ac7-e6ea-757d-011f16583a3a/AppIcon-0-0-1x_U007emarketing-0-11-0-sRGB-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/instapay-egypt/id1592108795?uo=4",
+      "product_ids": []
+    },
+    {
+      "key": "Jawwal Pay",
+      "id": "8b86bee3-083c-532d-879e-7f4b0b99d4a6",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e4/a5/fd/e4a5fdfa-c8f8-a2c3-6b59-6e58544cfe42/AppIcon-0-0-1x_U007emarketing-0-8-0-0-sRGB-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/us/app/jawwalpay/id1611321078?uo=4",
+      "product_ids": []
+    },
+    {
+      "key": "Amiso Party",
+      "id": "9a735c50-d086-51b0-bf63-989b8cf9be2f",
+      "url": "https://play-lh.googleusercontent.com/0LFLv_LAv65Nje8PoVDgW7qn1-tnJ2s8--xiLHp8l1arp3XE3VpBFIKTXS-gmmKOz8lXAjaMTTU3GjwCbjJAkg=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.amisu.mobile",
+      "product_ids": [
+        "5fda9f83-1eaf-448a-a54b-b9669a755495"
+      ]
+    },
+    {
+      "key": "Lklk chat",
+      "id": "ad187e18-985e-5482-ae06-3656d6819142",
+      "url": "https://play-lh.googleusercontent.com/gzII1NyyMkHe8w3jClYfls21nI0SqbrewWKt0gOmphLbiQrxXn_RuCiCCCo7GtACFv0BwzsZDVx-i_PFJlAlVg=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.bwmatbw.lklklivechatapp",
+      "product_ids": [
+        "dd2ba57a-cb15-42f0-b13b-da2c41fac1b0"
+      ]
+    },
+    {
+      "key": "Eparty voice chat",
+      "id": "fec82ed0-c4ad-5d28-b134-c9a2b7a10974",
+      "url": "https://play-lh.googleusercontent.com/YLjqnkaSbdlxYnPyVUwtdpegIDZI_MOimiYYMaJ4S4YjzrC51jWgiGbKx7UlZyzzhVT47Er7joG3Wk_yATEv8Q=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.eptept.eparty",
+      "product_ids": [
+        "3ac58d38-6844-448b-aad5-a611e17ac450"
+      ]
+    },
+    {
+      "key": "Bobo Live",
+      "id": "6a5dbf09-4e34-5193-9e8e-89f60fc8388f",
+      "url": "https://play-lh.googleusercontent.com/teo6098mvenU1BmmyII1YAMtoqSS2mIqcSef2IX24Crk36pzpRpDvUIScyB8W0xqg_vvA18O7_pCzVizVZDn=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.duiud.bobo",
+      "product_ids": [
+        "3d80ebdd-25c0-431d-ad26-0f440d38fb8b"
+      ]
+    },
+    {
+      "key": "Pocket Chat voice games",
+      "id": "d5b6a8b3-f354-55cc-9529-3ff397918d6f",
+      "url": "https://play-lh.googleusercontent.com/fu_K3HNg3ur6JwM5mzuwkVquReHKa8B6LYaQIdADXa6G_jH10zyaFrTM5B6U7tE1Oa_-oqug6Dmivtj5y5tANg=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.sy.pocket",
+      "product_ids": [
+        "a9ef2787-a7a0-43d4-9750-52c1f09b404b"
+      ]
+    },
+    {
+      "key": "MTN Syria",
+      "id": "0c4bad89-3974-520a-899e-d894c50fdea5",
+      "url": "https://play-lh.googleusercontent.com/UN8xB-9pON-PxK0f1xKrBVHZZ6uFOhfUFhgPGJa37wiEXltBWLyOsard5Iz7F82MJNbFx-2PM7Fw-L7rDqRKdA=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.mtn1app",
+      "product_ids": [
+        "1cb6dba1-533c-4064-b3b6-5f24293e7850"
+      ]
+    },
+    {
+      "key": "ALFA Lebanon",
+      "id": "e8d6d954-fccf-5a95-86f1-4bc59c9c3dd1",
+      "url": "https://play-lh.googleusercontent.com/KmGxH6Wk6YWju9JtECbb_ueG9JTxO8DKHhCzVUV4HOcRloxIqZ7Vdetxmf3VF2i6wCuwqS2OVqt5z5NniZTK4w=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.AlfaUI.Alfa2Go",
+      "product_ids": [
+        "ed52730c-07cb-4dc9-986e-3d9e883927bd"
+      ]
+    },
+    {
+      "key": "Tumile",
+      "id": "d15cf372-6797-5570-bbc9-c6f125833e97",
+      "url": "https://play-lh.googleusercontent.com/TKq6PJl-VXa8G2Z4ws7e7udwfwRmSLoMyfDHOmKnQIMSpeNL7ZTjSbppjefAjRf90N8SVpEita1I2hU7QPLB=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.rcplatform.livechat&hl=en",
+      "product_ids": [
+        "c5d37e70-eb81-4c67-a5c1-13a608123adc"
+      ]
+    },
+    {
+      "key": "Pawa Live",
+      "id": "1b26cbe3-7903-5f14-bdae-8235804a3daa",
+      "url": "https://play-lh.googleusercontent.com/h9BM5FCICiFyGC9e8dCPmOPAu8WjC-p0wbmdg9_5Ak2I5DKkOICRf8p8F2ctuUrvn3sKXsluDNT5GA1M2ENTrP0=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.smileparty.pawalive&hl=en",
+      "product_ids": [
+        "f9b210f4-4ee8-4c51-bd62-48f69449cfd4"
+      ]
+    },
+    {
+      "key": "Whish Money",
+      "id": "c8effe08-4a7c-59a0-a4ba-f12443ef2361",
+      "url": "https://play-lh.googleusercontent.com/qZiyebWpkluyt3azous2SEefmfG34ELOfJ45-ZeL7_KMzyaHaJLhk7_mSUgaExk8VjPjn4yUvtRp0EXXYk2j=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=money.whish.android&hl=en",
+      "product_ids": []
+    },
+    {
+      "key": "Amo",
+      "id": "efa3b6cf-9bd3-5f1c-891b-eecce2915c14",
+      "url": "https://play-lh.googleusercontent.com/z19tl84pdHsB2MCVWtEdQKhEODSLmbsKlDZMureNZrRWQwX22H-kr5T8x2QtE5XnI9a9lXL7L66kVflOMJOqrw=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.xiaoyu.amo&hl=en",
+      "product_ids": [
+        "efa421d7-bdf6-4bf1-8283-43619c573f00"
+      ]
+    },
+    {
+      "key": "Apple Gift Card",
+      "id": "29723a88-5010-553b-8abd-795c273389da",
+      "url": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/giftcard-og-202303?wid=1200&hei=630&fmt=jpeg&qlt=95&.v=1679597545112",
+      "source_page": "https://www.apple.com/shop/gift-cards",
+      "product_ids": [
+        "c5d64307-5cf9-4f6f-b756-10a4fa68516d",
+        "9ded5772-b790-4a58-973a-75a89407977e",
+        "6ac63bdf-04db-44c1-8051-d31a35edd879",
+        "b0a640d5-67cf-4caa-8478-61f2d77912c4",
+        "a8ac7700-3c15-47e7-ba10-e31dbaa3e4e6",
+        "b8ab24e6-6500-4afa-9c23-78717f3f6f93",
+        "e12f615b-7723-4fb9-bc12-5e2ee8ef7de0"
+      ]
+    },
+    {
+      "key": "Bishar Chat",
+      "id": "ef587d24-443a-5ab4-8633-7fb28725ba24",
+      "url": "https://play-lh.googleusercontent.com/c_5KYMH1z436Rme_gN_I2roUtjYosEKhhLCjr0j5oFN0LKNPYyfd8HDw2G5pv3eF61agPLKzHOOttg2FaCBq=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.worcelia.talk&hl=en",
+      "product_ids": [
+        "9e841d3d-9364-4f1f-90dd-c58b3db4e7f8"
+      ]
+    },
+    {
+      "key": "UMNOW",
+      "id": "f499c96b-9af2-5a09-a043-869c3938df2d",
+      "url": "https://play-lh.googleusercontent.com/347BtbUtLVNojxTVIBnBYE4NkB1qglYKV2uWmJRpOX5CgmD0MAl1zhzz4BSlDEdlfFmpTZIHxjfafTHOjHe3Rg=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.tfy.cila&hl=en",
+      "product_ids": [
+        "b438deeb-ab9b-4066-a5ff-0edaa344e344"
+      ]
+    },
+    {
+      "key": "InFun",
+      "id": "beed7c1e-1616-59f6-b791-c32443594a46",
+      "url": "https://play-lh.googleusercontent.com/SAg58uYP6pCHHWZlhOQpJkqQNUjc4uht0z3HPCGOQT5tJFyiXv6qBL6EvUNsEiZxLBVBPG2nLOHQxgsfotxhiA=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.party.infun&hl=en",
+      "product_ids": [
+        "4b94a693-410a-440a-9e22-7710da588be0"
+      ]
+    },
+    {
+      "key": "Bulala",
+      "id": "d48b4c91-1330-5565-8960-045abb85664f",
+      "url": "https://play-lh.googleusercontent.com/v0EuiU3_kU4CwNZvS2qyjb9XL32_6jVb1LuPVYmhf-IvAS-h_lyWuip5H4xnV2qHBLr_y8lpLEfu4G_LCXe8=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.bulala.zdzq&hl=en",
+      "product_ids": [
+        "f4e40ca0-7f03-4d0e-bdb1-fec526c01115"
+      ]
+    },
+    {
+      "key": "Opa",
+      "id": "84b49be6-e38f-5650-b238-63c395610ade",
+      "url": "https://play-lh.googleusercontent.com/jEYTvqSHJ9PvBATRyK1TOWYOu7VyLuyZ6NEFxCj2ERkqknUs9UMKejyywA-_-HjYplStODQPY4pmxdtGqV0P6_k=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.soulla.android&hl=en",
+      "product_ids": [
+        "eb32db79-a7fd-4e54-bd62-c796383f77db"
+      ]
+    },
+    {
+      "key": "Gamet",
+      "id": "3d12e4b9-1375-5163-ae35-ba5ba5ddba15",
+      "url": "https://play-lh.googleusercontent.com/76GNm3MoI8BKfszimFVwDd5fCM0RzBcirJBI0MHl4OP-MIpi_5-w8W1WAbIsdjB7M2jkgr9QWHuoLd88-4AWUys=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.gametlive.social&hl=en",
+      "product_ids": [
+        "b6756d90-1f0b-42e1-84c0-0742bf35bd7e"
+      ]
+    },
+    {
+      "key": "ChillChat",
+      "id": "3d5afb8c-8fa7-5000-859d-b86f2a23f56b",
+      "url": "https://play-lh.googleusercontent.com/8w9Ype_aF_PIa31rVfSV0O9c5CZJp9RiSkKWnNdOvZKRp6VSeZzrgejdTPYMC7-46RB6Pb8FzwSQTH8r5AHr=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.bite.chillchat&hl=en",
+      "product_ids": [
+        "48a72ea3-6aa6-4a8d-9ef9-686de01dd15a",
+        "37c0f7eb-084a-4946-a9ff-13196368b1d1"
+      ]
+    },
+    {
+      "key": "Dawa",
+      "id": "51aaf847-ab79-522b-9a3f-98a815d3e48e",
+      "url": "https://play-lh.googleusercontent.com/ivJ7CcA3bd3WdCQm3zS2_ylKAEyWha72thuDBaZQRmweNaklXCyzswW3U3R-M8lwWPTdSrc9qM_-KX2WGC33ew=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.hayaa.dawachat&hl=en",
+      "product_ids": [
+        "7b04c928-ccbb-4230-895a-72d34695c280"
+      ]
+    },
+    {
+      "key": "Olamet",
+      "id": "0075f46f-82dc-5ffc-88e7-3610d814672a",
+      "url": "https://play-lh.googleusercontent.com/oUJB6X-4rPytoGlr0zs4BT-XmPDYkEgJr5GN8xzPO6K73LEzjKyV1WAFf3bRCYb_uImF_0hDa6NpdB8yLhgpiQ=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.olamet.mobile&hl=en",
+      "product_ids": [
+        "df60a337-c154-45b3-8b7c-d5ef6b16c37f"
+      ]
+    },
+    {
+      "key": "Pocoo",
+      "id": "f65ffefb-7fe4-531e-82ff-0c6ec737ac8d",
+      "url": "https://play-lh.googleusercontent.com/VjNNLSN8RRcLyz-kbOp-obKeM5a2f50DM6iICgIfl8LMhB1dl2NsIMdbH66VJ0dSpGA9hqzeuSxaeA2TzYhntQ=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.oohla.ksa&hl=en",
+      "product_ids": [
+        "d6f15a49-1388-4095-b546-5043db740c86"
+      ]
+    },
+    {
+      "key": "Aria",
+      "id": "d80a0aad-fd06-5c18-abdc-c5b9be8d3662",
+      "url": "https://lh3.googleusercontent.com/GwJJacgCni1iqgmeqCMBcTfmo9CaVOxTsNEH5J3vtzzhalYGobbUoDpdbJlwQU-N43iZbodWwWDV_UlSnaA8VrmR5WaOGLiDS8ObdA",
+      "source_page": "https://www.appbrain.com/app/aria/com.operavoice.aria",
+      "product_ids": [
+        "afa820b4-19c2-4334-bcbf-7d592daab571"
+      ]
+    },
+    {
+      "key": "Boli",
+      "id": "bcaf3aef-f919-5ce4-a8b8-348e1f8b2ee6",
+      "url": "https://lh3.googleusercontent.com/237zJgMAKEQnoIAKDg1NuM27vCs149bmCwsh04gFQ9ZwASQXyrquXTpK2nyDKjXDr1Z3MGiYWdn339HCE3vxcMBBzBkHJ0Gg39aj",
+      "source_page": "https://www.appbrain.com/app/boli/com.iyinguo.silkroad",
+      "product_ids": [
+        "3244937a-b238-4c57-a082-85429f7a996d"
+      ]
+    },
+    {
+      "key": "iFun",
+      "id": "4792b61a-ccb1-531b-b8e5-fd41a4c2f49e",
+      "url": "https://lh3.googleusercontent.com/1cR_JXOKWz7uwpzMWee6PTTIFflgJdarM77k5g3DkpYk1XOngVQf6BymuzbafUiaBMfeIw0dF6AQmP4z_RW0MWkGJtezyM9Tsmq_",
+      "source_page": "https://www.appbrain.com/app/ifun-group-voice-chat-rooms/com.imoyu.ifun",
+      "product_ids": [
+        "1466222d-e44b-439e-9be5-7afa83b9b883"
+      ]
+    },
+    {
+      "key": "Chirp",
+      "id": "4e6f2d6c-5648-545f-894d-3f4e8f2b8e95",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/7d/74/82/7d7482d8-7e65-21e6-f7bb-f8bded7ada26/AppIcon-0-0-1x_U007emarketing-0-6-0-sRGB-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/gb/app/bomlu-group-voice-chatroom/id1620373573?uo=4",
+      "product_ids": [
+        "68cbef90-86ca-4be2-b223-64f6f8d9c390"
+      ]
+    },
+    {
+      "key": "Binance",
+      "id": "803ac8f5-522c-54ce-b84d-656e1b096973",
+      "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/c3/fa/7d/c3fa7d44-91ea-b22c-c71c-faa54c06454f/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg",
+      "source_page": "https://apps.apple.com/gb/app/binance-buy-bitcoin-crypto/id1436799971?uo=4",
+      "product_ids": []
+    },
+    {
+      "key": "Tether",
+      "id": "e6ea20a6-1aa9-5da8-8621-f3a2f94bfad3",
+      "url": "https://tether.to/images/logoCircle.png",
+      "source_page": "https://tether.to/en/media/",
+      "product_ids": [
+        "ff572ee2-a310-4198-9d5c-720fc54f23bf"
+      ]
+    },
+    {
+      "key": "CliQ",
+      "id": "ba54cc35-3943-5bb3-b267-c40e6fe79070",
+      "url": "https://www.jopacc.com/sites/default/files/2023-11/system%20logos%20%5BRecovered%5D-14.svg",
+      "source_page": "https://www.jopacc.com/what-we-do/systems-platforms/what-cliq",
+      "product_ids": [
+        "82c901b3-225c-4e2e-a67a-352e96b95fe6"
+      ]
+    },
+    {
+      "key": "Xena Live",
+      "id": "bee48729-4040-5829-86d2-09b9a3d303b8",
+      "url": "https://play-lh.googleusercontent.com/67LznToC42thuwsh8UMyj9DwWV6Pjltd_JXoyYw7fUF6K-X0rD-BbyXyRrBrDdDi9lNQ8wJzUkYhc_XFf14Kbg=s0-br30",
+      "source_page": "https://play.google.com/store/search?q=Xena+Live&c=apps",
+      "product_ids": [
+        "77d6a838-9900-4b6b-9a9a-1d23ee472329",
+        "25f1cfcd-0b1b-4642-8b4a-462b0282daa1",
+        "17b73865-8476-4ca0-8851-9d1392907afb"
+      ]
+    }
+  ]
+}
