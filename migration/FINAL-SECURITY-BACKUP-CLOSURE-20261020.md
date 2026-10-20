@@ -24,3 +24,9 @@
 1. Independent full backup + isolated restore test (blocker).
 2. Review remaining SECURITY DEFINER RPCs and leaked-password auth setting; retain financial permissions (security gate).
 3. Document successful outcome and backup verification, then publish final unblocked closure note. Keep old infrastructure intact per owner direction.
+
+## Follow-up production CI repair
+- Owner confirmed live purchase and deposit, Telegram alerts and product/admin changes working. Updated `migration/release-acceptance.json` (commit `132acb6c48a79e58fc72db108953a69d455fa22e`) to record completed owner acceptance.
+- Corrected the 15-minute *pre-launch-only* verification expiry in production builder (commit `23c9930cbf9314de924e3c145fece949d809e764`). After owner-verified purchase/deposit, acceptance persists across subsequent production builds; other required gates remain.
+- Cloudflare production Pages deployment `0e129313-90cc-4f88-955d-d7f6f6d93402` **succeeded**, after previous doc-only CI attempt had failed. Official domains remain Cloudflare Pages.
+- This repair does NOT create a restorable database backup, turn on deposit emails, or remove existing auth/security warnings. Do not declare unconditional technical closure.
