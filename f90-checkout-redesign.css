@@ -119,3 +119,12 @@ body.f90-checkout-open #quickProductPanel .f90-visa-purchase{
  body.f90-checkout-open #quickProductPanel .f90-visa-purchase{padding:8px!important;gap:4px!important}
  .f90-visa-purchase .f90-visa-product{padding-bottom:5px}
 }
+
+/* Live server-quoted total immediately beside quantity. */
+.f90-visa-form .f90-purchase-qty-price{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;row-gap:5px;align-items:stretch;min-width:0}
+.f90-visa-form .f90-purchase-qty-price>.f90-visa-inputrow{grid-column:1;grid-row:1;min-width:0;margin:0}
+.f90-visa-form .f90-purchase-qty-price>.f90-quantity-limits{grid-column:1;grid-row:2;min-width:0;font-size:10px;padding:4px}
+.f90-visa-form .f90-purchase-qty-price>.f90-checkout-summary{grid-column:2;grid-row:1 / span 2;min-width:0;margin:0;display:flex;align-items:center;justify-content:center}
+.f90-visa-form .f90-purchase-qty-price>.f90-checkout-summary .f90-visa-price{width:100%;overflow-wrap:anywhere}
+.f90-visa-form .f90-purchase-qty-price:not(:has(.f90-visa-inputrow))>.f90-checkout-summary{grid-column:1 / -1;grid-row:auto}
+@media(max-width:345px){.f90-visa-form .f90-purchase-qty-price{grid-template-columns:1fr}.f90-visa-form .f90-purchase-qty-price>*{grid-column:1!important;grid-row:auto!important}}
