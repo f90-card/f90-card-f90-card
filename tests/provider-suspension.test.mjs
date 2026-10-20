@@ -19,7 +19,9 @@ test("disabled suppliers are blocked for quotes and new orders", () => {
   assert.match(edge, /quoteProductId \? assertProviderAvailable\(quoteProductId\) : Promise\.resolve\(\)/);
   assert.match(edge, /const \[a\] = await Promise\.all\(/);
   assert.match(edge, /if \(action === "quote"\) \{[\s\S]*?await rpc\("f90_quote"/);
-  assert.match(edge, /const product = uuid\(b\.product_id \|\| b\.service\);\s*await assertProviderAvailable\(product\)/);
+  const checkout=edge.slice(edge.indexOf('if (action === "checkout" || action === "add")'),edge.indexOf('if (action === "transaction.lookup")'));
+  assert.ok(checkout.indexOf("if (previous)") < checkout.indexOf("await assertProviderAvailable(product)"));
+  assert.ok(checkout.indexOf("await assertProviderAvailable(product)") < checkout.indexOf('rpc("f90_checkout"'));
 });
 test("supplier toggle modifies only the supplier state and adds audit", () => {
   const start = edge.indexOf('if (action === "provider.toggle")');
