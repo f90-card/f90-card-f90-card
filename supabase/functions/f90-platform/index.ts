@@ -109,7 +109,10 @@ function fail(e: any) {
     e.status || 400,
     e.publicMessage || "تعذّر تنفيذ العملية. راجع البيانات وحاول مجددًا",
   ];
-  return new Response(JSON.stringify({ error: { code, message } }), {
+  const publicMessage = e instanceof AppError &&
+    ["F90_AUTH", "F90_FORBIDDEN"].includes(code) && e.publicMessage
+      ? e.publicMessage : message;
+  return new Response(JSON.stringify({ error: { code, message: publicMessage } }), {
     status,
     headers: { ...cors, "Content-Type": "application/json; charset=utf-8" },
   });
