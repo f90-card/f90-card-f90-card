@@ -45,7 +45,7 @@ async function render(){
  const rows={categories,products,banners}[page];
  main.innerHTML=`<div class="section-head"><h2>${{categories:'أقسام الأمين كارد',products:'خدمات الأمين كارد',banners:'إعلانات الأمين كارد'}[page]}</h2><button type="button" class="button" data-new>إضافة</button></div>`+
  (page==='products'&&!categories.length?'<p>أضف قسمًا أولًا، ثم أضف الخدمات داخله.</p>':'')+
- `<div class="records">${rows.map(row=>`<article class="record">${row.image_path?`<img class="partner-thumb" src="${e(img(row.image_path))}" alt="">`:''}<div class="record-main"><h3>${e(row.name||row.title||'إعلان')}</h3><p>${row.is_active?'فعّال':'متوقف'} · ترتيب ${row.sort_order}</p>${page==='products'?`<strong>${e(new Intl.NumberFormat('ar',{style:'currency',currency:row.currency,maximumFractionDigits:6}).format(row.price))}</strong>`:''}</div><button class="button secondary" type="button" data-edit="${row.id}">تعديل</button><button class="button secondary" type="button" data-toggle="${row.id}">${row.is_active?'إيقاف':'تفعيل'}</button></article>`).join('')}</div>`;
+ `<div class="records">${rows.map(row=>`<article class="record">${row.image_path?`<img class="partner-thumb" src="${e(img(row.image_path))}" alt="">`:''}<div class="record-main"><h3>${e(row.name||row.title||'إعلان')}</h3><p>${row.is_active?'فعّال':'متوقف'} · ترتيب ${row.sort_order}</p>${page==='products'?`<strong>${e(new Intl.NumberFormat('ar',{style:'currency',currency:row.currency,maximumFractionDigits:6}).format(row.price))}</strong>`:''}</div><button class="button secondary" type="button" data-edit="${row.id}">تعديل</button><button class="button secondary" type="button" data-toggle="${row.id}">${row.is_active?'إيقاف':'تفعيل'}</button><button class="button secondary" type="button" data-delete="${row.id}" style="color:#ff7b8f">حذف</button></article>`).join('')}</div>`;
 }
 async function upload(file){
  if(!file?.size)return null;
@@ -91,6 +91,15 @@ document.addEventListener('click',async ev=>{
  else if(button.hasAttribute('data-new'))editor(page);
  else if(button.dataset.edit)editor(page,{categories,products,banners}[page].find(x=>x.id===button.dataset.edit));
  else if(button.dataset.toggle){const row={categories,products,banners}[page].find(x=>x.id===button.dataset.toggle);check(await db.from(tables[page]).update({is_active:!row.is_active}).eq('id',row.id).eq('space_id',space.id).select('id').single());await refresh();}
+ else if(button.dataset.delete){
+ const row={categories,products,banners}[page].find(x=>x.id===button.dataset.delete);
+ if(!row)throw new Error('العنصر غير موجود');
+ if(page==='categories'&&products.some(p=>p.category_id===row.id))throw new Error('انقل أو احذف خدمات هذا القسم أولاً');
+ if(!window.confirm('حذف '+(row.name||row.title)+' نهائيًا؟ لن يتأثر أي قسم أو منتج في F90 CARD.'))return;
+ busy=true;
+ try{check(await db.from(tables[page]).delete().eq('id',row.id).eq('space_id',space.id).select('id').single());say('تم الحذف');await refresh();}
+ finally{busy=false;}
+ }
  else if(button.dataset.removeImage){
  const path=space.id+'/'+button.dataset.removeImage;
  if([space.collaboration_image,...categories.map(x=>x.image_path),...products.map(x=>x.image_path),...banners.map(x=>x.image_path)].includes(path))throw new Error('الصورة مرتبطة بمحتوى حالي. غيّر صورته أولًا.');
