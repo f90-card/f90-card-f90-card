@@ -14,7 +14,7 @@ async function read(){
 }
 function navigation(){
  controls.innerHTML=(spaces.length>1?`<label class="field"><span>المساحة</span><select id="partnerSpace">${spaces.map(s=>`<option value="${s.id}" ${s.id===space.id?'selected':''}>${e(s.name)}</option>`).join('')}</select></label>`:'')+
- `<div class="partner-stats"><label>الصور: ${(Number(usage.used_bytes)/1048576).toFixed(1)} / 200 ميجابايت<progress max="${usage.limit_bytes}" value="${usage.used_bytes}"></progress></label><span>خدمات فعّالة: ${usage.active_products}</span><span>خدمات متوقفة: ${usage.inactive_products}</span></div>`+
+ `${!space.is_active?'<p class="notice" role="alert">قسم الأمين كارد غير منشور حاليًا، لذلك لن تظهر أقسامه ومنتجاته للزوار. اطلب من مدير الموقع تفعيل ظهور المساحة من «التواصل».</p>':''}<div class="partner-stats"><label>الصور: ${(Number(usage.used_bytes)/1048576).toFixed(1)} / 200 ميجابايت<progress max="${usage.limit_bytes}" value="${usage.used_bytes}"></progress></label><span>خدمات فعّالة: ${usage.active_products}</span><span>خدمات متوقفة: ${usage.inactive_products}</span></div>`+
  `<nav class="partner-tabs">${[['products','الخدمات'],['categories','الأقسام'],...(role==='manager'||role==='admin'?[['banners','إعلانات F90 الخاصة بالأمين']]:[]),['settings','التواصل'],['media','الصور']].map(([key,title])=>`<button type="button" data-page="${key}" class="button ${page===key?'':'secondary'}">${title}</button>`).join('')}</nav>`;
  $('partnerSpace')?.addEventListener('change',async ev=>{space=spaces.find(s=>s.id===ev.target.value);await refresh();});
 }
@@ -70,7 +70,7 @@ async function save(ev,kind,row){
  if(kind==='banners'&&!data.image_path)throw new Error('صورة الإعلان مطلوبة');
  const r=row.id?await db.from(tables[kind]).update(data).eq('id',row.id).eq('space_id',space.id).select('id').single():await db.from(tables[kind]).insert({...data,space_id:space.id}).select('id').single();check(r);
  say('حُفظ التعديل');await refresh();
- }catch(err){if(newImage)await db.storage.from('f90-partner-images').remove([newImage]);say(err.message);}finally{busy=false;button.disabled=false;}
+ }catch(err){if(newImage)await db.storage.from('f90-partner-images').remove([newImage]);say('لم تُحفظ الإضافة: '+err.message);}finally{busy=false;button.disabled=false;}
 }
 async function saveSettings(ev){
  ev.preventDefault();if(busy)return;busy=true;let newImage;const f=ev.target,button=f.querySelector('[type=submit]');button.disabled=true;
