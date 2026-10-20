@@ -141,5 +141,5 @@ test("checkout refuses stale wallet balance unless refresh succeeds", () => {
   assert.ok(freshness >= 0 && freshness < balanceCheck && balanceCheck < checkoutCall);
   assert.match(checkout, /const refreshed = await refreshMe\(\);/);
   assert.match(checkout, /if \(!refreshed\)/);
-  assert.match(checkout, /if \(!S\.me\?\.profile\?\.is_verified\)/);
+  assert.match(checkout, /purchase_requires_verification===true && !S\.me\.profile\?\.is_verified/);
 });
