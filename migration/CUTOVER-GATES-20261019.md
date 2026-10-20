@@ -9,6 +9,15 @@
 - Before publication, still require source/target data reconciliation, single-writer Yassen/cron handover, authentication and admin operational readiness, production Cloudflare release and routing checks. Preserve manual pricing and customer balances.
 - At go-live, keep financial processing gated or under controlled maintenance until its post-publication verification, and retain rollback. The owner-deferred tests do not establish that live checkout/deposit succeeds.
 
+
+## Runtime cutover checkpoint — 2026-10-20
+
+- Verified read-only wallet parity: 22/22 original wallets match the new project's balances; one additional stage-only wallet exists.
+- The old project's three order/Yassen cron jobs were disabled; the new project's three corresponding cron jobs are enabled. The old Yassen provider is disabled and the new one enabled. A new-project Yassen fetch job, order worker and import job all have succeeded cron executions. This is NOT proof of an end-to-end fulfilled customer order.
+- The new project still has 14 historical queued mail notifications; those must not be replayed. The two mail/Telegram cron jobs remain outside this Yassen-only handover.
+- Cloudflare Pages custom domains f90card.online and www.f90card.online were registered but remain pending; DNS continues pointing to Vercel. The existing Cloudflare acceptance Pages build still builds in acceptance/noindex mode, and production release report is not present. Do not promote the acceptance build or claim official cutover.
+- Owner explicitly defers live purchase/deposit tests until after publication; that decision does not authorize fabrication of production acceptance evidence.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
