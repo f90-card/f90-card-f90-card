@@ -54,8 +54,10 @@ test("an unfunded account cannot send a purchase to the server", async () => {
   assert.match(h.document.getElementById("toast").textContent, /غير كافٍ/);
   h.cleanup();
 });
-test("unverified account cannot reach checkout", async () => {
-  const h = await harness("index.html", { hash: "#/product/coins", verified: false });
+test("unverified account cannot reach checkout when verification is required", async () => {
+  const catalog = fixture();
+  catalog.settings.config.purchase_requires_verification = true;
+  const h = await harness("index.html", { hash: "#/product/coins", verified: false, catalog });
   h.document.getElementById("checkoutForm").dispatchEvent(
     new h.window.Event("submit", { bubbles: true, cancelable: true }),
   );
