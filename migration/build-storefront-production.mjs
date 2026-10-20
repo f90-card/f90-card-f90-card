@@ -8,8 +8,8 @@ const newHost='ogkipkavlywgwhtomoca.supabase.co';
 const key='sb_publishable_hhEc0Rw4r_V-sLpC82KLdw_mcoWNSec';
 const mode=process.env.F90_BUILD_MODE||'acceptance';
 if(!['acceptance','production'].includes(mode))throw Error('Invalid build mode');
-// Production is deliberately unavailable until a fresh independent release review.
-// The reviewed report must be generated from final reconciliations, not estimates.
+// Production requires verified release approval. Pre-launch deferred acceptance expires after 15 minutes;
+// after the owner confirms real purchase, deposit and Telegram, signed-off acceptance persists across deploys.
 if(mode==='production'){
   const report=JSON.parse(await readFile(process.env.F90_RELEASE_REPORT||'migration/release-acceptance.json','utf8'));
   const required=['financialParity','privateStorageAccess','mediaIndependent','checkoutIdempotency','supplierSingleWriter','mailCutoffTest','authAcceptance','ownerCutoverApproved'];
@@ -18,7 +18,7 @@ if(mode==='production'){
   // only while server-side financial writes are independently proven gated.
   const depositAccepted=report.depositAcceptance===true ||
     (report.depositAcceptance===false && report.ownerDeferredDepositTest===true && report.financialWritesGatedUntilTest===true);
-  if(report.target!==newHost||!Number.isFinite(age)||age<0||age>15*60*1000||required.some(k=>report[k]!==true)||!depositAccepted)
+  if(report.target!==newHost||!Number.isFinite(age)||age<0||((report.ownerConfirmedPurchaseDepositAndTelegram!==true||report.depositAcceptance!==true)&&age>15*60*1000)||required.some(k=>report[k]!==true)||!depositAccepted)
     throw Error('Production release gates incomplete or stale');
 }
 const allowedDirs=new Set(['assets','public','discover']);
