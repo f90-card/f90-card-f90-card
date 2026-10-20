@@ -53,7 +53,7 @@ function home(settings){
  const ads=[["digital","الخدمات الرقمية"],["transfer","تحويل الأموال"],["design","تصاميم احترافية"],["website","احصل على موقعك"]];
  return '<section class="f90-special-home" aria-label="إعلانات الخدمات">'+
  '<div class="f90-special-ad-strip" aria-label="إعلانات خاصة بالمتجر">'+ads.filter(([id])=>c["show_"+id]!==false).map(([id,title])=>
- '<div class="f90-special-ad"><img src="'+images[id]+'" alt="'+esc(title)+'" loading="lazy"></div>').join("")+
+ '<div class="f90-special-ad"><img src="'+esc((typeof c[id+"_banner_url"]==="string"&&/^(https:\/\/|\.\/assets\/)/.test(c[id+"_banner_url"]))?c[id+"_banner_url"]:images[id])+'" alt="'+esc(title)+'" loading="lazy"></div>').join("")+
  '</div></section>';
 }
 function category(slug,settings){
