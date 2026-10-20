@@ -47,6 +47,11 @@ export function endpointURL(value) {
     throw new ProviderError("عنوان المورّد غير مسموح");
   return u;
 }
+export function f90SelfEndpoint(value) {
+  const host = endpointURL(value).hostname.toLowerCase();
+  return ["www.f90card.online", "f90card.online", "f90-card-acceptance.pages.dev",
+    "ogkipkavlywgwhtomoca.supabase.co"].includes(host) || host.endsWith(".f90-card-acceptance.pages.dev");
+}
 export function normalizeService(s) {
   if (!s || typeof s !== "object" || s.available === false) return null;
   // Omega's product API uses qty_values and product_type, and prices one
@@ -97,6 +102,14 @@ export function normalizeService(s) {
     params,
     allowed_quantities: allowed,
     omega,
+    ...(s._f90_merchant === true ? {
+      fields: Array.isArray(s.fields) ? s.fields : [],
+      quantity_step: s.quantity_step || 1,
+      pack_quantity: s.pack_quantity || 1,
+      image_url: s.image_url || "",
+      description: s.description || "",
+      availability: s.availability,
+    } : {}),
     raw: s,
   };
 }
@@ -149,6 +162,60 @@ export async function callProvider(
       throw new ProviderError("عنوان الشبكة الخاص بالمورّد غير مسموح");
   }
   const headers = { Accept: "application/json" };
+  if (provider.adapter === "f90_merchant") {
+    if (u.search) throw new ProviderError("رابط F90 لا يقبل معاملات أو مفاتيح في العنوان");
+    if (!["services", "balance", "status", "add"].includes(action))
+      throw new ProviderError("عملية F90 غير مدعومة");
+    if (action === "add" && f90SelfEndpoint(u.href))
+      throw new ProviderError("ربط المتجر بنفسه للفحص والاستيراد كمسودات فقط؛ الطلبات الآلية لنفس المتجر ممنوعة");
+    const request = async (payload, write = false) => {
+      let response, raw, data;
+      try {
+        response = await fetcher(u, { method: "POST", redirect: "manual",
+          headers: { ...headers, "Content-Type": "application/json", "x-f90-key": key },
+          body: JSON.stringify(payload), signal: AbortSignal.timeout(timeout) });
+        raw = await response.text();
+      } catch { throw new ProviderError("تعذّر تأكيد الاتصال بواجهة F90", write); }
+      if (raw.length > 5000000) throw new ProviderError("استجابة F90 أكبر من الحد", write);
+      try { data = JSON.parse(raw); }
+      catch { throw new ProviderError("استجابة F90 ليست JSON صالحًا", write); }
+      // Never forward upstream messages, which may contain secrets or client data.
+      if (!response.ok || data?.error) {
+        const code = String(data?.error?.code || "");
+        const known = { F90_AUTH: "مفتاح التاجر غير صحيح أو ملغى", F90_FORBIDDEN: "صلاحيات مفتاح التاجر غير كافية",
+          F90_INSUFFICIENT_BALANCE: "رصيد حساب التاجر لدى F90 غير كافٍ",
+          F90_PRICE_CHANGED: "تغيّر سعر F90؛ حدّث الأسعار قبل الطلب",
+          F90_IDEMPOTENCY_CONFLICT: "مرجع الطلب مستخدم ببيانات مختلفة" };
+        throw new ProviderError(known[code] || "رفضت واجهة F90 الطلب",
+          write && (response.status >= 500 || (response.status >= 300 && response.status < 400) || response.status === 408));
+      }
+      if (!Object.hasOwn(data || {}, "data")) throw new ProviderError("عقد استجابة F90 غير متوافق", write);
+      return data.data;
+    };
+    if (action === "services") {
+      const [items, categories] = await Promise.all([request({ action }), request({ action: "categories" })]);
+      if (!Array.isArray(items) || !Array.isArray(categories)) throw new ProviderError("كتالوج F90 غير صالح");
+      const names = new Map(categories.map(c => [c.id, c.name]));
+      return items.map(s => ({ ...s, _f90_merchant: true, category_name: names.get(s.category) || s.category }));
+    }
+    if (action === "balance") return request({ action });
+    if (action === "status") {
+      const data = await request({ action, order: args.order });
+      if (!data?.order?.id || typeof data.order.status !== "string")
+        throw new ProviderError("حالة طلب F90 غير واضحة");
+      return { ...data.order, status: data.order.status === "refunded" ? "failed" : data.order.status };
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(String(args.client_reference || "")) ||
+        !Number.isSafeInteger(Number(args.quantity)) || Number(args.quantity) < 1 ||
+        !Number.isFinite(Number(args.expected_total_usd)) || Number(args.expected_total_usd) <= 0 ||
+        !args.fields || typeof args.fields !== "object" || Array.isArray(args.fields))
+      throw new ProviderError("مرجع الطلب أو تكلفته أو حقوله غير صالحة لواجهة F90");
+    const data = await request({ action: "checkout", product_id: args.service,
+      quantity: Number(args.quantity), fields: args.fields, idempotency_key: args.client_reference,
+      expected_total_usd: Number(args.expected_total_usd) }, true);
+    if (!data?.id) throw new ProviderError("لم تؤكد F90 رقم الطلب", true);
+    return { order_id: data.id, status: data.status };
+  }
   if (provider.adapter === "omega" || provider.adapter === "yassen") {
     const yassen = provider.adapter === "yassen";
     if (yassen && u.origin !== "https://api.yassen-card.com")
