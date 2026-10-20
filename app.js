@@ -291,11 +291,7 @@
     $("drawerProfile").innerHTML =
       `<section class="f90-drawer-identity"><a class="drawer-profile" href="${me ? "#/profile" : "#/auth"}">${avatar(p)}<div><strong>${e(p?.display_name || "أهلًا بك في أف تسعين")}</strong><span class="small">${me ? e(C.roles[me.role]) + " · " + e(p.customer_id || "") : "سجّل دخولك وابدأ رحلتك"}</span>${me && !me.needs_mfa ? verified(p) : ""}</div></a>${me ? `<button type="button" class="f90-drawer-session" data-action="logout">${I("logout")} تسجيل الخروج</button>` : `<a class="f90-drawer-session" href="#/auth">${I("user")} تسجيل الدخول</a>`}</section>`;
     $("drawerProfile").insertAdjacentHTML("beforeend", `<a class="f90-drawer-vip-link" href="#/vip">${I("crown")}<span>${me ? `مستواك VIP ${e(me.vip_level || 1)} · عرض المزايا` : "اكتشف مستويات VIP ومزاياها"}</span><span aria-hidden="true">‹</span></a>`);
-    $("drawerProfile").insertAdjacentHTML("beforeend", `<div class="f90-drawer-social"><div class="f90-drawer-social-title">تابع منصاتنا الرسمية</div><div class="f90-social-card-grid">${f90SocialCards() || '<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>'}</div></div>`);
-    const drawerBalance = me && !me.needs_mfa && !S.walletStale
-      ? e(displayMoney(me.wallet?.balance_usd,true))
-      : me ? "الرصيد يحتاج تحديث" : "سجّل الدخول لعرض الرصيد";
-    $("drawerProfile").insertAdjacentHTML("beforeend", `<section class="f90-drawer-wallet-card" aria-label="رصيد المحفظة"><div class="f90-drawer-wallet-card-top"><img src="${e(C.safeUrl(S.settings.logo_url || "./f90-logo.png") || "./f90-logo.png")}" alt="F90 CARD"><span>F90 DIGITAL WALLET</span></div><div class="f90-drawer-wallet-heading">${I("wallet")}<span>رصيد محفظتك</span></div><strong dir="ltr">${drawerBalance}</strong><small class="f90-drawer-wallet-copy">© F90 CARD · محفظة رقمية داخل المتجر</small><div class="f90-drawer-wallet-actions"><a href="#/deposit">${I("plus")} شحن الرصيد</a><a href="#/wallet">${I("wallet")} المحفظة</a></div></section><div class="f90-drawer-quick-title">اختصارات واضحة</div><div class="f90-drawer-quick-grid"><a href="#/">${I("grid")}<span>الرئيسية</span></a><a href="#/orders">${I("clock")}<span>طلباتي</span></a><a href="#/wallet">${I("wallet")}<span>المحفظة</span></a><a href="#/profile">${I("user")}<span>حسابي</span></a></div>`);
+
     const drawerPreferences=document.querySelector("#drawer .drawer-preferences");
     if(drawerPreferences)document.querySelector("#drawerProfile .f90-drawer-wallet-card")?.insertAdjacentElement("afterend",drawerPreferences);
     const links = [
@@ -336,9 +332,10 @@
     }).join("") + (drawerGroup ? "</div></details>" : "");
     // Standalone final drawer links: accessible without opening accordions.
     const extra=[];
+    if(me?.role==='charging_agent')extra.push('<a class="f90-drawer-standalone" href="./trader-commissions.html">'+I("wallet")+'<span>عمولاتي وعملائي</span></a>');
     if(me?.role==='manager')extra.push('<a class="f90-drawer-standalone" href="./trader-commissions.html">'+I("users")+'<span>وكلاء الموقع</span></a>');
     if(me && ['manager','admin','amin_card'].includes(me.role))extra.push('<a class="f90-drawer-standalone f90-amin-admin-link" href="./amin-card.html">'+I("grid")+'<span>'+(me.role==='amin_card'?'لوحة تحكم الامين كارد':'قسم الامين كارد')+'</span></a>');
-    $('drawerLinks').insertAdjacentHTML('beforeend',extra.join(''));
+    $('drawerLinks').insertAdjacentHTML('beforeend',extra.join('')+'<section class="f90-drawer-social" style="margin:14px 8px 24px"><div class="f90-drawer-social-title">تابع قنواتنا الرسمية</div><div class="f90-social-card-grid">'+(f90SocialCards()||'<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>')+'</div></section>');
     document.getElementById('f90TraderCommissionsLink')?.remove();
     if(['trader','charging_agent'].includes(me?.role))$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عملائي وعمولاتي</a>');
     const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
