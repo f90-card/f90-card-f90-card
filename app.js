@@ -263,7 +263,7 @@
     const symbol=symbols[code]||code;
     const printed=balance?Math.trunc(value):value;
     return symbol+" "+new Intl.NumberFormat("en-US",{
-      minimumFractionDigits:0,maximumFractionDigits:balance?0:(Math.abs(value)<1?6:2)
+      minimumFractionDigits:0,maximumFractionDigits:balance?0:(Math.abs(value)<1?6:3)
     }).format(printed);
   }
   function f90ShortLimit(value){
@@ -1020,10 +1020,12 @@
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
         ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
+        <div class="f90-purchase-qty-price">
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
           <div class="f90-visa-price"><span>السعر النهائي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-busy="true">جارٍ حساب السعر…</strong></div>
+        </div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
