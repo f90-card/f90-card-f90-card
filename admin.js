@@ -184,8 +184,8 @@
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
-      ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
-      ["الإشعارات والإضافات",["media-center","telegram-alerts"]]
+      ["المظهر والمحتوى",["content-text","content-images","content-links","content-branding","promotions","notifications","policies","settings"]],
+      ["الإشعارات والإضافات",["telegram-alerts"]]
     ];
     const link=item=>'<a href="#/'+item[0]+'" class="'+(S.active===item[0]?'active':'')+'">'+I(item[2])+item[1]+'</a>';
     $("adminNav").innerHTML=buckets.map(([title,ids])=>{
