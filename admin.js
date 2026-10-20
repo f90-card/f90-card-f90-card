@@ -660,6 +660,47 @@
     };
     draw();
   }
+  function specialBannerEditor() {
+    if (!manager()) return;
+    const config=S.settings.config||{}, special=config.special_services||{};
+    const items=[["digital","الخدمات الرقمية"],["transfer","تحويل الأموال"],["design","خدمات التصميم"],["website","امتلك موقعك"]];
+    const panel=document.createElement("section");
+    panel.className="panel";
+    panel.id="f90SpecialBanners";
+    panel.innerHTML='<h2>الإعلانات الصغيرة أسفل البنر الرئيسي</h2><p>هنا الصور القديمة الخاصة بمتجر F90، منفصلة عن إعلانات الأمين كارد. تستطيع إخفاء أي إعلان أو استبدال صورته.</p>'+
+    '<form id="f90SpecialBannerForm"><div class="records">'+items.map(([id,title])=>
+      '<div class="record"><strong>'+e(title)+'</strong><img alt="'+e(title)+'" loading="lazy" style="width:110px;max-height:80px;object-fit:contain" src="'+e(special[id+"_banner_url"]||"./assets/f90-new/banner-"+id+".webp")+'">'+
+      '<label><input type="checkbox" name="'+id+'_enabled" '+(special["show_"+id]===false?'':'checked')+'> إظهار الإعلان</label>'+
+      '<label class="field">رابط صورة الإعلان<input name="'+id+'_url" type="url" value="'+e(special[id+"_banner_url"]||"")+'" placeholder="https://..."></label>'+
+      '<label class="field">أو ارفع صورة جديدة<input name="'+id+'_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>'+
+      '<label><input type="checkbox" name="'+id+'_delete"> حذف/إخفاء الإعلان الحالي</label></div>'
+    ).join('')+'</div><h3>بنر التعريف</h3><label><input type="checkbox" name="show_intro" '+(config.show_intro===false?'':'checked')+'> إظهار بنر التعريف</label>'+
+    '<label class="field">صورة بنر التعريف<input name="hero_image" type="url" value="'+e(config.hero_image?.startsWith("https://")?config.hero_image:"")+'" placeholder="https://..."></label>'+
+    '<label class="field">أو رفع صورة بنر التعريف<input name="hero_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>'+
+    '<button class="button" type="submit">حفظ صور الإعلانات وبنر التعريف</button></form>';
+    main.append(panel);
+    panel.querySelector("form").onsubmit=async ev=>{
+      ev.preventDefault();const form=ev.currentTarget,button=form.querySelector('[type=submit]');
+      button.disabled=true;
+      try{
+        const next={...special};
+        for(const [id] of items){
+          const removed=form.elements[id+'_delete'].checked;
+          let url=form.elements[id+'_url'].value.trim();
+          if(url&&!/^https:\/\//.test(url))throw new Error("استخدم روابط HTTPS فقط");
+          const file=form.elements[id+'_file'].files[0];
+          if(file)url=(await A.upload(file,"f90-images","banners")).url;
+          next["show_"+id]=!removed&&form.elements[id+'_enabled'].checked;
+          next[id+"_banner_url"]=removed?"":url;
+        }
+        let hero=form.elements.hero_image.value.trim()||config.hero_image||"";
+        if(form.elements.hero_file.files[0])hero=(await A.upload(form.elements.hero_file.files[0],"f90-images","banners")).url;
+        if(hero&&!/^https:\/\//.test(hero)&&!/^\.\/assets\//.test(hero))throw new Error("رابط بنر التعريف غير صالح");
+        const updated=await A.call("settings.save",{data:{...S.settings,config:{...config,special_services:next,show_intro:form.elements.show_intro.checked,hero_image:hero}}});
+        S.settings=updated;toast("تم تحديث الإعلانات");await catalogPage("banners");
+      }catch(err){toast(err.message||"تعذر الحفظ");}finally{button.disabled=false;}
+    };
+  }
   async function catalogPage(kind) {
     await catalogs();
     if (kind === "products" && S.providerFilter && S.providerFilter !== "__local__" && !(S.providers || []).some((p) => p.id === S.providerFilter)) {
@@ -706,6 +747,7 @@
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
     if (kind === "products" && S.productSearch) { document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const p = S.products.find(x => x.id === row.dataset.rowId); row.style.display = String(p?.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase()) ? "" : "none"; }); }
+    if(kind === "banners") specialBannerEditor();
   }
   let pendingBulk = null;
   let bulkBusy = false;
