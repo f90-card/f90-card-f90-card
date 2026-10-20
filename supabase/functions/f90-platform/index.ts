@@ -43,6 +43,7 @@ const roleNames = [
   "admin",
   "designer",
   "trader",
+  "charging_agent",
   "support",
   "amin_card",
 ];
@@ -201,7 +202,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
       const clientIP = req.headers.get("cf-connecting-ip")?.trim() || "";
       // Fail closed without a gateway-supplied client IP; reject spoofable x-real-ip fallback.
       if (!clientIP || !Array.isArray(api.allowed_ips) || !api.allowed_ips.includes(clientIP))
-        throw new AppError("F90_FORBIDDEN",403,"Request IP is not on this token's allowlist");
+        throw new AppError("F90_FORBIDDEN",403,"عنوان الخادم غير موجود ضمن العناوين المسموحة لهذا المفتاح");
     }
     userId = api.user_id;
   } else {
@@ -387,6 +388,14 @@ async function buildPublicCatalog() {
   const allowedProductIds = new Set(linked
     .filter((entry: any) => allowedProviderIds.has(entry.provider_id))
     .map((entry: any) => entry.product_id));
+  // Owner-managed manual services can be resold without a supplier mapping.
+  // Linked archived/disconnected suppliers retain their existing exclusion.
+  const explicitlyLinkedProductIds = new Set(linked.map((entry: any) => entry.product_id));
+  for (const product of products) {
+    if (!explicitlyLinkedProductIds.has(product.id) &&
+        (product.commerce?.fulfillment || "manual") === "manual")
+      allowedProductIds.add(product.id);
+  }
   const allowedCategoryIds = new Set<string>();
   const categoriesById = new Map(categories.map((entry:any)=>[entry.id,entry]));
   // These owner-managed categories and their manual products belong beside the
@@ -868,7 +877,7 @@ async function catalogSave(a: Actor, b: any) {
     slug: text(d.slug || old.slug || `${kind}-${crypto.randomUUID()}`, 250),
     image_url: text(d.image_url, 2000) || null,
     description: text(d.description, 10000),
-    is_active: d.is_active !== false,
+    is_active: typeof d.is_active === "boolean" ? d.is_active : (id ? old.is_active === true : true),
     sort_order: integer(d.sort_order ?? old.sort_order ?? 0, 0, 100000),
   };
   if (kind === "category") {
@@ -1207,6 +1216,26 @@ async function staff(a: Actor, b: any) {
       { request_id: id, kind: request.kind, status: request.status });
     return request;
   }
+  if (action === "staff.availability.set") {
+    requireRole(a,"manager");
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    const ids=Array.isArray(b.ids)?[...new Set(b.ids.map((v:unknown)=>uuid(v)))]:[];
+    if(!ids.length||ids.length>100)throw new AppError("F90_FIELDS",400,"اختر من 1 إلى 100 خدمة");
+    const state=String(b.availability||"");
+    if(!["available","refilling","automatic"].includes(state))throw new AppError("F90_FIELDS");
+    const list=check(await db.from("products").select("id,commerce").in("id",ids));
+    if(list.length!==ids.length)throw new AppError("F90_NOT_FOUND",404);
+    for(const p of list){
+      const c=p.commerce||{};
+      const override=state==="automatic"?null:state;
+      const supplier=c.supplier_refilling===true;
+      const availability=override||(supplier?"refilling":(c.supplier_previous_availability==="refilling"?"refilling":"available"));
+      const updated={...c,manual_availability_override:override,availability};
+      check(await db.from("products").update({commerce:updated}).eq("id",p.id).select("id").single());
+    }
+    await auditSafe(a.id,"catalog.availability.bulk","products",{ids,state});
+    return {saved:list.length,state};
+  }
   if (action === "staff.catalog") {
     requireRole(a, "manager", "designer");
     const rows = await Promise.all(
@@ -1234,7 +1263,7 @@ async function staff(a: Actor, b: any) {
     const linkedProductIds = new Set(internals.map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]).filter((p: any) => managedProductIds.has(p.id) ||
+      products: check(rows[1]).filter((p: any) => p.is_active === false || managedProductIds.has(p.id) ||
         (ownerCategoryIds.has(p.category_id) && !linkedProductIds.has(p.id))),
       banners: check(rows[2]),
       internal: a.role === "manager" ? internals.filter((i: any) => managedProviderIds.has(i.provider_id) || !i.provider_id) : [],
@@ -2019,7 +2048,7 @@ async function staff(a: Actor, b: any) {
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
-    const endpoint = adapter === "f90" ? "https://f90-card.github.io/f90-card-f90-card/" : text(b.endpoint, 2000);
+    const endpoint = adapter === "f90" ? "https://www.f90card.online/" : text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
       old.adapter !== adapter);
@@ -2476,6 +2505,7 @@ Deno.serve(async (req: Request) => {
       throw new AppError("F90_FIELDS");
     }
     const action = text(b.action, 80);
+    // Production financial actions enabled on explicit owner request, 2026-10-20.
     if (action === "worker" || action === "smm.catalog") {
       const token = req.headers.get("x-f90-worker");
       if (
@@ -2532,7 +2562,7 @@ Deno.serve(async (req: Request) => {
     if (action === "catalog" || action === "health")
       return out(
         action === "health"
-          ? { version: 3, checkout: "wallet" }
+          ? { version: 3, checkout: "wallet", status: "ready" }
           : await publicCatalog(),
       );
     // Start the provider availability check alongside authentication.
@@ -2613,7 +2643,7 @@ Deno.serve(async (req: Request) => {
     if (action === "categories") {
       scoped(a, "catalog");
       return out((await publicCatalog()).categories.map((c: any) => ({
-        id: c.id, name: c.name, parent_id: c.parent_id,
+        id: c.id, name: c.name, parent_id: c.parent_id, image_url: c.image_url || "", description: c.description || "",
       })));
     }
     if (action === "services" || action === "service") {
@@ -2629,6 +2659,10 @@ Deno.serve(async (req: Request) => {
       const items = (await publicCatalog()).products.map((p: any) => ({
           service: p.id,
           name: p.name,
+          description: p.description || "",
+          image_url: p.image_url || "",
+          gallery: Array.isArray(p.gallery) ? p.gallery : [],
+          currency: "USD",
           category: p.category_id,
           type: p.commerce.type || "fixed",
           rate:
@@ -2670,9 +2704,9 @@ Deno.serve(async (req: Request) => {
     if (action === "checkout" || action === "add") {
       scoped(a, "orders");
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
-      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
+      const purchaseConfig=check(await db.from("site_settings").select("config").eq("id",1).single()).config||{};
+      if(purchaseConfig.purchase_requires_verification===true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED",403,"يجب توثيق الحساب قبل الشراء.");
       const product = uuid(b.product_id || b.service);
-      await assertProviderAvailable(product);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const reference = paymentReference(b.idempotency_key);
       const requestedQuantity = integer(b.quantity || 1);
@@ -2696,6 +2730,8 @@ Deno.serve(async (req: Request) => {
             "هذا المرجع مرتبط بطلب آخر أو ببيانات عميل مختلفة. افتح الطلب السابق بدل تكرار الدفع.");
         return out(customerOrder(previous), 200);
       }
+      // Resolve existing paid references before checking current supplier availability.
+      await assertProviderAvailable(product);
       const expected =
         b.expected_total_usd ??
         (a.keyId
@@ -2827,7 +2863,8 @@ Deno.serve(async (req: Request) => {
     if (action === "deposit.submit") {
       const reference = paymentReference(b.idempotency_key);
       const verification = check(await db.from("profiles").select("is_verified,account_currency").eq("id", a.id).single());
-      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
+      const depositConfig = check(await db.from("site_settings").select("config").eq("id",1).single()).config || {};
+      if (depositConfig.deposit_requires_verification === true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       const method = text(b.method_id, 100);
       // The account preference stored in Postgres is the sole authority. A
       // modified browser payload cannot change the deposit currency.
@@ -2967,7 +3004,7 @@ Deno.serve(async (req: Request) => {
         .eq("is_active", true);
       if (count.error) throw count.error;
       if ((count.count || 0) >= 1 && !b.replace_existing)
-        throw new AppError("F90_FIELDS",409,"One active token per trader. Rotate or revoke the current token.");
+        throw new AppError("F90_FIELDS",409,"للتاجر مفتاح نشط واحد. دوّر المفتاح الحالي أو ألغِه أولًا.");
       const random = crypto.getRandomValues(new Uint8Array(32));
       const token =
         "f90_live_" +
