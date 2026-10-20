@@ -23,7 +23,7 @@ const insertion = `    const action = text(b.action, 80);
       "staff.salary.list", "staff.finance", "staff.providers",
     ]);
     if (!stageAllowed.has(action))
-      throw new AppError("F90_FORBIDDEN", 403, "نسخة النقل للقراءة فقط حتى اكتمال نقل العملاء والتحقق من العمليات");
+      throw new AppError("F90_MIGRATION_READONLY", 423, "نسخة النقل للقراءة فقط حتى اكتمال نقل العملاء والتحقق من العمليات");
 `;
 let guarded = replaceOnce(original, "    const action = text(b.action, 80);\n", insertion);
 guarded = replaceOnce(guarded,
