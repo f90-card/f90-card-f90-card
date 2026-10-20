@@ -104,6 +104,7 @@ document.addEventListener('click',async ev=>{
  }
  else if(button.dataset.removeImage){
  const path=space.id+'/'+button.dataset.removeImage;
+ if(role==='amin_card'&&(space.collaboration_image===path||banners.some(x=>x.image_path===path)))throw new Error('صور الإعلانات ولوغو التعاون تُدار بواسطة مدير الموقع فقط');
  const linked=space.collaboration_image===path||[...categories,...products,...banners].some(x=>x.image_path===path);
  if(!window.confirm(linked?'الصورة مستخدمة حاليًا. سيتم فصلها عن محتوى الأمين وحذفها. متابعة؟':'حذف الصورة نهائيًا؟'))return;
  busy=true;
