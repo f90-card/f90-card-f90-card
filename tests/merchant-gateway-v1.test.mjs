@@ -78,3 +78,18 @@ test("ambiguous upstream failure returns an error without an automatic retry", a
     assert.equal((await r.json()).error.code, "F90_UPSTREAM");
   } finally { globalThis.fetch = original; }
 });
+
+test("Arabic merchant guide and token view render safely with one canonical endpoint", async () => {
+  const source = await readFile(new URL("f90-merchant-v2.js", root), "utf8");
+  const window = {};
+  new Function("window", "document", source)(window, {addEventListener(){}});
+  const guide = window.F90MerchantViews.docs("https://wrong.example", '/logo.png');
+  assert.match(guide, /دليل التاجر وربط المتاجر/);
+  assert.ok(guide.includes("https://www.f90card.online/api/v1"));
+  assert.ok(!guide.includes("wrong.example"));
+  const tokenView = window.F90MerchantViews.tokens([], true, "/logo.png", "https://wrong.example");
+  assert.ok(tokenView.includes('id="keyForm"'));
+  assert.ok(tokenView.includes("https://www.f90card.online/api/v1"));
+  assert.ok(!tokenView.includes("wrong.example"));
+  assert.ok(!window.F90MerchantViews.docs("", '"><script>injected</script>').includes('"><script>injected</script>'));
+});
