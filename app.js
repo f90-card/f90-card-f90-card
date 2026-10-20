@@ -102,6 +102,12 @@
     $("modalRoot").innerHTML = "";
     document.body.style.overflow = "";
   }
+  let keyDisplayGeneration = 0;
+  function clearMerchantKey() {
+    keyDisplayGeneration++;
+    if ($("modalRoot")?.querySelector("[data-f90-api-secret]")) closeModal();
+  }
+  window.addEventListener("pagehide", clearMerchantKey);
   function toggleDrawer(open) {
     $("drawer").hidden = !open;
     $("drawerBackdrop").hidden = !open;
@@ -1785,6 +1791,7 @@
     );
   }
   async function route() {
+    clearMerchantKey();
     f90PriorityTileCount=0;
     const seq = ++S.route;
     const oldPromoVideo=main.querySelector(".f90-home-phone-video");
@@ -2341,6 +2348,7 @@
         toast("تم حفظ صلاحيات مفتاح التاجر");
         return;
       }
+      const creationScreen = keyDisplayGeneration;
       const key = await A.call("key.create", values);
       let apiTestMessage="لم يكتمل اختبار الاتصال؛ المفتاح أُنشئ ويمكن استخدامه من خادم متجرك.";
       try {
@@ -2357,10 +2365,14 @@
         } finally {clearTimeout(timeout);}
       } catch {apiTestMessage="المفتاح أنشئ بنجاح، لكن لم يُحسم اختبار الاتصال التلقائي.";}
       await refreshMe();
+      if (creationScreen !== keyDisplayGeneration) {
+        toast("أُنشئ المفتاح دون عرضه بعد مغادرة الصفحة. أنشئ بديلًا من صفحة مفاتيح التجار عند الحاجة.");
+        return;
+      }
       developers();
       modal(
         "احفظ مفتاح التاجر",
-        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
+        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><div class="key-token" data-f90-api-secret dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
       );
       return;
     }
