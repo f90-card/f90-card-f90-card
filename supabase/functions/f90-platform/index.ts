@@ -188,7 +188,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
         .maybeSingle(),
     );
     if (!api || (api.expires_at && Date.parse(api.expires_at) <= Date.now()))
-      throw new AppError("F90_AUTH");
+      throw new AppError("F90_AUTH", 401, "مفتاح التاجر غير صحيح أو ملغى أو منتهي الصلاحية");
     if (
       !(await rpc("f90_limit", {
         p_key: `key:${api.id}`,
@@ -263,7 +263,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
 }
 function scoped(a: Actor, scope: string) {
   if (a.keyId && !a.scopes?.includes(scope))
-    throw new AppError("F90_FORBIDDEN");
+    throw new AppError("F90_FORBIDDEN", 403, "مفتاح التاجر لا يملك صلاحية هذه العملية");
 }
 async function auditSafe(actorId: string, action: string, targetId: string, details: any) {
   try {
@@ -2787,8 +2787,9 @@ Deno.serve(async (req: Request) => {
           .select("*")
           .eq("id", uuid(b.id || b.order))
           .eq("user_id", a.id)
-          .single(),
+          .maybeSingle(),
       );
+      if (!o) throw new AppError("F90_NOT_FOUND");
       const events = check(
         await db
           .from("f90_order_events")
