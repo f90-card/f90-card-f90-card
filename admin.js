@@ -52,7 +52,7 @@
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
-    ["trader-commissions", "عمولات التجار", "wallet", ["manager"]],
+    ["trader-commissions", "عمولات وكلاء الشحن", "wallet", ["manager"]],
     ["amin-card", "الأمين كارد", "grid", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
