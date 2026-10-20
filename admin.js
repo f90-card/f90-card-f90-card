@@ -52,7 +52,7 @@
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
-    ["trader-commissions", "عمولات وكلاء الشحن", "wallet", ["manager"]],
+    ["trader-commissions", "وكلاء الموقع", "wallet", ["manager"]],
     ["amin-card", "الأمين كارد", "grid", ["manager", "admin"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
@@ -180,7 +180,7 @@
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
       ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit"]],
-      ["العملاء والتجار",["users","traders","agents","leaderboard"]],
+      ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
       ["المظهر والمحتوى",["content-text","content-images","content-links","content-backgrounds","content-branding","design-center","promotions","notifications","policies","settings"]],
