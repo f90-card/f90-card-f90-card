@@ -50,6 +50,17 @@
 - Both custom domains registered in Pages remain pending, because apex A record still points to `76.76.21.21` and www CNAME to `cname.vercel-dns.com`. **DNS and Vercel were not changed**: preserve functioning storefront until independently validated production release can replace it.
 - Admin edit acceptance has been confirmed by the owner; authenticated live purchase/deposit have not been tested and are explicitly deferred by the owner. Remaining production gates must be truthfully checked or explicitly safely gated.
 
+
+## Production launch and DNS switch — 2026-10-20
+
+- Owner approved publication before authenticated purchase/deposit testing, conditional upon financial writes remaining unavailable until tested.
+- New Supabase `f90-platform` **v15 ACTIVE** blocks `checkout`, reseller `add`, and `deposit.submit` server-side (HTTP 423), preserving admin actions. This is a temporary safety gate, not a passed payment test.
+- Actual Cloudflare production release report `migration/release-acceptance.json` committed `969ba585a62d88eaa8312fd3fe66e67002c040df`; production deployment `db0ee699-f40a-4557-ae9b-ccd61646a68a` **built and deployed successfully**. This is a released but financially gated storefront.
+- Cloudflare zone DNS: `f90card.online` and `www.f90card.online` now each have proxied CNAME to `f90-card-acceptance.pages.dev`. Both changed from Vercel on owner authorization. Mail/Google TXT/MX records left alone.
+- Pages ownership verification became **active** for both domains; `validation_data.status=pending` (HTTPS certificate challenge) and full custom-domain status remains `pending` at last readback. Do not claim HTTPS/domain routing verified yet. Live HTTP check from this runtime could not resolve hostnames, so was inconclusive.
+- Old Vercel deployment and domain attachments are retained as rollback; no deletion or old-site data removal.
+- **Remaining:** confirm Cloudflare domain status becomes active and live HTTPS requests succeed on both hostnames; verify content/backend and post-publication checkout/deposit under owner's supervision, then remove temporary financial lock deliberately. Historical mail queue still must not replay.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
