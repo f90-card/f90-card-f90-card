@@ -1070,9 +1070,7 @@
     } else {
       main.innerHTML = productHtml;
     }
-    const quantityRow=$("checkoutForm")?.querySelector('[name="quantity"]:not([type="hidden"])')?.closest('.f90-visa-inputrow');
-    const totalBox=$("checkoutForm")?.querySelector('.f90-premium-summary');
-    if(quantityRow && totalBox){quantityRow.classList.add('f90-quantity-with-price');quantityRow.appendChild(totalBox);}
+    // Keep the live price alongside quantity in the grid, rather than nesting a second card in the input.
     if (S.me) loadCheckoutRecipients($("checkoutForm"));
     if (!disabled) quoteProduct(p);
     else
