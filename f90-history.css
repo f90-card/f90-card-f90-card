@@ -57,3 +57,6 @@
 #f90HistoryView .f90-history-entry{padding:12px 11px;gap:8px}
 #f90HistoryView .f90-history-entry .record-image{width:41px;height:41px;min-width:41px}
 }
+
+/* Compact live order duration next to the order summary title. */
+.f90-order-elapsed{margin:4px 0 6px;display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 36%,var(--line));border-radius:12px;padding:5px 9px;font-size:.86rem;direction:rtl;font-variant-numeric:tabular-nums;white-space:nowrap;background:color-mix(in srgb,var(--surface) 85%,var(--accent))}
