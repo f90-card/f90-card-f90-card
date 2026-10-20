@@ -42,6 +42,7 @@
     authSignOutTimer,
     toastTimer,
     bannerTimer,
+    introTimer,
     quoteTimer,
     orderPollTimer,
     orderSecondsTimer,
@@ -714,7 +715,7 @@
  ${window.F90Special?.home(S.settings) || ''}
 
  ${window.F90Partners?.aboveIntro() || ''}
- ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
+ ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img class="f90-intro-carousel-image" src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -737,6 +738,20 @@
        `<div class="value-item">${I(i)}<div><strong>${t}</strong><small>${s}</small></div></div>`,
    )
    .join("")}</div>`;
+    // Independent introduction rotator; never changes the main ad carousel.
+    clearInterval(introTimer);
+    const introImage=main.querySelector('.f90-intro-carousel-image');
+    const introSources=[c.welcome?.image_url,c.hero_image,...(Array.isArray(c.intro_banner_images)?c.intro_banner_images:[])]
+      .map(v=>C.safeUrl(v)).filter((v,i,all)=>v&&all.indexOf(v)===i);
+    if(introImage&&introSources.length>1){
+      let introIndex=Math.max(0,introSources.indexOf(introImage.src));
+      introTimer=setInterval(()=>{
+        if(!introImage.isConnected){clearInterval(introTimer);return;}
+        introIndex=(introIndex+1)%introSources.length;
+        introImage.style.opacity='0.2';
+        setTimeout(()=>{if(introImage.isConnected){introImage.src=introSources[introIndex];introImage.style.opacity='1';}},280);
+      },6500);
+    }
     // Partner ads share the existing secondary banner carousel; never the main hero.
     const partnerStrip=main.querySelector('.f90-special-ad-strip');
     for(const banner of (window.F90Partners?.secondaryBanners()||[])){
@@ -1764,6 +1779,7 @@
     const ticker=$("promotionBar");
     if(ticker && ticker.parentElement===main)main.parentElement.insertBefore(ticker,main);
     clearInterval(bannerTimer);
+    clearInterval(introTimer);
     clearInterval(maintenanceTimer);
     document.body.classList.remove("f90-in-maintenance");
     clearTimeout(quoteTimer);
