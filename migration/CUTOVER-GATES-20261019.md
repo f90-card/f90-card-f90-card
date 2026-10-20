@@ -18,6 +18,13 @@
 - Cloudflare Pages custom domains f90card.online and www.f90card.online were registered but remain pending; DNS continues pointing to Vercel. The existing Cloudflare acceptance Pages build still builds in acceptance/noindex mode, and production release report is not present. Do not promote the acceptance build or claim official cutover.
 - Owner explicitly defers live purchase/deposit tests until after publication; that decision does not authorize fabrication of production acceptance evidence.
 
+
+## 2026-10-20 verification: exact products and roles
+
+- **Products:** exact source/new database id-and-price comparison confirms 601/601 rows matched and zero price differences (not merely matching row counts). This closes the earlier 61-row *public product price* delta, although other pricing/settings classes require their own comparison.
+- **Customer permission integrity:** all 22 source profiles match their target counterpart exactly for f90_user_roles.role and profiles.account_status. The single banned account is banned in both source and target, so it must not be unbanned as a migration fix. One additional stage-only target profile remains.
+- **Cloudflare project is not production-ready:** its Git source settings have deployments_enabled=false and production_deployments_enabled=false; latest deployment is the acceptance build. The build script defaults to acceptance and injects noindex; production mode requires a time-limited independently verified release report. Neither project domain is yet verified. Do not change DNS to serve a noindex acceptance build.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
