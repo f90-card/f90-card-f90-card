@@ -168,6 +168,28 @@ export async function callProvider(
       throw new ProviderError("عملية F90 غير مدعومة");
     if (action === "add" && f90SelfEndpoint(u.href))
       throw new ProviderError("ربط المتجر بنفسه للفحص والاستيراد كمسودات فقط؛ الطلبات الآلية لنفس المتجر ممنوعة");
+    const useGet=provider.config?.f90_transport==="get";
+    const requestGET=async (path, searchParams=null) => {
+      const url=new URL(path,u.origin);
+      if(searchParams)for(const [name,value] of Object.entries(searchParams))url.searchParams.set(name,String(value));
+      let response,data,raw;
+      try{
+        response=await fetcher(url,{method:"GET",redirect:"manual",
+          headers:{Accept:"application/json","api-token":key},
+          signal:AbortSignal.timeout(timeout)});
+        raw=await response.text();
+      }catch{throw new ProviderError("تعذّر الاتصال بواجهة F90 GET");}
+      if(raw.length>15000000)throw new ProviderError("استجابة F90 GET كبيرة جدًا");
+      try{data=JSON.parse(raw)}catch{throw new ProviderError("استجابة F90 GET ليست JSON صالحًا")}
+      if(!response.ok||data?.error){
+        const code=String(data?.error?.code||"");
+        if(code==="F90_AUTH")throw new ProviderError("مفتاح التاجر غير صحيح أو ملغى");
+        if(code==="F90_FORBIDDEN")throw new ProviderError("صلاحيات حساب التاجر غير كافية");
+        throw new ProviderError("رفضت واجهة F90 GET الطلب");
+      }
+      if(!Object.hasOwn(data||{},"data"))throw new ProviderError("استجابة F90 GET لا تحتوي على data");
+      return data.data;
+    };
     const request = async (payload, write = false) => {
       let response, raw, data;
       try {
@@ -193,17 +215,25 @@ export async function callProvider(
       return data.data;
     };
     if (action === "services") {
+      if(useGet){
+        const result=await requestGET("/client/api/products");
+        const items=result?.products;
+        if(!Array.isArray(items))throw new ProviderError("قائمة F90 GET غير صالحة");
+        return items.map(item=>({...item,_f90_merchant:true}));
+      }
       const [items, categories] = await Promise.all([request({ action }), request({ action: "categories" })]);
       if (!Array.isArray(items) || !Array.isArray(categories)) throw new ProviderError("كتالوج F90 غير صالح");
       const names = new Map(categories.map(c => [c.id, c.name]));
-      return items.map(s => ({ ...s, _f90_merchant: true, category_name: names.get(s.category) || s.category }));
+      return items.map(item => ({ ...item, _f90_merchant: true, category_name: names.get(item.category) || item.category }));
     }
-    if (action === "balance") return request({ action });
+    if (action === "balance") return useGet?requestGET("/client/api/profile"):request({ action });
     if (action === "status") {
-      const data = await request({ action, order: args.order });
-      if (!data?.order?.id || typeof data.order.status !== "string")
-        throw new ProviderError("حالة طلب F90 غير واضحة");
-      return { ...data.order, status: data.order.status === "refunded" ? "failed" : data.order.status };
+      const data=useGet
+        ? (await requestGET("/client/api/check",{orders:JSON.stringify([args.order])}))?.[0]
+        : (await request({ action, order: args.order }))?.order;
+      if(!data?.id&&!data?.order_id)throw new ProviderError("حالة طلب F90 غير واضحة");
+      if(typeof data.status!=="string")throw new ProviderError("نتيجة حالة F90 غير صالحة");
+      return {...data,status:data.status==="refunded"?"failed":data.status};
     }
     if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(String(args.client_reference || "")) ||
         !Number.isSafeInteger(Number(args.quantity)) || Number(args.quantity) < 1 ||
