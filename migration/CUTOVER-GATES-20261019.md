@@ -32,6 +32,15 @@
 - Owner still defers live purchase and deposit acceptance until after launch. Do not mark those tests as passed.
 - Production build, independent release report, DNS cutover, and mail cutover are not yet verified by this confirmation.
 
+
+## Production publish recheck — 2026-10-20
+
+- Cloudflare Pages project `f90-card-acceptance` production mode env `F90_BUILD_MODE=production` and production deployment webhook enabled; last deployed revision remains acceptance deployment `399df7f6-fde1-45df-9553-32154700ccf8`.
+- Custom domains `f90card.online` and `www.f90card.online` remain pending and both DNS entries continue pointing to Vercel; no cutover performed.
+- `migration/release-acceptance.json` remains absent. No attested production build or full post-deploy auth/checkout/deposit test exists; do not claim production published.
+- Latest independent count parity readback: source/target 601 products, 29 orders, 10 deposits, 58 ledger entries. Old Yassen/order cron jobs 0 active; new 3 active.
+- The owner successfully edited via the target admin UI, but this does not by itself certify every release gate.
+
 ## Current verified checkpoint — 2026-10-19 18:51 UTC
 
 Latest aggregate readback also confirmed 29 orders, 58 ledger rows, 10 deposits in each system, 22/22 wallet balances matched, zero in-flight orders in either system, old jobs enabled and target jobs disabled.
