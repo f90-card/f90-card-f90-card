@@ -2,7 +2,7 @@
 'use strict';
 const db=window.f90Supabase,C=window.F90Core,e=C.escapeHTML;
 const $=id=>document.getElementById(id),message=$('partnerMessage'),main=$('partnerMain'),controls=$('partnerControls');
-let spaces=[],space=null,categories=[],products=[],banners=[],usage={},page='products',busy=false;
+let spaces=[],space=null,categories=[],products=[],banners=[],usage={},page='products',busy=false,role='';
 const tables={categories:'f90_partner_categories',products:'f90_partner_products',banners:'f90_partner_banners'};
 function check(r){if(r.error)throw new Error(r.error.message);return r.data;}
 function field(name,label,value='',type='text',attrs=''){return `<label class="field"><span>${e(label)}</span><input name="${e(name)}" type="${type}" value="${e(value)}" ${attrs}></label>`;}
@@ -15,7 +15,7 @@ async function read(){
 function navigation(){
  controls.innerHTML=(spaces.length>1?`<label class="field"><span>المساحة</span><select id="partnerSpace">${spaces.map(s=>`<option value="${s.id}" ${s.id===space.id?'selected':''}>${e(s.name)}</option>`).join('')}</select></label>`:'')+
  `<div class="partner-stats"><label>الصور: ${(Number(usage.used_bytes)/1048576).toFixed(1)} / 200 ميجابايت<progress max="${usage.limit_bytes}" value="${usage.used_bytes}"></progress></label><span>خدمات فعّالة: ${usage.active_products}</span><span>خدمات متوقفة: ${usage.inactive_products}</span></div>`+
- `<nav class="partner-tabs">${[['products','الخدمات'],['categories','الأقسام'],['banners','الإعلانات'],['settings','التواصل والتعاون'],['media','الصور']].map(([key,title])=>`<button type="button" data-page="${key}" class="button ${page===key?'':'secondary'}">${title}</button>`).join('')}</nav>`;
+ `<nav class="partner-tabs">${[['products','الخدمات'],['categories','الأقسام'],...(role==='manager'||role==='admin'?[['banners','إعلانات F90 الخاصة بالأمين']]:[]),['settings','التواصل'],['media','الصور']].map(([key,title])=>`<button type="button" data-page="${key}" class="button ${page===key?'':'secondary'}">${title}</button>`).join('')}</nav>`;
  $('partnerSpace')?.addEventListener('change',async ev=>{space=spaces.find(s=>s.id===ev.target.value);await refresh();});
 }
 async function refresh(){await read();navigation();await render();}
@@ -38,6 +38,7 @@ async function render(){
  main.innerHTML=`<form id="partnerSettings"><h2>التواصل والتعاون</h2>${field('name','اسم المساحة',space.name,'text','required maxlength="100"')}<label class="check-field"><input name="is_active" type="checkbox" ${space.is_active?'checked':''}>عرض المساحة للجمهور</label><h3>لوغو التعاون</h3><p>يظهر لوغو واحد بدون نصوص أو روابط، أسفل البنرات وفوق التعريف بـF90 CARD.</p>${imageField(space.collaboration_image)}<h3>تواصل مع الأمين كارد</h3><p>أضف رابطًا أو بريدًا أو رقمًا في كل سطر، بهذا الشكل: واتساب | https://wa.me/962...</p><label class="field"><span>روابط التواصل</span><textarea name="contacts" rows="8" maxlength="12000">${e((space.contacts||[]).map(x=>x.label+' | '+x.url).join('\n'))}</textarea></label><button class="button" type="submit">حفظ</button></form>`;
  $('partnerSettings').onsubmit=saveSettings;return;
  }
+ if(page==='banners'&&!['manager','admin'].includes(role)){main.textContent='إدارة البنرات متاحة لمدير الموقع فقط';return;}
  if(page==='media'){
  const list=check(await db.storage.from('f90-partner-images').list(space.id,{limit:1000,sortBy:{column:'name',order:'asc'}}));
  main.innerHTML='<h2>إدارة صور الأمين كارد</h2><p>يمكن حذف الصورة حتى لو كانت مرتبطة بخدمة أو قسم أو بنر، وسيتم فصلها عنه بعد التأكيد.</p><div class="partner-media-grid">'+list.filter(x=>x.id).map(x=>`<article><img class="partner-thumb" src="${e(img(space.id+'/'+x.name))}" alt="صورة مرفوعة"><small>${(Number(x.metadata?.size||0)/1048576).toFixed(2)} MB</small><button type="button" class="button secondary" data-remove-image="${e(x.name)}">حذف الصورة</button></article>`).join('')+'</div>';return;
@@ -117,7 +118,7 @@ try{
  if(!db)throw new Error('تعذّر تحميل اتصال المتجر');
  const session=check(await db.auth.getSession())?.session;
  if(!session){main.innerHTML='<p>سجّل الدخول إلى حسابك لفتح لوحة الأمين كارد.</p><a class="button" href="./#/auth">تسجيل الدخول</a>';return;}
- const role=check(await db.from('f90_user_roles').select('role').eq('user_id',session.user.id).single()).role;
+ role=check(await db.from('f90_user_roles').select('role').eq('user_id',session.user.id).single()).role;
  if(!['manager','admin','amin_card'].includes(role))throw new Error('هذه اللوحة مخصصة للأمين كارد وإدارة المتجر');
  spaces=check(await db.from('f90_partner_spaces').select('*').order('created_at'));
  if(role==='amin_card')spaces=spaces.filter(s=>s.owner_id===session.user.id);
