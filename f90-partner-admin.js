@@ -40,7 +40,7 @@ async function render(){
  }
  if(page==='media'){
  const list=check(await db.storage.from('f90-partner-images').list(space.id,{limit:1000,sortBy:{column:'name',order:'asc'}}));
- main.innerHTML='<h2>الصور</h2><p>يمكن إزالة الصور غير المستخدمة لإتاحة مساحة.</p><div class="partner-media-grid">'+list.filter(x=>x.id).map(x=>`<article><img class="partner-thumb" src="${e(img(space.id+'/'+x.name))}" alt="صورة مرفوعة"><small>${(Number(x.metadata?.size||0)/1048576).toFixed(2)} MB</small><button type="button" class="button secondary" data-remove-image="${e(x.name)}">إزالة صورة غير مستخدمة</button></article>`).join('')+'</div>';return;
+ main.innerHTML='<h2>إدارة صور الأمين كارد</h2><p>يمكن حذف الصورة حتى لو كانت مرتبطة بخدمة أو قسم أو بنر، وسيتم فصلها عنه بعد التأكيد.</p><div class="partner-media-grid">'+list.filter(x=>x.id).map(x=>`<article><img class="partner-thumb" src="${e(img(space.id+'/'+x.name))}" alt="صورة مرفوعة"><small>${(Number(x.metadata?.size||0)/1048576).toFixed(2)} MB</small><button type="button" class="button secondary" data-remove-image="${e(x.name)}">حذف الصورة</button></article>`).join('')+'</div>';return;
  }
  const rows={categories,products,banners}[page];
  main.innerHTML=`<div class="section-head"><h2>${{categories:'أقسام الأمين كارد',products:'خدمات الأمين كارد',banners:'إعلانات الأمين كارد'}[page]}</h2><button type="button" class="button" data-new>إضافة</button></div>`+
@@ -102,8 +102,14 @@ document.addEventListener('click',async ev=>{
  }
  else if(button.dataset.removeImage){
  const path=space.id+'/'+button.dataset.removeImage;
- if([space.collaboration_image,...categories.map(x=>x.image_path),...products.map(x=>x.image_path),...banners.map(x=>x.image_path)].includes(path))throw new Error('الصورة مرتبطة بمحتوى حالي. غيّر صورته أولًا.');
- check(await db.storage.from('f90-partner-images').remove([path]));await refresh();
+ const linked=space.collaboration_image===path||[...categories,...products,...banners].some(x=>x.image_path===path);
+ if(!window.confirm(linked?'الصورة مستخدمة حاليًا. سيتم فصلها عن محتوى الأمين وحذفها. متابعة؟':'حذف الصورة نهائيًا؟'))return;
+ busy=true;
+ try{
+ if(space.collaboration_image===path){check(await db.from('f90_partner_spaces').update({collaboration_image:null}).eq('id',space.id).select('id').single());space.collaboration_image=null;}
+ for(const [kind,rows] of Object.entries({categories,products,banners})){for(const row of rows.filter(x=>x.image_path===path)){check(await db.from(tables[kind]).update({image_path:null}).eq('id',row.id).eq('space_id',space.id).select('id').single());}}
+ check(await db.storage.from('f90-partner-images').remove([path]));say('تم حذف الصورة');await refresh();
+ }finally{busy=false;}
  }
  }catch(err){say(err.message);}
 });
