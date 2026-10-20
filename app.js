@@ -43,6 +43,8 @@
     toastTimer,
     bannerTimer,
     quoteTimer,
+    orderPollTimer,
+    orderSecondsTimer,
     maintenanceTimer,
     installPrompt,
     promoTimers = [],
@@ -1617,15 +1619,25 @@
       '<button class="button secondary small" data-action="order-pdf">'+I("download")+' تنزيل PDF</button>')+
       '<div class="f90-order-summary-layout"><section class="panel f90-order-summary-card">'+
       '<div class="f90-order-summary-heading"><img src="'+e(C.safeUrl(S.settings.logo_url||"./f90-logo.png")||"./f90-logo.png")+'" alt="F90 CARD" loading="lazy">'+
-      '<div><h2>ملخص الطلب</h2>'+customerOrderStatus(o.status)+'</div></div>'+
+      '<div><h2>ملخص الطلب</h2><p id="f90OrderSeconds" class="f90-order-elapsed" aria-live="off">مدة التنفيذ: جارٍ الحساب…</p>'+customerOrderStatus(o.status)+'</div></div>'+
       '<div class="f90-order-summary-rows">'+rows+'</div>'+
       (Number(o.refunded_usd)>0?'<p class="notice success">قيمة مستردة: '+e(accountMoney(o.refunded_usd))+'</p>':"")+
       more+'<div class="f90-order-summary-actions">'+
-      '<button class="button secondary small" data-action="refresh-route">تحديث حالة الطلب</button>'+
+      ''+
       supportLink("مساعدة في الطلب "+o.order_number)+'</div></section>'+
-      '<details class="panel f90-order-secondary"><summary>متابعة التنفيذ أو طلب المساعدة</summary>'+
+      '<details class="panel f90-order-secondary"><summary>متابعة الطلب أو تقديم اعتراض</summary>'+
       '<h3>حالة التنفيذ</h3><div class="timeline">'+eventsHtml+'</div>'+requestPanel+
       '</details></div>';
+    const startedAt=Date.parse(o.started_at||o.created_at)||Date.now();
+    const terminal=['completed','partial','failed','rejected','refunded','cancelled','canceled'].includes(o.status);
+    const finalAt=terminal?(Date.parse(o.completed_at||o.updated_at)||Date.now()):null;
+    const seconds=()=>Math.max(0,Math.floor(((finalAt||Date.now())-startedAt)/1000));
+    const label=$("f90OrderSeconds");
+    const updateSeconds=()=>{if(label?.isConnected)label.textContent='مدة التنفيذ: '+new Intl.NumberFormat('ar').format(seconds())+' ثانية';};
+    clearInterval(orderSecondsTimer);updateSeconds();
+    if(!terminal)orderSecondsTimer=setInterval(updateSeconds,1000);
+    clearTimeout(orderPollTimer);
+    if(!terminal)orderPollTimer=setTimeout(()=>{if(S.route===seq&&main.dataset.page==='order')order(id).catch(()=>{});},12000);
   }
   function vip() {
     const me = S.me,
@@ -1755,6 +1767,8 @@
     clearInterval(maintenanceTimer);
     document.body.classList.remove("f90-in-maintenance");
     clearTimeout(quoteTimer);
+    clearTimeout(orderPollTimer);
+    clearInterval(orderSecondsTimer);
     f90CategoryAvailability.clear();
     f90CategoryById.clear();
     closeQuickProduct();
