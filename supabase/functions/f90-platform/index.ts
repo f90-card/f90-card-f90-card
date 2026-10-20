@@ -4,6 +4,7 @@ import { recipientNameFromSupplier } from "./recipient-name.mjs";
 import {
   callProvider,
   endpointURL,
+  f90SelfEndpoint,
   normalizeService,
   normalizeStatus,
   recoveryRedirect,
@@ -718,6 +719,9 @@ async function work() {
           quantity: o.quantity,
           link,
           client_reference: o.id,
+          ...(currentProvider.adapter === "f90_merchant" ? {
+            fields: o.customer_fields, expected_total_usd: o.cost_usd,
+          } : {}),
           params,
           ...(o.customer_fields.comments
             ? { comments: o.customer_fields.comments }
@@ -2040,7 +2044,7 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
-    const adapter = ["f90", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    const adapter = ["f90", "f90_merchant", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
     if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
@@ -2062,6 +2066,10 @@ async function staff(a: Actor, b: any) {
     const autoOrders = adapter === "f90" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
+    if (adapter === "f90_merchant" && currency !== "USD")
+      throw new AppError("F90_FIELDS", 400, "عملة API تجار F90 هي USD؛ اختر الدولار");
+    if (autoOrders && adapter === "f90_merchant" && f90SelfEndpoint(endpoint))
+      throw new AppError("F90_FIELDS", 400, "ربط المتجر بنفسه للفحص والاستيراد كمسودات فقط؛ أوقف الطلبات الآلية");
     if (autoOrders && adapter === "omega")
       throw new AppError("F90_FIELDS", 400, "أوميغا متاح للقراءة فقط حاليًا");
     const d = {
@@ -2292,20 +2300,24 @@ async function staff(a: Actor, b: any) {
           } : {}),
           category_id: chosenCategoryId,
           is_active: false,
-          image_url: b.image_url || "",
+          image_url: b.image_url || s.image_url || "",
+          ...(p.adapter === "f90_merchant" ? { description: s.description || "" } : {}),
           commerce: {
-            type: "quantity",
+            type: p.adapter === "f90_merchant" && s.type !== "quantity" ? "fixed" : "quantity",
+            ...(p.adapter === "f90_merchant" ? {
+              availability: s.availability, pack_quantity: s.pack_quantity,
+            } : {}),
             fulfillment: p.config?.automatic_orders_enabled === true &&
               !s.allowed_quantities && p.adapter !== "omega" ? "automatic" : "manual",
             prices: { USD: price },
             unit_quantity: s.unit_quantity,
             quantity_min: s.min,
             quantity_max: s.max,
-            quantity_step: s.allowed_quantities?.length > 1 &&
+            quantity_step: p.adapter === "f90_merchant" ? s.quantity_step : s.allowed_quantities?.length > 1 &&
               s.allowed_quantities.every((v: number, i: number, ar: number[]) =>
                 i === 0 || v - ar[i - 1] === ar[1] - ar[0])
               ? s.allowed_quantities[1] - s.allowed_quantities[0] : 1,
-            fields: s.params?.length
+            fields: p.adapter === "f90_merchant" ? s.fields : s.params?.length
               ? s.params.map((label: string, i: number) => ({
                   id: "param_" + (i + 1),
                   label_ar: label,
