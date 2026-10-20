@@ -2044,7 +2044,8 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
-    const adapter = ["f90", "f90_merchant", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    const adapter = b.adapter === "f90_merchant_get" ? "f90_merchant" :
+      ["f90", "f90_merchant", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
     if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
@@ -2057,8 +2058,13 @@ async function staff(a: Actor, b: any) {
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
     const endpoint = adapter === "f90" ? "https://www.f90card.online/" : text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
+    const f90Transport = adapter === "f90_merchant"
+      ? b.adapter === "f90_merchant_get" || b.f90_transport === "get" ? "get"
+        : b.f90_transport === "post" ? "post" : old?.config?.f90_transport === "get" ? "get" : "post"
+      : null;
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
-      old.adapter !== adapter);
+      old.adapter !== adapter || (adapter === "f90_merchant" &&
+        (old.config?.f90_transport || "post") !== f90Transport));
     if (old && old.currency !== currency)
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
     if (connectionChanged && !b.token && adapter !== "f90")
@@ -2084,6 +2090,7 @@ async function staff(a: Actor, b: any) {
       config: {
         ...(old?.config || {}),
         request_timeout_ms: integer(b.request_timeout_ms ?? old?.config?.request_timeout_ms ?? 20000, 5000, 30000),
+        ...(adapter === "f90_merchant" ? { f90_transport: f90Transport } : {}),
         automatic_orders_enabled: autoOrders,
       },
     };
