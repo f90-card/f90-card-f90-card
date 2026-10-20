@@ -2098,7 +2098,7 @@
         await mfaChallenge();
         return;
       }
-      if (!S.me.profile?.is_verified) {
+      if (S.settings?.config?.purchase_requires_verification===true && !S.me.profile?.is_verified) {
         modal("توثيق الحساب مطلوب", `<p>يلزم توثيق حسابك وموافقة الإدارة قبل تنفيذ الشراء.</p><a class="button" href="#/verification">انتقل إلى توثيق الهوية</a>`);
         return;
       }
@@ -2109,7 +2109,7 @@
         chrome();
         if (!refreshed)
           throw new Error("تعذّر تحديث المحفظة. تأكد من اتصالك وحاول مجددًا قبل إجراء شراء جديد.");
-        if (!S.me?.profile?.is_verified)
+        if (S.settings?.config?.purchase_requires_verification===true && !S.me?.profile?.is_verified)
           throw new Error("يلزم توثيق الحساب قبل إجراء الشراء.");
       }
       if (Number(S.me.wallet.balance_usd) < Number(S.quote.total_usd))
