@@ -10,6 +10,7 @@
     admin: "مسؤول المتابعة",
     designer: "مصمم",
     trader: "تاجر",
+    charging_agent: "وكيل شحن",
     support: "الدعم الفني",
     amin_card: "الأمين كارد",
   };
