@@ -4,16 +4,18 @@ import {resolve,dirname} from 'node:path';
 const root=resolve('dist-f90-media');
 const manifest=JSON.parse(await readFile('migration/authentic-originals-20261020.json','utf8'));
 if(manifest.version!==1||manifest.assets.length>150)throw Error('Invalid authentic image manifest');
-const approved=/^(?:play-lh\.googleusercontent\.com|lh3\.googleusercontent\.com|is\d+-ssl\.mzstatic\.com|store\.storeimages\.cdn-apple\.com|tether\.to|www\.jopacc\.com)$/;
+const approved=/^(?:play-lh\.googleusercontent\.com|lh3\.googleusercontent\.com|is\d+-ssl\.mzstatic\.com|store\.storeimages\.cdn-apple\.com|tether\.to|www\.jopacc\.com|www\.mastercard\.com|upload\.wikimedia\.org|flagcdn\.com|www\.f90card\.online)$/;
 const assets=[],skipped=[];
 let cursor=0;
 await Promise.all(Array.from({length:6},async()=>{
  while(cursor<manifest.assets.length){
   const e=manifest.assets[cursor++];
   try{
-   const u=new URL(e.url);
-   if(u.protocol!=='https:'||!approved.test(u.hostname)||! /^[a-f0-9-]{36}$/.test(e.id))throw Error('Unapproved image source');
-   const r=await fetch(u,{signal:AbortSignal.timeout(25000)});
+   if(e.local_file && e.local_file!=='assets/originals/vodafone-official.svg')throw Error('Unapproved local image');
+   const u=e.local_file?null:new URL(e.url);
+   if((u&&(u.protocol!=='https:'||!approved.test(u.hostname)))||! /^[a-f0-9-]{36}$/.test(e.id))throw Error('Unapproved image source');
+   const local=e.local_file?await readFile(e.local_file):null;
+   const r=local?new Response(local,{headers:{'content-type':'image/svg+xml'}}):await fetch(u,{signal:AbortSignal.timeout(25000)});
    if(!r.ok)throw Error('Source returned '+r.status);
    const mime=(r.headers.get('content-type')||'').split(';')[0];
    const ext=({'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/avif':'avif','image/gif':'gif','image/svg+xml':'svg'})[mime];

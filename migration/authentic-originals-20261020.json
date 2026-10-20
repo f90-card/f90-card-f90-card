@@ -595,6 +595,125 @@
         "25f1cfcd-0b1b-4642-8b4a-462b0282daa1",
         "17b73865-8476-4ca0-8851-9d1392907afb"
       ]
+    },
+    {
+      "key": "Allo",
+      "id": "a751ac05-2493-562d-bfa2-0f8fd7c0c537",
+      "url": "https://lh3.googleusercontent.com/9cGY0sMdbinrKpiLlhKgnUhZfHCg2yR9H90Cv7gmw5SaZ0ufr_s4bN3MSzO37vns5iMutDRiFGe1HXCHEIgc8oCL5PCkbmAkT7RV",
+      "source_page": "https://www.appbrain.com/app/allo-group-voice-chat-game/com.live.allo",
+      "product_ids": [
+        "d441c760-323e-4bf3-8d02-ee3603a17eee"
+      ]
+    },
+    {
+      "key": "TiLive",
+      "id": "0a373a71-66ae-501a-8161-99ef0a2d014e",
+      "url": "https://play-lh.googleusercontent.com/H292maHMFtmQSTKhwoP3fEgA0aVnZoCidACfYNQ-og_MXFSnmQwEtKpYHOEvEOqEZ6j3Fk41NBypaa2V__4Z=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.ti.live.stream&hl=en",
+      "product_ids": [
+        "410d1927-3bc8-4d48-910d-b977cea4a37f"
+      ]
+    },
+    {
+      "key": "Doli",
+      "id": "e74b658d-db02-5e76-90ef-befb72b2ddac",
+      "url": "https://play-lh.googleusercontent.com/28bK7-UK_cxbQuNoYaI_hxVP4cCUgRepIjKv-IwzhDozp7DMJcoV6xQd2AeP7_bZHHpZVLgioxG6HFSqUKR_vg=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.dolilive&hl=en",
+      "product_ids": [
+        "0ee1b4b8-cdd8-4498-95ca-7e99eb564582"
+      ]
+    },
+    {
+      "key": "Mastercard",
+      "id": "27c4285f-5f40-5eb0-9b9f-27107171b170",
+      "url": "https://www.mastercard.com/news/media/jbcmoato/mastercard-symbol_transparentbg.png",
+      "source_page": "https://www.mastercard.com/news/press/media-resources/",
+      "product_ids": []
+    },
+    {
+      "key": "GoMeet",
+      "id": "345c2e5c-f40c-5b8c-8e30-91384b21b68e",
+      "url": "https://play-lh.googleusercontent.com/XvMwOuecl4Bn9L0BehYMzdYi20-0TY8DBJVVJKCbVPXKnJg7P6hh0LIix9trWuszI_IAo-6zNazY8LCYSj7-DA=s0-br30",
+      "source_page": "https://play.google.com/store/apps/details?id=com.chat.live.gomeettoday&hl=en",
+      "product_ids": [
+        "96ee70b6-a7af-4644-8a02-0baa1289bfb6",
+        "ba02dd10-9ef1-475a-a97d-a2de5ece8d62"
+      ]
+    },
+    {
+      "key": "Perfect Money",
+      "id": "37134ef8-9e1b-5aea-94c2-1b882c05f6cf",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Perfect_Money.png",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Perfect_Money.png",
+      "product_ids": [
+        "3ea2a83b-4c58-433b-a1b8-ea37b6ae61db"
+      ]
+    },
+    {
+      "key": "Syriatel",
+      "id": "7fb29690-5c9f-5345-bd7e-81008f046ef1",
+      "url": "https://play-lh.googleusercontent.com/pmwiZbU4FEWJju_fyt2_G2bf7OdRKL7UCp7FLEubdkw9As3bUyaVew-nJoW3lDc716oXiZA162YAMz4vBUijQ4Q=s512",
+      "source_page": "https://play.google.com/store/apps/details?id=com.closetoyou.ae",
+      "product_ids": [
+        "3a9b7ceb-18f4-4cfc-9dbd-0241854777a9",
+        "a7fad750-d14f-4b6f-9afe-8b786606e6d2"
+      ]
+    },
+    {
+      "key": "Vodafone Cash",
+      "id": "fc65e7b2-7a98-5931-973b-abe0b73e112c",
+      "url": null,
+      "source_page": "https://static.vodafone.com.eg/en/vodafone-cash",
+      "product_ids": [
+        "0ceb352e-520b-4bce-96b7-98fb86b61657"
+      ],
+      "local_file": "assets/originals/vodafone-official.svg"
+    },
+    {
+      "key": "Turkey",
+      "id": "ef88ce10-ea18-5118-a5ec-e094266eeeb5",
+      "url": "https://flagcdn.com/w320/tr.png",
+      "source_page": "https://flagpedia.net/tr",
+      "product_ids": []
+    },
+    {
+      "key": "Algeria",
+      "id": "e529a052-25c4-5a83-9d31-ef845cd30b13",
+      "url": "https://flagcdn.com/w320/dz.png",
+      "source_page": "https://flagpedia.net/dz",
+      "product_ids": []
+    },
+    {
+      "key": "Jordan",
+      "id": "1b23ff64-dbdd-5727-bd6b-ad404fd3f6b9",
+      "url": "https://flagcdn.com/w320/jo.png",
+      "source_page": "https://flagpedia.net/jo",
+      "product_ids": []
+    },
+    {
+      "key": "Palestine",
+      "id": "c1cca88f-b4c7-59c4-8a86-10a3d3cb9959",
+      "url": "https://flagcdn.com/w320/ps.png",
+      "source_page": "https://flagpedia.net/ps",
+      "product_ids": []
+    },
+    {
+      "key": "F90 original logo",
+      "id": "b02ac69f-3834-5632-8acc-e15caa7919b6",
+      "url": "https://www.f90card.online/f90-logo.png",
+      "source_page": "https://www.f90card.online/",
+      "product_ids": [
+        "b1a16998-c806-4dcd-b8ca-b1863b3b3c5a",
+        "20c243c6-5ca8-4fb6-9e48-bd9ac2ac0e24",
+        "55d0e0dd-18f6-448a-a703-01cf6190cb77",
+        "d5c28476-8d17-4354-a946-7dd4a0527f10",
+        "44595c11-e049-459b-87dd-52c08691110a",
+        "40ac9b2a-8d24-4e54-9378-2bdaa45e4d9f",
+        "c75d66eb-bafa-4c7d-9108-4fe680518b59",
+        "6766fc49-7841-4c8f-8eee-773e2344b2b0",
+        "ab700f9f-8287-4360-8b54-c21b71e417f0",
+        "71a9f24f-facc-4be5-9eab-8bd0663f11bf"
+      ]
     }
   ]
 }
