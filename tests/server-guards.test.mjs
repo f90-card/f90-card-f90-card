@@ -19,7 +19,7 @@ test("account verification is enforced for checkout and deposits", () => {
   assert.match(checkout, /if\(purchaseConfig\.purchase_requires_verification===true && !verification\.is_verified\) throw new AppError\("F90_VERIFICATION_REQUIRED"/);
   assert.match(deposit, /select\("is_verified,account_currency"\)/);
   assert.match(deposit, /const accountCurrency=String\(verification\.account_currency/);
-  assert.match(deposit, /if\(depositConfig\.deposit_requires_verification===true && !verification\.is_verified\) throw new AppError\("F90_VERIFICATION_REQUIRED"/);
+  assert.match(deposit, /if\s*\(depositConfig\.deposit_requires_verification\s*===\s*true && !verification\.is_verified\) throw new AppError\("F90_VERIFICATION_REQUIRED"/);
 });
 
 test("reference-based recovery is read-only and scoped to the account", () => {
