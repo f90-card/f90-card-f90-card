@@ -148,6 +148,13 @@ async function verifyBackup(id:string){
  return {matches:sha===ref.sha256,size_bytes:binary.byteLength,checked_at:new Date().toISOString(),
  note:"فحص البصمة لا يضمن إمكانية استعادة قاعدة البيانات كاملة."};
 }
+async function backupLink(id:string){
+ if(!uidRe.test(id))throw Error("INVALID_BACKUP_ID");
+ const ref=value(await db.from("f90_ops_snapshots").select("object_path").eq("id",id).single(),"BACKUP_NOT_FOUND");
+ const signed=await db.storage.from(bucket).createSignedUrl(ref.object_path,90);
+ if(signed.error||!signed.data?.signedUrl)throw Error("BACKUP_LINK_UNAVAILABLE");
+ return {url:signed.data.signedUrl,expires_in_seconds:90};
+}
 async function changeFlag(userId:string,key:string,enabled:boolean,reason:string){
  if(!["checkout_enabled","deposits_enabled","merchant_enabled"].includes(key))throw Error("INVALID_FLAG");
  if(typeof enabled!=="boolean"||reason.length<8||reason.length>240)throw Error("REASON_REQUIRED");
@@ -190,6 +197,7 @@ Deno.serve(async req=>{
   else if(action==="backup.list")out=await listBackups();
   else if(action==="backup.create")out=await createBackup(actor.id);
   else if(action==="backup.verify")out=await verifyBackup(String(b.id||""));
+  else if(action==="backup.link")out=await backupLink(String(b.id||""));
   else if(action==="toggle")out=await changeFlag(actor.id,String(b.key||""),b.enabled,String(b.reason||"").trim());
   else if(action==="suspend")out=await suspend(actor.id,String(b.user_id||""),String(b.mode||""),String(b.reason||"").trim());
   else throw Error("UNKNOWN_ACTION");
