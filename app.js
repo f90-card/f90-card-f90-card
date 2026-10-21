@@ -511,6 +511,7 @@
           }
         }
         S.me = me;
+        window.F90SecurityUI?.record(me?.profile?.id||me?.id);
         const accountCurrency=me?.profile?.account_currency;
         if(["USD","ILS","JOD"].includes(accountCurrency)){
           S.currency=accountCurrency;
@@ -530,6 +531,7 @@
             if (!refreshed.error && refreshed.data?.session) {
               const me = await A.call("me");
               S.me = me;
+              window.F90SecurityUI?.record(me?.profile?.id||me?.id);
               S.walletStale = false;
               return true;
             }
@@ -1121,6 +1123,8 @@
           )}${field("phone", "رقم الهاتف <small>اختياري</small>", "tel", "", 'autocomplete="tel-national" maxlength="25" dir="ltr"')}</div><label class="check-field"><input type="checkbox" required>أوافق على <a href="#/policy/terms">الشروط</a> و<a href="#/policy/privacy">سياسة الخصوصية</a></label>`
         : ""
     }<p class="inline-error" id="authError"></p><button class="button full" type="submit">${mode === "register" ? "إنشاء حساب" : mode === "forgot" ? "أرسل رابط الاستعادة" : "دخول"}</button></form>${mode !== "forgot" ? `<div class="divider">أو</div><button class="google-button" data-action="google"><span class="f90-google-mark" aria-hidden="true">G</span>المتابعة باستخدام جوجل</button><button class="button ghost small" style="margin-top:16px" data-action="auth-tab" data-mode="forgot">نسيت كلمة المرور؟</button>` : '<p class="muted small" style="margin-top:16px">ستصلك رسالة إذا كان البريد مرتبطًا بحساب.</p>'}</section></div>`;
+    main.insertAdjacentHTML("beforeend",
+      '<p class="f90-security-disclosure">لحماية حسابات العملاء، يسجل المتجر نشاط الجلسات ومعلومات الشبكة والجهاز العامة لمدة تصل إلى 30 يومًا. يمكن مراجعتها من صفحة أمان الحساب. لا نستخدم تحديد الموقع الدقيق.</p>');
   }
   function loginRequired() {
     auth();
@@ -1797,6 +1801,11 @@ async function history(kind){
       factors.data?.totp?.filter((f) => f.status === "verified") || [];
     S.factors = verifiedFactors;
     main.innerHTML = `<div class="security-intro">${I("shield")}<div><h1>أمان يليق بحسابك</h1><p class="muted">طبقة حماية إضافية، بإرادتك وفي الوقت الذي يناسبك.</p></div></div><div class="split"><section class="panel"><h2>التحقق بخطوتين</h2><p class="muted">بعد تفعيله، ستحتاج رمز تطبيق المصادقة عند تسجيل الدخول لإكمال العمليات المحمية.</p><div class="notice ${verifiedFactors.length ? "success" : ""}">${verifiedFactors.length ? "الحماية الثنائية مفعّلة" : "الحماية الثنائية غير مفعّلة"}</div>${verifiedFactors.length ? `<button class="button secondary" data-action="mfa-disable" data-id="${e(verifiedFactors[0].id)}">تعطيل الحماية الثنائية</button>` : `<button class="button" data-action="mfa-enroll">تفعيل الحماية</button>`}</section><section class="panel"><h2>كلمة المرور</h2><form id="passwordForm">${field("password", "كلمة مرور جديدة", "password", "", 'required minlength="10" autocomplete="new-password"')}${field("confirm", "تأكيد كلمة المرور", "password", "", 'required minlength="10" autocomplete="new-password"')}<button class="button secondary" type="submit">تغيير كلمة المرور</button></form><p class="muted small" style="margin-top:16px">استخدم كلمة طويلة وفريدة. لن يطلب منك الدعم كلمة المرور أو رمز المصادقة.</p></section></div>`;
+    main.insertAdjacentHTML("beforeend",
+      '<section class="panel f90-security-area"><h2>نشاط تسجيل الدخول</h2>'+
+      '<p class="muted small">يمكنك مراجعة الجهاز والمتصفح وعنوان IP والدولة التقريبية المرتبطة بجلساتك خلال 30 يومًا. هذه البيانات لا تحدد مكانك الدقيق وقد تختلف عند استخدام VPN.</p>'+
+      '<div id="f90SelfSecuritySessions" aria-live="polite">جارٍ التحميل…</div></section>');
+    window.F90SecurityUI?.renderMine("f90SelfSecuritySessions");
   }
   async function verification() {
     const seq = S.route;
