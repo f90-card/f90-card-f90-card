@@ -3194,12 +3194,6 @@
       orderRequestsPage().catch((err) => toast(errorMessage(err)));
       return;
     }
-    if (ev.target.matches('#providerForm [name="adapter"]')) {
-      const automatic = ev.target.form.elements.automatic_orders_enabled;
-      automatic.disabled = ev.target.value === "omega";
-      if (automatic.disabled) automatic.checked = false;
-      return;
-    }
     if (ev.target.matches('#importForm input[type="checkbox"]')) { updateProviderImportPreview(); return; }
     if (ev.target.id === "listFilter") {
       S.filter = ev.target.value;
