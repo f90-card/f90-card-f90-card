@@ -95,7 +95,7 @@ if(mode==='acceptance'){
   await writeFile(resolve(dest,'f90-release-gates.json'),JSON.stringify(quality));
 }
 
-const headers='/*\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n'+(mode==='acceptance'?'  X-Robots-Tag: noindex, nofollow, noarchive\n':'')+'/config.js\n  Cache-Control: no-store\n/sw.js\n  Cache-Control: no-cache\n/*.html\n  Cache-Control: no-cache\n';
+const headers='/*\n  X-Frame-Options: DENY\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n'+(mode==='acceptance'?'  X-Robots-Tag: noindex, nofollow, noarchive\n':'')+'/config.js\n  Cache-Control: no-store\n/sw.js\n  Cache-Control: no-cache\n/\n  Cache-Control: no-cache, must-revalidate\n/index.html\n  Cache-Control: no-cache, must-revalidate\n/app.js\n  Cache-Control: no-cache, must-revalidate\n/f90-finance-pages-20261021.css\n  Cache-Control: no-cache, must-revalidate\n/*.html\n  Cache-Control: no-cache, must-revalidate\n';
 await writeFile(resolve(dest,'_headers'),headers);
 await writeFile(resolve(dest,'_redirects'),'/discover/games.html /discover/ 301\n/index.html / 301\n');
 // Pages Functions live outside the static output; Cloudflare bundles functions/.
