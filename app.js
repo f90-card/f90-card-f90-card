@@ -1870,6 +1870,8 @@ async function history(kind){
       .join(
         "",
       )}</nav><article class="policy-content"><div class="eyebrow">دليل تعاملنا معك</div><h1>${e(titles[id] || "المعلومات")}</h1><p class="policy-mark small">${e(S.settings.store_name)} · فلسطين، رام الله · ${e(S.settings.config.policy_updated || "١٢ أكتوبر ٢٠٢٦")}</p><div class="policy-text">${e(page?.ar || "يجري إعداد محتوى هذه الصفحة. تواصل مع الإدارة للحصول على التفاصيل.")}</div><div class="notice">لأي سؤال عن هذه السياسة، <a href="#/support">تواصل معنا</a>.</div></article></div>`;
+    if(id==="privacy")main.querySelector(".policy-text")?.insertAdjacentHTML("beforeend",
+      '<p class="f90-security-disclosure"><strong>حماية الحساب:</strong> نسجل للجلسات الموثّقة عنوان IP إن توفر من بوابة الشبكة، والدولة التقريبية ونوع الجهاز ونظام التشغيل والمتصفح، لمدة لا تتجاوز 30 يومًا. يمكن للعميل مراجعة نشاط حسابه، وتقتصر صلاحية عرض سجلات جميع العملاء على مدير المتجر. لا نستخدم GPS أو تحديد موقع دقيق.</p>');
   }
 
   function apiGuide() {
