@@ -53,5 +53,21 @@
       });
     }catch{el.textContent="تعذّر تحميل السجل أو ليس لديك صلاحية المدير."}
   }
+  // Observe verified Supabase session events outside critical login/checkout flows.
+  // Deferring the request avoids nested asynchronous calls in auth callbacks.
+  function start(){
+    const auth=api()?.auth;
+    if(!auth)return;
+    auth.getSession().then(({data})=>{
+      const id=data?.session?.user?.id;
+      if(id)setTimeout(()=>record(id),0);
+    }).catch(()=>{});
+    auth.onAuthStateChange((event,session)=>{
+      const id=session?.user?.id;
+      if(id&&["SIGNED_IN","INITIAL_SESSION","TOKEN_REFRESHED"].includes(event))
+        setTimeout(()=>record(id),0);
+    });
+  }
+  setTimeout(start,0);
   window.F90SecurityUI={record,renderMine,renderManager};
 })();
