@@ -48,6 +48,7 @@
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["audit", "سجل الإدارة", "shield", ["manager"]],
+    ["customer-security", "أمان العملاء والأجهزة", "shield", ["manager"]],
     ["users", "العملاء والأرصدة", "user", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
@@ -181,7 +182,7 @@
   function navigation() {
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
-      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit"]],
+      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","customer-security"]],
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
@@ -2348,6 +2349,13 @@
     await A.call("settings.save",{data:{...S.settings,config:{...c,telegram_alerts}}});
     await refreshSettings();await telegramAlerts();toast("تم حفظ أنواع إشعارات تلجرام");
   }
+  async function customerSecurity(){
+    main.innerHTML=head("أمان العملاء والأجهزة","سجل الجلسات الموثّقة خلال 30 يومًا")+
+      '<section class="panel f90-security-area">'+
+      '<p class="muted small">يعرض عنوان IP المسجل إذا توفّر، ونوع الجهاز والمتصفح والدولة التقريبية. قد تكون بيانات الشبكة غير دقيقة بسبب VPN. لا يُجمع موقع GPS أو تفاصيل الهاتف الخاصة.</p>'+
+      '<div id="f90CustomerSecurity">جارٍ تحميل السجل…</div></section>';
+    await window.F90SecurityUI?.renderManager("f90CustomerSecurity");
+  }
   async function route() {
     S.token++;
     closeModal();
@@ -2385,6 +2393,7 @@
       else if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
+      else if (page === "customer-security") await customerSecurity();
       else if (page === "order-requests") await orderRequestsPage();
       else if (
         ["orders", "deposits", "verification", "users", "ledger", "audit"].includes(page)
