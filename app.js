@@ -511,7 +511,7 @@
           }
         }
         S.me = me;
-        window.F90SecurityUI?.record(me?.profile?.id||me?.id);
+
         const accountCurrency=me?.profile?.account_currency;
         if(["USD","ILS","JOD"].includes(accountCurrency)){
           S.currency=accountCurrency;
@@ -531,7 +531,7 @@
             if (!refreshed.error && refreshed.data?.session) {
               const me = await A.call("me");
               S.me = me;
-              window.F90SecurityUI?.record(me?.profile?.id||me?.id);
+
               S.walletStale = false;
               return true;
             }
