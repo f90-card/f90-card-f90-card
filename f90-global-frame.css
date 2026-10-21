@@ -34,3 +34,12 @@
  :root.f90-global-frame-on #mainContent .method-grid .method-tile::after{inset:7px 16% auto!important;height:13px!important}
 }
 @media(prefers-reduced-motion:reduce){:root.f90-global-frame-on #mainContent .image-grid .image-tile:hover{transform:none!important}}
+
+/* Live preview in the administration pane, no catalog mutations. */
+.f90-frame-admin-wrap{max-width:650px;margin-inline:auto}
+.f90-frame-demo{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;width:min(100%,250px);margin:18px auto;padding:28px 8px 12px;border-radius:12px;background:#11131b;color:#fff;gap:8px;border:1px solid #6d2535}
+.f90-frame-demo::before{content:"";position:absolute;inset:-4px;z-index:3;pointer-events:none;background:url("./assets/f90-electric-frame.svg") center/100% 100% no-repeat}
+.f90-frame-demo-logo{height:24px;position:relative;z-index:1;display:grid;place-items:center}
+.f90-frame-demo-logo img{width:auto;max-height:24px;max-width:110px;object-fit:contain}
+.f90-frame-demo-art{width:100%;aspect-ratio:1;object-fit:contain;border-radius:9px}
+.f90-frame-demo strong{text-align:center;font-size:12px}
