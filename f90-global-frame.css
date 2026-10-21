@@ -1,75 +1,140 @@
-/* F90 FRAME FIX: artwork borders ONLY. Card names, prices and buttons remain outside. */
-:root.f90-global-frame-on{--f90-frame-art:url("./assets/f90-electric-frame.svg");--f90-frame-logo:url("./f90-logo.png");--f90-frame-opacity:1}
-/* Stop the previous overlay and optional animated outline on whole catalog/method cards. */
+/* F90 CARD | smooth, image-only programmable frame. No bitmap border is downloaded in soft mode. */
+:root.f90-global-frame-on{
+ --f90-frame-color:#ff3654;
+ --f90-frame-highlight:#ff9dab;
+ --f90-frame-halo:rgba(255,43,72,.19);
+ --f90-frame-opacity:1;
+ --f90-frame-logo:url("./f90-logo.png");
+}
+/* Presets recolor the slim border instead of filtering the entire artwork. */
+:root.f90-global-frame-on[data-f90-frame-preset="silver"]{
+ --f90-frame-color:#abb8ca;--f90-frame-highlight:#f0f3f8;--f90-frame-halo:rgba(169,187,214,.18);
+}
+:root.f90-global-frame-on[data-f90-frame-preset="gold"]{
+ --f90-frame-color:#d9a843;--f90-frame-highlight:#ffeab2;--f90-frame-halo:rgba(225,173,69,.19);
+}
+/* Never draw a second frame around the overall card or its text. Overrides animated edge plugin. */
 :root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile)::before,
 :root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile)::after,
 :root.f90-global-frame-on #mainContent .method-grid .method-tile::before,
 :root.f90-global-frame-on #mainContent .method-grid .method-tile::after{
- content:none!important;background:none!important;animation:none!important;
+ content:none!important;background:none!important;border:none!important;box-shadow:none!important;animation:none!important;
 }
-/* Built-in image container (square) is the sole decorative-frame anchor. */
+/* Picture is the visual card. Label remains its own detached block beneath it. */
+:root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile){
+ display:flex!important;flex-direction:column!important;gap:5px!important;
+ padding:0!important;margin:0!important;
+ border:0!important;background:transparent!important;
+ box-shadow:none!important;overflow:visible!important;
+ border-radius:0!important;isolation:isolate;
+}
 :root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner{
- position:relative!important;isolation:isolate!important;overflow:hidden!important;
- aspect-ratio:1!important;border-radius:12px!important;
+ position:relative!important;display:block!important;isolation:isolate!important;
+ width:100%!important;aspect-ratio:1!important;overflow:hidden!important;
+ border-radius:14px!important;background:#11131a;
+ box-shadow:0 3px 10px rgba(0,0,0,.12)!important;
 }
-/* Uploaded PNG/WebP and default electric frame fill only the image, not caption. */
+:root.f90-global-frame-on #mainContent .image-grid .f90-flip-face,
+:root.f90-global-frame-on #mainContent .image-grid .f90-flip-face img{
+ border-radius:inherit!important;
+}
+:root.f90-global-frame-on #mainContent .image-grid .f90-flip-face img{
+ filter:none!important;opacity:1!important;
+}
+/* 1.5px subtle border locked to exact image bounds. No stone/PNG frame in default mode. */
 :root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::before,
-:root.f90-global-frame-on #mainContent .f90-method-image-frame::before{
- content:""!important;display:block!important;position:absolute!important;
- inset:0!important;width:100%!important;height:100%!important;
- background:var(--f90-frame-art) center/100% 100% no-repeat!important;
- mask:none!important;-webkit-mask:none!important;border:none!important;border-radius:inherit!important;
- animation:none!important;transform:none!important;box-shadow:none!important;
- pointer-events:none!important;z-index:5!important;opacity:var(--f90-frame-opacity,1)!important;
+:root.f90-global-frame-on #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::before{
+ content:""!important;position:absolute!important;display:block!important;
+ inset:0!important;width:auto!important;height:auto!important;
+ box-sizing:border-box!important;
+ border:1.5px solid var(--f90-frame-color)!important;border-radius:inherit!important;
+ background:none!important;
+ box-shadow:inset 0 0 0 .5px var(--f90-frame-highlight),inset 0 0 7px var(--f90-frame-halo)!important;
+ transform:none!important;filter:none!important;
+ -webkit-mask:none!important;mask:none!important;
+ pointer-events:none!important;z-index:5!important;
+ animation:none!important;opacity:var(--f90-frame-opacity,1)!important;
 }
-/* Bigger official logo over the image, absent when uploaded artwork already includes its own. */
-:root.f90-global-frame-on:not(.f90-frame-no-logo):not(.f90-frame-custom) #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::after,
-:root.f90-global-frame-on:not(.f90-frame-no-logo):not(.f90-frame-custom) #mainContent .f90-method-image-frame::after{
- content:""!important;display:block!important;position:absolute!important;
- inset:1% 14% auto!important;width:72%!important;height:23%!important;
+/* Larger original logo, but still positioned inside the image, never above caption. */
+:root.f90-global-frame-on:not(.f90-frame-no-logo) #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::after,
+:root.f90-global-frame-on:not(.f90-frame-no-logo) #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::after{
+ content:""!important;position:absolute!important;display:block!important;
+ inset:1.5% 17% auto!important;width:66%!important;height:20%!important;
  background:var(--f90-frame-logo) center/contain no-repeat!important;
- pointer-events:none!important;z-index:6!important;filter:drop-shadow(0 2px 2px #000a)!important;
+ border:0!important;border-radius:0!important;
+ z-index:6!important;pointer-events:none!important;
+ filter:drop-shadow(0 1px 3px rgba(0,0,0,.65))!important;
 }
-:root.f90-global-frame-on.f90-frame-custom #mainContent :is(.f90-flip-inner,.f90-method-image-frame)::after,
-:root.f90-global-frame-on.f90-frame-no-logo #mainContent :is(.f90-flip-inner,.f90-method-image-frame)::after{content:none!important}
-:root.f90-global-frame-on[data-f90-frame-preset="silver"] #mainContent :is(.f90-flip-inner,.f90-method-image-frame)::before{filter:grayscale(1) brightness(1.4)}
-:root.f90-global-frame-on[data-f90-frame-preset="gold"] #mainContent :is(.f90-flip-inner,.f90-method-image-frame)::before{filter:sepia(1) saturate(4) hue-rotate(345deg)}
-/* The deposit method image gets its own square wrapper; name/status stay outside. */
+/* Optional legacy uploaded artwork works only when administrator explicitly switches mode. */
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .image-grid .f90-flip-inner::before,
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::before{
+ background:var(--f90-frame-art) center/100% 100% no-repeat!important;
+ border:0!important;box-shadow:none!important;
+}
+:root.f90-global-frame-on[data-f90-frame-mode="image"].f90-frame-custom #mainContent .image-grid .f90-flip-inner::after,
+:root.f90-global-frame-on[data-f90-frame-mode="image"].f90-frame-custom #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::after,
+:root.f90-global-frame-on.f90-frame-no-logo #mainContent .image-grid .f90-flip-inner::after,
+:root.f90-global-frame-on.f90-frame-no-logo #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::after{
+ content:none!important;
+}
+/* Captions stay clearly separate from artwork and readable in both themes. */
+:root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .tile-caption{
+ position:relative;z-index:1;display:grid!important;place-items:center;
+ width:100%;min-height:32px!important;margin:0!important;
+ padding:6px 4px!important;border:1px solid rgba(255,62,90,.25)!important;
+ border-radius:9px!important;background:#171923!important;
+ color:#f8f8fa!important;-webkit-text-fill-color:#f8f8fa!important;
+ text-shadow:none!important;font-weight:800;line-height:1.35;
+ font-size:clamp(10px,1.3vw,13px);text-align:center;overflow-wrap:anywhere;
+}
+:root[data-theme="cream"].f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .tile-caption{
+ color:#241b25!important;-webkit-text-fill-color:#241b25!important;
+ background:#fff9fb!important;border-color:#dcb9c3!important;opacity:1!important;
+}
+/* Deposit method image wrapper already exists; it is the only framed part of the tile. */
 #mainContent .f90-deposit-methods-with-images .f90-method-image-frame{
- display:block;position:relative;isolation:isolate;flex:none;
- width:min(100%,132px);aspect-ratio:1;overflow:hidden;border-radius:12px;margin-inline:auto;
+ display:block;position:relative;isolation:isolate;flex:0 0 auto;
+ width:min(100%,148px);aspect-ratio:1;overflow:hidden;border-radius:14px;margin-inline:auto;
 }
 #mainContent .f90-deposit-methods-with-images .f90-method-image-frame .f90-deposit-method-art{
- display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
- object-fit:contain!important;border-radius:10px!important;
+ display:block!important;width:100%!important;height:100%!important;
+ max-width:none!important;max-height:none!important;object-fit:contain!important;border-radius:inherit!important;
 }
-/* Cream theme readability: clear dark labels against light cards. */
-:root[data-theme="cream"] #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile){
- background:linear-gradient(145deg,#fffdfd,#f5edf0)!important;border-color:#b67a89!important;
+:root.f90-global-frame-on #mainContent .f90-deposit-methods-with-images .method-tile{
+ padding:7px 6px!important;gap:6px!important;
+ border:0!important;border-radius:12px!important;
+ box-shadow:none!important;background:transparent!important;
+ color:var(--text)!important;overflow:visible!important;
 }
-:root[data-theme="cream"] #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .tile-caption{
- color:#241b25!important;-webkit-text-fill-color:#241b25!important;text-shadow:none!important;opacity:1!important;
- border-top-color:#ceabb5!important;
+:root.f90-global-frame-on #mainContent .f90-deposit-methods-with-images .method-tile :is(strong,small){
+ color:var(--text)!important;-webkit-text-fill-color:var(--text)!important;text-align:center;
 }
-:root[data-theme="cream"] #mainContent .f90-deposit-methods-with-images .method-tile{
- background:linear-gradient(145deg,#fffdfd,#f5edf0)!important;color:#241b25!important;
-}
-:root[data-theme="cream"] #mainContent .f90-deposit-methods-with-images .method-tile :is(strong,small){
- color:#241b25!important;-webkit-text-fill-color:#241b25!important;opacity:1!important;
+:root[data-theme="cream"].f90-global-frame-on #mainContent .f90-deposit-methods-with-images .method-tile :is(strong,small){
+ color:#241b25!important;-webkit-text-fill-color:#241b25!important;
 }
 @media(max-width:520px){
- #mainContent .f90-deposit-methods-with-images .f90-method-image-frame{width:min(100%,108px)}
- :root.f90-global-frame-on #mainContent .image-grid .f90-flip-inner{border-radius:9px!important}
+ :root.f90-global-frame-on #mainContent .image-grid .f90-flip-inner{border-radius:11px!important}
+ :root.f90-global-frame-on #mainContent .image-grid .tile-caption{font-size:10px!important;min-height:32px!important;padding:5px 2px!important}
+ #mainContent .f90-deposit-methods-with-images .f90-method-image-frame{width:min(100%,124px);border-radius:11px}
 }
-/* Admin preview demonstrates frame on the image alone, not the whole tile. */
+@media(prefers-reduced-motion:reduce){
+ :root.f90-global-frame-on #mainContent .image-grid .image-tile{transition:none!important}
+}
+/* Admin preview demonstrates the same soft, image-only frame. */
 .f90-frame-admin-wrap{max-width:650px;margin-inline:auto}
 .f90-frame-demo{
- display:flex;flex-direction:column;align-items:center;gap:9px;
- width:min(100%,250px);margin:18px auto;padding:8px 8px 14px;
- border:1px solid #6d2535;border-radius:12px;background:#14161e;color:white;
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+ width:min(100%,250px);margin:18px auto;padding:7px 7px 13px;
+ border:0!important;border-radius:12px;background:transparent;color:var(--text);
 }
-.f90-frame-demo-artwrap{position:relative;isolation:isolate;overflow:hidden;width:100%;aspect-ratio:1;border-radius:10px}
+.f90-frame-demo-artwrap{
+ position:relative;isolation:isolate;overflow:hidden;width:100%;aspect-ratio:1;
+ border:1.5px solid var(--f90-frame-color,#ff3654);border-radius:14px;
+ box-shadow:inset 0 0 0 .5px var(--f90-frame-highlight,#ff9dab),0 0 7px rgba(255,43,72,.15);
+}
 .f90-frame-demo-art{display:block;width:100%;height:100%;object-fit:contain}
-.f90-frame-demo-overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:5;pointer-events:none}
-.f90-frame-demo-logo{position:absolute;top:1%;left:14%;width:72%;height:23%;object-fit:contain;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 2px #000b)}
-.f90-frame-demo strong{text-align:center;color:white;font-size:12px}
+.f90-frame-demo-overlay{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:5;pointer-events:none}
+.f90-frame-demo-artwrap.f90-preview-image{border-color:transparent;box-shadow:none}
+.f90-frame-demo-artwrap.f90-preview-image .f90-frame-demo-overlay{display:block}
+.f90-frame-demo-logo{position:absolute;top:1.5%;left:17%;width:66%;height:20%;object-fit:contain;z-index:6;pointer-events:none;filter:drop-shadow(0 1px 3px #000a)}
+.f90-frame-demo strong{display:grid;place-items:center;width:100%;min-height:32px;padding:5px;border-radius:9px;background:var(--surface2);color:var(--text);font-size:12px;text-align:center}
