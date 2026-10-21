@@ -4,8 +4,11 @@ import { readFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 const merchantSource = await readFile(new URL("functions/api/merchant.js", root), "utf8");
 const merchantURL = "data:text/javascript;base64," + Buffer.from(merchantSource).toString("base64");
+const compatSource = await readFile(new URL("functions/api/compat.js", root), "utf8");
+const compatURL = "data:text/javascript;base64," + Buffer.from(compatSource).toString("base64");
 const versionedSource = (await readFile(new URL("functions/api/v1.js", root), "utf8"))
-  .replace('"./merchant.js"', JSON.stringify(merchantURL));
+  .replace('"./merchant.js"', JSON.stringify(merchantURL))
+  .replace('"./compat.js"', JSON.stringify(compatURL));
 const { onRequest } = await import("data:text/javascript;base64," + Buffer.from(versionedSource).toString("base64"));
 const invoke = (method, headers = {}, body, query = "") => onRequest({
   request: new Request("https://www.f90card.online/api/v1" + query, {method, headers, ...(body === undefined ? {} : {body})})
