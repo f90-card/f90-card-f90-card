@@ -32,6 +32,7 @@
       cell("إيداعات معلقة",x.deposits.pending)+cell("مفاتيح تجار مفعّلة",x.api.active)+
       cell("عناصر إشعارات قيد الانتظار (عينة)",x.notification_backlog.sampled)+cell("إشعارات غير مسودات (عينة)",x.notification_backlog.non_draft_in_sample)+'</div>'+
       '<h3>الموردون</h3><div class="f90-ops-lines">'+(x.providers||[]).map(p=>line(p.name,p.is_enabled?"مفعّل":"متوقف","الهامش العام: "+p.margin_percent+"%")).join("")+'</div>'+
+      '<h3>المهام المجدولة</h3><div class="f90-ops-lines">'+(x.cron_jobs||[]).map(j=>line(j.name,j.active?(j.last_status==="succeeded"?"مفعلة: آخر تنفيذ ناجح":"مفعلة: "+(j.last_status||"لم تُنفّذ")):"متوقفة",date(j.last_run))).join("")+'</div>'+
       '<h3>آخر نشاط مرصود</h3>'+line("الطلبات",date(x.orders.last),"من قاعدة بيانات المتجر")+
       line("الإيداعات",date(x.deposits.last))+
       line("الأجهزة",date(x.session_latest))+note(x.note);
