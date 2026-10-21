@@ -61,6 +61,10 @@ function message(row:any):string{
      "<b>وقت الرصد:</b> "+escapeHTML(stamp(d.created_at))+"\n"+
      "راجع مركز تحكم F90 من لوحة الإدارة.";
  }
+ if(row.event_type==="ops_resolved" && d.code==="monitor_initial_false_alarm")
+   return "ℹ️ <b>F90 CARD | تصحيح تنبيهات المراقبة</b>\n"+
+     escapeHTML(String(d.message||"").slice(0,450))+"\n"+
+     "<b>وقت التصحيح:</b> "+escapeHTML(stamp(d.created_at));
  if(row.event_type==="ops_resolved"){
    return "✅ <b>F90 CARD | تعافي الخدمة</b>\n"+
      "<b>المشكلة السابقة:</b> "+escapeHTML(String(d.message||"")).slice(0,370)+"\n"+
