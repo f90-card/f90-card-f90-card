@@ -36,22 +36,36 @@
   }
   async function renderManager(elementId){
     const el=document.getElementById(elementId);if(!el)return;
-    el.textContent="جارٍ تحميل سجلات الجلسات…";
+    el.textContent="جارٍ تحميل حسابات العملاء…";
     try{
       const {items}=await call("manager_list");
       if(!el.isConnected)return;
       const rows=items||[];
-      el.innerHTML='<input class="f90-security-search" type="search" aria-label="بحث في نشاط العملاء" placeholder="ابحث باسم العميل أو IP أو البلد أو الجهاز">'+
-        '<p class="muted small">'+rows.length+' جلسة معروضة من أحدث 100 جلسة خلال 30 يومًا.</p>'+
-        '<div class="f90-security-records">'+(rows.length?rows.map(x=>item(x,true)).join(""):'<p class="muted">لا توجد بيانات مسجلة بعد. ستظهر الجلسات بعد دخول العملاء.</p>')+'</div>';
+      const statusName={active:"نشط",suspended:"موقوف",banned:"محظور"};
+      const card=(x)=>'<article class="f90-security-entry f90-security-customer">'+
+        '<div class="f90-sec-name"><strong>'+escape(x.name||"عميل")+'</strong>'+
+        '<small>رقم العميل: <b dir="ltr">'+escape(x.customer_id||"—")+'</b></small></div>'+
+        '<div class="f90-sec-information"><span>الحالة: '+escape(statusName[x.status]||"غير معروفة")+'</span>'+
+        '<span>الدولة: '+escape(x.country||"غير متاحة")+' · IP: <b dir="ltr">'+escape(x.ip||"غير متاح")+'</b></span>'+
+        '<span>الجهاز: '+escape(label(x.device))+' · '+escape(x.os||"غير معروف")+' · '+escape(x.browser||"غير معروف")+'</span>'+
+        '<small>آخر نشاط موثّق: '+escape(x.last_seen_at?when(x.last_seen_at):"لم يتم رصد جلسة بعد")+'</small></div>'+
+        '<button type="button" class="button secondary small" data-action="find-user" data-id="'+escape(x.user_id)+'">إدارة الحساب</button></article>';
+      el.innerHTML='<label class="field"><span>بحث العملاء</span><input class="f90-security-search" type="search" aria-label="بحث في حسابات العملاء" placeholder="الاسم، رقم العميل، الدولة، IP، الجهاز"></label>'+
+        '<p class="muted small">كل الحسابات المسجّلة (القديمة والجديدة) · من أقدم نشاط إلى أحدث نشاط · بيانات الـ IP والجهاز قد لا تتوفر.</p>'+
+        '<p class="muted small" id="f90SecCounter">'+rows.length+' حساب</p>'+
+        '<div class="f90-security-records">'+(rows.length?rows.map(card).join(""):'<p class="muted">لا توجد حسابات مسجّلة.</p>')+'</div>';
       const search=el.querySelector("input");
       search?.addEventListener("input",()=>{
         const term=search.value.trim().toLocaleLowerCase("ar");
+        let count=0;
         el.querySelectorAll(".f90-security-entry").forEach(row=>{
-          row.hidden=!!term&&!row.textContent.toLocaleLowerCase("ar").includes(term);
+          const match=!term||row.textContent.toLocaleLowerCase("ar").includes(term);
+          row.hidden=!match;
+          if(match)count++;
         });
+        const counter=el.querySelector("#f90SecCounter");if(counter)counter.textContent=count+" حساب مطابق";
       });
-    }catch{el.textContent="تعذّر تحميل السجل أو ليس لديك صلاحية المدير."}
+    }catch{el.textContent="تعذّر تحميل سجل العملاء أو ليس لديك صلاحية المدير."}
   }
   // Observe verified Supabase session events outside critical login/checkout flows.
   // Deferring the request avoids nested asynchronous calls in auth callbacks.
