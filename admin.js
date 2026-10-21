@@ -1080,13 +1080,13 @@
     main.innerHTML=head("إطارات الكروت","إطار رفيع برمجي على حدود الصورة نفسها، والاسم منفصل أسفلها. لا تتغير صور المنتجات أو الأسعار.")+
       '<section class="panel f90-frame-admin-wrap"><form id="cardFramesForm">'+
       check("frame_enabled","تفعيل الإطار على جميع الكروت",o.enabled!==false)+
-      select("frame_mode","طريقة تصميم الإطار",[["soft","برمجي ناعم ورفيع (الافتراضي)"],["image","صورة مخصصة (PNG / WebP)"]],o.mode==="image"?"image":"soft")+
+      select("frame_mode","طريقة تصميم الإطار",[["soft","برمجي ناعم ورفيع (الافتراضي)"],["image","صورة مخصصة (PNG / WebP)"]],o.mode==="image" || (o.image_url&&o.image_mode_explicit!==true)?"image":"soft")+
       select("frame_preset","لون الإطار",[["lightning","أحمر ناعم"],["silver","فضي ناعم"],["gold","ذهبي ناعم"]],o.preset||"lightning")+
       check("frame_show_logo","عرض شعار F90 CARD الأصلي أعلى الإطار",o.show_logo!==false)+
       field("frame_opacity","قوة الإطار","number",o.opacity??1,'min="0.35" max="1" step="0.05"')+
       field("frame_url","رابط إطار شفاف بديل (اختياري)","url",o.image_url||"", 'placeholder="https://..." dir="ltr"')+
-      field("frame_file","أو رفع إطار PNG / WebP شفاف جديد","file","",'accept="image/png,image/webp"')+
-      '<div class="f90-frame-demo" aria-label="معاينة الإطار على الصورة فقط"><div class="f90-frame-demo-artwrap '+(o.mode==="image"&&o.image_url?"f90-preview-image":"f90-preview-soft")+'"><img class="f90-frame-demo-art" src="./assets/sections/f90-games.webp" alt="مثال لصورة قسم"><img class="f90-frame-demo-overlay" src="'+e(C.safeUrl(o.image_url)||'./assets/f90-electric-frame.svg')+'" alt="" aria-hidden="true">'+(o.show_logo!==false&&!(o.mode==="image"&&o.image_url)?'<img class="f90-frame-demo-logo" src="'+e(C.safeUrl(S.settings?.logo_url)||'./f90-logo.png')+'" alt="">':'')+'</div><strong>اسم الخدمة خارج الإطار</strong></div>'+
+      field("frame_file","رفع إطار PNG / WebP (يُفعَّل تلقائيًا)","file","",'accept="image/png,image/webp"')+
+      '<div class="f90-frame-demo" aria-label="معاينة الإطار على الصورة فقط"><div class="f90-frame-demo-artwrap '+(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true)?"f90-preview-image":"f90-preview-soft")+'"><img class="f90-frame-demo-art" src="./assets/sections/f90-games.webp" alt="مثال لصورة قسم"><img class="f90-frame-demo-overlay" src="'+e(C.safeUrl(o.image_url)||'./assets/f90-electric-frame.svg')+'" alt="" aria-hidden="true">'+(o.show_logo!==false&&!(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true))?'<img class="f90-frame-demo-logo" src="'+e(C.safeUrl(S.settings?.logo_url)||'./f90-logo.png')+'" alt="">':'')+'</div><strong>اسم الخدمة خارج الإطار</strong></div>'+
       '<p class="muted small">تغيير الإطار ينعكس على كل الكروت بعد الحفظ والتحديث. التصميم طبقة خارجية خفيفة ولا يُعدل الصور الأصلية.</p>'+
       '<button class="button" type="submit">حفظ الإطار وتطبيقه على الجميع</button></form></section>';
   }
@@ -1096,10 +1096,13 @@
     if(file?.size>5*1024*1024)throw new Error("حجم صورة الإطار يجب ألا يتجاوز 5 ميجابايت");
     const url=file?.size?(await A.upload(file,"f90-images","branding")).url:String(d.frame_url||"").trim();
     if(url&&!/^https:\/\//i.test(url)&&!url.startsWith("./"))throw new Error("رابط الإطار يجب أن يكون HTTPS");
+    const selectedMode=form.elements.frame_mode.value==="image"?"image":"soft";
+    const mode=file?.size || (url && url!==String(old.image_url||"").trim())?"image":selectedMode;
     const frame={
       ...old,
       enabled:form.elements.frame_enabled.checked,
-      mode:form.elements.frame_mode.value==="image"?"image":"soft",
+      mode,
+      image_mode_explicit:true,
       preset:["lightning","silver","gold"].includes(d.frame_preset)?d.frame_preset:"lightning",
       show_logo:form.elements.frame_show_logo.checked,
       opacity:Math.max(.35,Math.min(1,Number(d.frame_opacity)||1)),
@@ -1108,7 +1111,7 @@
     await A.call("settings.save",{data:{...S.settings,config:{...c,card_frame:frame}}});
     await refreshSettings();
     cardFrames();
-    toast("تم تحديث إطار جميع الكروت. افتح المتجر لمشاهدة التصميم.");
+    toast(mode==="image"?"تم رفع وتفعيل صورة الإطار لجميع الخدمات والأقسام":"تم تفعيل الإطار البرمجي الرفيع");
   }
   async function settings() {
     const d = S.settings,
@@ -1139,7 +1142,7 @@
           ["contain", "الصورة كاملة"],
         ],
         c.logo_fit || "cover",
-      )}<div class="field-row">${field("logo_x", "تحريك الشعار يمين / يسار", "number", c.logo_x || 0, 'min="-100" max="100"')}${field("logo_y", "تحريك الشعار أعلى / أسفل", "number", c.logo_y || 0, 'min="-100" max="100"')}</div>${check("logo_motion", "إضافة حركة لطيفة للشعار", c.logo_motion)}<div class="form-section"><h3>بطاقات الخدمات والأقسام</h3>${check("edge_glow_enabled", "إطار متوهج متحرك على البطاقات والأزرار", c.edge_glow_enabled !== false)}${field("edge_glow_color", "لون الإطار المتوهج", "color", c.edge_glow_color || "#ff2444")}${field("edge_glow_speed", "مدة دورة الإطار بالثواني (كلما زادت أصبح أبطأ)", "number", c.edge_glow_speed ?? 14, 'min="4" max="60" step="1"')}${select("card_flip_speed", "مدة تأثير الظهور الأول", [["0.4","سريع (0.4 ثانية)"],["0.8","متوسط (0.8 ثانية)"],["1.2","هادئ (1.2 ثانية)"],["2","بطيء (ثانيتان)"]], String([0.4,0.8,1.2,2].reduce((a,b)=>Math.abs(b-(Number(c.card_flip_speed)||0.8))<Math.abs(a-(Number(c.card_flip_speed)||0.8))?b:a,0.8)))}${check("card_flip_enabled", "تأثير ظهور خفيف مرة واحدة بدون دوران", c.card_flip_enabled !== false)}${field("card_back_image", "رابط صورة خلفية البطاقات", "url", c.card_back_image || "")}${field("card_back_file", "رفع صورة خلفية البطاقات", "file", "", 'accept="image/png,image/jpeg,image/webp"')}${field("card_fallback_image", "رابط الصورة الموحدة عند غياب الصورة أو توقف الخدمة", "url", c.card_fallback_image || "")}${field("card_fallback_file", "رفع الصورة الموحدة", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<p class="muted small">صورة الخلفية تظهر أثناء دوران البطاقة، ثم تظهر صورة الخدمة. الصورة الموحدة تظهر فقط عندما لا توجد صورة أصلية. عند توقف الخدمة تبقى صورتها الأصلية ظاهرة مع شارة قيد التعبئة.</p></div><div class="form-section"><h3>الإطار الموحد لكروت المتجر</h3>${check("card_frame_enabled","تفعيل الإطار الناري على الأقسام والخدمات وطرق الإيداع",c.card_frame?.enabled!==false)}${select("card_frame_preset","لون الإطار",[["lightning","أحمر ناعم"],["silver","فضي ناعم"],["gold","ذهبي ناعم"]],c.card_frame?.preset||"lightning")}${select("card_frame_mode","طريقة الإطار",[["soft","برمجي رفيع"],["image","صورة مخصصة"]],c.card_frame?.mode==="image"?"image":"soft")}${check("card_frame_show_logo","عرض شعار F90 CARD أعلى الكروت",c.card_frame?.show_logo!==false)}${field("card_frame_opacity","قوة الإطار (0.35 حتى 1)","number",c.card_frame?.opacity??1,'min="0.35" max="1" step="0.05"')}${field("card_frame_image_url","رابط إطار شفاف خاص","url",c.card_frame?.image_url||"")}${field("card_frame_file","رفع إطار PNG أو WebP جديد لجميع الكروت","file","",'accept="image/png,image/webp"')}<p class="muted small">إطار برمجي ناعم على حواف الصورة فقط؛ اسم الخدمة والسعر خارج الصورة. (اختر وضع الصورة إن أردت تصميم PNG).</p></div><p class="muted small">يمكن رفع شعار متحرك. تعتمد الحركة على صورة متحركة أو خيار الحركة أعلاه.</p>${field("app_icon_url", "صورة أيقونة التطبيق <small>يفضل صورة مربعة ثابتة</small>", "text", c.app_icon_url || "")}${field("app_icon_file", "رفع أيقونة التطبيق", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<div class="form-section"><h3>واجهة المتجر</h3>${check("show_banners", "إظهار صور الإعلانات", c.show_banners !== false)}<p class="muted small">يمكن تعديل بنر التعريف وصور الإعلانات الصغيرة من قسم «الإعلانات» مباشرة.</p>${field("banner_seconds", "مدة تبديل الإعلان بالثواني", "number", c.banner_seconds || 6, 'min="3" max="120"')}${field("announcement", "الإعلان النصي", "textarea", d.announcement || "")}${check("popup_enabled", "إظهار تنبيه في وسط الشاشة للزوار والعملاء", c.popup_announcement?.enabled)}${check("popup_home_each_entry", "عرض التنبيه كلما دخل الزائر الرئيسية", c.popup_announcement?.every_home_visit===true)}${field("popup_text", "نص التنبيه", "textarea", c.popup_announcement?.text_ar || "", 'maxlength="1000"')}${field("footer_ar", "نبذة أسفل الموقع", "textarea", c.footer_ar || "")}</div><div class="form-section"><h3>واجهة التجار</h3>${check("merchant_api_enabled", "تفعيل صفحة الربط ومفاتيح API للتجار", c.merchant_api_enabled !== false)}<p class="muted small">عند الإيقاف تُرفض الطلبات باستخدام مفاتيح التجار، ولا تُحذف مفاتيحهم. تعود للعمل بعد التفعيل.</p></div><div class="form-section"><h3>صفحة الترحيب</h3>${field("welcome_title", "عنوان صفحة الترحيب", "text", c.welcome?.title_ar || "عالمك الرقمي يبدأ هنا", 'maxlength="100"')}${field("welcome_subtitle", "نبذة صفحة الترحيب", "textarea", c.welcome?.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.", 'maxlength="350" rows="3"')}${field("welcome_image", "صورة صفحة الترحيب", "text", c.welcome?.image_url || "")}<p class="muted small">تظهر الصفحة للزائر عند فتح رابط الموقع من دون مسار، ويمكن الوصول إليها من القائمة. الأقسام وطرق الإيداع تُقرأ من البيانات المفعّلة.</p></div><div class="form-section"><h3>الصيانة</h3>${check("maintenance_enabled", "تفعيل الصيانة للزوار والعملاء", c.maintenance?.enabled)}${field("maintenance_text", "رسالة الصيانة", "textarea", c.maintenance?.text_ar || "نجهّز لك تجربة أفضل. نعود قريبًا.")}${field("maintenance_until", "موعد انتهاء الصيانة (اختياري، بتوقيت جهازك)", "datetime-local", c.maintenance?.until ? (() => { const d = new Date(c.maintenance.until); return Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : ""; })() : "")}</div><div class="form-section"><h3>قناة واتساب الرسمية</h3><p class="muted small">أدخل رابط القناة الحقيقي. تظهر دعوة الانضمام للزائر عند أول زيارة، دون منع تصفح المتجر.</p>${field("whatsapp_channel_url", "رابط قناة واتساب", "url", c.whatsapp_channel_url || "", 'placeholder="https://whatsapp.com/channel/..." dir="ltr"')}${check("whatsapp_channel_popup", "إظهار دعوة الانضمام عند أول دخول", c.whatsapp_channel_popup !== false)}</div><div class="form-section"><h3>روابط التواصل</h3><p class="muted small">يمكن تغيير اسم كل منصة ورابطها وأيقونتها مباشرة، أو رفع صورة جديدة بدل الأيقونة.</p><div id="socialRows" class="dynamic-rows">${(c.social_links || []).map((s, n) => socialRow(s, n)).join("")}</div><button type="button" class="button secondary small" data-action="add-social">إضافة منصة جديدة</button></div><button class="button" style="margin-top:25px" type="submit">حفظ إعدادات الموقع</button></section>${imageEditor(d.logo_url || "")}</div></form>`;
+      )}<div class="field-row">${field("logo_x", "تحريك الشعار يمين / يسار", "number", c.logo_x || 0, 'min="-100" max="100"')}${field("logo_y", "تحريك الشعار أعلى / أسفل", "number", c.logo_y || 0, 'min="-100" max="100"')}</div>${check("logo_motion", "إضافة حركة لطيفة للشعار", c.logo_motion)}<div class="form-section"><h3>بطاقات الخدمات والأقسام</h3>${check("edge_glow_enabled", "إطار متوهج متحرك على البطاقات والأزرار", c.edge_glow_enabled !== false)}${field("edge_glow_color", "لون الإطار المتوهج", "color", c.edge_glow_color || "#ff2444")}${field("edge_glow_speed", "مدة دورة الإطار بالثواني (كلما زادت أصبح أبطأ)", "number", c.edge_glow_speed ?? 14, 'min="4" max="60" step="1"')}${select("card_flip_speed", "مدة تأثير الظهور الأول", [["0.4","سريع (0.4 ثانية)"],["0.8","متوسط (0.8 ثانية)"],["1.2","هادئ (1.2 ثانية)"],["2","بطيء (ثانيتان)"]], String([0.4,0.8,1.2,2].reduce((a,b)=>Math.abs(b-(Number(c.card_flip_speed)||0.8))<Math.abs(a-(Number(c.card_flip_speed)||0.8))?b:a,0.8)))}${check("card_flip_enabled", "تأثير ظهور خفيف مرة واحدة بدون دوران", c.card_flip_enabled !== false)}${field("card_back_image", "رابط صورة خلفية البطاقات", "url", c.card_back_image || "")}${field("card_back_file", "رفع صورة خلفية البطاقات", "file", "", 'accept="image/png,image/jpeg,image/webp"')}${field("card_fallback_image", "رابط الصورة الموحدة عند غياب الصورة أو توقف الخدمة", "url", c.card_fallback_image || "")}${field("card_fallback_file", "رفع الصورة الموحدة", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<p class="muted small">صورة الخلفية تظهر أثناء دوران البطاقة، ثم تظهر صورة الخدمة. الصورة الموحدة تظهر فقط عندما لا توجد صورة أصلية. عند توقف الخدمة تبقى صورتها الأصلية ظاهرة مع شارة قيد التعبئة.</p></div><div class="form-section"><h3>الإطار الموحد لكروت المتجر</h3>${check("card_frame_enabled","تفعيل الإطار الناري على الأقسام والخدمات وطرق الإيداع",c.card_frame?.enabled!==false)}${select("card_frame_preset","لون الإطار",[["lightning","أحمر ناعم"],["silver","فضي ناعم"],["gold","ذهبي ناعم"]],c.card_frame?.preset||"lightning")}${select("card_frame_mode","طريقة الإطار",[["soft","برمجي رفيع"],["image","صورة مخصصة"]],c.card_frame?.mode==="image" || (c.card_frame?.image_url&&c.card_frame?.image_mode_explicit!==true)?"image":"soft")}${check("card_frame_show_logo","عرض شعار F90 CARD أعلى الكروت",c.card_frame?.show_logo!==false)}${field("card_frame_opacity","قوة الإطار (0.35 حتى 1)","number",c.card_frame?.opacity??1,'min="0.35" max="1" step="0.05"')}${field("card_frame_image_url","رابط إطار شفاف خاص","url",c.card_frame?.image_url||"")}${field("card_frame_file","رفع PNG / WebP (يتفعّل تلقائيًا)","file","",'accept="image/png,image/webp"')}<p class="muted small">إطار برمجي ناعم على حواف الصورة فقط؛ اسم الخدمة والسعر خارج الصورة. (اختر وضع الصورة إن أردت تصميم PNG).</p></div><p class="muted small">يمكن رفع شعار متحرك. تعتمد الحركة على صورة متحركة أو خيار الحركة أعلاه.</p>${field("app_icon_url", "صورة أيقونة التطبيق <small>يفضل صورة مربعة ثابتة</small>", "text", c.app_icon_url || "")}${field("app_icon_file", "رفع أيقونة التطبيق", "file", "", 'accept="image/png,image/jpeg,image/webp"')}<div class="form-section"><h3>واجهة المتجر</h3>${check("show_banners", "إظهار صور الإعلانات", c.show_banners !== false)}<p class="muted small">يمكن تعديل بنر التعريف وصور الإعلانات الصغيرة من قسم «الإعلانات» مباشرة.</p>${field("banner_seconds", "مدة تبديل الإعلان بالثواني", "number", c.banner_seconds || 6, 'min="3" max="120"')}${field("announcement", "الإعلان النصي", "textarea", d.announcement || "")}${check("popup_enabled", "إظهار تنبيه في وسط الشاشة للزوار والعملاء", c.popup_announcement?.enabled)}${check("popup_home_each_entry", "عرض التنبيه كلما دخل الزائر الرئيسية", c.popup_announcement?.every_home_visit===true)}${field("popup_text", "نص التنبيه", "textarea", c.popup_announcement?.text_ar || "", 'maxlength="1000"')}${field("footer_ar", "نبذة أسفل الموقع", "textarea", c.footer_ar || "")}</div><div class="form-section"><h3>واجهة التجار</h3>${check("merchant_api_enabled", "تفعيل صفحة الربط ومفاتيح API للتجار", c.merchant_api_enabled !== false)}<p class="muted small">عند الإيقاف تُرفض الطلبات باستخدام مفاتيح التجار، ولا تُحذف مفاتيحهم. تعود للعمل بعد التفعيل.</p></div><div class="form-section"><h3>صفحة الترحيب</h3>${field("welcome_title", "عنوان صفحة الترحيب", "text", c.welcome?.title_ar || "عالمك الرقمي يبدأ هنا", 'maxlength="100"')}${field("welcome_subtitle", "نبذة صفحة الترحيب", "textarea", c.welcome?.subtitle_ar || "استكشف خدماتنا الرقمية، أضف رصيدك بعد توثيق حسابك، وتابع طلباتك من مكان واحد.", 'maxlength="350" rows="3"')}${field("welcome_image", "صورة صفحة الترحيب", "text", c.welcome?.image_url || "")}<p class="muted small">تظهر الصفحة للزائر عند فتح رابط الموقع من دون مسار، ويمكن الوصول إليها من القائمة. الأقسام وطرق الإيداع تُقرأ من البيانات المفعّلة.</p></div><div class="form-section"><h3>الصيانة</h3>${check("maintenance_enabled", "تفعيل الصيانة للزوار والعملاء", c.maintenance?.enabled)}${field("maintenance_text", "رسالة الصيانة", "textarea", c.maintenance?.text_ar || "نجهّز لك تجربة أفضل. نعود قريبًا.")}${field("maintenance_until", "موعد انتهاء الصيانة (اختياري، بتوقيت جهازك)", "datetime-local", c.maintenance?.until ? (() => { const d = new Date(c.maintenance.until); return Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : ""; })() : "")}</div><div class="form-section"><h3>قناة واتساب الرسمية</h3><p class="muted small">أدخل رابط القناة الحقيقي. تظهر دعوة الانضمام للزائر عند أول زيارة، دون منع تصفح المتجر.</p>${field("whatsapp_channel_url", "رابط قناة واتساب", "url", c.whatsapp_channel_url || "", 'placeholder="https://whatsapp.com/channel/..." dir="ltr"')}${check("whatsapp_channel_popup", "إظهار دعوة الانضمام عند أول دخول", c.whatsapp_channel_popup !== false)}</div><div class="form-section"><h3>روابط التواصل</h3><p class="muted small">يمكن تغيير اسم كل منصة ورابطها وأيقونتها مباشرة، أو رفع صورة جديدة بدل الأيقونة.</p><div id="socialRows" class="dynamic-rows">${(c.social_links || []).map((s, n) => socialRow(s, n)).join("")}</div><button type="button" class="button secondary small" data-action="add-social">إضافة منصة جديدة</button></div><button class="button" style="margin-top:25px" type="submit">حفظ إعدادات الموقع</button></section>${imageEditor(d.logo_url || "")}</div></form>`;
   }
   function socialRow(s, n) {
     const presets = [["اختر منصة لإضافة شعارها", ""], ["واتساب", "whatsapp"], ["إنستغرام", "instagram"], ["فيسبوك", "facebook"], ["تيك توك", "tiktok"], ["تيليجرام", "telegram"], ["يوتيوب", "youtube"], ["سناب شات", "snapchat"], ["إكس", "x"], ["ديسكورد", "discord"]];
@@ -1663,6 +1666,8 @@
       ? (await A.upload(d.hero_file, "f90-images", "banners")).url
       : (d.hero_image || c.hero_image);
     const frameImage = d.card_frame_file?.size ? (await A.upload(d.card_frame_file, "f90-images", "branding")).url : String(d.card_frame_image_url || "").trim();
+    const frameMode = d.card_frame_file?.size || (frameImage && frameImage!==String(c.card_frame?.image_url||"").trim())
+      ? "image" : (d.card_frame_mode==="image"?"image":"soft");
     const cardBack = d.card_back_file?.size ? (await A.upload(d.card_back_file, "f90-images", "branding")).url : d.card_back_image;
     const cardFallback = d.card_fallback_file?.size ? (await A.upload(d.card_fallback_file, "f90-images", "branding")).url : d.card_fallback_image;
     const social = await Promise.all([...form.querySelectorAll("[data-social-row]")].map(
@@ -1703,7 +1708,7 @@
           edge_glow_speed: Math.max(4, Math.min(60, Number(d.edge_glow_speed) || 14)),
           card_flip_speed: Math.max(0.2, Math.min(3, Number(d.card_flip_speed) || 0.8)),
           card_flip_enabled: form.elements.card_flip_enabled.checked,
-          card_frame: {...c.card_frame,mode:d.card_frame_mode==="image"?"image":"soft",enabled:form.elements.card_frame_enabled.checked,preset:["lightning","silver","gold"].includes(d.card_frame_preset)?d.card_frame_preset:"lightning",show_logo:form.elements.card_frame_show_logo.checked,opacity:Math.max(.35,Math.min(1,Number(d.card_frame_opacity)||1)),image_url:frameImage},
+          card_frame: {...c.card_frame,mode:frameMode,image_mode_explicit:true,enabled:form.elements.card_frame_enabled.checked,preset:["lightning","silver","gold"].includes(d.card_frame_preset)?d.card_frame_preset:"lightning",show_logo:form.elements.card_frame_show_logo.checked,opacity:Math.max(.35,Math.min(1,Number(d.card_frame_opacity)||1)),image_url:frameImage},
           card_back_image: cardBack,
           card_fallback_image: cardFallback,
           default_theme: d.default_theme,
@@ -3229,6 +3234,28 @@
     }
   });
   document.addEventListener("change", (ev) => {
+    // Selecting a frame file or entering its URL activates image mode automatically.
+    if (ev.target.name==="frame_file" || ev.target.name==="card_frame_file") {
+      const file=ev.target.files?.[0];
+      if (file) {
+        const selectName=ev.target.name==="frame_file"?"frame_mode":"card_frame_mode";
+        const mode=ev.target.form?.elements[selectName];
+        if (mode) mode.value="image";
+        if (ev.target.name==="frame_file"){
+          const preview=ev.target.form?.querySelector(".f90-frame-demo-artwrap");
+          const art=preview?.querySelector(".f90-frame-demo-overlay");
+          if(preview&&art){
+            if(window.f90FramePreviewUrl)URL.revokeObjectURL(window.f90FramePreviewUrl);
+            window.f90FramePreviewUrl=URL.createObjectURL(file);
+            art.src=window.f90FramePreviewUrl;
+            preview.classList.add("f90-preview-image");
+            preview.classList.remove("f90-preview-soft");
+            preview.querySelector(".f90-frame-demo-logo")?.remove();
+          }
+        }
+      }
+      return;
+    }
     if (ev.target.id === "requestFilter") {
       S.filter = ev.target.value;
       S.offset = 0;
@@ -3271,6 +3298,24 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.name==="frame_url" || ev.target.name==="card_frame_image_url") {
+      const value=String(ev.target.value||"").trim();
+      if(/^https:\/\//i.test(value)){
+        const mode=ev.target.form?.elements[ev.target.name==="frame_url"?"frame_mode":"card_frame_mode"];
+        if(mode)mode.value="image";
+        if(ev.target.name==="frame_url"){
+          const preview=ev.target.form?.querySelector(".f90-frame-demo-artwrap");
+          const art=preview?.querySelector(".f90-frame-demo-overlay");
+          if(preview&&art){
+            art.src=value;
+            preview.classList.add("f90-preview-image");
+            preview.classList.remove("f90-preview-soft");
+            preview.querySelector(".f90-frame-demo-logo")?.remove();
+          }
+        }
+      }
+      return;
+    }
     if (ev.target.form?.id === "designCenterForm") {
       const form=ev.target.form,title=$("f90VisualPreviewTitle"),desc=$("f90VisualPreviewDescription");
       if(title)title.textContent=form.elements.welcome_title.value||"F90 CARD";

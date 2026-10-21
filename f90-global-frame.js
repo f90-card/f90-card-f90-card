@@ -10,7 +10,9 @@
   root.classList.toggle("f90-global-frame-on",o.enabled!==false);
   root.classList.toggle("f90-frame-no-logo",o.show_logo===false);
   const frame=imageUrl(o.image_url);
-  const imageMode=o.mode==="image" && !!frame;
+  // Backward compatibility: older admin saved an uploaded image alongside mode=soft.
+  // New explicit soft choices carry image_mode_explicit=true.
+  const imageMode=!!frame && (o.mode==="image" || o.image_mode_explicit!==true && o.mode!=="image");
   root.dataset.f90FrameMode=imageMode?"image":"soft";
   root.classList.toggle("f90-frame-custom",imageMode);
   root.dataset.f90FramePreset=styles.has(o.preset)?o.preset:"lightning";

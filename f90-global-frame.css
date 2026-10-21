@@ -65,15 +65,16 @@
  z-index:6!important;pointer-events:none!important;
  filter:drop-shadow(0 1px 3px rgba(0,0,0,.65))!important;
 }
-/* Optional legacy uploaded artwork works only when administrator explicitly switches mode. */
-:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .image-grid .f90-flip-inner::before,
+/* Uploaded frame image replaces the soft border only when image mode is active.
+   Same selector as the default outline plus the data attribute wins !important specificity. */
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::before,
 :root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::before{
  background:var(--f90-frame-art) center/100% 100% no-repeat!important;
  border:0!important;box-shadow:none!important;
 }
-:root.f90-global-frame-on[data-f90-frame-mode="image"].f90-frame-custom #mainContent .image-grid .f90-flip-inner::after,
+:root.f90-global-frame-on[data-f90-frame-mode="image"].f90-frame-custom #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::after,
 :root.f90-global-frame-on[data-f90-frame-mode="image"].f90-frame-custom #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::after,
-:root.f90-global-frame-on.f90-frame-no-logo #mainContent .image-grid .f90-flip-inner::after,
+:root.f90-global-frame-on.f90-frame-no-logo #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner::after,
 :root.f90-global-frame-on.f90-frame-no-logo #mainContent .f90-deposit-methods-with-images .f90-method-image-frame::after{
  content:none!important;
 }
