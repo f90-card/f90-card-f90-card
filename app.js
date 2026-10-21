@@ -1543,13 +1543,15 @@ function depositRecord(d) {
 
 function orderRecord(o) {
     const state=o.status||"pending",recipient=orderRecipientFields(o);
+    // Keep the stored recipient ID separate from any nickname; never infer a name from an ID.
+    const accountId=orderRecipientFields(o).accountId;
     const extras=recipient.extras.map(([key,val])=>financeField(String(key),typeof val==="object"?JSON.stringify(val):String(val))).join("");
     const details='<div class="f90-fin-field-grid">'+
        financeField("رقم العملية",o.id||"—")+financeField("المنتج",o.product_name||"—")+
        financeField("الكمية",financeNumber(o.quantity||0))+
        financeField("الإجمالي",accountMoney(o.total_usd))+
        financeField("التاريخ",C.date(o.created_at))+
-       (recipient.accountId?financeField("ID الشحن",recipient.accountId):"")+
+       (accountId?financeField("ID الشحن",accountId):"")+
        (recipient.accountName?financeField("اسم الحساب",recipient.accountName):"")+extras+'</div>'+
        '<a class="f90-fin-detail-link" href="'+href("order",o.id)+'">فتح تفاصيل الطلب والاعتراض ←</a>';
     const picture=C.safeUrl(o.product_image);
