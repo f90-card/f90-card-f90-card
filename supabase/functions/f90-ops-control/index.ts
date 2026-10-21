@@ -46,6 +46,7 @@ async function health(){
  ]);
  for(const r of [flags,providers,orders,deposits,notifications,keys,sessions])if(r.error)throw Error("MONITOR_UNAVAILABLE");
  const pending=(notifications.data||[]).filter(x=>x.destination!=="channel_draft");
+ const cronResult=await db.rpc("f90_ops_cron_health");
  return {
  as_of:new Date().toISOString(),
  flags:flags.data,
@@ -54,6 +55,7 @@ async function health(){
  deposits:{count_sampled:deposits.data?.length||0,pending:(deposits.data||[]).filter(x=>x.status==="pending").length,last:deposits.data?.[0]?.created_at||null},
  notification_backlog:{sampled:notifications.data?.length||0,non_draft_in_sample:pending.length,last:notifications.data?.[0]?.created_at||null},
  api:{keys_sampled:keys.data?.length||0,active:(keys.data||[]).filter(x=>x.is_active).length,ever_used:(keys.data||[]).filter(x=>x.last_used_at).length},
+ cron_jobs:cronResult.error?[]:cronResult.data,
  session_latest:sessions.data?.[0]?.last_seen_at||null,
  note:"تُعرض مؤشرات قاعدة البيانات فقط. نجاح مهام المجدول والتسليم الفعلي يحتاجان فحصًا منفصلًا."
  };
