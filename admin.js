@@ -77,6 +77,7 @@
     ["telegram-alerts", "تنبيهات تلجرام", "send", ["manager"]],
     ["policies", "المعلومات والسياسات", "doc", ["manager"]],
     ["settings", "الهوية والإعدادات", "edit", ["manager"]],
+    ["card-frames", "إطارات الكروت", "grid", ["manager"]],
   ];
   const titles = {
     orders: "إدارة الطلبات",
@@ -184,7 +185,7 @@
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
-      ["المظهر والمحتوى",["content-text","content-images","content-links","content-branding","promotions","notifications","policies","settings"]],
+      ["المظهر والمحتوى",["content-text","content-images","content-links","content-branding","promotions","notifications","policies","settings","card-frames"]],
       ["الإشعارات والإضافات",["telegram-alerts"]]
     ];
     const link=item=>'<a href="#/'+item[0]+'" class="'+(S.active===item[0]?'active':'')+'">'+I(item[2])+item[1]+'</a>';
@@ -1072,6 +1073,40 @@
         `<button class="button secondary small" data-action="back-dynamic">رجوع</button>`,
       ) +
       `<form id="dynamicForm"><div class="editor"><section class="panel">${body}<button class="button" type="submit">حفظ</button></section>${["payments", "promotions"].includes(kind) ? imageEditor(d.image_url || "") : ""}</div></form>`;
+  }
+  /* Independent editor: one global frame, not one uploaded image per product. */
+  function cardFrames(){
+    const c=S.settings?.config||{},o=c.card_frame||{};
+    main.innerHTML=head("إطارات الكروت","إطار واحد لجميع الأقسام والخدمات وطرق الإيداع. لا تتغير صور المنتجات أو أسعارها.")+
+      '<section class="panel f90-frame-admin-wrap"><form id="cardFramesForm">'+
+      check("frame_enabled","تفعيل الإطار على جميع الكروت",o.enabled!==false)+
+      select("frame_preset","الإطار الحالي",[["lightning","رقم 4: برق أحمر ناري"],["silver","فضي معدني"],["gold","ذهبي"]],o.preset||"lightning")+
+      check("frame_show_logo","عرض شعار F90 CARD الأصلي أعلى الإطار",o.show_logo!==false)+
+      field("frame_opacity","قوة الإطار","number",o.opacity??1,'min="0.35" max="1" step="0.05"')+
+      field("frame_url","رابط إطار شفاف بديل (اختياري)","url",o.image_url||"", 'placeholder="https://..." dir="ltr"')+
+      field("frame_file","أو رفع إطار PNG / WebP شفاف جديد","file","",'accept="image/png,image/webp"')+
+      '<div class="f90-frame-demo" aria-label="معاينة الإطار الناري"><div class="f90-frame-demo-logo"><img src="./f90-logo.png" alt="شعار F90 CARD"></div><img class="f90-frame-demo-art" src="./assets/sections/f90-games.webp" alt="مثال لصورة قسم"><strong>مثال لكرت قسم الألعاب</strong></div>'+
+      '<p class="muted small">تغيير الإطار ينعكس على كل الكروت بعد الحفظ والتحديث. التصميم طبقة خارجية خفيفة ولا يُعدل الصور الأصلية.</p>'+
+      '<button class="button" type="submit">حفظ الإطار وتطبيقه على الجميع</button></form></section>';
+  }
+  async function saveCardFrames(form,d){
+    const c=S.settings?.config||{},old=c.card_frame||{};
+    const file=form.elements.frame_file?.files?.[0];
+    if(file?.size>5*1024*1024)throw new Error("حجم صورة الإطار يجب ألا يتجاوز 5 ميجابايت");
+    const url=file?.size?(await A.upload(file,"f90-images","branding")).url:String(d.frame_url||"").trim();
+    if(url&&!/^https:\/\//i.test(url)&&!url.startsWith("./"))throw new Error("رابط الإطار يجب أن يكون HTTPS");
+    const frame={
+      ...old,
+      enabled:form.elements.frame_enabled.checked,
+      preset:["lightning","silver","gold"].includes(d.frame_preset)?d.frame_preset:"lightning",
+      show_logo:form.elements.frame_show_logo.checked,
+      opacity:Math.max(.35,Math.min(1,Number(d.frame_opacity)||1)),
+      image_url:url
+    };
+    await A.call("settings.save",{data:{...S.settings,config:{...c,card_frame:frame}}});
+    await refreshSettings();
+    cardFrames();
+    toast("تم تحديث إطار جميع الكروت. افتح المتجر لمشاهدة التصميم.");
   }
   async function settings() {
     const d = S.settings,
@@ -2331,6 +2366,7 @@
       )
         publicListPage(page);
       else if (page === "settings") await settings();
+      else if (page === "card-frames") await cardFrames();
       else if (page === "salary-requests") {
         main.innerHTML=head("طلبات رواتب Xena Live","طلبات السحب مستقلة عن بقية الإيداعات، ويمكنك اعتمادها أو رفضها بعد فحص الإيصال.");
         await window.F90SpecialAdmin.renderSalaryInbox(main);
@@ -2372,6 +2408,7 @@
     if (form.id === "catalogForm") return saveCatalog(form, d);
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
+    if (form.id === "cardFramesForm") return saveCardFrames(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);
     if (form.id === "radioYoutubeForm") return saveRadioYoutube(form,d);
