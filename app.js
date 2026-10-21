@@ -1445,13 +1445,13 @@
         '<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>')+
         '<div class="method-grid f90-deposit-methods-with-images">'+methods.map(x=>x.enabled===true?
           '<a class="method-tile f90-method-active" href="'+(salaryMethod(x)?"#/special/salary":href("deposit",x.id))+'" aria-label="'+e(x.name_ar)+'">'+
-          image(x.image_url,x.name_ar,"f90-deposit-method-art")+
+          '<span class="f90-method-image-frame">'+image(x.image_url,x.name_ar,"f90-deposit-method-art")+'</span>'+
           '<strong>'+e(x.name_ar)+'</strong><small>إيداع متاح الآن</small></a>':
           '<div class="method-tile f90-method-unavailable" aria-disabled="true">'+
-          image(x.image_url,x.name_ar,"f90-deposit-method-art")+
+          '<span class="f90-method-image-frame">'+image(x.image_url,x.name_ar,"f90-deposit-method-art")+'</span>'+
           '<strong>'+e(x.name_ar)+'</strong><small>غير متاح حاليًا</small></div>').join("")+
         (fallbackSalary?'<a class="method-tile f90-method-active" href="#/special/salary">'+
-          image(S.settings.config?.salary_withdrawal?.image_url||"./assets/f90-new/xena-salary-v2.webp","سحب رواتب Xena Live","f90-deposit-method-art")+
+          '<span class="f90-method-image-frame">'+image(S.settings.config?.salary_withdrawal?.image_url||"./assets/f90-new/xena-salary-v2.webp","سحب رواتب Xena Live","f90-deposit-method-art")+'</span>'+
           '<strong>سحب رواتب Xena Live</strong><small>حساب الكوينز وتقديم الطلب</small></a>':"")+
         '</div>'+
         (!active.length&&!fallbackSalary?empty("لا توجد طرق إيداع مفعّلة حاليًا","wallet"):"");
