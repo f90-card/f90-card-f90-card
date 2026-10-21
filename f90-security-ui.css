@@ -1,0 +1,9 @@
+.f90-security-area{width:min(100%,1000px);margin:22px auto}
+.f90-security-area .muted{line-height:1.8}
+.f90-security-records{display:grid;gap:10px;margin-top:12px;max-height:70vh;overflow:auto}
+.f90-security-entry{display:grid;gap:6px;min-width:0;border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--surface2);color:var(--text);overflow-wrap:anywhere}
+.f90-security-entry strong{font-size:13px}
+.f90-security-entry span,.f90-security-entry small{font-size:11px;color:var(--muted)}
+.f90-security-entry[hidden]{display:none}
+.f90-security-search{width:100%;min-height:44px;background:var(--surface2);color:var(--text);padding:10px;border:1px solid var(--line);border-radius:10px}
+.f90-security-disclosure{font-size:12px;line-height:1.7;color:var(--muted);margin:14px 0}
