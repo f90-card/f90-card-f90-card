@@ -75,3 +75,26 @@
 }
 @media(max-width:360px){.f90-fin-wallet-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}.f90-fin-field-grid{grid-template-columns:1fr}.f90-fin-row .f90-fin-summary{grid-template-columns:minmax(0,1fr) 69px 60px 10px;gap:4px}.f90-fin-price{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.f90-fin-chevron{transition:none}}
+
+/* Individual order details mirror the reference's readable grouped information,
+   while retaining F90 status, PDF and complaint controls. */
+#mainContent[data-page="order"] .f90-order-summary-layout{width:min(100%,960px);margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr);gap:15px}
+#mainContent[data-page="order"] .f90-order-summary-card{padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+#mainContent[data-page="order"] .f90-order-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+#mainContent[data-page="order"] .f90-order-summary-heading img{max-width:100px;max-height:62px;object-fit:contain}
+#mainContent[data-page="order"] .f90-order-summary-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#mainContent[data-page="order"] .f90-order-summary-row{display:grid;place-items:center;align-content:center;min-height:105px;min-width:0;gap:12px;text-align:center;box-sizing:border-box;border:none;border-radius:15px;padding:14px;color:#fff!important;background:#145543}
+#mainContent[data-page="order"] .f90-order-summary-row:nth-child(4n+2){background:#88610c}
+#mainContent[data-page="order"] .f90-order-summary-row:nth-child(4n+3){background:#a92d52}
+#mainContent[data-page="order"] .f90-order-summary-row:nth-child(4n+4){background:#096e71}
+#mainContent[data-page="order"] .f90-order-summary-row:nth-child(5){grid-column:1/-1;background:#27205d}
+#mainContent[data-page="order"] .f90-order-summary-row>span{color:#fff!important;font-weight:750;font-size:13px}
+#mainContent[data-page="order"] .f90-order-summary-row>strong{color:#fff!important;font-weight:850;font-size:clamp(13px,2.3vw,18px);overflow-wrap:anywhere;user-select:text}
+#mainContent[data-page="order"] .f90-order-secondary{border-radius:18px;padding:16px}
+#mainContent[data-page="order"] .f90-order-requests{padding:12px 0}
+#mainContent[data-page="order"] .f90-order-requests .record{border-radius:12px}
+@media(max-width:600px){
+ #mainContent[data-page="order"] .f90-order-summary-rows{gap:9px}
+ #mainContent[data-page="order"] .f90-order-summary-row{min-height:92px;padding:9px 5px;gap:8px}
+ #mainContent[data-page="order"] .f90-order-summary-row>strong{font-size:13px}
+}
