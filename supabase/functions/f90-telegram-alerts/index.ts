@@ -53,6 +53,20 @@ function message(row:any):string{
      "<b>النوع:</b> "+escapeHTML(d.kind)+"\n"+
      "<b>المرجع:</b> <code>"+escapeHTML(id)+"</code>\n"+
      "<b>الوقت:</b> "+escapeHTML(date);
+ if(row.event_type==="ops_issue"){
+   return "🚨 <b>F90 CARD | تنبيه تشغيلي</b>\n"+
+     "<b>السبب:</b> "+escapeHTML(String(d.message||"")).slice(0,370)+"\n"+
+     "<b>درجة التنبيه:</b> "+escapeHTML(d.level==="critical"?"حرج":"تحذير")+"\n"+
+     "<b>الرمز:</b> <code>"+escapeHTML(String(d.code||"")).slice(0,80)+"</code>\n"+
+     "<b>وقت الرصد:</b> "+escapeHTML(stamp(d.created_at))+"\n"+
+     "راجع مركز تحكم F90 من لوحة الإدارة.";
+ }
+ if(row.event_type==="ops_resolved"){
+   return "✅ <b>F90 CARD | تعافي الخدمة</b>\n"+
+     "<b>المشكلة السابقة:</b> "+escapeHTML(String(d.message||"")).slice(0,370)+"\n"+
+     "<b>الرمز:</b> <code>"+escapeHTML(String(d.code||"")).slice(0,80)+"</code>\n"+
+     "<b>وقت التعافي:</b> "+escapeHTML(stamp(d.created_at));
+ }
  throw new Error("Unsupported event");
 }
 Deno.serve(async req=>{
