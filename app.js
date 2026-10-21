@@ -136,6 +136,7 @@
   function brand() {
     const c = S.settings.config || {};
     window.F90ThemeBackground?.sync(c,S.settings.logo_url);
+    window.F90GlobalFrame?.apply(c,S.settings.logo_url||"./f90-logo.png");
     window.F90MediaPlayer?.sync(c);
     document.documentElement.style.setProperty("--f90-edge-color", /^#[0-9a-fA-F]{6}$/.test(c.edge_glow_color || "") ? c.edge_glow_color : "#ff2444");
     document.documentElement.style.setProperty("--f90-edge-duration", `${Math.max(4, Math.min(60, Number(c.edge_glow_speed) || 14))}s`);
@@ -3088,7 +3089,7 @@
           const incomingRates = JSON.stringify((latest.rates||[]).map(r => [r.currency,r.per_usd,r.is_enabled,r.name_ar]));
           const oldDefaultCurrency = S.settings?.currency;
           if (Array.isArray(latest.rates)) S.rates = latest.rates;
-          if (latest.settings) S.settings = latest.settings;
+          if (latest.settings) { S.settings = latest.settings; window.F90GlobalFrame?.apply(S.settings.config,S.settings.logo_url||"./f90-logo.png"); }
           const validCurrency = S.rates.some(r => r.currency === S.currency && r.is_enabled && Number(r.per_usd)>0);
           if (!S.currencyPreference || !validCurrency)
             S.currency = S.settings.currency || "USD";

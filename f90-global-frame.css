@@ -1,0 +1,36 @@
+/* F90 electric No.4: fixed, transparent overlay on live storefront cards. */
+:root.f90-global-frame-on{--f90-frame-art:url("./assets/f90-electric-frame.svg");--f90-frame-logo:url("./f90-logo.png")}
+:root.f90-global-frame-on #mainContent :is(.image-grid .image-tile.f90-category-tile,.image-grid .image-tile.f90-product-tile,.method-grid .method-tile){
+ position:relative!important;isolation:isolate!important;overflow:visible!important;border:1px solid #67232e!important;
+ border-radius:12px!important;background:linear-gradient(145deg,#0b0a10,#19151e)!important;box-shadow:0 5px 18px #0005!important;
+}
+:root.f90-global-frame-on #mainContent .image-grid :is(.f90-category-tile,.f90-product-tile){padding:25px 5px 7px!important;gap:0!important}
+:root.f90-global-frame-on #mainContent .method-grid .method-tile{padding-top:30px!important;padding-inline:9px!important}
+:root.f90-global-frame-on #mainContent :is(.image-grid .image-tile.f90-category-tile,.image-grid .image-tile.f90-product-tile,.method-grid .method-tile)::before{
+ content:""!important;display:block!important;position:absolute!important;inset:-4px!important;width:auto!important;height:auto!important;
+ border:0!important;border-radius:0!important;background:var(--f90-frame-art) center / 100% 100% no-repeat!important;
+ -webkit-mask:none!important;mask:none!important;animation:none!important;transform:none!important;box-shadow:none!important;
+ pointer-events:none!important;z-index:8!important;opacity:var(--f90-frame-opacity,1)!important;
+}
+:root.f90-global-frame-on #mainContent :is(.image-grid .image-tile.f90-category-tile,.image-grid .image-tile.f90-product-tile,.method-grid .method-tile)::after{
+ content:""!important;position:absolute!important;inset:9px 16% auto!important;width:68%!important;height:15px!important;display:block!important;
+ background:var(--f90-frame-logo) center / contain no-repeat!important;pointer-events:none!important;z-index:9!important;
+ filter:drop-shadow(0 1px 2px #000) drop-shadow(0 0 3px #ff214472)!important;
+}
+:root.f90-global-frame-on.f90-frame-no-logo #mainContent :is(.image-grid .image-tile.f90-category-tile,.image-grid .image-tile.f90-product-tile,.method-grid .method-tile)::after{content:none!important}
+:root.f90-global-frame-on #mainContent .image-grid .image-tile :is(.f90-flip-inner,.tile-caption,.refill-badge),
+:root.f90-global-frame-on #mainContent .method-grid .method-tile>*{position:relative;z-index:1}
+:root.f90-global-frame-on #mainContent .image-grid .image-tile .f90-flip-inner{overflow:hidden;border-radius:9px}
+:root.f90-global-frame-on #mainContent .image-grid .image-tile .tile-caption{margin-top:6px!important}
+:root.f90-global-frame-on[data-f90-frame-preset="silver"] #mainContent :is(.image-grid .image-tile,.method-grid .method-tile)::before{filter:grayscale(1) brightness(1.4)}
+:root.f90-global-frame-on[data-f90-frame-preset="gold"] #mainContent :is(.image-grid .image-tile,.method-grid .method-tile)::before{filter:sepia(1) saturate(4) hue-rotate(345deg)}
+:root.f90-global-frame-on #mainContent .image-grid .image-tile:hover{transform:translateY(-2px);box-shadow:0 7px 18px #f22a4260!important}
+:root.f90-global-frame-on #mainContent .image-grid .image-tile:focus-visible,
+:root.f90-global-frame-on #mainContent .method-grid .method-tile:focus-visible{outline:2px solid #ff5169;outline-offset:4px}
+@media(max-width:520px){
+ :root.f90-global-frame-on #mainContent .image-grid :is(.f90-category-tile,.f90-product-tile){padding:19px 4px 6px!important;border-radius:9px!important}
+ :root.f90-global-frame-on #mainContent .image-grid .image-tile::after{inset:7px 16% auto!important;height:10px!important}
+ :root.f90-global-frame-on #mainContent .method-grid .method-tile{padding-top:24px!important}
+ :root.f90-global-frame-on #mainContent .method-grid .method-tile::after{inset:7px 16% auto!important;height:13px!important}
+}
+@media(prefers-reduced-motion:reduce){:root.f90-global-frame-on #mainContent .image-grid .image-tile:hover{transform:none!important}}
