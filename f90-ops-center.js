@@ -47,8 +47,9 @@
    }else if(tab==="emergency"){
     const x=await call("overview");
     const list=[["checkout_enabled","الشراء","إيقاف طلبات الشراء الجديدة"],["deposits_enabled","الإيداعات","إيقاف إنشاء طلبات الإيداع الجديدة"],["merchant_enabled","API التجار","إيقاف مفاتيح التجار مؤقتًا"]];
-    out='<div class="notice">مفاتيح الطوارئ مُعدة في قاعدة البيانات، لكن ربطها بمسارات المعاملات لم يجتز النشر بعد. لهذا لن نعرض زر إيقاف لا يضمن التنفيذ.</div>'+
-      '<div class="f90-ops-lines">'+list.map(([key,title,desc])=>'<article class="f90-ops-line"><strong>'+h(title)+'</strong><span>'+h(desc)+'</span><small>القيمة الحالية: '+(x.flags[key]?"تشغيل":"إيقاف")+' | زر التعديل مؤجل حتى اكتمال الربط بالخادم المالي</small></article>').join("")+'</div>';
+    out='<div class="notice">تُنفّذ هذه المفاتيح من قاعدة البيانات. لا تتأثر الطلبات القديمة أو أرصدة العملاء، لكن طلبات الشراء والإيداع الجديدة ستُرفض أثناء الإيقاف. جميع التغييرات مسجّلة بالسبب.</div>'+
+      '<div class="f90-ops-lines">'+list.map(([key,title,desc])=>'<article class="f90-ops-line"><strong>'+h(title)+'</strong><span>'+h(desc)+'</span><small>الحالة الحالية: '+(x.flags[key]?"يعمل":"متوقف")+'</small>'+
+      '<button type="button" class="button secondary small" data-ops-action="toggle" data-key="'+h(key)+'" data-value="'+(!x.flags[key])+'">'+(x.flags[key]?"إيقاف مؤقت":"إعادة التشغيل")+'</button></article>').join("")+'</div>';
    }else if(tab==="security"){
     const result=await api().functions.invoke("f90-security-activity",{body:{action:"manager_list"}});
     if(result.error||result.data?.error)throw Error("تعذّر تحميل العملاء");
@@ -97,6 +98,18 @@
  }
  async function act(button){
   const action=button.dataset.opsAction;
+  if(action==="toggle"){
+   const key=button.dataset.key,enabled=button.dataset.value==="true";
+   const why=prompt("اكتب سبب الإجراء لحفظه في سجل الإدارة (8 أحرف على الأقل):","");
+   if(why===null)return;
+   if(why.trim().length<8){alert("السبب يجب أن يكون من 8 أحرف على الأقل.");return;}
+   if(!confirm(enabled?"تأكيد إعادة تشغيل هذه الخدمة؟":"تأكيد إيقاف هذه الخدمة عن استقبال طلبات جديدة؟"))return;
+   button.disabled=true;
+   try{await call("toggle",{key,enabled,reason:why.trim()});alert("تم تغيير الحالة على الخادم بنجاح.");await navigate("emergency")}
+   catch(e){alert(e.message||"تعذّر تغيير حالة الخدمة")}
+   finally{button.disabled=false}
+   return;
+  }
   if(action==="profit.reload"){await loadProfit();return;}
   if(action==="backup.reload"){await navigate("backup");return;}
   if(action==="backup.create"){
