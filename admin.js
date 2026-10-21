@@ -1084,11 +1084,33 @@
       select("frame_preset","لون الإطار",[["lightning","أحمر ناعم"],["silver","فضي ناعم"],["gold","ذهبي ناعم"]],o.preset||"lightning")+
       check("frame_show_logo","عرض شعار F90 CARD الأصلي أعلى الإطار",o.show_logo!==false)+
       field("frame_opacity","قوة الإطار","number",o.opacity??1,'min="0.35" max="1" step="0.05"')+
+      field("frame_inset","ضبط فتحة الصورة داخل الإطار (%)","number",o.image_inset??11,'min="3" max="23" step="1" inputmode="numeric"')+
       field("frame_url","رابط إطار شفاف بديل (اختياري)","url",o.image_url||"", 'placeholder="https://..." dir="ltr"')+
       field("frame_file","رفع إطار PNG / WebP (يُفعَّل تلقائيًا)","file","",'accept="image/png,image/webp"')+
-      '<div class="f90-frame-demo" aria-label="معاينة الإطار على الصورة فقط"><div class="f90-frame-demo-artwrap '+(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true)?"f90-preview-image":"f90-preview-soft")+'"><img class="f90-frame-demo-art" src="./assets/sections/f90-games.webp" alt="مثال لصورة قسم"><img class="f90-frame-demo-overlay" src="'+e(C.safeUrl(o.image_url)||'./assets/f90-electric-frame.svg')+'" alt="" aria-hidden="true">'+(o.show_logo!==false&&!(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true))?'<img class="f90-frame-demo-logo" src="'+e(C.safeUrl(S.settings?.logo_url)||'./f90-logo.png')+'" alt="">':'')+'</div><strong>اسم الخدمة خارج الإطار</strong></div>'+
+      '<div class="f90-frame-demo" aria-label="معاينة الإطار على الصورة فقط"><div style="--f90-frame-image-inset:'+(Math.max(3,Math.min(23,Number(o.image_inset)||11)))+'%" class="f90-frame-demo-artwrap '+(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true)?"f90-preview-image":"f90-preview-soft")+'"><img class="f90-frame-demo-art" src="./assets/sections/f90-games.webp" alt="مثال لصورة قسم"><img class="f90-frame-demo-overlay" src="'+e(C.safeUrl(o.image_url)||'./assets/f90-electric-frame.svg')+'" alt="" aria-hidden="true">'+(o.show_logo!==false&&!(o.image_url&&(o.mode==="image"||o.image_mode_explicit!==true))?'<img class="f90-frame-demo-logo" src="'+e(C.safeUrl(S.settings?.logo_url)||'./f90-logo.png')+'" alt="">':'')+'</div><strong>اسم الخدمة خارج الإطار</strong></div>'+
       '<p class="muted small">تغيير الإطار ينعكس على كل الكروت بعد الحفظ والتحديث. التصميم طبقة خارجية خفيفة ولا يُعدل الصور الأصلية.</p>'+
       '<button class="button" type="submit">حفظ الإطار وتطبيقه على الجميع</button></form></section>';
+  }
+  /* Read the transparent frame aperture, cheaply, from a locally selected PNG/WebP.
+     The real artwork is stored untouched; only the image window inset is inferred. */
+  async function detectFrameInset(file){
+    if(!file?.size)return null;
+    try{
+      const bmp=await createImageBitmap(file);
+      const n=256,canvas=document.createElement("canvas");
+      canvas.width=n;canvas.height=n;
+      const ctx=canvas.getContext("2d",{willReadFrequently:true});
+      if(!ctx){bmp.close?.();return null}
+      ctx.clearRect(0,0,n,n);ctx.drawImage(bmp,0,0,n,n);bmp.close?.();
+      const data=ctx.getImageData(0,0,n,n).data,mid=n>>1;
+      const alpha=(x,y)=>data[(y*n+x)*4+3];
+      if(alpha(mid,mid)>55)return null;
+      let left=mid,right=mid;
+      while(left>0&&alpha(left,mid)<55)left--;
+      while(right<n-1&&alpha(right,mid)<55)right++;
+      const pct=Math.round(100*Math.max(left+1,n-1-right)/n);
+      return Number.isFinite(pct)?Math.max(3,Math.min(23,pct)):null;
+    }catch{return null;}
   }
   async function saveCardFrames(form,d){
     const c=S.settings?.config||{},old=c.card_frame||{};
@@ -1098,11 +1120,13 @@
     if(url&&!/^https:\/\//i.test(url)&&!url.startsWith("./"))throw new Error("رابط الإطار يجب أن يكون HTTPS");
     const selectedMode=form.elements.frame_mode.value==="image"?"image":"soft";
     const mode=file?.size || (url && url!==String(old.image_url||"").trim())?"image":selectedMode;
+    const detectedInset=file?.size?await detectFrameInset(file):null;
     const frame={
       ...old,
       enabled:form.elements.frame_enabled.checked,
       mode,
       image_mode_explicit:true,
+      image_inset:detectedInset??Math.max(3,Math.min(23,Number(d.frame_inset)||11)),
       preset:["lightning","silver","gold"].includes(d.frame_preset)?d.frame_preset:"lightning",
       show_logo:form.elements.frame_show_logo.checked,
       opacity:Math.max(.35,Math.min(1,Number(d.frame_opacity)||1)),
@@ -3298,6 +3322,11 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.name==="frame_inset") {
+      const raw=Number(ev.target.value),preview=ev.target.form?.querySelector(".f90-frame-demo-artwrap");
+      if(preview&&Number.isFinite(raw))preview.style.setProperty("--f90-frame-image-inset",Math.max(3,Math.min(23,raw))+"%");
+      return;
+    }
     if (ev.target.name==="frame_url" || ev.target.name==="card_frame_image_url") {
       const value=String(ev.target.value||"").trim();
       if(/^https:\/\//i.test(value)){

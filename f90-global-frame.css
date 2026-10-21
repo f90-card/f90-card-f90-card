@@ -139,3 +139,34 @@
 .f90-frame-demo-artwrap.f90-preview-image .f90-frame-demo-overlay{display:block}
 .f90-frame-demo-logo{position:absolute;top:1.5%;left:17%;width:66%;height:20%;object-fit:contain;z-index:6;pointer-events:none;filter:drop-shadow(0 1px 3px #000a)}
 .f90-frame-demo strong{display:grid;place-items:center;width:100%;min-height:32px;padding:5px;border-radius:9px;background:var(--surface2);color:var(--text);font-size:12px;text-align:center}
+
+/* Frame-window alignment: the uploaded image is the card shell, the source art sits INSIDE its transparent opening.
+   The outer graphic stays at full image bounds; image margins are never outside the card. */
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner > .f90-flip-face{
+ position:absolute!important;inset:var(--f90-frame-image-inset,11%)!important;
+ top:var(--f90-frame-image-inset,11%)!important;bottom:var(--f90-frame-image-inset,11%)!important;
+ left:var(--f90-frame-image-inset,11%)!important;right:var(--f90-frame-image-inset,11%)!important;
+ width:auto!important;height:auto!important;margin:0!important;
+ border-radius:9px!important;overflow:hidden!important;
+ transform:none!important;
+}
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile) .f90-flip-inner > .f90-flip-face > img{
+ display:block!important;width:100%!important;height:100%!important;
+ object-fit:contain!important;object-position:center!important;
+ border-radius:9px!important;filter:none!important;
+}
+/* Payment method art also fits behind the decorative edge rather than bleeding outside it. */
+:root.f90-global-frame-on[data-f90-frame-mode="image"] #mainContent .f90-deposit-methods-with-images .f90-method-image-frame > .f90-deposit-method-art{
+ position:absolute!important;inset:var(--f90-frame-image-inset,11%)!important;
+ width:calc(100% - 2 * var(--f90-frame-image-inset,11%))!important;
+ height:calc(100% - 2 * var(--f90-frame-image-inset,11%))!important;
+ object-fit:contain!important;margin:0!important;
+}
+/* Render the exact same inset in settings preview, with a truly separate caption. */
+.f90-frame-demo-artwrap.f90-preview-image > .f90-frame-demo-art{
+ position:absolute!important;
+ inset:var(--f90-frame-image-inset,11%)!important;
+ width:calc(100% - 2 * var(--f90-frame-image-inset,11%))!important;
+ height:calc(100% - 2 * var(--f90-frame-image-inset,11%))!important;
+ object-fit:contain!important;
+}

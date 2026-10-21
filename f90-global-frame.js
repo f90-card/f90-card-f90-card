@@ -16,6 +16,9 @@
   root.dataset.f90FrameMode=imageMode?"image":"soft";
   root.classList.toggle("f90-frame-custom",imageMode);
   root.dataset.f90FramePreset=styles.has(o.preset)?o.preset:"lightning";
+  // The image fills the transparent frame opening, not the outer frame canvas.
+  const inset=Number(o.image_inset);
+  root.style.setProperty("--f90-frame-image-inset",String(Number.isFinite(inset)?Math.max(3,Math.min(23,inset)):11)+"%");
   const mark=imageUrl(logo)||imageUrl("./f90-logo.png");
   if(frame)root.style.setProperty("--f90-frame-art","url("+JSON.stringify(frame)+")");
   else root.style.removeProperty("--f90-frame-art");
