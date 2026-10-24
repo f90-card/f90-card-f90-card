@@ -606,7 +606,7 @@
       '</tbody></table></div><p class="muted small">آخر 50 حركة. السجل الكامل متاح في قسم السجل المالي.</p></section>'+
       '<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
       (u.is_verified
-        ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p></section>'
+        ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p><form id="f90RevokeVerificationForm">'+field("reason","سبب سحب التوثيق","textarea","",'required minlength="8" maxlength="500"')+ <button class="button secondary" type="submit">سحب توثيق الحساب</button></form></section>'
         : '<section class="panel"><h3>اعتماد الحساب يدويًا للإيداع والشراء</h3><p class="muted small">هذا اعتماد داخلي بالمتجر، وليس إثبات هوية قانونيًا. لا تستخدمه إلا بعد مراجعة بيانات العميل. سيُسجّل اسم المدير وسبب الاعتماد في سجل الإدارة.</p>'+
           '<form id="f90ManualVerificationForm">'+field("reason","سبب الاعتماد وما الذي تمت مراجعته","textarea","",'required minlength="8" maxlength="500"')+
           '<button class="button" type="submit">اعتماد الحساب للإيداع والشراء</button></form></section>')+
@@ -2517,6 +2517,16 @@
       if(!form.dataset.requestId)form.dataset.requestId=crypto.randomUUID();
       await A.call("staff.adjust",{id:S.detail.id,amount_usd:amount,note:d.note,request_id:form.dataset.requestId,expected_balance:Number(S.detail.balance_usd)});
       toast("تم تسجيل حركة الرصيد");
+      return detailUser(S.detail);
+    }
+    if (form.id === "f90RevokeVerificationForm") {
+      if (!manager() || !S.detail?.id || !S.detail.is_verified) throw new Error("سحب التوثيق متاح للمدير فقط");
+      const reason=String(d.reason||"").trim();
+      if(reason.length<8)throw new Error("أدخل سبب سحب التوثيق");
+      if(!confirm("تأكيد سحب توثيق الحساب؟"))return;
+      await A.call("staff.revoke_verification",{id:S.detail.id,reason});
+      S.detail.is_verified=false;
+      toast("تم سحب التوثيق وتسجيل القرار");
       return detailUser(S.detail);
     }
     if (form.id === "f90ManualVerificationForm") {
