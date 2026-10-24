@@ -48,6 +48,7 @@
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["audit", "سجل الإدارة", "shield", ["manager"]],
+    ["security-sessions", "سجل الجلسات الأمنية", "shield", ["manager"]],
     ["customer-security", "أمان العملاء والأجهزة", "shield", ["manager"]],
     ["users", "العملاء والأرصدة", "user", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
@@ -2357,6 +2358,16 @@
       '<div id="f90CustomerSecurity">جارٍ تحميل السجل…</div></section>';
     await window.F90SecurityUI?.renderManager("f90CustomerSecurity");
   }
+  async function securitySessionsPage() {
+    const result = await A.call("staff.security.sessions", {limit: 50});
+    const rows = Array.isArray(result.items) ? result.items : [];
+    const safe = value => e(String(value ?? "غير متوفر"));
+    const when = value => value ? safe(new Intl.DateTimeFormat("ar-PS", {dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Hebron"}).format(new Date(value))) : "غير متوفر";
+    main.innerHTML = head("سجل الجلسات الأمنية", "للإدارة فقط. الدولة تقريبية ولا تعني موقع GPS. عناوين IP قد تكون مشتركة أو خاصة بشبكات VPN.") +
+      '<section class="panel"><p class="muted">آخر 50 جلسة مسجلة. عدم وجود معلومات للجهاز يعني أن المتصفح لم يتيحها.</p><div class="table-wrap"><table><thead><tr><th>الحساب</th><th>عنوان IP العام</th><th>الدولة</th><th>الجهاز والنظام</th><th>المتصفح</th><th>آخر نشاط</th></tr></thead><tbody>' +
+      (rows.map(x => '<tr><td>'+safe(x.user_id)+'</td><td>'+safe(x.ip_address)+'</td><td>'+safe(x.country_code)+'</td><td>'+safe(x.device_type)+' / '+safe(x.os_name)+'</td><td>'+safe(x.browser_name)+'</td><td>'+when(x.last_seen_at)+'</td></tr>').join("") || '<tr><td colspan="6">لا توجد جلسات محفوظة</td></tr>') +
+      '</tbody></table></div></section>';
+  }
   async function route() {
     S.token++;
     closeModal();
@@ -2394,6 +2405,7 @@
       else if (["dashboard", "leaderboard"].includes(page))
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
+      else if (page === "security-sessions") await securitySessionsPage();
       else if (page === "customer-security") await customerSecurity();
       else if (page === "order-requests") await orderRequestsPage();
       else if (
