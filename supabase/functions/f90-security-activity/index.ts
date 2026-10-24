@@ -33,7 +33,8 @@ Deno.serve(async (req:Request)=>{
       if(input.action!=="login_failure" || !/^[a-f0-9]{64}$/.test(input.identity||""))return response(req,401,{error:"AUTH_REQUIRED"});
       const key=await db.rpc("f90_security_gateway_secret");
       const context=await verifyContext(req.headers.get("x-f90-activity-context")||"",req.headers.get("x-f90-activity-signature")||"","",body,key.data||"");
-      const limited=await db.rpc("f90_limit",{p_key:"security-login:"+context.ip,p_limit:40});
+      const fingerprint=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(key.data+context.ip))),x=>x.toString(16).padStart(2,"0")).join("");
+      const limited=await db.rpc("f90_limit",{p_key:"security-login:"+fingerprint,p_limit:40});
       if(limited.error||!limited.data)return response(req,429,{error:"RATE_LIMIT"});
       const saved=await db.rpc("f90_security_signal",{p_kind:"login_failed",p_key:input.identity,p_user:null,p_details:{message:"محاولات دخول فاشلة متكررة عبر بوابة الموقع"},p_threshold:5});
       if(saved.error)throw saved.error;return response(req,200,{saved:true});
