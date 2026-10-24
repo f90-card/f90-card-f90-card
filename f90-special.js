@@ -99,7 +99,7 @@ function render(kind,settings,user,selected="",rates=[]){
  const isVerified=!!user?.profile?.is_verified,isSigned=!!user;
  canSubmitTransfer=isVerified&&isSigned&&tr.enabled===true&&c.show_transfer!==false;
  canSubmitSalary=isVerified&&isSigned&&sal.enabled===true&&c.show_salary!==false;
- customerSalaryCurrency=["USD","ILS","JOD"].includes(user?.profile?.account_currency)
+ customerSalaryCurrency=window.F90Core.enabledCurrency(user?.profile?.account_currency,visibleRates)
    ? user.profile.account_currency:"USD";
  visibleSalaryOptions=(Array.isArray(sal.payout_options)?sal.payout_options:[]).filter(x=>
    x?.enabled===true && visibleRates.some(r=>r.currency===x.currency&&r.is_enabled&&Number(r.per_usd)>0) &&

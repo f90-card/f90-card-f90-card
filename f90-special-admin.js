@@ -15,7 +15,7 @@ const field=(name,label,value,type="text",attrs="")=>'<label class="field"><span
 const textarea=(name,label,value)=>'<label class="field"><span>'+label+'</span><textarea name="'+name+'" maxlength="2500" rows="3">'+esc(value??"")+'</textarea></label>';
 const check=(name,label,yes)=>'<label class="f90-manage-switch"><input type="checkbox" name="'+name+'" '+(yes?"checked":"")+'> '+label+'</label>';
 const heading=(title,desc)=>'<div class="page-head"><div><div class="eyebrow">F90 CARD · الإدارة</div><h1>'+title+'</h1><p>'+desc+'</p></div></div>';
-const currencies=["USD","ILS","JOD","SYP","TRY","AED","EUR","EGP","SAR","QAR"];
+let currencies=["USD"];
 const methodRow=(x={})=>'<div class="f90-transfer-method-row" data-method-row>'+field("method_id","معرّف الطريقة",x.id||"","text",'required pattern="[a-z0-9-]{2,60}"')+field("method_name","اسم الخدمة",x.name_ar||"","text",'required maxlength="120"')+
  '<label class="field"><span>عملة المستفيد</span><select name="method_currency">'+currencies.map(c=>'<option value="'+c+'" '+((x.currency||"USD")===c?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
  field("method_fee","عمولة هذه الخدمة ٪",x.fee_percent??2,"number",'min="0" max="30" step="0.01" required')+
@@ -82,8 +82,7 @@ function salaryEditor(settings,rates=[]){
  const rows=Array.isArray(sal.payout_options)?sal.payout_options:[];
  const pay=(settings?.config?.payment_methods||[]).find(x=>x.is_salary_withdrawal===true ||
    x.id==="27c8ecef-f69d-4b36-bb88-70bba88c4062");
- const activeRates=(rates||[]).filter(x=>x.is_enabled && Number(x.per_usd)>0 &&
-   ["USD","ILS","JOD"].includes(String(x.currency||"")));
+ const activeRates=(rates||[]).filter(x=>x.is_enabled && Number(x.per_usd)>0 && !x.is_archived);
  const image=String(sal.image_url||pay?.image_url||"");
  const options=activeRates.map(rate=>{
    const old=rows.find(x=>x.currency===rate.currency)||{};
@@ -293,7 +292,9 @@ window.setInterval(()=>{
  lastSalaryInboxPoll=now;
  void renderSalaryInbox(document.getElementById("adminMain"));
 },30000);
-async function render(kind,main,settings){
+async function render(kind,main,settings,rates=[]){
+ currencies=(rates||[]).filter(x=>x.is_enabled&&!x.is_archived&&Number(x.per_usd)>0).map(x=>x.currency);
+ if(!currencies.length)currencies=["USD"];
  if(kind==="special-requests")return renderRequests(main);
  return renderSettings(main,settings);
 }

@@ -296,6 +296,7 @@
   }
 
   function chrome() {
+    C.setCurrencyRates(S.rates);
     brand();
     const me = S.me,
       p = me?.profile,
@@ -498,7 +499,7 @@
           const isNewGoogleAccount = authResult.data.session.user?.app_metadata?.provider === "google" &&
             Number.isFinite(started) && Date.now() - started >= 0 && Date.now() - started < 600000 &&
             Number.isFinite(created) && created >= started - 10000 && created <= Date.now() &&
-            ["USD","ILS","JOD"].includes(pendingGoogle.currency);
+            /^[A-Z]{3,8}$/.test(String(pendingGoogle.currency||""));
           try {
             if (isNewGoogleAccount && me?.profile?.account_currency !== pendingGoogle.currency) {
               const result = await A.call("profile.currency", {currency:pendingGoogle.currency});
@@ -513,7 +514,7 @@
         S.me = me;
 
         const accountCurrency=me?.profile?.account_currency;
-        if(["USD","ILS","JOD"].includes(accountCurrency)){
+        if(/^[A-Z]{3,8}$/.test(String(accountCurrency||""))){
           S.currency=accountCurrency;
           try{localStorage.setItem("f90-currency",accountCurrency);}catch{}
           S.currencyPreference=true;
@@ -1098,7 +1099,7 @@
   }
   function auth(mode = S.authMode) {
     S.authMode = mode;
-    main.innerHTML = `<div class="auth-layout"><div class="auth-art">${image("./assets/sections/services.png", "عالم أف تسعين كارد")}</div><section class="panel auth-panel"><div class="eyebrow">رحلتك تبدأ هنا</div><h1>${mode === "register" ? "أهلًا بعالمك الرقمي" : mode === "forgot" ? "استعادة الحساب" : "أهلًا بعودتك"}</h1><div class="auth-tabs"><button data-action="auth-tab" data-mode="login" class="${mode === "login" ? "active" : ""}">تسجيل الدخول</button><button data-action="auth-tab" data-mode="register" class="${mode === "register" ? "active" : ""}">حساب جديد</button></div><form id="authForm" data-mode="${mode}">${mode !== "forgot" ? select("account_currency", "عملة حسابك (يمكن تغييرها لاحقًا من القائمة)", [["USD","دولار أمريكي ($)"],["ILS","شيكل (₪)"],["JOD","دينار أردني (د.أ)"]], ["USD","ILS","JOD"].includes(S.currency) ? S.currency : "USD") : ""}${mode === "register" ? field("display_name", "اسمك", "text", "", 'required maxlength="100" autocomplete="name"') : ""}${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${mode !== "forgot" ? field("password", "كلمة المرور", "password", "", 'required minlength="' + (mode === "register" ? "10" : "1") + '" autocomplete="' + (mode === "register" ? "new-password" : "current-password") + '" dir="ltr"') : ""}${
+    main.innerHTML = `<div class="auth-layout"><div class="auth-art">${image("./assets/sections/services.png", "عالم أف تسعين كارد")}</div><section class="panel auth-panel"><div class="eyebrow">رحلتك تبدأ هنا</div><h1>${mode === "register" ? "أهلًا بعالمك الرقمي" : mode === "forgot" ? "استعادة الحساب" : "أهلًا بعودتك"}</h1><div class="auth-tabs"><button data-action="auth-tab" data-mode="login" class="${mode === "login" ? "active" : ""}">تسجيل الدخول</button><button data-action="auth-tab" data-mode="register" class="${mode === "register" ? "active" : ""}">حساب جديد</button></div><form id="authForm" data-mode="${mode}">${mode !== "forgot" ? select("account_currency", "عملة حسابك (يمكن تغييرها لاحقًا من القائمة)", C.currencyOptions(S.rates), C.enabledCurrency(S.currency,S.rates) ? S.currency : "USD") : ""}${mode === "register" ? field("display_name", "اسمك", "text", "", 'required maxlength="100" autocomplete="name"') : ""}${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${mode !== "forgot" ? field("password", "كلمة المرور", "password", "", 'required minlength="' + (mode === "register" ? "10" : "1") + '" autocomplete="' + (mode === "register" ? "new-password" : "current-password") + '" dir="ltr"') : ""}${
       mode === "register"
         ? `<div class="field-row">${select(
             "phone_country",
@@ -2155,7 +2156,7 @@ async function history(kind){
             emailRedirectTo: redirect,
             data: {
               display_name: data.display_name,
-              account_currency: ["USD","ILS","JOD"].includes(String(data.account_currency)) ? String(data.account_currency) : "USD",
+              account_currency: C.enabledCurrency(String(data.account_currency),S.rates) ? String(data.account_currency) : "USD",
               phone: data.phone || null,
               phone_country: data.phone_country,
             },
@@ -2633,7 +2634,7 @@ async function history(kind){
   document.addEventListener("change", (ev) => {
     if (ev.target.name === "account_currency" && ev.target.closest("#authForm") && !S.me) {
       const chosen = String(ev.target.value || "");
-      if (!["USD", "ILS", "JOD"].includes(chosen)) return;
+      if (!C.enabledCurrency(chosen,S.rates)) return;
       S.currency = chosen;
       S.currencyPreference = true;
       try { localStorage.setItem("f90-currency", chosen); } catch {}
@@ -2735,7 +2736,7 @@ async function history(kind){
         // Existing accounts always retain their saved profile currency.
         if (!S.me) {
           const chosen = String(document.querySelector("#authForm [name=account_currency]")?.value || S.currency);
-          if (["USD","ILS","JOD"].includes(chosen)) {
+          if (C.enabledCurrency(chosen,S.rates)) {
             try { localStorage.setItem("f90-google-currency-pending", JSON.stringify({currency:chosen,started_at:Date.now()})); } catch {}
           }
         }
@@ -2903,7 +2904,7 @@ async function history(kind){
   $("currencySelect").addEventListener("change", async (ev) => {
     const chosen=String(ev.target.value||"");
     const before=S.me?.profile?.account_currency||S.currency;
-    if(!["USD","ILS","JOD"].includes(chosen)){ev.target.value=before;return;}
+    if(!C.enabledCurrency(chosen,S.rates)){ev.target.value=before;return;}
     if(S.me){
       ev.target.disabled=true;
       try{

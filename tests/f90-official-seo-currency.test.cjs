@@ -24,7 +24,7 @@ test("Legacy index.html resolves to root and PWA opens canonical home", () => {
 test("Registration passes account currency as validated auth metadata", () => {
   const app = read("app.js");
   assert.match(app, /name="account_currency"|select\("account_currency"/);
-  assert.match(app, /account_currency: \["USD","ILS","JOD"\]\.includes/);
+  assert.match(app, /account_currency: C\.enabledCurrency/);
   assert.match(app, /profile\.currency/);
   assert.match(app, /f90-google-currency-pending/);
   assert.doesNotThrow(() => new Function(app));
