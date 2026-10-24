@@ -11,11 +11,11 @@ const fix=read("supabase/migrations/20261016223500_auth_data_rls_query_and_revie
 const combine=read("supabase/migrations/20261016224300_combine_salary_row_policies_to_reduce_query_work.sql");
 
 test("website keeps existing password login, registration and password recovery",()=>{
- assert.match(app,/auth\.signInWithPassword/);
+ assert.match(app,/F90SecurityUI\.signIn/);
  assert.match(app,/auth\.signUp/);
  assert.match(app,/auth\.resetPasswordForEmail/);
  assert.match(app,/auth\(mode = S\.authMode\)/);
- assert.match(admin,/auth\.signInWithPassword/);
+ assert.match(admin,/F90SecurityUI\.signIn/);
 });
 
 test("auth callback confirms absence of session before redirecting to login",()=>{

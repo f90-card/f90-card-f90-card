@@ -2185,7 +2185,7 @@ async function history(kind){
         );
         return;
       } else {
-        const r = await A.client.auth.signInWithPassword({
+        const r = await window.F90SecurityUI.signIn({
           email: data.email,
           password: data.password,
         });
