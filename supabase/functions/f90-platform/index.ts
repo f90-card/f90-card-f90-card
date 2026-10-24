@@ -4,6 +4,7 @@ import { recipientNameFromSupplier } from "./recipient-name.mjs";
 import {
   callProvider,
   endpointURL,
+  f90SelfEndpoint,
   normalizeService,
   normalizeStatus,
   recoveryRedirect,
@@ -43,13 +44,18 @@ const roleNames = [
   "admin",
   "designer",
   "trader",
+  "charging_agent",
   "support",
+  "amin_card",
 ];
 const errors: Record<string, [number, string]> = {
   F90_FORBIDDEN: [403, "لا تملك الصلاحية المطلوبة أو حسابك موقوف"],
   F90_NOT_FOUND: [404, "العنصر غير موجود"],
   F90_REFILLING: [409, "الخدمة قيد التعبئة حاليًا"],
   F90_QUANTITY: [400, "الكمية لا تطابق الحدود والخطوة المسموحة"],
+  F90_CURRENCY_CODE: [400, "استخدم رمز عملة من 3 إلى 8 أحرف إنجليزية مثل SAR"],
+  F90_RATE_BASE: [409, "الدولار هو العملة الأساسية؛ يبقى مفعّلًا بسعر 1 ولا يمكن حذفه"],
+  F90_RATE_IN_USE: [409, "العملة مرتبطة بحسابات أو موردين أو هي العملة الافتراضية؛ غيّر ارتباطها قبل حذفها أو إيقافها"],
   F90_RATE_MISSING: [409, "لم تضبط الإدارة سعر الصرف لهذه العملة"],
   F90_PRICE_MISSING: [409, "سعر الخدمة لم يجهّز بعد"],
   F90_INSUFFICIENT_BALANCE: [402, "رصيد محفظتك غير كافٍ. أضف رصيدًا أولًا"],
@@ -107,7 +113,10 @@ function fail(e: any) {
     e.status || 400,
     e.publicMessage || "تعذّر تنفيذ العملية. راجع البيانات وحاول مجددًا",
   ];
-  return new Response(JSON.stringify({ error: { code, message } }), {
+  const publicMessage = e instanceof AppError &&
+    ["F90_AUTH", "F90_FORBIDDEN"].includes(code) && e.publicMessage
+      ? e.publicMessage : message;
+  return new Response(JSON.stringify({ error: { code, message: publicMessage } }), {
     status,
     headers: { ...cors, "Content-Type": "application/json; charset=utf-8" },
   });
@@ -186,7 +195,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
         .maybeSingle(),
     );
     if (!api || (api.expires_at && Date.parse(api.expires_at) <= Date.now()))
-      throw new AppError("F90_AUTH");
+      throw new AppError("F90_AUTH", 401, "مفتاح التاجر غير صحيح أو ملغى أو منتهي الصلاحية");
     if (
       !(await rpc("f90_limit", {
         p_key: `key:${api.id}`,
@@ -200,7 +209,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
       const clientIP = req.headers.get("cf-connecting-ip")?.trim() || "";
       // Fail closed without a gateway-supplied client IP; reject spoofable x-real-ip fallback.
       if (!clientIP || !Array.isArray(api.allowed_ips) || !api.allowed_ips.includes(clientIP))
-        throw new AppError("F90_FORBIDDEN",403,"Request IP is not on this token's allowlist");
+        throw new AppError("F90_FORBIDDEN",403,"عنوان الخادم غير موجود ضمن العناوين المسموحة لهذا المفتاح");
     }
     userId = api.user_id;
   } else {
@@ -261,7 +270,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
 }
 function scoped(a: Actor, scope: string) {
   if (a.keyId && !a.scopes?.includes(scope))
-    throw new AppError("F90_FORBIDDEN");
+    throw new AppError("F90_FORBIDDEN", 403, "مفتاح التاجر لا يملك صلاحية هذه العملية");
 }
 async function auditSafe(actorId: string, action: string, targetId: string, details: any) {
   try {
@@ -386,6 +395,14 @@ async function buildPublicCatalog() {
   const allowedProductIds = new Set(linked
     .filter((entry: any) => allowedProviderIds.has(entry.provider_id))
     .map((entry: any) => entry.product_id));
+  // Owner-managed manual services can be resold without a supplier mapping.
+  // Linked archived/disconnected suppliers retain their existing exclusion.
+  const explicitlyLinkedProductIds = new Set(linked.map((entry: any) => entry.product_id));
+  for (const product of products) {
+    if (!explicitlyLinkedProductIds.has(product.id) &&
+        (product.commerce?.fulfillment || "manual") === "manual")
+      allowedProductIds.add(product.id);
+  }
   const allowedCategoryIds = new Set<string>();
   const categoriesById = new Map(categories.map((entry:any)=>[entry.id,entry]));
   // These owner-managed categories and their manual products belong beside the
@@ -477,7 +494,7 @@ async function buildPublicCatalog() {
           : p,
       ),
     banners: check(rows[3]),
-    rates: check(rows[4]),
+    rates: check(rows[4]).filter((r: any) => !r.is_archived),
     vip: check(rows[5]),
     news: check(rows[8]).filter((n: any) => !n.product_id || allowedProductIds.has(n.product_id)),
     version: 3,
@@ -705,6 +722,9 @@ async function work() {
           quantity: o.quantity,
           link,
           client_reference: o.id,
+          ...(currentProvider.adapter === "f90_merchant" ? {
+            fields: o.customer_fields, expected_total_usd: o.cost_usd,
+          } : {}),
           params,
           ...(o.customer_fields.comments
             ? { comments: o.customer_fields.comments }
@@ -836,8 +856,16 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     .slice(0, 30)
     .map((t: any) => ({
       min: integer(t.min),
+      ...(t.max == null || t.max === "" ? {} : {max:integer(t.max)}),
       prices: { USD: num(t.prices?.USD, 0.000001, 1000000) },
     }));
+  result.pricing_tiers.sort((x: any,y: any)=>x.min-y.min);
+  for(let n=0;n<result.pricing_tiers.length;n++) {
+    const tier=result.pricing_tiers[n],prev=result.pricing_tiers[n-1];
+    if(tier.min<1 || (tier.max!=null && tier.max<tier.min) ||
+       (prev && (prev.min===tier.min || (prev.max!=null && prev.max>=tier.min))))
+      throw new AppError("F90_QUANTITY");
+  }
   return result;
 }
 async function catalogSave(a: Actor, b: any) {
@@ -859,7 +887,7 @@ async function catalogSave(a: Actor, b: any) {
     slug: text(d.slug || old.slug || `${kind}-${crypto.randomUUID()}`, 250),
     image_url: text(d.image_url, 2000) || null,
     description: text(d.description, 10000),
-    is_active: d.is_active !== false,
+    is_active: typeof d.is_active === "boolean" ? d.is_active : (id ? old.is_active === true : true),
     sort_order: integer(d.sort_order ?? old.sort_order ?? 0, 0, 100000),
   };
   if (kind === "category") {
@@ -1198,6 +1226,26 @@ async function staff(a: Actor, b: any) {
       { request_id: id, kind: request.kind, status: request.status });
     return request;
   }
+  if (action === "staff.availability.set") {
+    requireRole(a,"manager");
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    const ids=Array.isArray(b.ids)?[...new Set(b.ids.map((v:unknown)=>uuid(v)))]:[];
+    if(!ids.length||ids.length>100)throw new AppError("F90_FIELDS",400,"اختر من 1 إلى 100 خدمة");
+    const state=String(b.availability||"");
+    if(!["available","refilling","automatic"].includes(state))throw new AppError("F90_FIELDS");
+    const list=check(await db.from("products").select("id,commerce").in("id",ids));
+    if(list.length!==ids.length)throw new AppError("F90_NOT_FOUND",404);
+    for(const p of list){
+      const c=p.commerce||{};
+      const override=state==="automatic"?null:state;
+      const supplier=c.supplier_refilling===true;
+      const availability=override||(supplier?"refilling":(c.supplier_previous_availability==="refilling"?"refilling":"available"));
+      const updated={...c,manual_availability_override:override,availability};
+      check(await db.from("products").update({commerce:updated}).eq("id",p.id).select("id").single());
+    }
+    await auditSafe(a.id,"catalog.availability.bulk","products",{ids,state});
+    return {saved:list.length,state};
+  }
   if (action === "staff.catalog") {
     requireRole(a, "manager", "designer");
     const rows = await Promise.all(
@@ -1225,7 +1273,7 @@ async function staff(a: Actor, b: any) {
     const linkedProductIds = new Set(internals.map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]).filter((p: any) => managedProductIds.has(p.id) ||
+      products: check(rows[1]).filter((p: any) => p.is_active === false || managedProductIds.has(p.id) ||
         (ownerCategoryIds.has(p.category_id) && !linkedProductIds.has(p.id))),
       banners: check(rows[2]),
       internal: a.role === "manager" ? internals.filter((i: any) => managedProviderIds.has(i.provider_id) || !i.provider_id) : [],
@@ -1953,23 +2001,15 @@ async function staff(a: Actor, b: any) {
       await db.from("site_settings").update(data).eq("id", 1).select().single(),
     );
   }
-  if (action === "staff.rate") {
+  if (["staff.rate", "staff.rate.delete", "staff.rate.purge"].includes(action)) {
     requireRole(a, "manager");
-    const currency = text(b.currency, 8).toUpperCase();
-    if (!/^[A-Z]{3,8}$/.test(currency)) throw new AppError("F90_FIELDS");
-    return check(
-      await db
-        .from("f90_rates")
-        .upsert({
-          currency,
-          name_ar: text(b.name_ar, 100),
-          per_usd: currency === "USD" ? 1 : num(b.per_usd, 0.00000001, 1e8),
-          is_enabled: currency === "USD" || b.is_enabled !== false,
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single(),
-    );
+    const currency = String(b.currency || "").trim().toUpperCase();
+    const operation = action === "staff.rate" ? "save" : action === "staff.rate.delete" ? "delete" : "purge";
+    return rpc("f90_manage_currency", {
+      p_actor:a.id, p_action:operation, p_currency:currency,
+      p_name:text(b.name_ar || "",100), p_rate:b.per_usd == null ? null : num(b.per_usd,0.00000001,100000000),
+      p_enabled:b.is_enabled !== false,
+    });
   }
   if (action === "staff.vip") {
     requireRole(a, "manager");
@@ -1999,7 +2039,8 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
-    const adapter = ["f90", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+    const adapter = b.adapter === "f90_merchant_get" ? "f90_merchant" :
+      ["f90", "f90_merchant", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
     if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
@@ -2010,10 +2051,15 @@ async function staff(a: Actor, b: any) {
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
-    const endpoint = adapter === "f90" ? "https://f90-card.github.io/f90-card-f90-card/" : text(b.endpoint, 2000);
+    const endpoint = adapter === "f90" ? "https://www.f90card.online/" : text(b.endpoint, 2000);
     const currency = text(b.currency || "USD", 8);
+    const f90Transport = adapter === "f90_merchant"
+      ? b.adapter === "f90_merchant_get" || b.f90_transport === "get" ? "get"
+        : b.f90_transport === "post" ? "post" : old?.config?.f90_transport === "get" ? "get" : "post"
+      : null;
     const connectionChanged = !!old && (old.endpoint !== endpoint ||
-      old.adapter !== adapter);
+      old.adapter !== adapter || (adapter === "f90_merchant" &&
+        (old.config?.f90_transport || "post") !== f90Transport));
     if (old && old.currency !== currency)
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
     if (connectionChanged && !b.token && adapter !== "f90")
@@ -2021,6 +2067,10 @@ async function staff(a: Actor, b: any) {
     const autoOrders = adapter === "f90" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
+    if (adapter === "f90_merchant" && currency !== "USD")
+      throw new AppError("F90_FIELDS", 400, "عملة API تجار F90 هي USD؛ اختر الدولار");
+    if (autoOrders && adapter === "f90_merchant" && f90SelfEndpoint(endpoint))
+      throw new AppError("F90_FIELDS", 400, "ربط المتجر بنفسه للفحص والاستيراد كمسودات فقط؛ أوقف الطلبات الآلية");
     if (autoOrders && adapter === "omega")
       throw new AppError("F90_FIELDS", 400, "أوميغا متاح للقراءة فقط حاليًا");
     const d = {
@@ -2035,6 +2085,7 @@ async function staff(a: Actor, b: any) {
       config: {
         ...(old?.config || {}),
         request_timeout_ms: integer(b.request_timeout_ms ?? old?.config?.request_timeout_ms ?? 20000, 5000, 30000),
+        ...(adapter === "f90_merchant" ? { f90_transport: f90Transport } : {}),
         automatic_orders_enabled: autoOrders,
       },
     };
@@ -2251,20 +2302,24 @@ async function staff(a: Actor, b: any) {
           } : {}),
           category_id: chosenCategoryId,
           is_active: false,
-          image_url: b.image_url || "",
+          image_url: b.image_url || s.image_url || "",
+          ...(p.adapter === "f90_merchant" ? { description: s.description || "" } : {}),
           commerce: {
-            type: "quantity",
+            type: p.adapter === "f90_merchant" && s.type !== "quantity" ? "fixed" : "quantity",
+            ...(p.adapter === "f90_merchant" ? {
+              availability: s.availability, pack_quantity: s.pack_quantity,
+            } : {}),
             fulfillment: p.config?.automatic_orders_enabled === true &&
               !s.allowed_quantities && p.adapter !== "omega" ? "automatic" : "manual",
             prices: { USD: price },
             unit_quantity: s.unit_quantity,
             quantity_min: s.min,
             quantity_max: s.max,
-            quantity_step: s.allowed_quantities?.length > 1 &&
+            quantity_step: p.adapter === "f90_merchant" ? s.quantity_step : s.allowed_quantities?.length > 1 &&
               s.allowed_quantities.every((v: number, i: number, ar: number[]) =>
                 i === 0 || v - ar[i - 1] === ar[1] - ar[0])
               ? s.allowed_quantities[1] - s.allowed_quantities[0] : 1,
-            fields: s.params?.length
+            fields: p.adapter === "f90_merchant" ? s.fields : s.params?.length
               ? s.params.map((label: string, i: number) => ({
                   id: "param_" + (i + 1),
                   label_ar: label,
@@ -2467,6 +2522,7 @@ Deno.serve(async (req: Request) => {
       throw new AppError("F90_FIELDS");
     }
     const action = text(b.action, 80);
+    // Production financial actions enabled on explicit owner request, 2026-10-20.
     if (action === "worker" || action === "smm.catalog") {
       const token = req.headers.get("x-f90-worker");
       if (
@@ -2523,7 +2579,7 @@ Deno.serve(async (req: Request) => {
     if (action === "catalog" || action === "health")
       return out(
         action === "health"
-          ? { version: 3, checkout: "wallet" }
+          ? { version: 3, checkout: "wallet", status: "ready" }
           : await publicCatalog(),
       );
     // Start the provider availability check alongside authentication.
@@ -2570,8 +2626,8 @@ Deno.serve(async (req: Request) => {
       const result = check(await db.from("f90_security_sessions")
         .select("id,user_id,session_id,ip_address,country_code,device_type,os_name,browser_name,first_seen_at,last_seen_at")
         .order("last_seen_at", { ascending: false }).limit(limit));
-      await db.from("f90_audit").insert({ actor_id:a.id, action:"security.sessions.read", details:{count:result.length} });
-      return out({items:result, location_accuracy:"country_only", data_origin:"recorded_sessions"});
+      await db.from("f90_audit").insert({actor_id:a.id, action:"security.sessions.read", details:{count:result.length}});
+      return out({items:result,location_accuracy:"country_only"});
     }
     if (action === "me") return out(await summary(a));
     protect(a);
@@ -2615,7 +2671,7 @@ Deno.serve(async (req: Request) => {
     if (action === "categories") {
       scoped(a, "catalog");
       return out((await publicCatalog()).categories.map((c: any) => ({
-        id: c.id, name: c.name, parent_id: c.parent_id,
+        id: c.id, name: c.name, parent_id: c.parent_id, image_url: c.image_url || "", description: c.description || "",
       })));
     }
     if (action === "services" || action === "service") {
@@ -2631,6 +2687,10 @@ Deno.serve(async (req: Request) => {
       const items = (await publicCatalog()).products.map((p: any) => ({
           service: p.id,
           name: p.name,
+          description: p.description || "",
+          image_url: p.image_url || "",
+          gallery: Array.isArray(p.gallery) ? p.gallery : [],
+          currency: "USD",
           category: p.category_id,
           type: p.commerce.type || "fixed",
           rate:
@@ -2672,9 +2732,9 @@ Deno.serve(async (req: Request) => {
     if (action === "checkout" || action === "add") {
       scoped(a, "orders");
       const verification = check(await db.from("profiles").select("is_verified").eq("id", a.id).single());
-      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الشراء. افتح صفحة توثيق الهوية من حسابك.");
+      const purchaseConfig=check(await db.from("site_settings").select("config").eq("id",1).single()).config||{};
+      if(purchaseConfig.purchase_requires_verification===true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED",403,"يجب توثيق الحساب قبل الشراء.");
       const product = uuid(b.product_id || b.service);
-      await assertProviderAvailable(product);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const reference = paymentReference(b.idempotency_key);
       const requestedQuantity = integer(b.quantity || 1);
@@ -2698,6 +2758,8 @@ Deno.serve(async (req: Request) => {
             "هذا المرجع مرتبط بطلب آخر أو ببيانات عميل مختلفة. افتح الطلب السابق بدل تكرار الدفع.");
         return out(customerOrder(previous), 200);
       }
+      // Resolve existing paid references before checking current supplier availability.
+      await assertProviderAvailable(product);
       const expected =
         b.expected_total_usd ??
         (a.keyId
@@ -2753,8 +2815,9 @@ Deno.serve(async (req: Request) => {
           .select("*")
           .eq("id", uuid(b.id || b.order))
           .eq("user_id", a.id)
-          .single(),
+          .maybeSingle(),
       );
+      if (!o) throw new AppError("F90_NOT_FOUND");
       const events = check(
         await db
           .from("f90_order_events")
@@ -2829,12 +2892,13 @@ Deno.serve(async (req: Request) => {
     if (action === "deposit.submit") {
       const reference = paymentReference(b.idempotency_key);
       const verification = check(await db.from("profiles").select("is_verified,account_currency").eq("id", a.id).single());
-      if (!verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
+      const depositConfig = check(await db.from("site_settings").select("config").eq("id",1).single()).config || {};
+      if (depositConfig.deposit_requires_verification === true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED", 403, "يجب توثيق الحساب قبل الإيداع. افتح صفحة توثيق الهوية من حسابك.");
       const method = text(b.method_id, 100);
       // The account preference stored in Postgres is the sole authority. A
       // modified browser payload cannot change the deposit currency.
       const accountCurrency=String(verification.account_currency||"USD");
-      if (!["USD","ILS","JOD"].includes(accountCurrency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      if (!/^[A-Z]{3,8}$/.test(accountCurrency)) throw new AppError("F90_ACCOUNT_CURRENCY");
       const referenceCurrency=text(b.currency||"",8);
       const amount = num(b.amount,0.000001,1000000);
       const receipt = text(b.receipt_path, 500);
@@ -2884,10 +2948,10 @@ Deno.serve(async (req: Request) => {
     if (action === "profile.currency") {
       if (a.keyId || a.needsMfa) throw new AppError("F90_FORBIDDEN");
       const currency = text(b.currency, 8).toUpperCase();
-      if (!["USD","ILS","JOD"].includes(currency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      if (!/^[A-Z]{3,8}$/.test(currency)) throw new AppError("F90_ACCOUNT_CURRENCY");
       const rate = check(await db.from("f90_rates")
-        .select("currency,is_enabled,per_usd").eq("currency",currency).single());
-      if (!rate.is_enabled || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
+        .select("currency,is_enabled,per_usd,is_archived").eq("currency",currency).single());
+      if (!rate.is_enabled || rate.is_archived || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
       check(await db.from("profiles").update({account_currency:currency}).eq("id",a.id));
       return out({currency});
     }
@@ -2969,7 +3033,7 @@ Deno.serve(async (req: Request) => {
         .eq("is_active", true);
       if (count.error) throw count.error;
       if ((count.count || 0) >= 1 && !b.replace_existing)
-        throw new AppError("F90_FIELDS",409,"One active token per trader. Rotate or revoke the current token.");
+        throw new AppError("F90_FIELDS",409,"للتاجر مفتاح نشط واحد. دوّر المفتاح الحالي أو ألغِه أولًا.");
       const random = crypto.getRandomValues(new Uint8Array(32));
       const token =
         "f90_live_" +
