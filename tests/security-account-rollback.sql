@@ -1,0 +1,33 @@
+BEGIN;
+DO $test$
+DECLARE m uuid:=(SELECT ur.user_id FROM public.f90_user_roles ur JOIN auth.users au ON au.id=ur.user_id WHERE ur.role='manager' AND au.raw_app_meta_data->>'f90_security_fixture'='true' ORDER BY au.created_at DESC LIMIT 1); c uuid:=(SELECT ur.user_id FROM public.f90_user_roles ur JOIN auth.users au ON au.id=ur.user_id WHERE ur.role='customer' AND au.raw_app_meta_data->>'f90_security_fixture'='true' ORDER BY au.created_at DESC LIMIT 1); t uuid:=(SELECT ur.user_id FROM public.f90_user_roles ur JOIN auth.users au ON au.id=ur.user_id WHERE ur.role='trader' AND au.raw_app_meta_data->>'f90_security_fixture'='true' ORDER BY au.created_at DESC LIMIT 1); ms uuid; s uuid:=gen_random_uuid(); n integer; a bigint; before_wallet text; before_docs text; before_role text;
+BEGIN
+ SELECT id INTO ms FROM auth.sessions WHERE user_id=m AND aal='aal2' ORDER BY created_at DESC LIMIT 1;
+ IF ms IS NULL THEN RAISE EXCEPTION 'Fixture manager has no MFA'; END IF;
+ SELECT md5(coalesce(string_agg(to_jsonb(w)::text,',' ORDER BY w.user_id),'')) INTO before_wallet FROM public.f90_wallets w WHERE user_id IN(c,t);
+ SELECT role INTO before_role FROM public.f90_user_roles WHERE user_id=t;
+ INSERT INTO public.f90_verifications(user_id,document_type,front_path,selfie_path) VALUES(t,'id','test-only/no-object','test-only/no-selfie') RETURNING id::text INTO before_docs;
+ PERFORM public.f90_security_verification(m,ms,t,false,'isolated SQL review revoke');
+ PERFORM public.f90_security_verification(m,ms,t,true,'isolated SQL review reapprove');
+ IF before_wallet IS DISTINCT FROM (SELECT md5(coalesce(string_agg(to_jsonb(w)::text,',' ORDER BY w.user_id),'')) FROM public.f90_wallets w WHERE user_id IN(c,t)) THEN RAISE EXCEPTION 'Verification changed wallet'; END IF;
+ IF (SELECT role FROM public.f90_user_roles WHERE user_id=t) IS DISTINCT FROM before_role THEN RAISE EXCEPTION 'Verification changed role'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.f90_verifications WHERE id=before_docs::uuid AND front_path='test-only/no-object' AND erased_at IS NULL) THEN RAISE EXCEPTION 'Verification erased document'; END IF;
+ INSERT INTO public.f90_security_sessions(user_id,session_id,ip_address,country_code,os_name,browser_name,network_source) VALUES(c,s,'8.8.8.8','PS','Android','Chrome','cloudflare_signed_v1');
+ SELECT count(*) INTO n FROM public.f90_audit WHERE actor_id=c AND action='security.new_session' AND details->>'session_id'=s::text;
+ UPDATE public.f90_security_sessions SET ip_address='1.1.1.1' WHERE session_id=s AND user_id=c;
+ IF n<>1 OR (SELECT count(*) FROM public.f90_audit WHERE actor_id=c AND action='security.new_session' AND details->>'session_id'=s::text)<>1 THEN RAISE EXCEPTION 'Duplicate new session audit'; END IF;
+ IF EXISTS(SELECT 1 FROM public.f90_security_alerts WHERE kind='connection_change' AND user_id=c) THEN RAISE EXCEPTION 'IP alone created suspicion'; END IF;
+ UPDATE public.f90_security_sessions SET country_code='DE',os_name='Windows' WHERE session_id=s AND user_id=c;
+ IF NOT EXISTS(SELECT 1 FROM public.f90_security_alerts WHERE kind='connection_change' AND user_id=c AND alerted_at IS NOT NULL) THEN RAISE EXCEPTION 'Combined connection/device change undetected'; END IF;
+ FOR i IN 1..4 LOOP PERFORM public.f90_security_signal('login_failed','isolated-sql-failure',NULL,'{}',5); END LOOP;
+ IF EXISTS(SELECT 1 FROM public.f90_security_alerts WHERE subject_key='isolated-sql-failure' AND alerted_at IS NOT NULL) THEN RAISE EXCEPTION 'Alert threshold too low'; END IF;
+ PERFORM public.f90_security_signal('login_failed','isolated-sql-failure',NULL,'{}',5);
+ PERFORM public.f90_security_signal('login_failed','isolated-sql-failure',NULL,'{}',5);
+ IF (SELECT count(*) FROM public.f90_security_alerts WHERE subject_key='isolated-sql-failure' AND alerted_at IS NOT NULL)<>1 OR (SELECT occurrences FROM public.f90_security_alerts WHERE subject_key='isolated-sql-failure')<>6 THEN RAISE EXCEPTION 'Deduplication failed'; END IF;
+ UPDATE public.f90_security_sessions SET last_seen_at=now()-interval '31 days' WHERE user_id=c AND session_id=s;
+ DELETE FROM public.f90_security_sessions WHERE last_seen_at<now()-interval '30 days';
+ DELETE FROM public.f90_security_alerts WHERE last_seen_at<now()-interval '30 days';
+ IF EXISTS(SELECT 1 FROM public.f90_security_sessions WHERE session_id=s AND user_id=c) THEN RAISE EXCEPTION '30-day cleanup failed'; END IF;
+END $test$;
+SELECT 'PASS: verification wallet/role/document safety; unique audit; IP-only no alert; combined signal; threshold/dedup; 30-day cleanup (all rolled back)' result;
+ROLLBACK;

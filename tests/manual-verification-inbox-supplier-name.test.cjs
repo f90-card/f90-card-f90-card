@@ -13,7 +13,7 @@ test("manager can approve a user in the admin profile with a reason",()=>{
  assert.match(admin,/id="f90ManualVerificationForm"/);
  assert.match(admin,/staff\.manual_verify/);
  assert.match(admin,/reason\.length<8/);
- assert.match(edge,/if \(action === "staff\.manual_verify"\)/);
+ assert.match(edge,/action === "staff\.manual_verify"/);
  assert.match(edge,/requireRole\(a, "manager"\)/);
  assert.match(edge,/p_user:uuid\(b\.id\)/);
  assert.match(migration,/f90_private\.require_actor\(p_actor, array\['manager'\]\)/);

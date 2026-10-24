@@ -76,6 +76,8 @@ const errors: Record<string, [number, string]> = {
   F90_RECONCILE: [409, "راجع نتيجة المورّد قبل الاسترداد"],
   F90_IDEMPOTENCY: [400, "مرجع الطلب غير صحيح"],
   F90_STATUS: [400, "حالة الطلب غير صحيحة"],
+  F90_CURRENT_SESSION: [409,"جلسة المدير الحالية محمية؛ اختر جلسة أخرى"],
+  F90_SELF_VERIFICATION: [409,"لا يمكنك تعديل توثيق حسابك بنفسك"],
   F90_AUTH: [401, "سجّل الدخول لإكمال العملية"],
   F90_MFA: [403, "أدخل رمز التحقق الثنائي أولًا"],
   F90_LIMIT: [429, "طلبات كثيرة. انتظر دقيقة وحاول مجددًا"],
@@ -85,6 +87,8 @@ type Actor = {
   role: string;
   profile: any;
   needsMfa: boolean;
+  aal?: string;
+  sessionId?: string;
   keyId?: string;
   scopes?: string[];
   token?: string;
@@ -166,6 +170,14 @@ function requireRole(a: Actor, ...roles: string[]) {
 function protect(a: Actor) {
   if (a.needsMfa) throw new AppError("F90_MFA");
 }
+function securityManager(a: Actor) {
+  requireRole(a,"manager");
+  if(a.keyId) throw new AppError("F90_FORBIDDEN");
+  if(a.aal!=="aal2" || !a.sessionId) throw new AppError("F90_MFA",403,"فعّل المصادقة الثنائية وأدخل رمزها لاستخدام أدوات الأمان");
+}
+async function securitySignal(kind:string,key:string,user:string|null=null,details:any={},threshold=1){
+  try{await db.rpc("f90_security_signal",{p_kind:kind,p_key:key,p_user:user,p_details:details,p_threshold:threshold});}catch{console.error("Security signal unavailable");}
+}
 async function hash(value: string) {
   const raw = await crypto.subtle.digest(
     "SHA-256",
@@ -194,8 +206,10 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
         .eq("is_active", true)
         .maybeSingle(),
     );
-    if (!api || (api.expires_at && Date.parse(api.expires_at) <= Date.now()))
+    if (!api || (api.expires_at && Date.parse(api.expires_at) <= Date.now())) {
+      await securitySignal("api_key_invalid",await hash(key),null,{message:"استخدام متكرر لمفتاح غير صالح"},5);
       throw new AppError("F90_AUTH", 401, "مفتاح التاجر غير صحيح أو ملغى أو منتهي الصلاحية");
+    }
     if (
       !(await rpc("f90_limit", {
         p_key: `key:${api.id}`,
@@ -260,6 +274,8 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
     role,
     profile,
     token,
+    aal: claims.aal,
+    sessionId: claims.session_id,
     needsMfa:
       !api &&
       claims.factors.some((f: any) => f.status === "verified") &&
@@ -1424,6 +1440,7 @@ async function staff(a: Actor, b: any) {
       } as any
     )[b.kind];
     if (!table) throw new AppError("F90_FIELDS");
+    if(b.kind==="audit")securityManager(a);
     requireRole(
       a,
       ...(b.kind === "users" || b.kind === "audit"
@@ -1597,13 +1614,15 @@ async function staff(a: Actor, b: any) {
       p_approve: !!b.approve,
       p_note: text(b.note),
     });
-  if (action === "staff.review_verification")
+  if (action === "staff.review_verification") {
+    securityManager(a);
     return rpc("f90_review_verification", {
       p_actor: a.id,
       p_id: uuid(b.id),
       p_approve: !!b.approve,
       p_note: text(b.note),
     });
+  }
   if (action === "staff.order") {
     requireRole(a, "manager", "admin");
     return rpc("f90_order_transition", {
@@ -1822,17 +1841,14 @@ async function staff(a: Actor, b: any) {
       return {saved:true,name:row.supplier_account_name,previous:true};
     return syncCompletedSupplierName(row);
   }
-  if (action === "staff.manual_verify") {
-    requireRole(a, "manager");
-    if (a.keyId) throw new AppError("F90_FORBIDDEN");
-    const reason = text(b.reason, 500).trim();
-    if (reason.length < 8) throw new AppError("F90_FIELDS",400,"اكتب سبب اعتماد الحساب ونتيجة المراجعة (٨ أحرف على الأقل)");
-    return rpc("f90_manual_verify_account", {
-      p_actor:a.id, p_user:uuid(b.id), p_reason:reason
-    });
+  if (action === "staff.revoke_verification" || action === "staff.manual_verify") {
+    securityManager(a);
+    const reason=text(b.reason,500).trim();
+    if(reason.length<8)throw new AppError("F90_FIELDS",400,"اكتب سبب القرار من 8 أحرف على الأقل");
+    return rpc("f90_security_verification",{p_actor:a.id,p_actor_session:a.sessionId,p_user:uuid(b.id),p_verified:action==="staff.manual_verify",p_reason:reason});
   }
   if (action === "staff.user") {
-    requireRole(a, "manager");
+    securityManager(a);
     if (b.role && !roleNames.includes(b.role)) throw new AppError("F90_FIELDS");
     return rpc("f90_change_user", {
       p_actor: a.id,
@@ -2495,6 +2511,7 @@ async function staff(a: Actor, b: any) {
 }
 
 Deno.serve(async (req: Request) => {
+  let securityAction="",securityActor:Actor|null=null;
   let usage: { key_id: string; user_id: string; action: string } | null = null;
   const response = await (async () => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -2522,6 +2539,7 @@ Deno.serve(async (req: Request) => {
       throw new AppError("F90_FIELDS");
     }
     const action = text(b.action, 80);
+    securityAction=action;
     // Production financial actions enabled on explicit owner request, 2026-10-20.
     if (action === "worker" || action === "smm.catalog") {
       const token = req.headers.get("x-f90-worker");
@@ -2589,6 +2607,7 @@ Deno.serve(async (req: Request) => {
       actor(req, action === "quote"),
       quoteProductId ? assertProviderAvailable(quoteProductId) : Promise.resolve(),
     ]);
+    securityActor=a;
     if (a?.keyId)
       usage = { key_id: a.keyId, user_id: a.id, action };
     if (action === "quote") {
@@ -2618,6 +2637,29 @@ Deno.serve(async (req: Request) => {
       ].includes(action)
     )
       throw new AppError("F90_FORBIDDEN");
+    if (action.startsWith("staff.security.")) {
+      securityManager(a);
+      if(action==="staff.security.sessions") {
+        const date=(v:any)=>{if(!v)return null;const d=new Date(v);if(!Number.isFinite(d.getTime()))throw new AppError("F90_FIELDS");return d.toISOString();};
+        return out(await rpc("f90_security_sessions_list",{p_actor:a.id,p_actor_session:a.sessionId,p_user:b.user_id?uuid(b.user_id):null,p_from:date(b.from),p_to:date(b.to),p_status:text(b.status||"all",15),p_search:text(b.search,120),p_offset:integer(b.offset||0,0,100000)}));
+      }
+      if(action==="staff.security.revoke"){
+        if(b.confirm_user_id!==b.user_id)throw new AppError("F90_FIELDS",400,"أكّد الحساب المستهدف قبل الإلغاء");
+        const reason=text(b.reason,500).trim();
+        if(reason.length<8)throw new AppError("F90_FIELDS",400,"سبب إلغاء الجلسة إلزامي (8 أحرف على الأقل)");
+        return out(await rpc("f90_security_sessions_revoke",{p_actor:a.id,p_actor_session:a.sessionId,p_user:uuid(b.user_id),p_session:b.session_id?uuid(b.session_id):null,p_all:b.all===true,p_reason:reason}));
+      }
+      if(action==="staff.security.alerts"){
+        const rows=check(await db.from("f90_security_alerts").select("id,kind,user_id,occurrences,details,first_seen_at,last_seen_at,acknowledged_at,acknowledgement_reason").not("alerted_at","is",null).order("last_seen_at",{ascending:false}).limit(100));
+        check(await db.from("f90_audit").insert({actor_id:a.id,action:"security.alerts.read",target_id:a.id,details:{count:rows.length}}));
+        return out({items:rows});
+      }
+      if(action==="staff.security.acknowledge"){
+        const reason=text(b.reason,500).trim();if(reason.length<8)throw new AppError("F90_FIELDS");
+        return out(await rpc("f90_security_acknowledge",{p_actor:a.id,p_actor_session:a.sessionId,p_alert:integer(b.id),p_reason:reason}));
+      }
+      throw new AppError("F90_FIELDS");
+    }
     if (action === "me") return out(await summary(a));
     protect(a);
     if (action === "recipients.list") {
@@ -3095,6 +3137,8 @@ Deno.serve(async (req: Request) => {
     }
     throw new AppError("F90_NOT_FOUND");
   } catch (e) {
+    if(securityAction.startsWith("staff.") && securityActor && (String(e?.message).includes("F90_FORBIDDEN") || e?.code==="F90_FORBIDDEN"))
+      await securitySignal("admin_denied",securityActor.id,securityActor.id,{action:securityAction},3);
     return fail(e);
   }
   })();
@@ -3116,5 +3160,3 @@ Deno.serve(async (req: Request) => {
   }
   return response;
 });
-
-

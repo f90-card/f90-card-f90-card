@@ -48,7 +48,8 @@
     ["verification", "توثيق الهوية", "shield", ["manager", "admin"]],
     ["ledger", "السجل المالي", "wallet", ["manager", "admin"]],
     ["audit", "سجل الإدارة", "shield", ["manager"]],
-    ["security-sessions", "سجل الجلسات الأمنية", "shield", ["manager"]],
+    ["security-sessions", "سجل الجلسات وإدارتها", "shield", ["manager"]],
+    ["security-alerts", "التنبيهات الأمنية", "shield", ["manager"]],
     ["customer-security", "أمان العملاء والأجهزة", "shield", ["manager"]],
     ["users", "العملاء والأرصدة", "user", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
@@ -183,7 +184,7 @@
   function navigation() {
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
-      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","security-sessions","customer-security"]],
+      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","security-sessions","security-alerts","customer-security"]],
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
@@ -213,6 +214,7 @@
     S.vip = data.vip;
   }
   function permissions() {
+    void window.F90SecurityUI?.adminDenied();
     main.innerHTML = head(
       "الوصول غير متاح",
       "هذه الصفحة متاحة لصلاحيات محددة داخل المتجر.",
@@ -469,7 +471,7 @@
       rows = r.items
         .map(
           (x) =>
-            `<tr><td>${e(C.date(x.created_at))}</td><td>${e(auditName(x.action))}</td><td><small>${e(x.target_id || "—")}</small></td><td><small>${e(x.actor?.display_name || x.actor?.email || x.actor_id || "النظام الآلي")}</small></td></tr>`
+            `<tr><td>${e(C.date(x.created_at))}</td><td>${e(auditName(x.action))}</td><td><small>${e(x.target_id || "—")}</small><br><small>${e(x.details?.reason || x.details?.note || "")}</small></td><td><small>${e(x.actor?.display_name || x.actor?.email || x.actor_id || "النظام الآلي")}</small></td></tr>`
         )
         .join("");
     }
@@ -497,6 +499,13 @@
         "deposit.review": "مراجعة إيداع",
         "identity.review": "مراجعة هوية",
         "user.permissions": "تعديل صلاحيات مستخدم",
+        "security.sessions.read":"عرض سجل الجلسات",
+        "security.customers.read":"عرض أمان العملاء",
+        "security.sessions.revoked":"إلغاء جلسات الحساب",
+        "security.alert.acknowledged":"مراجعة تنبيه أمني",
+        "verification.revoked":"سحب توثيق الحساب",
+        "account.manual_verification":"اعتماد توثيق الحساب",
+        "security.new_session":"رصد جلسة جديدة",
         "catalog.create": "إنشاء عنصر",
         "catalog.update": "تعديل عنصر",
         "provider.save": "حفظ إعدادات مورّد",
@@ -1848,7 +1857,7 @@
         <section class="panel"><h2>نتائج اتصال الموردين</h2><p class="muted">عرض حي للحالة المحفوظة؛ هذا الفحص لا ينفذ طلبات شراء.</p>
         ${suppliers.status==="rejected" ? '<p class="notice error">تعذّر قراءة الموردين؛ تحقق من الصلاحيات والاتصال.</p>' : ""}
         <div class="f90-monitor-list">${list.map(p=>`<article><strong>${e(p.name)}</strong><span>${p.is_enabled?"مفعّل":"موقوف"} · ${e(p.adapter)} · ${e(p.currency)}</span><span>آخر مزامنة ناجحة: ${e(p.config?.sync_last_success ? C.date(p.config.sync_last_success) : "غير مسجّلة")}</span>${p.config?.sync_error ? `<small class="f90-monitor-fault">${e(String(p.config.sync_error).slice(0,240))}</small>` : ""}</article>`).join("")||'<p class="muted">لا توجد مصادر خدمة.</p>'}</div>
-        <div class="actions"><a class="button secondary" href="#/providers">إدارة الموردين</a><a class="button secondary" href="#/traders">التجار ومفاتيح API</a><a class="button secondary" href="#/audit">سجل العمليات</a><a class="button secondary" href="https://supabase.com/dashboard/project/xzqnrpycjxfbyrfaolud" target="_blank" rel="noopener noreferrer">لوحة الخادم والسجلات التفصيلية ↗</a></div>
+        <div class="actions"><a class="button secondary" href="#/providers">إدارة الموردين</a><a class="button secondary" href="#/traders">التجار ومفاتيح API</a><a class="button secondary" href="#/audit">سجل العمليات</a><a class="button secondary" href="https://supabase.com/dashboard/project/ogkipkavlywgwhtomoca" target="_blank" rel="noopener noreferrer">لوحة الخادم والسجلات التفصيلية ↗</a></div>
         </section>
         <section class="panel"><h2>ما الذي نقيسه هنا؟</h2><p>يقيس Response مدة استجابة API من متصفح الإدارة، وليس إجمالي زمن الشراء أو الخادم الداخلي. تعني كلمة «متاح» نجاح فحص health فقط. تحتاج أخطاء التوصيل والتخزين إلى سجلات الخادم للتشخيص الكامل.</p><p class="muted">لا تكشف هذه الصفحة التوكنات أو رموز المزودين. لم يُفعّل Webhook أو IP Allowlist للتجار.</p><h3>دليل سريع لفهم الأخطاء</h3><div class="f90-admin-glossary"><div><b>200</b><span>الاتصال ناجح، لكن راجع بيانات الطلب نفسه</span></div><div><b>401</b><span>مفتاح الدخول أو الجلسة غير صحيحة</span></div><div><b>403</b><span>صلاحيات الحساب لا تسمح بالعملية</span></div><div><b>409</b><span>تغيّر السعر أو حدث تعارض، تحقق قبل إعادة المحاولة</span></div><div><b>429</b><span>تجاوز حد الطلبات، خفف الاستعلامات</span></div><div><b>5xx</b><span>خطأ خادم، لا تكرر طلب شراء قبل معرفة نتيجته</span></div></div><p class="muted small">تسجيل الأخطاء التفصيلي يتم في أدوات خادم Supabase، وهذه الصفحة تعرض نتائج آمنة ومختصرة للمدير.</p></section>`;
   }
@@ -2354,20 +2363,11 @@
   async function customerSecurity(){
     main.innerHTML=head("أمان العملاء والأجهزة","سجل الجلسات الموثّقة خلال 30 يومًا")+
       '<section class="panel f90-security-area">'+
-      '<p class="muted small">يعرض عنوان IP المسجل إذا توفّر، ونوع الجهاز والمتصفح والدولة التقريبية. قد تكون بيانات الشبكة غير دقيقة بسبب VPN. لا يُجمع موقع GPS أو تفاصيل الهاتف الخاصة.</p>'+
+      '<p class="muted small">يعرض عنوان IP المسجل إذا توفّر، ونوع الجهاز والمتصفح والدولة التقريبية. قد تكون بيانات الشبكة غير دقيقة بسبب VPN. الموقع الدقيق لا يُجمع إلا بموافقة منفصلة من صاحبه، ويمكنه إيقافه وحذفه. البيانات القديمة لا تعني وجود اتصال حالي.</p>'+
       '<div id="f90CustomerSecurity">جارٍ تحميل السجل…</div></section>';
     await window.F90SecurityUI?.renderManager("f90CustomerSecurity");
   }
-  async function securitySessionsPage() {
-    const result = await A.call("staff.security.sessions", {limit: 50});
-    const rows = Array.isArray(result.items) ? result.items : [];
-    const safe = value => e(String(value ?? "غير متوفر"));
-    const when = value => value ? safe(new Intl.DateTimeFormat("ar-PS", {dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Hebron"}).format(new Date(value))) : "غير متوفر";
-    main.innerHTML = head("سجل الجلسات الأمنية", "للإدارة فقط. الدولة تقريبية ولا تعني موقع GPS. عناوين IP قد تكون مشتركة أو خاصة بشبكات VPN.") +
-      '<section class="panel"><p class="muted">آخر 50 جلسة مسجلة. عدم وجود معلومات للجهاز يعني أن المتصفح لم يتيحها.</p><div class="table-wrap"><table><thead><tr><th>الحساب</th><th>عنوان IP العام</th><th>الدولة</th><th>الجهاز والنظام</th><th>المتصفح</th><th>آخر نشاط</th></tr></thead><tbody>' +
-      (rows.map(x => '<tr><td>'+safe(x.user_id)+'</td><td>'+safe(x.ip_address)+'</td><td>'+safe(x.country_code)+'</td><td>'+safe(x.device_type)+' / '+safe(x.os_name)+'</td><td>'+safe(x.browser_name)+'</td><td>'+when(x.last_seen_at)+'</td></tr>').join("") || '<tr><td colspan="6">لا توجد جلسات محفوظة</td></tr>') +
-      '</tbody></table></div></section>';
-  }
+  async function securitySessionsPage() { await window.F90SecurityAdmin.sessions(main); }
   async function route() {
     S.token++;
     closeModal();
@@ -2406,6 +2406,7 @@
         await dashboard(page === "leaderboard");
       else if (page === "alerts") await alertsPage();
       else if (page === "security-sessions") await securitySessionsPage();
+      else if (page === "security-alerts") await window.F90SecurityAdmin.alerts(main);
       else if (page === "customer-security") await customerSecurity();
       else if (page === "order-requests") await orderRequestsPage();
       else if (
@@ -2438,6 +2439,7 @@
       else if (page === "traders") await traders();
       else if (page === "agents") await window.F90Agents.adminPage(main);
     } catch (err) {
+      if(err.code==="F90_MFA"){await window.F90SecurityAdmin.mfa(main,()=>route());return;}
       main.innerHTML =
         head("تعذّر فتح الأدوات") +
         `<div class="notice error">${e(errorMessage(err))}</div><button class="button" data-action="reload">حاول مجددًا</button>`;
@@ -2672,7 +2674,7 @@
       return;
     }
     if (form.id === "adminAuth") {
-      const r = await A.client.auth.signInWithPassword({
+      const r = await window.F90SecurityUI.signIn({
         email: d.email,
         password: d.password,
       });
@@ -2704,7 +2706,8 @@
     try {
       await submit(form, Object.fromEntries(new FormData(form)), ev.submitter);
     } catch (err) {
-      toast(errorMessage(err));
+      if(err.code==="F90_MFA") await window.F90SecurityAdmin.mfa(main,()=>route());
+      else toast(errorMessage(err));
     } finally {
       delete form.dataset.busy;
       buttons.forEach((b) => {
