@@ -30,7 +30,16 @@
     suspended: "موقوف",
     banned: "محظور",
   };
-  const currencyNames = { USD: "دولار", ILS: "شيكل", JOD: "دينار أردني" };
+  const currencyNames = { USD: "دولار", ILS: "شيكل", JOD: "دينار أردني", SAR: "ريال سعودي" };
+  function enabledCurrency(code, rates) {
+    return Array.isArray(rates) && rates.some(r => r.currency === code && r.is_enabled && !r.is_archived && Number(r.per_usd) > 0);
+  }
+  function currencyOptions(rates) {
+    return (rates || []).filter(r => enabledCurrency(r.currency, rates)).map(r => [r.currency, r.name_ar || r.currency]);
+  }
+  function setCurrencyRates(rates) {
+    for (const r of rates || []) if (r.currency && r.name_ar) currencyNames[r.currency] = r.name_ar;
+  }
   const escapeHTML = (v) =>
     String(v ?? "").replace(
       /[&<>"']/g,
@@ -70,7 +79,7 @@
   function convert(usd, c, rates) {
     if (c === "USD") return Number(usd);
     const r = rates?.find(
-      (r) => r.currency === c && r.is_enabled && Number(r.per_usd) > 0,
+      (r) => r.currency === c && r.is_enabled && !r.is_archived && Number(r.per_usd) > 0,
     );
     return r ? Number(usd) * Number(r.per_usd) : null;
   }
@@ -171,6 +180,9 @@
     roles,
     statuses,
     currencyNames,
+    enabledCurrency,
+    currencyOptions,
+    setCurrencyRates,
     escapeHTML,
     safeUrl,
     money,

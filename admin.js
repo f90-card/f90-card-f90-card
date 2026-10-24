@@ -208,6 +208,7 @@
     const data = await A.call("catalog");
     S.settings = data.settings;
     S.rates = data.rates;
+    C.setCurrencyRates(S.rates);
     S.vip = data.vip;
   }
   function permissions() {
@@ -1013,7 +1014,7 @@
         field("reference_label","اسم حقل الإشعار أو رقم العملية","text",d.reference_label||"إشعار أو رقم العملية (اختياري)",'maxlength="150"') +
         field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
-        field("accepted_currencies","عملات هذه الطريقة (USD,ILS,JOD فقط)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
+        field("accepted_currencies","عملات هذه الطريقة (من العملات المفعّلة)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
 
         field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
         field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
@@ -1179,7 +1180,7 @@
         "العملات وسعر الصرف",
         "سعر الإدارة المعتمد: كم وحدة من العملة تعادل دولارًا واحدًا؟",
       ) +
-      `<div class="notice warning">غيّر الصرف بعد مراجعة سعر التحويل الذي تعتمد عليه. الإيداعات السابقة تحتفظ بسعرها لحظة التقديم. الدولار ثابت ولا يتغير.</div><div class="docs-grid">${S.rates.map((r) => `<form class="panel rateForm" data-currency="${r.currency}"><h3>${e(r.name_ar)}</h3>${field("name_ar", "اسم العملة بالعربية", "text", r.name_ar, "required")}${field("per_usd", "كم وحدة تساوي دولارًا؟", "number", r.per_usd || "", 'required min="0.00000001" max="100000000" step="0.00000001" ' + (r.currency === "USD" ? "readonly" : ""))}${check("is_enabled", "تفعيل العملة", r.is_enabled)}<button class="button secondary" type="submit">حفظ</button><p class="muted small" style="margin-top:12px">آخر تحديث: ${e(C.date(r.updated_at))}</p></form>`).join("")}</div><section class="panel"><h2>إضافة عملة أخرى</h2><form id="newRateForm"><div class="field-row">${field("currency", "رمز العملة", "text", "", 'required pattern="[A-Za-z]{3,8}" maxlength="8" dir="ltr"')}${field("name_ar", "اسم العملة بالعربية", "text", "", "required")}</div>${field("per_usd", "كم وحدة تعادل دولارًا واحدًا؟", "number", "", 'required min="0.00000001" max="100000000" step="0.00000001"')}<button class="button" type="submit">إضافة العملة</button></form></section>`;
+      `<div class="notice warning">غيّر الصرف بعد مراجعة سعر التحويل الذي تعتمد عليه. الإيداعات السابقة تحتفظ بسعرها لحظة التقديم. الدولار ثابت ولا يتغير.</div><button class="button danger" type="button" data-action="rate-purge">حذف جميع العملات غير المفعّلة</button><div class="docs-grid">${S.rates.map((r) => `<form class="panel rateForm" data-currency="${r.currency}"><h3>${e(r.name_ar)}</h3>${field("name_ar", "اسم العملة بالعربية", "text", r.name_ar, "required")}${field("per_usd", "كم وحدة تساوي دولارًا؟", "number", r.per_usd || "", 'required min="0.00000001" max="100000000" step="0.00000001" ' + (r.currency === "USD" ? "readonly" : ""))}${r.currency === "USD" ? '<p class="muted small">عملة الحساب الأساسية؛ تبقى مفعّلة بسعر 1.</p>' : check("is_enabled", "تفعيل العملة", r.is_enabled)}<button class="button secondary" type="submit">حفظ</button>${r.currency !== "USD" ? `<button class="button danger" type="button" data-action="rate-delete" data-currency="${e(r.currency)}">حذف العملة</button>` : ""}<p class="muted small" style="margin-top:12px">آخر تحديث: ${e(C.date(r.updated_at))}</p></form>`).join("")}</div><section class="panel"><h2>إضافة عملة أخرى</h2><form id="newRateForm"><div class="field-row">${field("currency", "رمز العملة", "text", "", 'required pattern="[A-Za-z]{3,8}" maxlength="8" dir="ltr"')}${field("name_ar", "اسم العملة بالعربية", "text", "", "required")}</div>${field("per_usd", "كم وحدة تعادل دولارًا واحدًا؟", "number", "", 'required min="0.00000001" max="100000000" step="0.00000001"')}<button class="button" type="submit">إضافة العملة</button></form></section>`;
   }
   function vip() {
     main.innerHTML =
@@ -1645,7 +1646,7 @@
         barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
-    if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!["USD","ILS","JOD"].includes(code)||!S.rates.some(rate=>rate.currency===code&&rate.is_enabled))))
+    if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!C.enabledCurrency(code,S.rates))))
       throw new Error("اختر عملة متاحة من الدولار أو الدينار أو الشيقل فقط.");
     if (kind === "promotions")
       Object.assign(row, {
@@ -2411,7 +2412,7 @@
         main.innerHTML=head("طلبات رواتب Xena Live","طلبات السحب مستقلة عن بقية الإيداعات، ويمكنك اعتمادها أو رفضها بعد فحص الإيصال.");
         await window.F90SpecialAdmin.renderSalaryInbox(main);
       }
-      else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings);
+      else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings,S.rates);
       else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
       else if (page === "rates") rates();
       else if (page === "vip") vip();
@@ -2535,7 +2536,7 @@
         name_ar: d.name_ar,
         per_usd: Number(d.per_usd),
         is_enabled:
-          form.id === "newRateForm" || form.elements.is_enabled.checked,
+          form.id === "newRateForm" || form.dataset.currency === "USD" || form.elements.is_enabled.checked,
       });
       await refreshSettings();
       rates();
@@ -3149,6 +3150,20 @@
       } else if (action === "smm-approve") {
         await A.call("provider.smm_approve", { product_id: b.dataset.id });
         toast("اعتمدت بيانات المسودة الحالية. يمكنك نشرها بعد التحقق النهائي.");
+      } else if (action === "rate-delete" || action === "rate-purge") {
+        const code = b.dataset.currency;
+        modal(action === "rate-purge" ? "حذف العملات غير المفعّلة" : "حذف العملة " + code,
+          `<p>تُحذف العملات غير المستخدمة. تُحفظ عملة السجلات التاريخية في الأرشيف، ولا يُحذف الدولار أو عملة حساب أو مورد مرتبط حاليًا. لن تتغير الأرصدة أو أسعار المنتجات.</p><button class="button danger" data-action="rate-delete-confirm" ${code ? `data-currency="${e(code)}"` : ""}>تأكيد الحذف</button>`);
+      } else if (action === "rate-delete-confirm") {
+        if (b.disabled) return;
+        b.disabled = true;
+        try {
+          const result = await A.call(b.dataset.currency ? "staff.rate.delete" : "staff.rate.purge", {currency:b.dataset.currency});
+          closeModal();
+          await refreshSettings();
+          rates();
+          toast(result.skipped?.length ? "حُذفت العملات الممكنة؛ بقيت عملات مرتبطة بحسابات أو موردين" : "تم حذف العملة من الخيارات مع حفظ السجلات السابقة");
+        } finally { if (b.isConnected) b.disabled = false; }
       } else if (action === "provider-sync") {
         const provider = S.providerRows?.find((item) => item.id === b.dataset.id);
         if (!provider) throw new Error("لم يُعثر على المورّد");

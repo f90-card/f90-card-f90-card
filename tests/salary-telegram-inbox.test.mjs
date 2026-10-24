@@ -35,14 +35,11 @@ test("salary requests appear on admin deposit page even without normal deposits"
  assert.match(salaryAdmin,/if\(document\.getElementById\("f90SalaryInbox"\)\)await renderSalaryInbox/);
 });
 
-test("only USD, JOD and ILS currencies are selectable in salary and deposit editors",()=>{
- assert.match(migration,/UPDATE public\.f90_rates SET is_enabled=false WHERE currency='XCN'/);
- assert.match(migration,/item->>'currency' IN \('USD','ILS','JOD'\)/);
- assert.match(admin,/\["USD","ILS","JOD"\]\.includes\(code\)/);
- assert.match(salaryAdmin,/\["USD","ILS","JOD"\]\.includes\(String\(x\.currency\|\|""\)\)/);
- assert.doesNotMatch(admin,/placeholder="USD,ILS,JOD,XCN"/);
- for(const [name,c] of [["admin",admin],["salary editor",salaryAdmin]])
-   assert.doesNotThrow(()=>new vm.Script(c,{filename:name}));
+test("enabled registry currencies are selectable in salary and deposit editors",()=>{
+ const editor=salaryAdmin;
+ assert.match(editor,/const activeRates=/);
+ assert.match(editor,/!x.is_archived/);
+ assert.doesNotMatch(editor,/const activeRates=[\s\S]{0,130}\["USD","ILS","JOD"\]\.includes/);
 });
 
 test("Telegram settings let manager opt in and out of Xena salary alerts",()=>{

@@ -53,6 +53,9 @@ const errors: Record<string, [number, string]> = {
   F90_NOT_FOUND: [404, "العنصر غير موجود"],
   F90_REFILLING: [409, "الخدمة قيد التعبئة حاليًا"],
   F90_QUANTITY: [400, "الكمية لا تطابق الحدود والخطوة المسموحة"],
+  F90_CURRENCY_CODE: [400, "استخدم رمز عملة من 3 إلى 8 أحرف إنجليزية مثل SAR"],
+  F90_RATE_BASE: [409, "الدولار هو العملة الأساسية؛ يبقى مفعّلًا بسعر 1 ولا يمكن حذفه"],
+  F90_RATE_IN_USE: [409, "العملة مرتبطة بحسابات أو موردين أو هي العملة الافتراضية؛ غيّر ارتباطها قبل حذفها أو إيقافها"],
   F90_RATE_MISSING: [409, "لم تضبط الإدارة سعر الصرف لهذه العملة"],
   F90_PRICE_MISSING: [409, "سعر الخدمة لم يجهّز بعد"],
   F90_INSUFFICIENT_BALANCE: [402, "رصيد محفظتك غير كافٍ. أضف رصيدًا أولًا"],
@@ -491,7 +494,7 @@ async function buildPublicCatalog() {
           : p,
       ),
     banners: check(rows[3]),
-    rates: check(rows[4]),
+    rates: check(rows[4]).filter((r: any) => !r.is_archived),
     vip: check(rows[5]),
     news: check(rows[8]).filter((n: any) => !n.product_id || allowedProductIds.has(n.product_id)),
     version: 3,
@@ -1998,23 +2001,15 @@ async function staff(a: Actor, b: any) {
       await db.from("site_settings").update(data).eq("id", 1).select().single(),
     );
   }
-  if (action === "staff.rate") {
+  if (["staff.rate", "staff.rate.delete", "staff.rate.purge"].includes(action)) {
     requireRole(a, "manager");
-    const currency = text(b.currency, 8).toUpperCase();
-    if (!/^[A-Z]{3,8}$/.test(currency)) throw new AppError("F90_FIELDS");
-    return check(
-      await db
-        .from("f90_rates")
-        .upsert({
-          currency,
-          name_ar: text(b.name_ar, 100),
-          per_usd: currency === "USD" ? 1 : num(b.per_usd, 0.00000001, 1e8),
-          is_enabled: currency === "USD" || b.is_enabled !== false,
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single(),
-    );
+    const currency = String(b.currency || "").trim().toUpperCase();
+    const operation = action === "staff.rate" ? "save" : action === "staff.rate.delete" ? "delete" : "purge";
+    return rpc("f90_manage_currency", {
+      p_actor:a.id, p_action:operation, p_currency:currency,
+      p_name:text(b.name_ar || "",100), p_rate:b.per_usd == null ? null : num(b.per_usd,0.00000001,100000000),
+      p_enabled:b.is_enabled !== false,
+    });
   }
   if (action === "staff.vip") {
     requireRole(a, "manager");
@@ -2892,7 +2887,7 @@ Deno.serve(async (req: Request) => {
       // The account preference stored in Postgres is the sole authority. A
       // modified browser payload cannot change the deposit currency.
       const accountCurrency=String(verification.account_currency||"USD");
-      if (!["USD","ILS","JOD"].includes(accountCurrency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      if (!/^[A-Z]{3,8}$/.test(accountCurrency)) throw new AppError("F90_ACCOUNT_CURRENCY");
       const referenceCurrency=text(b.currency||"",8);
       const amount = num(b.amount,0.000001,1000000);
       const receipt = text(b.receipt_path, 500);
@@ -2942,10 +2937,10 @@ Deno.serve(async (req: Request) => {
     if (action === "profile.currency") {
       if (a.keyId || a.needsMfa) throw new AppError("F90_FORBIDDEN");
       const currency = text(b.currency, 8).toUpperCase();
-      if (!["USD","ILS","JOD"].includes(currency)) throw new AppError("F90_ACCOUNT_CURRENCY");
+      if (!/^[A-Z]{3,8}$/.test(currency)) throw new AppError("F90_ACCOUNT_CURRENCY");
       const rate = check(await db.from("f90_rates")
-        .select("currency,is_enabled,per_usd").eq("currency",currency).single());
-      if (!rate.is_enabled || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
+        .select("currency,is_enabled,per_usd,is_archived").eq("currency",currency).single());
+      if (!rate.is_enabled || rate.is_archived || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
       check(await db.from("profiles").update({account_currency:currency}).eq("id",a.id));
       return out({currency});
     }
