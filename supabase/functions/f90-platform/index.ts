@@ -1822,6 +1822,20 @@ async function staff(a: Actor, b: any) {
       return {saved:true,name:row.supplier_account_name,previous:true};
     return syncCompletedSupplierName(row);
   }
+  if (action === "staff.revoke_verification") {
+    requireRole(a, "manager");
+    if (a.keyId) throw new AppError("F90_FORBIDDEN");
+    protect(a);
+    const userId = uuid(b.id);
+    const reason = text(b.reason, 500).trim();
+    if (reason.length < 8) throw new AppError("F90_FIELDS", 400, "أدخل سبب سحب التوثيق (8 أحرف على الأقل)");
+    const profile = check(await db.from("profiles").select("id,is_verified").eq("id",userId).single());
+    if (!profile.is_verified) throw new AppError("F90_FIELDS",409,"الحساب غير موثق بالفعل");
+    check(await db.from("profiles").update({is_verified:false}).eq("id",userId).eq("is_verified",true));
+    const audit = await db.from("f90_audit").insert({actor_id:a.id,action:"verification.revoked",target_id:userId,details:{reason}});
+    if (audit.error) throw new AppError("F90_INTERNAL",500,"سُحب التوثيق، لكن تعذّر حفظ سجل القرار. راجع الإدارة");
+    return out({revoked:true});
+  }
   if (action === "staff.manual_verify") {
     requireRole(a, "manager");
     if (a.keyId) throw new AppError("F90_FORBIDDEN");
@@ -2618,6 +2632,17 @@ Deno.serve(async (req: Request) => {
       ].includes(action)
     )
       throw new AppError("F90_FORBIDDEN");
+    if (action === "staff.security.sessions") {
+      requireRole(a, "manager");
+      if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      protect(a);
+      const limit = Math.min(100, Math.max(1, Number.isInteger(Number(b.limit)) ? Number(b.limit) : 50));
+      const result = check(await db.from("f90_security_sessions")
+        .select("id,user_id,session_id,ip_address,country_code,device_type,os_name,browser_name,first_seen_at,last_seen_at")
+        .order("last_seen_at", { ascending: false }).limit(limit));
+      await db.from("f90_audit").insert({actor_id:a.id, action:"security.sessions.read", details:{count:result.length}});
+      return out({items:result,location_accuracy:"country_only"});
+    }
     if (action === "me") return out(await summary(a));
     protect(a);
     if (action === "recipients.list") {
