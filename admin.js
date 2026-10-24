@@ -606,7 +606,7 @@
       '</tbody></table></div><p class="muted small">آخر 50 حركة. السجل الكامل متاح في قسم السجل المالي.</p></section>'+
       '<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
       (u.is_verified
-        ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p><form id="f90RevokeVerificationForm">'+field("reason","سبب سحب التوثيق","textarea","",'required minlength="8" maxlength="500"')+ <button class="button secondary" type="submit">سحب توثيق الحساب</button></form></section>'
+        ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p><form id="f90RevokeVerificationForm">'+field("reason","سبب سحب التوثيق","textarea","",'required minlength="8" maxlength="500"')+ '<button class="button secondary" type="submit">سحب توثيق الحساب</button></form></section>'
         : '<section class="panel"><h3>اعتماد الحساب يدويًا للإيداع والشراء</h3><p class="muted small">هذا اعتماد داخلي بالمتجر، وليس إثبات هوية قانونيًا. لا تستخدمه إلا بعد مراجعة بيانات العميل. سيُسجّل اسم المدير وسبب الاعتماد في سجل الإدارة.</p>'+
           '<form id="f90ManualVerificationForm">'+field("reason","سبب الاعتماد وما الذي تمت مراجعته","textarea","",'required minlength="8" maxlength="500"')+
           '<button class="button" type="submit">اعتماد الحساب للإيداع والشراء</button></form></section>')+
