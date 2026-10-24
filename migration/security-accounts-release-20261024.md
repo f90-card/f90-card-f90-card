@@ -37,3 +37,9 @@ The official login gateway observes password failures through that gateway. Dire
 Rollback: restore the prior Pages deployment and pre-change live Edge sources together; leave additive schema in place. Restore cron's original command if rolling back alert retention: `delete from public.f90_security_sessions where last_seen_at < now() - interval '30 days'`. Do not delete Vault's signing secret until all deployed producers/consumers using it have been retired. Never restore financial data from a security release.
 
 Final deployed-domain acceptance and browser verification are recorded separately after deployment; they are not implied by the pre-deployment checks above.
+
+## Production follow-up
+
+PR #54 merged as `263779a57af463777cb384ee076522a18774b6d1`; Pages deployment `4a19a5ad-6b6c-4775-831d-76da1894b060` succeeded. Live first-party `record`/`mine` succeeded and signature verification worked. An actual external login test exposed a 502 on the Pages-to-Auth direct proxy; this was not treated as passing.
+
+The follow-up sends the bounded login request, signed by Pages, to the existing security Edge function. A fresh per-request Supabase Auth client performs login; the service client is never repurposed for user sessions. Only real Auth failures increment a salted identifier counter; credentials are not recorded. The browser retains the original SDK login path as fallback for infrastructure errors only, never for rejected credentials or rate limits. Signed-login, fallback and malformed-upstream regressions were added. Date filters and displayed times now share the viewer's timezone, including DST. Security function version 8 / platform 32 are the follow-up backend versions.

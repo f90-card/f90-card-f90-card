@@ -30,12 +30,26 @@ Deno.serve(async (req:Request)=>{
   if(!token){
     try{
       const body=await readBoundedBody(req),input=JSON.parse(body);
-      if(input.action!=="login_failure" || !/^[a-f0-9]{64}$/.test(input.identity||""))return response(req,401,{error:"AUTH_REQUIRED"});
+      if(input.action!=="login_failure"&&input.action!=="login")return response(req,401,{error:"AUTH_REQUIRED"});
+      if(input.action==="login_failure"&&!/^[a-f0-9]{64}$/.test(input.identity||""))return response(req,401,{error:"AUTH_REQUIRED"});
       const key=await db.rpc("f90_security_gateway_secret");
+      if(key.error||typeof key.data!=="string")return response(req,503,{error:"GATEWAY_NOT_READY"});
       const context=await verifyContext(req.headers.get("x-f90-activity-context")||"",req.headers.get("x-f90-activity-signature")||"","",body,key.data||"");
       const fingerprint=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(key.data+context.ip))),x=>x.toString(16).padStart(2,"0")).join("");
       const limited=await db.rpc("f90_limit",{p_key:"security-login:"+fingerprint,p_limit:40});
       if(limited.error||!limited.data)return response(req,429,{error:"RATE_LIMIT"});
+      if(input.action==="login"){
+        if(typeof input.email!=="string"||typeof input.password!=="string"||input.email.length>320||input.password.length>1024)return response(req,400,{error:"INVALID_BODY"});
+        const authClient=createClient(projectUrl,Deno.env.get("SUPABASE_ANON_KEY")||"",{auth:{persistSession:false,autoRefreshToken:false}});
+        const result=await authClient.auth.signInWithPassword({email:input.email,password:input.password,...(input.gotrue_meta_security?{options:{captchaToken:input.gotrue_meta_security.captcha_token}}:{})});
+        if(!result.error&&result.data.session)return response(req,200,result.data.session);
+        if(result.error&&[400,401,422].includes(result.error.status||0)){
+          const identity=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(key.data+input.email.trim().toLowerCase()))),x=>x.toString(16).padStart(2,"0")).join("");
+          const saved=await db.rpc("f90_security_signal",{p_kind:"login_failed",p_key:identity,p_user:null,p_details:{message:"محاولات دخول فاشلة متكررة عبر بوابة الموقع"},p_threshold:5});
+          if(saved.error)console.error("Failed-login alert unavailable",saved.error.code);
+        }
+        return response(req,result.error?.status===429?429:[400,401,422].includes(result.error?.status||0)?401:503,{error:"LOGIN_FAILED"});
+      }
       const saved=await db.rpc("f90_security_signal",{p_kind:"login_failed",p_key:input.identity,p_user:null,p_details:{message:"محاولات دخول فاشلة متكررة عبر بوابة الموقع"},p_threshold:5});
       if(saved.error)throw saved.error;return response(req,200,{saved:true});
     }catch{return response(req,401,{error:"AUTH_REQUIRED"});}
