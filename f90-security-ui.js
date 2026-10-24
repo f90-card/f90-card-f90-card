@@ -115,11 +115,12 @@
  async function signIn(credentials){
   try{
    const r=await fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json',apikey:window.F90_CONFIG.SUPABASE_KEY},body:JSON.stringify(credentials),cache:'no-store',signal:AbortSignal.timeout(25000)});
-   const data=await r.json();
+   if(r.status>=500)return await api().auth.signInWithPassword(credentials);
+   let data;try{data=await r.json();}catch{return await api().auth.signInWithPassword(credentials);}
    if(!r.ok)return {data:null,error:{message:'بيانات الدخول غير صحيحة أو الاتصال غير متاح',status:r.status}};
    if(!data.access_token||!data.refresh_token)return {error:{message:'تعذر تأكيد الدخول'}};
    return await api().auth.setSession({access_token:data.access_token,refresh_token:data.refresh_token});
-  }catch{return {error:{message:'تعذر الاتصال بخادم تسجيل الدخول'}};}
+  }catch{return await api().auth.signInWithPassword(credentials);}
  }
  setTimeout(start,0);window.F90SecurityUI={record,renderMine,renderManager,signIn,adminDenied:()=>call('admin_denied').catch(()=>{})};
 })();
