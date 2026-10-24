@@ -183,7 +183,7 @@
   function navigation() {
     const allowed=sections.filter((item)=>item[3].includes(S.me.role));
     const buckets=[
-      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","customer-security"]],
+      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","security-sessions","customer-security"]],
       ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
       ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
       ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
