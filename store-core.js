@@ -135,9 +135,14 @@
     const code = options.currency || "USD";
     const fx = code === "USD" ? 1 : Number((options.rates || []).find(r=>r.currency===code&&r.is_enabled&&!r.is_archived)?.per_usd);
     const markup = Number(options.markup || 0);
-    if (options.currencyPricingEnabled !== false && fixed?.enabled === true && Number(fixed.prices?.[code]) > 0) {
-      const qty = c.type === "quantity" ? Number(quantity) : Number(c.pack_quantity || 1);
-      return Number(fixed.prices[code]) * qty / Number(fixed.unit_quantity) / fx * (1+markup/100);
+    const qty = c.type === "quantity" ? Number(quantity) : Number(c.pack_quantity || 1);
+    let nativePrice = Number(fixed?.prices?.[code]) || null;
+    if (fixed?.tiers_enabled === true) {
+      for (const tier of [...(fixed.tiers || [])].sort((a,b)=>Number(a.min)-Number(b.min)))
+        if (qty >= Number(tier.min) && Number(tier.prices?.[code]) > 0) nativePrice = Number(tier.prices[code]);
+    }
+    if (options.currencyPricingEnabled !== false && fixed?.enabled === true && nativePrice > 0) {
+      return nativePrice * qty / Number(fixed.unit_quantity) / fx * (1+markup/100);
     }
     let price = Number(c.prices?.USD ?? (p.currency === "USD" ? p.price : NaN));
     const q = c.type === "quantity" ? Number(quantity) : 1;
