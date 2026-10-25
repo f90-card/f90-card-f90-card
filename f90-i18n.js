@@ -34,8 +34,27 @@ function attributes(el){if(el.matches("input,textarea,button,a,img,select,[title
 function translateTree(root){if(root.nodeType===3){textNode(root);return;}if(root.nodeType!==1)return;const el=root;if(isExcluded(el))return;attributes(el);const walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);while(walk.nextNode())textNode(walk.currentNode);el.querySelectorAll("[placeholder],[title],[aria-label],[alt]").forEach(attributes);}
 let isRunning=false;let pending=false;
 function scan(){if(isRunning)return;isRunning=true;try{translateTree(document.body);}finally{isRunning=false;}}
-function setLanguage(next,save){if(!supported.includes(next))next="ar";lang=next;document.documentElement.lang=next;document.documentElement.dir=next==="ar"?"rtl":"ltr";document.documentElement.dataset.f90Language=next;if(save)try{localStorage.setItem(choiceKey,next);}catch{}const input=document.getElementById("f90-language-select");if(input)input.value=next;scan();}
-function addControl(){if(document.getElementById("f90-language-control"))return;const container=document.createElement("div");container.id="f90-language-control";container.dataset.f90NoTranslate="true";container.setAttribute("role","group");container.setAttribute("aria-label","Language / اللغة");const label=document.createElement("label");label.htmlFor="f90-language-select";label.textContent="🌐";const select=document.createElement("select");select.id="f90-language-select";select.setAttribute("aria-label","Select language");for(const [id,name] of Object.entries(NAMES)){const opt=document.createElement("option");opt.value=id;opt.textContent=name;select.appendChild(opt);}select.value=lang;select.addEventListener("change",()=>setLanguage(select.value,true));container.append(label,select);document.body.appendChild(container);}
+function setLanguage(next,save){if(!supported.includes(next))next="ar";lang=next;document.documentElement.lang=next;document.documentElement.dir=next==="ar"?"rtl":"ltr";document.documentElement.dataset.f90Language=next;if(save)try{localStorage.setItem(choiceKey,next);}catch{}const input=document.getElementById("f90-language-select");if(input)input.value=next;const drawerInput=document.getElementById("f90-language-drawer");if(drawerInput)drawerInput.value=next;scan();}
+function makePicker(id){
+ const holder=document.createElement("label");holder.className="f90-language-picker";holder.dataset.f90NoTranslate="true";
+ holder.textContent="🌐 ";
+ const select=document.createElement("select");select.id=id;select.setAttribute("aria-label","Choose website language");
+ for(const [key,name] of Object.entries(NAMES)){const option=document.createElement("option");option.value=key;option.textContent=name;select.appendChild(option);}
+ select.value=lang;select.addEventListener("change",()=>setLanguage(select.value,true));holder.appendChild(select);return holder;
+}
+function addControl(){
+ const toolbar=document.querySelector(".header-actions")||document.querySelector(".admin-top");
+ if(toolbar&&!document.getElementById("f90-language-select")){
+  const control=makePicker("f90-language-select");control.id="f90-language-control";
+  if(document.querySelector(".admin-top-title"))document.querySelector(".admin-top-title").insertAdjacentElement("afterend",control);
+  else toolbar.insertBefore(control,toolbar.firstChild);
+ }
+ const drawer=document.querySelector(".drawer-preferences")||document.querySelector("#adminSidebar");
+ if(drawer&&!document.getElementById("f90-language-drawer")){
+  const control=makePicker("f90-language-drawer");control.id="f90-language-drawer-control";
+  drawer.prepend(control);
+ }
+}
 function bootstrap(){addControl();setLanguage(lang,false);const observer=new MutationObserver(()=>{if(pending||isRunning)return;pending=true;requestAnimationFrame(()=>{pending=false;scan();});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),supported:[...supported]};}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootstrap,{once:true});else bootstrap();
 })();
