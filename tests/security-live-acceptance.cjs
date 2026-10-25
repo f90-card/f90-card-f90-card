@@ -44,6 +44,13 @@ async function check(name,fn){await fn();results.push({name,passed:true});consol
   await check('all account sessions revoked',async()=>{const r=await call('manager','staff.security.revoke',{user_id:customer.id,confirm_user_id:customer.id,all:true,reason:'isolated acceptance logout all devices'});assert.equal(r.status,200);assert.ok(r.body.data.revoked>=1);});
   await check('logout all rejects remaining access JWT',async()=>assert.equal((await call('customer','me',{},old.access_token)).status,401));
   await check('manager still authenticated after target logout',async()=>assert.equal((await call('manager','staff.security.sessions',{user_id:customer.id})).status,200));
+  await check('revoked JWT cannot invoke checkout',async()=>assert.equal((await call('customer','checkout',{product_id:'00000000-0000-0000-0000-000000000001',quantity:1,idempotency_key:crypto.randomUUID(),fields:{account_id:'isolated'}},old.access_token)).status,401));
+  await check('revoked JWT cannot invoke deposit',async()=>assert.equal((await call('customer','deposit.submit',{amount:0},old.access_token)).status,401));
+  const manager=state.users.manager,other=createClient(state.url,state.publicKey,{auth:{persistSession:false,autoRefreshToken:false}});
+  const r=await other.auth.signInWithPassword({email:manager.email,password:manager.password});assert.ifError(r.error);manager.sessions.push(r.data.session);save();
+  await check('logout all own devices preserves current MFA manager',async()=>{const r=await call('manager','staff.security.revoke',{user_id:manager.id,confirm_user_id:manager.id,all:true,reason:'isolated acceptance preserve current manager'});assert.equal(r.status,200);assert.ok(r.body.data.revoked>=1);assert.equal((await call('manager','staff.security.sessions')).status,200);});
+  await check('other manager device token is revoked',async()=>assert.equal((await call('manager','me',{},r.data.session.access_token)).status,401));
+
  }
  save();fs.writeFileSync('/tmp/f90-security-'+phase+'-results.json',JSON.stringify({results},null,2));console.log(JSON.stringify({phase,passed:results.length}));process.exit(0);
 })().catch(e=>{console.error(e.message);process.exit(1)});
