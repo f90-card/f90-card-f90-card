@@ -636,7 +636,36 @@
     return '<div class="form-section"><h3>سعر مستقل لكل عملة وكمية</h3>'+check("currency_pricing_enabled","تفعيل الأسعار المستقلة لهذه الخدمة",pricing.enabled===true)+
       '<p class="muted small">مثال: سعر مليون كوينز 114 دولارًا أو 80 دينارًا أو 375 شيقلًا. لكل عملة سعرها المباشر دون تحويل سعر الدولار. اترك السعر فارغًا للعملات التي تريد حسابها بالصرف. يتقدم السعر المستقل على شرائح سعر الدولار، وتُطبق زيادة المستخدم وخصوماته بعده.</p>'+
       field("currency_pricing_unit","هذه الأسعار مقابل كم وحدة؟","number",pricing.unit_quantity||(commerce.type==="quantity"?commerce.unit_quantity:commerce.pack_quantity)||1,'required min="1" max="1000000000" step="1"')+
-      '<div class="field-row">'+S.rates.filter(r=>!r.is_archived).map(r=>field("currency_price_"+r.currency,"السعر بـ"+r.name_ar+(r.is_enabled?"":" (عملة غير مفعّلة)"),"number",pricing.prices?.[r.currency]??"",'min="0.000001" max="1000000000" step="0.000001"')).join("")+'</div></div>';
+      '<div class="field-row">'+S.rates.filter(r=>!r.is_archived).map(r=>field("currency_price_"+r.currency,"السعر الأساسي بـ"+r.name_ar+(r.is_enabled?"":" (عملة غير مفعّلة)"),"number",pricing.prices?.[r.currency]??"",'min="0.000001" max="1000000000" step="0.000001"')).join("")+'</div>'+
+      '<h3>زيادة أو تخفيض السعر حسب الكمية ولكل عملة</h3>'+check("currency_tiers_enabled","تفعيل شرائح الكمية لهذه الخدمة",pricing.tiers_enabled===true)+
+      '<p class="muted small">فعّل الأسعار المستقلة أعلاه ثم الشرائح. كل سعر مقابل كمية وحدة التسعير أعلاه، ويُطبق على كامل كمية الطلب عند بلوغ بداية الشريحة، حتى بداية الشريحة التالية. مثال توضيحي: من 1 بسعر 85 دينارًا للمليون، ومن 1000000 بسعر 80 دينارًا للمليون. تستطيع رفع السعر أو تخفيضه بحرية. السعر الفارغ يرث آخر سعر سابق لنفس العملة، ثم السعر الأساسي، ثم التسعير المعتاد بالصرف عند عدم وجود سعر مستقل. إيقاف الشرائح يحتفظ بقيمها.</p>'+
+      '<div id="currencyTierRows" class="dynamic-rows">'+(pricing.tiers||[]).map((t,n)=>currencyTierRow(t,n)).join("")+'</div><button type="button" class="button secondary small" style="margin-top:12px" data-action="add-currency-tier">إضافة شريحة كمية وعملات</button></div>';
+  }
+  function currencyTierRow(tier,n) {
+    return '<div class="dynamic-row" data-currency-tier-row data-original-prices="'+e(JSON.stringify(tier.prices||{}))+'">'+
+      field("currency_tier_min_"+n,"من هذه الكمية فأكثر (شاملًا)","number",tier.min??"",'required min="1" max="1000000000" step="1" data-currency-tier-min')+
+      '<div class="field-row">'+S.rates.filter(r=>!r.is_archived).map(r=>field("currency_tier_price_"+n+"_"+r.currency,"السعر بـ"+r.name_ar+(r.is_enabled?"":" (عملة غير مفعّلة)"),"number",tier.prices?.[r.currency]??"",'min="0.000001" max="1000000000" step="0.000001" data-currency-tier-code="'+e(r.currency)+'"')).join("")+'</div>'+
+      '<button type="button" class="button ghost small" data-action="remove-row">حذف الشريحة</button></div>';
+  }
+  function parseCurrencyTiers(form) {
+    const tiers=[...form.querySelectorAll("[data-currency-tier-row]")].map(row=>{
+      const min=Number(row.querySelector("[data-currency-tier-min]").value);
+      if(!Number.isSafeInteger(min)||min<1||min>1000000000)throw new Error("بداية الشريحة يجب أن تكون كمية صحيحة موجبة");
+      const prices=JSON.parse(row.dataset.originalPrices||"{}");
+      for(const input of row.querySelectorAll("[data-currency-tier-code]")){
+        const code=input.dataset.currencyTierCode;
+        if(input.value.trim()===""){delete prices[code];continue;}
+        const price=Number(input.value);
+        if(!Number.isFinite(price)||price<0.000001||price>1000000000||Math.abs(price*1e6-Math.round(price*1e6))>0.00001)throw new Error("أدخل سعرًا موجبًا صحيحًا بحد أقصى ست منازل عشرية");
+        prices[code]=price;
+      }
+      if(!Object.keys(prices).length)throw new Error("أدخل سعرًا لعملة واحدة على الأقل في كل شريحة");
+      return {min,prices};
+    }).sort((a,b)=>a.min-b.min);
+    if(tiers.length>40)throw new Error("الحد الأقصى أربعون شريحة لكل خدمة");
+    if(tiers.some((t,n)=>n>0&&t.min===tiers[n-1].min))throw new Error("بدايات شرائح الكمية متكررة");
+    if(form.elements.currency_tiers_enabled.checked&&!tiers.length)throw new Error("أضف شريحة واحدة على الأقل أو أوقف تسعير الشرائح");
+    return tiers;
   }
   function categoryOptions(includeEmpty = true, exclude) {
     const list = includeEmpty ? [["", "بدون قسم / القسم الرئيسي"]] : [];
@@ -1624,8 +1653,9 @@
               if(!input)continue;
               if(input.value.trim()==="")delete prices[r.currency];else prices[r.currency]=Number(input.value);
             }
-            if(form.elements.currency_pricing_enabled.checked&&!Object.keys(prices).length)throw new Error("أدخل سعرًا مستقلًا لعملة واحدة على الأقل");
-            return {enabled:form.elements.currency_pricing_enabled.checked,unit_quantity:Number(d.currency_pricing_unit),prices};
+            const tiers=parseCurrencyTiers(form),tiers_enabled=form.elements.currency_tiers_enabled.checked;
+            if(form.elements.currency_pricing_enabled.checked&&!Object.keys(prices).length&&!(tiers_enabled&&tiers.length))throw new Error("أدخل سعرًا مستقلًا أو شريحة مفعّلة لعملة واحدة على الأقل");
+            return {enabled:form.elements.currency_pricing_enabled.checked,unit_quantity:Number(d.currency_pricing_unit),prices,tiers_enabled,tiers};
           })(),
         };
         data.internal = {
@@ -3087,6 +3117,10 @@
             },
           ]).replaceAll("_0", "_" + rows.children.length),
         );
+      } else if (action === "add-currency-tier") {
+        const rows=$("currencyTierRows");
+        if(rows.children.length>=40)throw new Error("الحد الأقصى أربعون شريحة لكل خدمة");
+        rows.insertAdjacentHTML("beforeend",currencyTierRow({},C.key().replaceAll("-","")));
       } else if (action === "add-tier") {
         const rows = $("tierRows");
         rows.insertAdjacentHTML(

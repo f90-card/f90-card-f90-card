@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { parentRefilling } from "./catalog.mjs";
 import { recipientNameFromSupplier } from "./recipient-name.mjs";
+import { cleanCurrencyPricing, nativePrice } from "./currency-pricing.mjs";
 import {
   callProvider,
   endpointURL,
@@ -839,15 +840,14 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
         : existing.fields || [],
     };
   const currencyPricing = c.currency_pricing ?? existing.currency_pricing ?? {};
-  if (!currencyPricing || typeof currencyPricing !== "object" || Array.isArray(currencyPricing)) throw new AppError("F90_FIELDS");
-  const fixedPrices: Record<string, number> = {};
-  for (const [code, value] of Object.entries(currencyPricing.prices || {})) {
-    if (!/^[A-Z]{3,8}$/.test(code)) throw new AppError("F90_CURRENCY_CODE");
-    fixedPrices[code] = num(value, 0.000001, 1000000000);
+  let cleanedCurrencyPricing;
+  try {
+    cleanedCurrencyPricing = cleanCurrencyPricing(currencyPricing, (c.type === "quantity" ? c.unit_quantity : c.pack_quantity) || (existing.type === "quantity" ? existing.unit_quantity : existing.pack_quantity) || 1);
+  } catch (err) {
+    throw new AppError("F90_FIELDS",400,err.message);
   }
-  if (currencyPricing.enabled === true && !Object.keys(fixedPrices).length) throw new AppError("F90_FIELDS",400,"أدخل سعرًا مستقلًا لعملة واحدة على الأقل");
   const result: any = {
-    currency_pricing: { enabled: currencyPricing.enabled === true, unit_quantity: integer(currencyPricing.unit_quantity || (c.type === "quantity" ? c.unit_quantity : c.pack_quantity) || (existing.type === "quantity" ? existing.unit_quantity : existing.pack_quantity) || 1), prices: fixedPrices },
+    currency_pricing: cleanedCurrencyPricing,
     type: c.type === "quantity" ? "quantity" : "fixed",
     availability: c.availability === "refilling" ? "refilling" : "available",
     fulfillment: c.fulfillment === "automatic" ? "automatic" : "manual",
@@ -2753,9 +2753,11 @@ Deno.serve(async (req: Request) => {
       if (!Number.isFinite(fx) || fx <= 0) throw new AppError("F90_RATE_MISSING");
       const items = catalog.products.map((p: any) => {
         const fixed=p.commerce.currency_pricing;
-        const independent=catalog.settings.config?.currency_pricing_enabled!==false && fixed?.enabled===true && Number(fixed.prices?.[priceCurrency])>0;
+        const catalogQuantity=Number(p.commerce.type==='quantity' ? p.commerce.quantity_min||1 : p.commerce.pack_quantity||1);
+        const localPrice=nativePrice(fixed,priceCurrency,catalogQuantity);
+        const independent=catalog.settings.config?.currency_pricing_enabled!==false && fixed?.enabled===true && localPrice>0;
         const baseRate=independent
-          ? Number(fixed.prices[priceCurrency])/fx * Number(p.commerce.type==='quantity' ? p.commerce.unit_quantity||1 : p.commerce.pack_quantity||1)/Number(fixed.unit_quantity)
+          ? localPrice/fx * Number(p.commerce.type==='quantity' ? p.commerce.unit_quantity||1 : p.commerce.pack_quantity||1)/Number(fixed.unit_quantity)
           : Number(prices.find((i:any)=>i.product_id===p.id)?.trader_price_usd ?? p.commerce.prices?.USD);
         return ({
           service: p.id,
@@ -2770,7 +2772,14 @@ Deno.serve(async (req: Request) => {
           price_currency: priceCurrency,
           currency_price_fixed: independent,
           currency_unit_quantity: independent ? fixed.unit_quantity : p.commerce.unit_quantity || 1,
-          rate_currency: independent ? Number(fixed.prices[priceCurrency])*(1+markup/100) : baseRate*fx*(1+markup/100),
+          rate_currency: independent ? localPrice*(1+markup/100) : baseRate*fx*(1+markup/100),
+          currency_pricing: fixed?.enabled===true && catalog.settings.config?.currency_pricing_enabled!==false ? {
+            enabled:true, unit_quantity:fixed.unit_quantity,
+            prices:Object.fromEntries(Object.entries(fixed.prices||{}).map(([k,v])=>[k,Number(v)*(1+markup/100)])),
+            tiers_enabled:fixed.tiers_enabled===true,
+            tiers:(fixed.tiers||[]).map((t:any)=>({min:t.min,prices:Object.fromEntries(Object.entries(t.prices||{}).map(([k,v])=>[k,Number(v)*(1+markup/100)]))})),
+            quantity_rule:"whole_order_inclusive_minimum",
+          } : null,
           unit_quantity: p.commerce.unit_quantity || 1,
           min: p.commerce.quantity_min || 1,
           max: p.commerce.quantity_max || 1,
