@@ -1,0 +1,9 @@
+// Explicit operator-run only with disposable marked fixtures; no flags are changed.
+const fs=require('node:fs'),assert=require('node:assert/strict');const path=process.env.F90_SECURITY_FIXTURES;if(!path)throw Error('F90_SECURITY_FIXTURES is required');const rows=JSON.parse(fs.readFileSync(path)),key='sb_publishable_hhEc0Rw4r_V-sLpC82KLdw_mcoWNSec',base='https://ogkipkavlywgwhtomoca.supabase.co',tokens={};
+async function call(path,data,token){const r=await fetch(base+path,{method:'POST',signal:AbortSignal.timeout(15000),headers:{apikey:key,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(data)});return {status:r.status,body:await r.json()};}
+(async()=>{for(const f of rows){const r=await call('/auth/v1/token?grant_type=password',{email:f.email,password:f.password});assert.equal(r.status,200);tokens[f.role]=r.body.access_token;}assert.equal(JSON.parse(Buffer.from(tokens.manager.split('.')[1],'base64url')).aal,'aal1');
+const results=[];for(const [name,token,body,status,code] of [
+['AAL1 manager reaches flag validation',tokens.manager,{action:'toggle',key:'invalid',reason:'isolated safety test'},400,'INVALID_FLAG'],
+['reason remains mandatory without changing flags',tokens.manager,{action:'toggle',key:'checkout_enabled',enabled:false,reason:''},400,'REASON_REQUIRED'],
+['customer cannot use operations',tokens.customer,{action:'toggle'},403,'MANAGER_ONLY'],
+['anonymous cannot use operations',null,{action:'toggle'},403,'AUTH_REQUIRED']]){const r=await call('/functions/v1/f90-ops-control',body,token);assert.equal(r.status,status,name);assert.equal(r.body.error.code,code);results.push(name);console.log('PASS '+name);}fs.writeFileSync('/tmp/f90-ops-access-results.json',JSON.stringify({passed:results.length,results},null,2));})().catch(e=>{console.error(e.message);process.exitCode=1});

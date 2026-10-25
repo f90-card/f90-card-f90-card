@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {stripTypeScriptTypes} from 'node:module';
+const user='a019eaa6-4e41-48d4-b1c0-49053783e7ca',sid='ba7e864b-17f3-48ca-8bf0-e42c98c830ab';
+const token='header.'+Buffer.from(JSON.stringify({session_id:sid,aal:'aal1'})).toString('base64url')+'.signature';let role='manager',active=true,valid=true,handler;
+const db={auth:{getUser:async()=>({data:{user:{id:user,factors:[]}}})},rpc:async()=>({data:valid}),from(table){const q={select(){return q},eq(){return q},single:async()=>({data:table==='profiles'?{account_status:active?'active':'suspended'}:{role}})};return q;}};
+globalThis.__opsAccessClient=()=>db;globalThis.Deno={env:{get:()=>''},serve:fn=>handler=fn};
+let src=readFileSync(new URL('../supabase/functions/f90-ops-control/index.ts',import.meta.url),'utf8').replace(/import \{ createClient \} from "[^"]+";/,'const createClient=globalThis.__opsAccessClient;');
+await import('data:text/javascript;base64,'+Buffer.from(stripTypeScriptTypes(src)).toString('base64'));
+const call=async(body,authenticated=true)=>handler(new Request('https://example.invalid/ops',{method:'POST',headers:{'Content-Type':'application/json',...(authenticated?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}));
+test('manager AAL1 reaches operational validation without MFA or changes to flags',async()=>{role='manager';active=true;valid=true;let r=await call({action:'toggle',key:'invalid',enabled:true,reason:'isolated validation'});assert.equal(r.status,400);assert.equal((await r.json()).error.code,'INVALID_FLAG');r=await call({action:'toggle',key:'checkout_enabled',enabled:false,reason:''});assert.equal(r.status,400);assert.equal((await r.json()).error.code,'REASON_REQUIRED');});
+test('operations continue to reject all nonmanager roles',async()=>{for(role of ['customer','trader','admin']){const r=await call({action:'toggle'});assert.equal(r.status,403);assert.equal((await r.json()).error.code,'MANAGER_ONLY');}});
+test('suspended manager and revoked session cannot use operations',async()=>{role='manager';active=false;valid=true;assert.equal((await call({action:'toggle'})).status,403);active=true;valid=false;const r=await call({action:'toggle'});assert.equal(r.status,403);assert.equal((await r.json()).error.code,'AUTH_REQUIRED');valid=true;});
+test('anonymous operations are rejected before processing actions',async()=>{assert.equal((await call({action:'toggle'},false)).status,403);});

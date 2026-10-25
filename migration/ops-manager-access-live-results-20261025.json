@@ -1,0 +1,9 @@
+{
+  "passed": 4,
+  "results": [
+    "AAL1 manager reaches flag validation",
+    "reason remains mandatory without changing flags",
+    "customer cannot use operations",
+    "anonymous cannot use operations"
+  ]
+}
