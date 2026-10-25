@@ -1,0 +1,23 @@
+{
+  "passed": 18,
+  "results": [
+    "manager AAL1 summary is complete without MFA requirement",
+    "manager AAL1 lists sessions",
+    "manager AAL1 lists customer security",
+    "manager AAL1 lists alerts",
+    "customer denied session administration",
+    "customer denied customer security",
+    "trader denied session administration",
+    "trader denied customer security",
+    "admin denied session administration",
+    "admin denied customer security",
+    "anonymous session administration denied",
+    "anonymous customer security denied",
+    "manager current session stays protected",
+    "AAL1 manager revokes disposable customer session",
+    "revoked customer access token rejected",
+    "revoked customer refresh token rejected",
+    "revoked customer checkout rejected",
+    "revoked customer deposit rejected"
+  ]
+}

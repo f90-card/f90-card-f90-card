@@ -15,13 +15,8 @@ async function check(name,fn){await fn();results.push({name,passed:true});consol
   for(const role of ['customer','trader','admin'])await check(role+' cannot read sessions',async()=>assert.equal((await call(role,'staff.security.sessions')).status,403));
   await check('unauthenticated cannot read sessions',async()=>assert.equal((await call(null,'staff.security.sessions')).status,401));
   await check('merchant API key cannot read security records',async()=>assert.equal((await keyCall('staff.security.sessions')).status,403));
-  await check('manager AAL1 requires MFA',async()=>assert.equal((await call('manager','staff.security.sessions')).body.error.code,'F90_MFA'));
-  const u=state.users.manager,c=createClient(state.url,state.publicKey,{auth:{persistSession:false,autoRefreshToken:false}});
-  await c.auth.setSession({access_token:u.session.access_token,refresh_token:u.session.refresh_token});
-  let factor=u.factor;
-  if(!factor){const r=await c.auth.mfa.enroll({factorType:'totp',friendlyName:'Isolated acceptance'});assert.ifError(r.error);factor=r.data;u.factor=factor;save();}
-  const verified=await c.auth.mfa.challengeAndVerify({factorId:factor.id,code:totp(factor.totp.secret)});assert.ifError(verified.error);u.session=verified.data;save();
-  await check('manager MFA reads sessions',async()=>{const r=await call('manager','staff.security.sessions',{user_id:state.users.customer.id});assert.equal(r.status,200,JSON.stringify(r.body));assert.ok(r.body.data.items.length>=1);});
+  const u=state.users.manager;
+  await check('manager AAL1 reads sessions without forced MFA',async()=>{const r=await call('manager','staff.security.sessions',{user_id:state.users.customer.id});assert.equal(r.status,200,JSON.stringify(r.body));assert.ok(r.body.data.items.length>=1);});
   await check('customer cannot cancel another session',async()=>assert.equal((await call('customer','staff.security.revoke',{user_id:u.id,confirm_user_id:u.id,all:true,reason:'isolated test request'})).status,403));
   const sid=JSON.parse(Buffer.from(u.session.access_token.split('.')[1],'base64url')).session_id;
   await check('current manager session is protected',async()=>{const r=await call('manager','staff.security.revoke',{user_id:u.id,confirm_user_id:u.id,session_id:sid,reason:'isolated test current session'});assert.equal(r.status,409);assert.equal(r.body.error.code,'F90_CURRENT_SESSION');});
@@ -48,7 +43,7 @@ async function check(name,fn){await fn();results.push({name,passed:true});consol
   await check('revoked JWT cannot invoke deposit',async()=>assert.equal((await call('customer','deposit.submit',{amount:0},old.access_token)).status,401));
   const manager=state.users.manager,other=createClient(state.url,state.publicKey,{auth:{persistSession:false,autoRefreshToken:false}});
   const r=await other.auth.signInWithPassword({email:manager.email,password:manager.password});assert.ifError(r.error);manager.sessions.push(r.data.session);save();
-  await check('logout all own devices preserves current MFA manager',async()=>{const r=await call('manager','staff.security.revoke',{user_id:manager.id,confirm_user_id:manager.id,all:true,reason:'isolated acceptance preserve current manager'});assert.equal(r.status,200);assert.ok(r.body.data.revoked>=1);assert.equal((await call('manager','staff.security.sessions')).status,200);});
+  await check('logout all own devices preserves current manager',async()=>{const r=await call('manager','staff.security.revoke',{user_id:manager.id,confirm_user_id:manager.id,all:true,reason:'isolated acceptance preserve current manager'});assert.equal(r.status,200);assert.ok(r.body.data.revoked>=1);assert.equal((await call('manager','staff.security.sessions')).status,200);});
   await check('other manager device token is revoked',async()=>assert.equal((await call('manager','me',{},r.data.session.access_token)).status,401));
 
  }
