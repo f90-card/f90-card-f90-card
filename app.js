@@ -377,7 +377,7 @@
       adminShortcut.href = "./admin.html";
       adminShortcut.title = adminShortcut.ariaLabel = "لوحة الإدارة";
       adminShortcut.innerHTML = I("chart");
-      $("headerWallet").before(adminShortcut);
+      $("menuButton").after(adminShortcut);
     } else if (!staff) adminShortcut?.remove();
     const enabled = S.rates.filter((r) => r.is_enabled && r.per_usd);
     if (!enabled.some((r) => r.currency === S.currency)) S.currency = S.settings.currency && enabled.some(r=>r.currency===S.settings.currency) ? S.settings.currency : "USD";
