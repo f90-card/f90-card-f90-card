@@ -173,7 +173,7 @@ function protect(a: Actor) {
 function securityManager(a: Actor) {
   requireRole(a,"manager");
   if(a.keyId) throw new AppError("F90_FORBIDDEN");
-  if(a.aal!=="aal2" || !a.sessionId) throw new AppError("F90_MFA",403,"فعّل المصادقة الثنائية وأدخل رمزها لاستخدام أدوات الأمان");
+  if(!a.sessionId) throw new AppError("F90_AUTH",401);
 }
 async function securitySignal(kind:string,key:string,user:string|null=null,details:any={},threshold=1){
   try{await db.rpc("f90_security_signal",{p_kind:kind,p_key:key,p_user:user,p_details:details,p_threshold:threshold});}catch{console.error("Security signal unavailable");}
@@ -277,6 +277,7 @@ async function actor(req: Request, optional = false): Promise<Actor | null> {
     aal: claims.aal,
     sessionId: claims.session_id,
     needsMfa:
+      role !== "manager" &&
       !api &&
       claims.factors.some((f: any) => f.status === "verified") &&
       claims.aal !== "aal2",

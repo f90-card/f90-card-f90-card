@@ -5,7 +5,7 @@ const token='header.'+Buffer.from(JSON.stringify({session_id:sid,aal:'aal1'})).t
 let state,handler;
 const db={auth:{getUser:async()=>({data:{user:{id:user,factors:[]}}}),signInWithPassword:async()=>state.loginError?{error:{status:400},data:{}}:{data:{session:{access_token:'fixture-access',refresh_token:'fixture-refresh'}}}},rpc:async(name,args)=>{if(name==='f90_security_signal')state.signals.push(args);return {data:name==='f90_security_gateway_secret'?secret:true}},from(table){
  let operation='select',row;
- const q={select(){return q},eq(k,v){if(operation==='update')state.filters.push([k,v]);return q},gte(){return q},order(){return q},limit(){return q},upsert(x){operation='upsert';row=x;return q},update(x){operation='update';row=x;return q},single:async()=>({data:operation==='upsert'?(state.rows.push(row),{id:1}):table==='profiles'?{account_status:'active'}:{role:state.role}}),then(resolve){if(operation==='update')state.updates.push(row);return Promise.resolve({data:[]}).then(resolve)}};return q;
+ const q={select(){return q},insert(){return q},eq(k,v){if(operation==='update')state.filters.push([k,v]);return q},gte(){return q},order(){return q},limit(){return q},upsert(x){operation='upsert';row=x;return q},update(x){operation='update';row=x;return q},single:async()=>({data:operation==='upsert'?(state.rows.push(row),{id:1}):table==='profiles'?{account_status:'active'}:{role:state.role}}),then(resolve){if(operation==='update')state.updates.push(row);return Promise.resolve({data:[]}).then(resolve)}};return q;
 }};
 globalThis.__securityCreateClient=()=>db;globalThis.Deno={env:{get:()=>''},serve:fn=>{handler=fn}};
 let src=readFileSync(new URL('../supabase/functions/f90-security-activity/index.ts',import.meta.url),'utf8');
@@ -19,3 +19,9 @@ test('precise location is ignored without consent and accepted only with valid c
 test('revocation clears only the authenticated users location and ordinary users cannot view manager data',async()=>{reset();assert.equal((await invoke({action:'record',clear_location:true})).status,200);assert.equal(state.updates[0].location_consent,false);assert.equal(state.updates[0].precise_latitude,null);assert.deepEqual(state.filters,[['user_id',user]]);assert.equal((await invoke({action:'manager_list'})).status,403);});
 
 test('login requires a signed gateway and only failed auth creates sanitized failure evidence',async()=>{reset();assert.equal((await invoke({action:'login',email:'fixture@example.invalid',password:'fixture-password'},false,false)).status,401);let r=await invoke({action:'login',email:'fixture@example.invalid',password:'fixture-password'},true,false);assert.equal(r.status,200);assert.equal((await r.json()).access_token,'fixture-access');assert.equal(state.signals.length,0);state.loginError=true;r=await invoke({action:'login',email:'fixture@example.invalid',password:'fixture-password'},true,false);assert.equal(r.status,401);assert.equal(state.signals.length,1);assert.equal(state.signals[0].p_threshold,5);assert.ok(!JSON.stringify(state.signals).includes('fixture@example.invalid'));assert.ok(!JSON.stringify(state.signals).includes('fixture-password'));});
+
+test('active manager AAL1 reads security data without forced enrollment while nonmanagers remain denied',async()=>{
+ reset();state.role='manager';assert.equal((await invoke({action:'manager_list'})).status,200);
+ for(const role of ['customer','trader','admin']){state.role=role;assert.equal((await invoke({action:'manager_list'})).status,403);}
+ assert.equal((await invoke({action:'manager_list'},true,false)).status,401);
+});

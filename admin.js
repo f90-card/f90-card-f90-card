@@ -764,8 +764,24 @@
           )
           .join("") || empty("لا توجد عناصر بعد")
       }</div>`;
-    if (kind === "products" && S.productSearch) { document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const p = S.products.find(x => x.id === row.dataset.rowId); row.style.display = String(p?.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase()) ? "" : "none"; }); }
+    if (kind === "products") filterProductRows();
     if(kind === "banners") specialBannerEditor();
+  }
+  function filterProductRows() {
+    const products = new Map(S.products.map(p => [String(p.id), p]));
+    let count = 0;
+    main.querySelectorAll(".catalog-list .catalog-row").forEach(row => {
+      const p = products.get(row.dataset.rowId);
+      const aliases = [p?.id, p?.slug, ...(p?.commerce?.search_aliases || [])];
+      const match = window.F90CatalogSearch?.matches(p?.name, S.productSearch || "", aliases)
+        ?? String(p?.name || "").toLocaleLowerCase().includes(String(S.productSearch || "").trim().toLocaleLowerCase());
+      row.hidden = !match;
+      if (match) count++;
+    });
+    let status = document.getElementById("productSearchStatus");
+    if (!status) { status = document.createElement("p"); status.id = "productSearchStatus"; status.className = "muted small"; status.setAttribute("role", "status"); main.querySelector(".catalog-list")?.before(status); }
+    status.textContent = count ? count + " خدمة ضمن القسم والمورد المحددين" : "لا توجد خدمات مطابقة ضمن القسم والمورد المحددين. اختر كل الأقسام وجميع الموردين لتوسيع البحث.";
+    updateBulkCount();
   }
   let pendingBulk = null;
   let bulkBusy = false;
@@ -2797,7 +2813,7 @@
           await providers();
         } finally { if (b.isConnected) b.disabled = false; }
       } else if (action === "bulk-fulfillment") { const chosen = selectedBulkProducts(); if (!chosen.length) throw new Error("حدد منتجًا واحدًا على الأقل"); if (!manager()) throw new Error("هذا الإجراء متاح للمدير فقط"); const mode = b.dataset.mode; if (!["manual","automatic"].includes(mode)) throw new Error("طريقة تنفيذ غير صحيحة"); pendingBulk = { ids: chosen.map(p => p.id), mode: "fulfillment", fulfillment: mode }; modal("تعديل طريقة شحن " + chosen.length + " منتج", `<p>تغيير طريقة التنفيذ إلى ${mode === "automatic" ? "آلي عبر المورّد المرتبط" : "يدوي"} للمنتجات المحددة فقط. لن تتغير الأسعار أو الصور.</p><button class="button" data-action="bulk-confirm">تأكيد الحفظ</button><p id="bulkProgress" class="muted small"></p>`); } else if (action === "bulk-select-visible") {
-        document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = el.closest(".catalog-row")?.style.display !== "none"; });
+        document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = !el.closest(".catalog-row")?.hidden && el.closest(".catalog-row")?.style.display !== "none"; });
         updateBulkCount();
       } else if (action === "bulk-clear") {
         document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = false; });
@@ -3401,7 +3417,7 @@
       return;
     }
     if (ev.target.id === "adminCategorySearch") { S.categorySearch = ev.target.value; document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const category = S.categories.find(x => x.id === row.dataset.rowId); row.style.display = String(category?.name || "").toLocaleLowerCase().includes(S.categorySearch.toLocaleLowerCase()) ? "" : "none"; }); }
-    if (ev.target.id === "productNameSearch") { S.productSearch = ev.target.value; document.querySelectorAll(".catalog-list .catalog-row").forEach(row => { const p = S.products.find(x => x.id === row.dataset.rowId); row.style.display = String(p?.name || "").toLocaleLowerCase().includes(S.productSearch.toLocaleLowerCase()) ? "" : "none"; }); } if (ev.target.id === "providerServiceSearch" || ev.target.matches('#importForm [name="margin_percent"]')) updateProviderImportPreview();
+    if (ev.target.id === "productNameSearch") { S.productSearch = ev.target.value; filterProductRows(); } if (ev.target.id === "providerServiceSearch" || ev.target.matches('#importForm [name="margin_percent"]')) updateProviderImportPreview();
     if (ev.target.id === "imageURL")
       $("imagePreview").innerHTML = image(
         ev.target.value,
