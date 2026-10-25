@@ -28,13 +28,58 @@ const original=new WeakMap();
 const last=new WeakMap();
 function convert(value){const match=/^(\s*)(.*?)(\s*)$/s.exec(value||"");if(!match)return value;const val=translation.get(match[2]);if(lang==="ar")return value;if(!val)return catalogFallback(value);const index={en:0,fr:1,pt:2}[lang];return match[1]+val[index]+match[3];}
 function isExcluded(el){return !!el.closest('script,style,code,pre,textarea,[contenteditable="true"],[data-f90-no-translate]');}
-function textNode(node){const el=node.parentElement;if(!el||isExcluded(el))return;const now=node.nodeValue||"";let src=original.get(node);const previous=last.get(node);if(src===undefined||previous!==now){src=now;original.set(node,src);}const newText=convert(src);if(newText!==now)node.nodeValue=newText;last.set(node,newText);}
+function textNode(node){
+ const el=node.parentElement;if(!el||isExcluded(el))return;
+ const now=node.nodeValue||"";
+ let src=original.get(node);
+ if(src===undefined){src=now;original.set(node,src);}
+ else if(last.has(node)&&now!==last.get(node)&&now!==src){src=now;original.set(node,src);}
+ const next=convert(src);
+ if(next!==now)node.nodeValue=next;
+ last.set(node,next);
+}
 const attributeNames=["placeholder","title","aria-label","alt"];
-function attributes(el){if(el.matches("input,textarea,button,a,img,select,[title],[aria-label],[placeholder]")){for(const key of attributeNames){if(!el.hasAttribute(key))continue;const attr=key+"-f90-original";const current=el.getAttribute(key)||"";if(!el.hasAttribute(attr)||el.dataset.f90TranslateVersion!==current&&el.getAttribute(attr)!==current&&lang==="ar")el.setAttribute(attr,current);const source=el.getAttribute(attr)||current;const output=convert(source);if(output!==current)el.setAttribute(key,output);}}}
-function translateTree(root){if(root.nodeType===3){textNode(root);return;}if(root.nodeType!==1)return;const el=root;if(isExcluded(el))return;attributes(el);const walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);while(walk.nextNode())textNode(walk.currentNode);el.querySelectorAll("[placeholder],[title],[aria-label],[alt]").forEach(attributes);}
-let isRunning=false;let pending=false;
-function scan(){if(isRunning)return;isRunning=true;try{translateTree(document.body);}finally{isRunning=false;}}
-function setLanguage(next,save){if(!supported.includes(next))next="ar";lang=next;document.documentElement.lang=next;document.documentElement.dir=next==="ar"?"rtl":"ltr";document.documentElement.dataset.f90Language=next;if(save)try{localStorage.setItem(choiceKey,next);}catch{}const input=document.getElementById("f90-language-select");if(input)input.value=next;const drawerInput=document.getElementById("f90-language-drawer");if(drawerInput)drawerInput.value=next;scan();}
+const originalAttrs=new WeakMap();
+const translatedAttrs=new WeakMap();
+function attributes(el){
+ let src=originalAttrs.get(el);if(!src){src={};originalAttrs.set(el,src);}
+ let rendered=translatedAttrs.get(el);if(!rendered){rendered={};translatedAttrs.set(el,rendered);}
+ for(const key of attributeNames){
+  if(!el.hasAttribute(key))continue;
+  const current=el.getAttribute(key)||"";
+  if(!(key in src)||(key in rendered&&current!==rendered[key]&&current!==src[key]))src[key]=current;
+  const next=convert(src[key]);
+  if(next!==current)el.setAttribute(key,next);
+  rendered[key]=next;
+ }
+}
+function translateTree(root){
+ if(root.nodeType===3){textNode(root);return;}
+ if(root.nodeType!==1||isExcluded(root))return;
+ attributes(root);
+ const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+ while(walk.nextNode())textNode(walk.currentNode);
+ root.querySelectorAll("[placeholder],[title],[aria-label],[alt]").forEach(attributes);
+}
+let isRunning=false, pending=false;
+function scan(){
+ if(isRunning||!document.body)return;
+ isRunning=true;
+ try{translateTree(document.body);document.title=convert(titleOriginal);}
+ finally{isRunning=false;}
+}
+const titleOriginal=document.title;
+function setLanguage(next,save){
+ if(!supported.includes(next))next="ar";
+ lang=next;
+ document.documentElement.lang=next;
+ document.documentElement.dir=next==="ar"?"rtl":"ltr";
+ document.documentElement.dataset.f90Language=next;
+ if(save)try{localStorage.setItem(choiceKey,next);}catch{}
+ for(const id of ["f90-language-select","f90-language-drawer"]){const input=document.getElementById(id);if(input)input.value=next;}
+ scan();
+ window.dispatchEvent(new CustomEvent("f90:languagechange",{detail:{language:next}}));
+}
 function makePicker(id){
  const holder=document.createElement("label");holder.className="f90-language-picker";holder.dataset.f90NoTranslate="true";
  holder.textContent="🌐 ";
@@ -55,6 +100,6 @@ function addControl(){
   drawer.prepend(control);
  }
 }
-function bootstrap(){addControl();setLanguage(lang,false);const observer=new MutationObserver(()=>{if(pending||isRunning)return;pending=true;requestAnimationFrame(()=>{pending=false;scan();});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),supported:[...supported]};}
+function bootstrap(){addControl();setLanguage(lang,false);const observer=new MutationObserver(()=>{if(pending||isRunning)return;pending=true;requestAnimationFrame(()=>{pending=false;scan();});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),translate:convert,supported:[...supported]};}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootstrap,{once:true});else bootstrap();
 })();
