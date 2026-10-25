@@ -9,9 +9,24 @@ const choiceKey="f90-language";
 function deviceLanguage(){const raw=(navigator.languages&&navigator.languages[0])||navigator.language||"ar";return supported.includes(raw.toLowerCase().split("-")[0])?raw.toLowerCase().split("-")[0]:"ar";}
 function savedLanguage(){try{const v=localStorage.getItem(choiceKey);return supported.includes(v)?v:null;}catch{return null;}}
 let lang=savedLanguage()||deviceLanguage();
+const CATALOG_WORDS={"شحن":["Top-up","Recharge","Recarga"],"سحب":["Withdrawal","Retrait","Saque"],"خدمة":["Service","Service","Serviço"],"اشتراك":["Subscription","Abonnement","Assinatura"],"اشتراكات":["Subscriptions","Abonnements","Assinaturas"],"بطاقة":["Card","Carte","Cartão"],"بطاقات":["Cards","Cartes","Cartões"],"كوينز":["Coins","Pièces","Moedas"],"كوين":["Coin","Pièce","Moeda"],"شهري":["Monthly","Mensuel","Mensal"],"سنوي":["Yearly","Annuel","Anual"],"يومي":["Daily","Quotidien","Diário"],"اسبوعي":["Weekly","Hebdomadaire","Semanal"],"أسبوعي":["Weekly","Hebdomadaire","Semanal"],"متابعين":["Followers","Abonnés","Seguidores"],"متابع":["Follower","Abonné","Seguidor"],"مشاهدات":["Views","Vues","Visualizações"],"مشاهدة":["View","Vue","Visualização"],"إعجابات":["Likes","J'aime","Curtidas"],"لايكات":["Likes","J'aime","Curtidas"],"تعليقات":["Comments","Commentaires","Comentários"],"مشاركة":["Share","Partage","Compartilhamento"],"مليون":["Million","Million","Milhão"],"الف":["Thousand","Mille","Mil"],"ألف":["Thousand","Mille","Mil"],"نقاط":["Points","Points","Pontos"],"رصيد":["Balance","Solde","Saldo"],"دولار":["USD","USD","USD"],"دينار":["Dinar","Dinar","Dinar"],"شيقل":["Shekel","Shekel","Shekel"],"شيكل":["Shekel","Shekel","Shekel"],"الاردن":["Jordan","Jordanie","Jordânia"],"الأردن":["Jordan","Jordanie","Jordânia"],"فلسطين":["Palestine","Palestine","Palestina"],"سوريا":["Syria","Syrie","Síria"],"لبنان":["Lebanon","Liban","Líbano"],"تركيا":["Turkey","Turquie","Turquia"],"مصر":["Egypt","Égypte","Egito"],"العراق":["Iraq","Irak","Iraque"],"المغرب":["Morocco","Maroc","Marrocos"],"اليمن":["Yemen","Yémen","Iêmen"],"الجزائر":["Algeria","Algérie","Argélia"],"أمريكا":["United States","États-Unis","Estados Unidos"],"حساب":["Account","Compte","Conta"],"حسابات":["Accounts","Comptes","Contas"],"مكاسب":["Earnings","Gains","Ganhos"],"العاب":["Games","Jeux","Jogos"],"ألعاب":["Games","Jeux","Jogos"],"شحن سريع":["Fast top-up","Recharge rapide","Recarga rápida"],"فوري":["Instant","Instantané","Instantâneo"],"تفعيل":["Activation","Activation","Ativação"],"هدية":["Gift","Cadeau","Presente"],"تارجت":["Target","Target","Target"],"اكزينا":["Xena","Xena","Xena"],"أكزينا":["Xena","Xena","Xena"],"عبر":["via","via","via"],"بواسطة":["via","via","via"],"تلقائي":["Automatic","Automatique","Automático"],"يدوي":["Manual","Manuel","Manual"]};
+const arabicPattern=/[\u0600-\u06FF]/;
+const tokenPattern=/[\u0621-\u064A]+/g;
+function catalogFallback(value){
+ if(lang==="ar" || !arabicPattern.test(value))return value;
+ const index={en:0,fr:1,pt:2}[lang];
+ let replaced=0;
+ const output=value.replace(tokenPattern,token=>{
+   const translated=CATALOG_WORDS[token];
+   if(translated){replaced++;return translated[index];}
+   return token;
+ });
+ // Keep unrecognized brand names and numbers intact, never invent a translation.
+ return replaced?output:value;
+}
 const original=new WeakMap();
 const last=new WeakMap();
-function convert(value){const match=/^(\s*)(.*?)(\s*)$/s.exec(value||"");if(!match)return value;const val=translation.get(match[2]);if(!val||lang==="ar")return value;const index={en:0,fr:1,pt:2}[lang];return match[1]+val[index]+match[3];}
+function convert(value){const match=/^(\s*)(.*?)(\s*)$/s.exec(value||"");if(!match)return value;const val=translation.get(match[2]);if(lang==="ar")return value;if(!val)return catalogFallback(value);const index={en:0,fr:1,pt:2}[lang];return match[1]+val[index]+match[3];}
 function isExcluded(el){return !!el.closest('script,style,code,pre,textarea,[contenteditable="true"],[data-f90-no-translate]');}
 function textNode(node){const el=node.parentElement;if(!el||isExcluded(el))return;const now=node.nodeValue||"";let src=original.get(node);const previous=last.get(node);if(src===undefined||previous!==now){src=now;original.set(node,src);}const newText=convert(src);if(newText!==now)node.nodeValue=newText;last.set(node,newText);}
 const attributeNames=["placeholder","title","aria-label","alt"];
