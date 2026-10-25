@@ -39,7 +39,8 @@ test("Price UI shows only server quotes, precise cost, no decimal wallet, and co
   assert.match(app,/function f90ShortLimit\(value\)/);
   assert.match(app,/\+"M"/);
   assert.match(app,/f90-quantity-limits/);
-  assert.match(app,/price\.textContent=f90CheckoutNumeric\(quote\.total_usd\)/);
+  assert.match(app,/price\.textContent=quote\.price_currency===S\.currency/);
+  assert.match(app,/Number\(quote\.total_currency\)/);
   assert.doesNotMatch(app.slice(app.indexOf('if (ev.target.closest("#checkoutForm") && ev.target.name === "quantity")'),app.indexOf('if (ev.target.closest("#depositForm"))')),/≈|تقديري/);
   assert.match(app,/await A\.call\("quote"/);
   assert.match(skin,/:root\[data-theme="cream"\]/);
@@ -102,7 +103,7 @@ test("Catalog and supplier availability speedups preserve safe server quote chec
   assert.match(edge,/quoteProductId \? assertProviderAvailable\(quoteProductId\)/);
   assert.match(edge,/const \[productResult, providerResult\] = await Promise\.all/);
   assert.match(edge,/categoriesById\.get\(categoryId\)/);
-  assert.match(edge,/await rpc\("f90_quote"/);
+  assert.match(edge,/await rpc\("f90_quote(?:_currency)?"/);
   assert.match(app,/idempotency_key: reference/);
 });
 test("Public catalog edge caching cannot cache a checkout quote",()=>{
@@ -111,7 +112,7 @@ test("Public catalog edge caching cannot cache a checkout quote",()=>{
   assert.match(edge,/if \(pendingPublicCatalog\) return pendingPublicCatalog/);
   assert.match(edge,/async function buildPublicCatalog\(\)/);
   const quoteBlock=edge.slice(edge.indexOf('if (action === "quote") {'),edge.indexOf('if (action === "quote") {')+1250);
-  assert.match(quoteBlock,/await rpc\("f90_quote"/);
+  assert.match(quoteBlock,/await rpc\("f90_quote(?:_currency)?"/);
   assert.doesNotMatch(quoteBlock,/cachedPublicCatalog/);
 });
 test("Mobile performance optimizations never bypass financial validation", () => {

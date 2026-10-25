@@ -129,17 +129,25 @@
       (!p.ends_at || Date.parse(p.ends_at) > n)
     );
   }
-  function previewPrice(p, quantity = 1) {
+  function previewPrice(p, quantity = 1, options = {}) {
     const c = p.commerce || {};
+    const fixed = c.currency_pricing;
+    const code = options.currency || "USD";
+    const fx = code === "USD" ? 1 : Number((options.rates || []).find(r=>r.currency===code&&r.is_enabled&&!r.is_archived)?.per_usd);
+    const markup = Number(options.markup || 0);
+    if (options.currencyPricingEnabled !== false && fixed?.enabled === true && Number(fixed.prices?.[code]) > 0) {
+      const qty = c.type === "quantity" ? Number(quantity) : Number(c.pack_quantity || 1);
+      return Number(fixed.prices[code]) * qty / Number(fixed.unit_quantity) / fx * (1+markup/100);
+    }
     let price = Number(c.prices?.USD ?? (p.currency === "USD" ? p.price : NaN));
     const q = c.type === "quantity" ? Number(quantity) : 1;
     for (const t of [...(c.pricing_tiers || [])].sort(
       (a, b) => Number(a.min) - Number(b.min),
     ))
       if (q >= Number(t.min) && (t.max == null || t.max === "" || q <= Number(t.max))) price = Number(t.prices?.USD ?? price);
-    return c.type === "quantity"
+    return (c.type === "quantity"
       ? (price * q) / Number(c.unit_quantity || 1)
-      : price;
+      : price) * (1+markup/100);
   }
   function key() {
     return typeof crypto !== "undefined" && crypto.randomUUID

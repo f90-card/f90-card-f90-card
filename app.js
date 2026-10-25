@@ -284,8 +284,15 @@
     if(amount===null||!Number.isFinite(Number(amount)))return "—";
     return new Intl.NumberFormat("en-US",{minimumFractionDigits:0,maximumFractionDigits:4}).format(Number(amount));
   }
+  function previewUsd(p,qty) {
+    return C.previewPrice(p,qty,{currency:S.currency,rates:S.rates,markup:S.me?.purchase_markup_percent||0,currencyPricingEnabled:S.settings.config?.currency_pricing_enabled!==false});
+  }
+  function orderMoney(order) {
+    return order.price_currency===S.currency && Number.isFinite(Number(order.total_currency)) && order.total_currency!==null
+      ? C.money(Number(order.total_currency),S.currency,true) : accountMoney(order.total_usd);
+  }
   function f90CheckoutPreview(p,qty){
-    const n=C.previewPrice(p,qty);
+    const n=previewUsd(p,qty);
     return Number.isFinite(n)&&n>=0?f90CheckoutNumeric(n):"—";
   }
   function f90ShortLimit(value){
@@ -657,7 +664,7 @@
     const disabled = C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id));
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
     if (pack)
-      return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(C.previewPrice(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
+      return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(previewUsd(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
     return `<a class="image-tile f90-product-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
   }
   function syncHomePhoneVideo() {
@@ -876,9 +883,10 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div><section class="f90-category-top"><button class="button secondary small" data-action="share" aria-label="نسخ رابط القسم">${I("copy")} نسخ رابط القسم</button></section>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div><section class="f90-category-top"><button class="button secondary small" data-action="share" aria-label="نسخ رابط القسم">${I("copy")} نسخ رابط القسم</button></section>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" data-category-id="${e(c.id)}" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid" id="categoryBaseGrid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
     const copySection=main.querySelector(".f90-category-top button");
     if(copySection){copySection.innerHTML=I("copy");copySection.title="نسخ رابط القسم";}
+    if ($("categoryFilter")) main.insertAdjacentHTML("beforeend",'<section id="categorySearchResults" hidden></section>');
     if ($("categoryFilter")) $("categoryFilter").closest("label")?.insertAdjacentHTML("afterend", '<p id="categoryNoResults" class="muted" hidden>لا توجد نتائج مطابقة داخل هذا القسم.</p>');
   }
   // Portaling the purchase sheet to <body> avoids parent stacking contexts
@@ -958,16 +966,16 @@
     if (price) price.setAttribute("aria-busy","true");
     try {
       // Only the authoritative quote from the server unlocks checkout.
-      const quote = await A.call("quote", {product_id:p.id, quantity:qty});
+      const quote = await A.call("quote", {product_id:p.id, quantity:qty, currency:S.currency});
       if (!f.isConnected || f !== $("checkoutForm") || seq !== S.quoteSeq ||
           Number(f.elements.quantity?.value || 1) !== qty) return;
       S.quote = quote;
       f.dataset.quotedQuantity = String(qty);
       delete f.dataset.pricePending;
       $("priceBoard")?.removeAttribute("aria-busy");
-      if (price) {price.removeAttribute("aria-busy");price.textContent=f90CheckoutNumeric(quote.total_usd);}
+      if (price) {price.removeAttribute("aria-busy");price.textContent=quote.price_currency===S.currency && Number.isFinite(Number(quote.total_currency)) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:4}).format(Number(quote.total_currency)) : f90CheckoutNumeric(quote.total_usd);}
       $("checkoutTotal").textContent = C.money(
-        C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
+        quote.price_currency===S.currency && Number.isFinite(Number(quote.total_currency)) ? Number(quote.total_currency) : C.convert(quote.total_usd,S.currency,S.rates),S.currency,true
       );
       if ($("f90CheckoutTopBalance")) $("f90CheckoutTopBalance").textContent = S.me ?
         f90CheckoutMoney(S.me.wallet?.balance_usd,true) : "سجّل الدخول";
@@ -1056,7 +1064,7 @@
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
-      <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(C.previewPrice(p,c.quantity_min||1))}</div>
+      <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(previewUsd(p,c.quantity_min||1))}</div>
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
         ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
@@ -1554,7 +1562,7 @@ function orderRecord(o) {
     const details='<div class="f90-fin-field-grid">'+
        financeField("رقم العملية",o.id||"—")+financeField("المنتج",o.product_name||"—")+
        financeField("الكمية",financeNumber(o.quantity||0))+
-       financeField("الإجمالي",accountMoney(o.total_usd))+
+       financeField("الإجمالي",orderMoney(o))+
        financeField("التاريخ",C.date(o.created_at))+
        (accountId?financeField("ID الشحن",accountId):"")+
        (recipient.accountName?financeField("اسم الحساب",recipient.accountName):"")+extras+'</div>'+
@@ -1717,7 +1725,7 @@ async function history(kind){
       ["اسم المنتج",String(o.product_name||"—")],
       ["الكمية",String(o.quantity??"—")],
       ["السعر",accountMoney(unit)],
-      ["السعر الإجمالي",accountMoney(o.total_usd)],
+      ["السعر الإجمالي",orderMoney(o)],
       ["التاريخ والوقت",C.date(o.created_at)],
       ...(recipient.accountId?[["ID الشحن",recipient.accountId]]:[]),
       ...(recipient.accountName?[["اسم الحساب",recipient.accountName]]:[])
@@ -2959,10 +2967,22 @@ async function history(kind){
     if (ev.target?.id !== "categoryFilter") return;
     const term = window.F90CatalogSearch?.normalize(ev.target.value) || ev.target.value.trim().toLocaleLowerCase("ar");
     let visible = 0;
-    main.querySelectorAll(".image-grid .image-tile, .packs-grid .pack").forEach((tile) => {
+    main.querySelectorAll("#categoryBaseGrid .image-tile, #categoryBaseGrid .pack").forEach((tile) => {
       tile.hidden = !!term && !term.split(" ").every(part => (tile.dataset.search || window.F90CatalogSearch?.normalize(tile.textContent) || "").includes(part));
       if (!tile.hidden) visible++;
     });
+    const nestedHost=$("categorySearchResults");
+    if (nestedHost) {
+      const categoryId=ev.target.dataset.categoryId,descendants=new Set([categoryId]);
+      for(let i=0;i<S.categories.length;i++){
+        let added=false;for(const c of S.categories)if(descendants.has(c.parent_id)&&!descendants.has(c.id)){descendants.add(c.id);added=true;}
+        if(!added)break;
+      }
+      const nested=term ? S.products.filter(p=>p.category_id!==categoryId&&descendants.has(p.category_id)&&window.F90CatalogSearch.matches(p.name,ev.target.value,[p.description||"",p.slug,...(p.commerce?.search_aliases||[])])) : [];
+      nestedHost.hidden=!nested.length;
+      nestedHost.innerHTML=nested.length ? '<h2>خدمات مطابقة داخل الأقسام الفرعية</h2><div class="image-grid">'+nested.map(p=>productTile(p)).join("")+'</div>' : '';
+      visible+=nested.length;
+    }
     $("categoryNoResults")?.toggleAttribute("hidden", visible > 0 || !term);
   });
   // Preserve the previous view when users use browser Back/Forward, while
