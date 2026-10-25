@@ -92,7 +92,7 @@ function addControl(){
  if(toolbar&&!document.getElementById("f90-language-select")){
   const control=makePicker("f90-language-select");control.id="f90-language-control";
   if(document.querySelector(".admin-top-title"))document.querySelector(".admin-top-title").insertAdjacentElement("afterend",control);
-  else toolbar.insertBefore(control,toolbar.firstChild);
+  else {const admin=document.getElementById("f90AdminShortcut");const menu=document.getElementById("menuButton");if(menu)menu.after(control);else toolbar.appendChild(control);}
  }
  const drawer=document.querySelector(".drawer-preferences")||document.querySelector("#adminSidebar");
  if(drawer&&!document.getElementById("f90-language-drawer")){
@@ -100,6 +100,6 @@ function addControl(){
   drawer.prepend(control);
  }
 }
-function bootstrap(){addControl();setLanguage(lang,false);const observer=new MutationObserver(()=>{if(pending||isRunning)return;pending=true;requestAnimationFrame(()=>{pending=false;scan();});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),translate:convert,supported:[...supported]};}
+function bootstrap(){addControl();setLanguage(lang,false);const observer=new MutationObserver(records=>{if(pending||isRunning)return;let meaningful=false;for(const m of records){if(m.type==="childList"&&m.addedNodes.length){meaningful=true;break;}if(m.type==="characterData"&&m.target.nodeValue!==last.get(m.target)){meaningful=true;break;}if(m.type==="attributes"){const originals=originalAttrs.get(m.target);const translated=translatedAttrs.get(m.target);if(!translated||m.target.getAttribute(m.attributeName)!==translated[m.attributeName]){meaningful=true;break;}}}if(!meaningful)return;pending=true;requestAnimationFrame(()=>{pending=false;observer.disconnect();try{scan();}finally{observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});}});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),translate:convert,supported:[...supported]};}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootstrap,{once:true});else bootstrap();
 })();
