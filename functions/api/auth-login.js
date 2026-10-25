@@ -16,7 +16,8 @@ export async function onRequest({request,env}){
   const clean={headers:new Headers({'cf-connecting-ip':request.headers.get('cf-connecting-ip')||'','user-agent':request.headers.get('user-agent')||''}),cf:request.cf};
   const signed=await signContext(clean,body,secret);
   stage='UPSTREAM_FETCH';
-  const r=await fetch(upstream,{method:'POST',headers:{'Content-Type':'application/json','x-f90-activity-context':signed.payload,'x-f90-activity-signature':signed.signature},body,signal:AbortSignal.timeout(12000),redirect:'error'});
+  const r=await fetch(upstream,{method:'POST',headers:{'Content-Type':'application/json','x-f90-activity-context':signed.payload,'x-f90-activity-signature':signed.signature},body,signal:AbortSignal.timeout(12000),redirect:'manual'});
+  if(r.status>=300&&r.status<400){await r.body?.cancel();return json(503,{error:'AUTH_GATEWAY_REDIRECT'});}
   stage='UPSTREAM_RESPONSE';
   let result;try{result=JSON.parse(await readBoundedBody(r,65536));}catch{return json(503,{error:'AUTH_GATEWAY_RESPONSE'})}
   return json(r.status,result);
