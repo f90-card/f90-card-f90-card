@@ -1,0 +1,229 @@
+{
+  "date": "2026-10-25",
+  "functional_commit": "8b0074948680b905d2ee11bcc472366874aec135",
+  "supabase": {
+    "f90-platform": 32,
+    "f90-security-activity": 8
+  },
+  "automated": {
+    "cjs": 119,
+    "mjs": 170,
+    "failed": 0
+  },
+  "live_suites": {
+    "backend": {
+      "results": [
+        {
+          "name": "customer cannot read sessions",
+          "passed": true
+        },
+        {
+          "name": "trader cannot read sessions",
+          "passed": true
+        },
+        {
+          "name": "admin cannot read sessions",
+          "passed": true
+        },
+        {
+          "name": "unauthenticated cannot read sessions",
+          "passed": true
+        },
+        {
+          "name": "merchant API key cannot read security records",
+          "passed": true
+        },
+        {
+          "name": "manager AAL1 requires MFA",
+          "passed": true
+        },
+        {
+          "name": "manager MFA reads sessions",
+          "passed": true
+        },
+        {
+          "name": "customer cannot cancel another session",
+          "passed": true
+        },
+        {
+          "name": "current manager session is protected",
+          "passed": true
+        },
+        {
+          "name": "one auth session is actually revoked",
+          "passed": true
+        },
+        {
+          "name": "unexpired revoked JWT cannot read account",
+          "passed": true
+        },
+        {
+          "name": "revoked refresh token is unusable",
+          "passed": true
+        },
+        {
+          "name": "other customer session remains valid",
+          "passed": true
+        },
+        {
+          "name": "mandatory verification reason enforced",
+          "passed": true
+        },
+        {
+          "name": "verification revoked with audit",
+          "passed": true
+        },
+        {
+          "name": "unverified trader key immediately loses access",
+          "passed": true
+        },
+        {
+          "name": "verification can be reapproved after review",
+          "passed": true
+        },
+        {
+          "name": "reapproved merchant key can read balance",
+          "passed": true
+        },
+        {
+          "name": "manager reads security alerts",
+          "passed": true
+        }
+      ]
+    },
+    "official": {
+      "results": [
+        {
+          "name": "official unauthenticated security request rejected",
+          "passed": true
+        },
+        {
+          "name": "merchant key cannot access security function",
+          "passed": true
+        },
+        {
+          "name": "official login issues a valid session",
+          "passed": true
+        },
+        {
+          "name": "gateway rejects IP and country spoofing",
+          "passed": true
+        },
+        {
+          "name": "own records isolated with trusted metadata",
+          "passed": true
+        },
+        {
+          "name": "unsigned direct record rejected",
+          "passed": true
+        },
+        {
+          "name": "customer denied official manager listing",
+          "passed": true
+        },
+        {
+          "name": "trader denied official manager listing",
+          "passed": true
+        },
+        {
+          "name": "admin denied official manager listing",
+          "passed": true
+        },
+        {
+          "name": "MFA manager reads official customer-security data",
+          "passed": true
+        },
+        {
+          "name": "explicit synthetic location keeps accuracy and timestamp",
+          "passed": true
+        },
+        {
+          "name": "clear consent erases all own precise locations",
+          "passed": true
+        },
+        {
+          "name": "customer cannot directly query security table",
+          "passed": true
+        },
+        {
+          "name": "repeated failed official logins rejected",
+          "passed": true
+        },
+        {
+          "name": "repeated invalid merchant keys rejected",
+          "passed": true
+        },
+        {
+          "name": "repeated unauthorized administrative access rejected",
+          "passed": true
+        },
+        {
+          "name": "alerts record auth failures, invalid keys and admin denials",
+          "passed": true
+        },
+        {
+          "name": "alert review reason is saved",
+          "passed": true
+        },
+        {
+          "name": "MFA manager reads audit including review",
+          "passed": true
+        },
+        {
+          "name": "public catalog still available",
+          "passed": true
+        },
+        {
+          "name": "official merchant balance still available",
+          "passed": true
+        }
+      ],
+      "observation": {
+        "trusted_source": "cloudflare_signed_v1",
+        "country_available": true,
+        "city_available": true,
+        "network_available": true
+      }
+    },
+    "logout-all": {
+      "results": [
+        {
+          "name": "all account sessions revoked",
+          "passed": true
+        },
+        {
+          "name": "logout all rejects remaining access JWT",
+          "passed": true
+        },
+        {
+          "name": "manager still authenticated after target logout",
+          "passed": true
+        },
+        {
+          "name": "revoked JWT cannot invoke checkout",
+          "passed": true
+        },
+        {
+          "name": "revoked JWT cannot invoke deposit",
+          "passed": true
+        },
+        {
+          "name": "logout all own devices preserves current MFA manager",
+          "passed": true
+        },
+        {
+          "name": "other manager device token is revoked",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "fixture_cleanup": {
+    "active_sessions": 0,
+    "active_keys": 0,
+    "active_profiles": 0,
+    "privileged_roles": 0
+  },
+  "visual_admin_acceptance": "pending_secure_browser_login",
+  "physical_mobile_visual_acceptance": "not_performed"
+}
