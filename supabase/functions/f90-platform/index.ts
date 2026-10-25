@@ -1030,8 +1030,50 @@ async function catalogSave(a: Actor, b: any) {
   });
   return saved;
 }
+async function localizationResources(b: any, includePrivate = false) {
+  const locale=text(b.locale,2);
+  if(!["en","fr","pt"].includes(locale))throw new AppError("F90_FIELDS");
+  const since=b.since?String(b.since):null;
+  if(since&&!Number.isFinite(Date.parse(since)))throw new AppError("F90_FIELDS");
+  const messages:Record<string,string>={};
+  for(let offset=0;offset<20000;offset+=1000){
+    let query=db.from("f90_i18n_text").select("source_text,"+locale).neq("provider","pending").order("source_text").range(offset,offset+999);
+    if(!includePrivate)query=query.eq("is_public",true);
+    if(since)query=query.gt("updated_at",since);
+    const rows=check(await query);
+    for(const row of rows)if(row[locale])messages[row.source_text]=row[locale];
+    if(rows.length<1000)return {messages,locale,updated_at:new Date().toISOString()};
+  }
+  throw new AppError("F90_FIELDS",503,"موارد الترجمة كبيرة؛ يلزم تقسيم إضافي");
+}
 async function staff(a: Actor, b: any) {
   const action = b.action;
+  if(action==="staff.i18n.resources"){
+    requireRole(a,"manager","designer");protect(a);return localizationResources(b,true);
+  }
+  if(action.startsWith("staff.i18n.")){
+    securityManager(a);
+    if(action==="staff.i18n.save"){
+      const source=text(b.source,12000);
+      const saved=await rpc("f90_i18n_save",{p_actor:a.id,p_source:source,p_en:text(b.en,16000),p_fr:text(b.fr,16000),p_pt:text(b.pt,16000),p_reason:text(b.reason,500)});
+      check(await db.from("f90_i18n_text").update({provider:"manual"}).eq("source_text",source));return saved;
+    }
+    if(action==="staff.i18n.list"){
+      let q=db.from("f90_i18n_text").select("source_text,en,fr,pt,is_public,manual_locales,provider,updated_at",{count:"exact"}).order("updated_at",{ascending:false}).range(integer(b.offset||0,0,100000),integer(b.offset||0,0,100000)+49);
+      if(b.search)q=q.ilike("source_text","%"+text(b.search,200).replace(/[\\%_]/g,"\\$&")+"%");
+      if(b.pending===true)q=q.eq("provider","pending");
+      const result=await q;check(result);
+      const jobs=check(await db.from("f90_i18n_jobs").select("status").limit(20000));
+      const counts:Record<string,number>={};for(const j of jobs)counts[j.status]=(counts[j.status]||0)+1;
+      return {rows:result.data,count:result.count,jobs:counts,control:check(await db.from("f90_i18n_control").select("enabled,daily_neuron_cap").eq("id",1).single())};
+    }
+    if(action==="staff.i18n.retry"){
+      const source=text(b.source,12000),reason=text(b.reason,500);if(reason.length<5)throw new AppError("F90_FIELDS");
+      check(await db.from("f90_i18n_jobs").update({status:"pending",attempts:0,last_error:null,next_attempt_at:new Date().toISOString(),lease_id:null,lease_until:null}).eq("source_text",source));
+      await auditSafe(a.id,"i18n.retry",await hash(source),{reason});return {queued:true};
+    }
+    throw new AppError("F90_NOT_FOUND");
+  }
   if (action === "staff.radio.status") {
     requireRole(a, "manager");
     const [row, src] = await Promise.all([
@@ -2569,6 +2611,14 @@ Deno.serve(async (req: Request) => {
     }
     const action = text(b.action, 80);
     securityAction=action;
+    if(action==="i18n.resources")return out(await localizationResources(b));
+    if(action==="i18n.worker.claim"||action==="i18n.worker.complete"){
+      const timestamp=Number(b.timestamp),payload=b.payload||{};
+      if(!Number.isSafeInteger(timestamp)||Math.abs(Date.now()/1000-timestamp)>300)throw new AppError("F90_AUTH",403);
+      const valid=await rpc("f90_i18n_worker_verify",{p_timestamp:timestamp,p_message:"f90-i18n-worker:"+timestamp+":"+action+":"+JSON.stringify(payload),p_signature:text(b.signature,64)});
+      if(!valid)throw new AppError("F90_AUTH",403);
+      return out(action==="i18n.worker.claim"?await rpc("f90_i18n_claim",{}):await rpc("f90_i18n_complete",{p_lease:uuid(payload.lease_id),p_rows:payload.rows}));
+    }
     // Production financial actions enabled on explicit owner request, 2026-10-20.
     if (action === "worker" || action === "smm.catalog") {
       const token = req.headers.get("x-f90-worker");
