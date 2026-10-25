@@ -5,3 +5,10 @@
 #f90-language-drawer-control{width:100%;margin:8px 0;padding:8px 6px;justify-content:space-between}
 #f90-language-drawer-control select{width:145px}
 @media(max-width:650px){.f90-language-picker select{width:86px;font-size:11px}#f90-language-control{margin-inline:2px}.admin-top .f90-language-picker select{width:90px}}
+
+/* Compact top navigation group: menu / admin / language */
+.header-actions{display:flex;align-items:center;gap:6px;min-width:0}
+.header-actions #f90-language-control{display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,110,130,.30);border-radius:12px;background:rgba(17,19,25,.85);padding:4px 6px;box-shadow:none;flex-shrink:0}
+.header-actions #f90-language-control select{background:transparent;border:0;max-width:99px;width:99px;font-weight:600;cursor:pointer}
+.header-actions #f90AdminShortcut{flex-shrink:0}
+@media(max-width:650px){.header-actions{gap:3px}.header-actions #f90-language-control{padding:3px;border-radius:9px}.header-actions #f90-language-control select{width:76px;max-width:76px;font-size:10px}.header-actions #f90-language-control{font-size:11px}}
