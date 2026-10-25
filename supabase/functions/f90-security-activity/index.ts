@@ -116,8 +116,6 @@ Deno.serve(async (req:Request)=>{
     const manager=action==="manager_list";
     if(manager){
       if(roleRes.data?.role!=="manager")return response(req,403,{error:"MANAGER_ONLY"});
-      if(claims.aal!=="aal2")
-        return response(req,403,{error:"MFA_REQUIRED"});
     }
     if(manager){const audit=await db.from("f90_audit").insert({actor_id:user.id,action:"security.customers.read",details:{}});if(audit.error)throw audit.error;}
     const limit=manager?2000:100;

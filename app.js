@@ -2120,16 +2120,10 @@ async function history(kind){
       } else if (page === "search") {
         const searchInput = $("globalSearch");
         const q = String(id || searchInput?.value || "").trim().toLocaleLowerCase("ar");
-        const normalize = window.F90CatalogSearch?.normalize || (value => String(value || "").toLocaleLowerCase("ar"));
-        const term = normalize(q);
-        const matchedCategories = term ? S.categories.filter(c=>window.F90CatalogSearch.matches(c.name,q,[c.description||""])) : S.categories.filter(c=>!c.parent_id).slice(0,12);
-        const matchedProducts = term ? S.products.filter(p=>window.F90CatalogSearch.matches(p.name,q,[p.description||"",...(p.commerce?.search_aliases||[])])) : S.products.filter(p=>p.is_featured).slice(0,18);
         main.innerHTML =
-          pageHead("البحث في المتجر", q ? "نتائج البحث عن: " + e(q) : "ابحث عن الألعاب والتطبيقات والخدمات") +
-          `<form id="f90SearchPageForm" class="f90-search-page-form" role="search"><label for="f90SearchPageInput">ابحث في جميع أقسام المتجر</label><div><input id="f90SearchPageInput" type="search" value="${e(q)}" placeholder="اسم لعبة أو تطبيق أو خدمة..." autocomplete="off" required><button class="button" type="submit">${I("search")} بحث</button></div></form>` +
-          `<p class="f90-search-result-count" role="status">${term ? "نتائج البحث: " : "الأقسام والخدمات المقترحة: "}${matchedCategories.length+matchedProducts.length}</p><div class="image-grid">${matchedCategories.map(categoryTile).join("")}${matchedProducts.map(p=>productTile(p)).join("")}</div>`;
-        if (!main.querySelector(".image-tile"))
-          main.insertAdjacentHTML("beforeend", empty("لم توجد نتائج مطابقة"));
+          pageHead("البحث في المتجر", "ابحث عن الألعاب والتطبيقات والخدمات") +
+          `<form id="f90SearchPageForm" class="f90-search-page-form" role="search"><label for="f90SearchPageInput">ابحث في جميع أقسام المتجر</label><div><input id="f90SearchPageInput" type="search" value="${e(q)}" placeholder="اسم لعبة أو تطبيق أو خدمة..." autocomplete="off"><button class="button" type="submit">${I("search")} بحث</button></div></form><div id="f90SearchResults"></div>`;
+        renderSearchResults(q);
       } else main.innerHTML = empty("هذه الصفحة غير موجودة");
     } catch (err) {
       if (seq === S.route)
@@ -2494,12 +2488,22 @@ async function history(kind){
       return;
     }
   }
+  function renderSearchResults(query) {
+    const host = document.getElementById("f90SearchResults");
+    if (!host) return;
+    const q = String(query || "").trim();
+    const matches = window.F90CatalogSearch?.matches || ((value, term, aliases=[]) => [value,...aliases].join(" ").toLocaleLowerCase("ar").includes(term.toLocaleLowerCase("ar")));
+    const categories = q ? S.categories.filter(c => matches(c.name,q,[c.description || ""])) : S.categories.filter(c => !c.parent_id).slice(0,12);
+    const products = q ? S.products.filter(p => matches(p.name,q,[p.id,p.slug,p.description || "",...(p.commerce?.search_aliases || [])])) : S.products.filter(p => p.is_featured).slice(0,18);
+    host.innerHTML = `<p class="f90-search-result-count" role="status">${q ? "نتائج البحث: " : "الأقسام والخدمات المقترحة: "}${categories.length+products.length}</p><div class="image-grid">${categories.map(categoryTile).join("")}${products.map(p=>productTile(p)).join("")}</div>` + (!categories.length && !products.length ? empty("لم توجد نتائج مطابقة") : "");
+  }
   document.addEventListener("submit", async (ev) => {
     const form = ev.target;
     if (form.id === "f90SearchPageForm") {
       ev.preventDefault();
       const term=$("f90SearchPageInput")?.value.trim();
-      if(term)location.hash=href("search",term);
+      location.hash=href("search",term || "");
+      renderSearchResults(term);
       return;
     }
     if (form.id === "searchForm" || form.id === "homeSearchForm") {
@@ -2951,6 +2955,7 @@ async function history(kind){
     }
   });
   main.addEventListener("input", (ev) => {
+    if (ev.target?.id === "f90SearchPageInput") { renderSearchResults(ev.target.value); return; }
     if (ev.target?.id !== "categoryFilter") return;
     const term = window.F90CatalogSearch?.normalize(ev.target.value) || ev.target.value.trim().toLocaleLowerCase("ar");
     let visible = 0;

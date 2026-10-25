@@ -661,3 +661,5 @@
 .admin-top .icon-button{width:40px;min-width:40px}
 .admin-main{padding-inline:9px}
 }
+
+.catalog-list .catalog-row[hidden]{display:none!important}
