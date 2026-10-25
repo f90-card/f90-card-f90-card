@@ -1,0 +1,49 @@
+{
+  "public": {
+    "passed": 7,
+    "results": [
+      "public catalog works",
+      "anonymous server quote in USD",
+      "anonymous server quote in ILS",
+      "anonymous server quote in JOD",
+      "anonymous denied staff.markup",
+      "anonymous denied staff.adjust",
+      "anonymous denied staff.currency_pricing"
+    ]
+  },
+  "authenticated": {
+    "passed": 12,
+    "results": [
+      "manager AAL1 reads new customer finance controls",
+      "customer cannot set markup",
+      "customer cannot credit wallet",
+      "markup validates the enable flag",
+      "manager sets markup only for the disposable customer",
+      "server quote includes the customer markup and ignores a different requested account currency",
+      "service catalog price includes the same individual markup",
+      "account summary returns the applied markup",
+      "zero currency credit is rejected without a wallet movement",
+      "changed exchange rate blocks a credit before any movement",
+      "global switch requires a reason without modifying the setting",
+      "markup can be disabled and the original quoted total is restored"
+    ]
+  },
+  "automated": {
+    "tests": 304,
+    "passed": 304,
+    "failed": 0
+  },
+  "default_quote_comparison": {
+    "checked": 94,
+    "matched": 94
+  },
+  "rollback_sql": "PASS before production migration; no persisted financial test data",
+  "test_cleanup": {
+    "active_sessions": 0,
+    "active_accounts": 0,
+    "privileged_roles": 0,
+    "orders": 0,
+    "wallet_ledger": 0,
+    "currency_adjustments": 0
+  }
+}

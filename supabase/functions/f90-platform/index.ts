@@ -56,6 +56,7 @@ const errors: Record<string, [number, string]> = {
   F90_CURRENCY_CODE: [400, "استخدم رمز عملة من 3 إلى 8 أحرف إنجليزية مثل SAR"],
   F90_RATE_BASE: [409, "الدولار هو العملة الأساسية؛ يبقى مفعّلًا بسعر 1 ولا يمكن حذفه"],
   F90_RATE_IN_USE: [409, "العملة مرتبطة بحسابات أو موردين أو هي العملة الافتراضية؛ غيّر ارتباطها قبل حذفها أو إيقافها"],
+  F90_RATE_CHANGED: [409, "تغيّر سعر الصرف أثناء مراجعة الرصيد. افتح الحساب وراجع العملية مجددًا"],
   F90_RATE_MISSING: [409, "لم تضبط الإدارة سعر الصرف لهذه العملة"],
   F90_PRICE_MISSING: [409, "سعر الخدمة لم يجهّز بعد"],
   F90_INSUFFICIENT_BALANCE: [402, "رصيد محفظتك غير كافٍ. أضف رصيدًا أولًا"],
@@ -554,6 +555,7 @@ async function summary(a: Actor) {
   const tier =
     tiers.filter((t: any) => spent >= Number(t.minimum_spend)).at(-1) ||
     tiers[0];
+  const userPricing = check(await db.from("f90_user_discounts").select("purchase_markup_percent,purchase_markup_enabled").eq("user_id",a.id).maybeSingle());
   await db
     .from("profiles")
     .update({ last_seen_at: new Date().toISOString() })
@@ -566,6 +568,7 @@ async function summary(a: Actor) {
     vip_level: a.profile.vip_override || tier.level,
     keys: check(keys),
     needs_mfa: false,
+    purchase_markup_percent: userPricing?.purchase_markup_enabled ? Number(userPricing.purchase_markup_percent) : 0,
   };
 }
 async function privatePath(a: Actor, bucket: string, path: unknown) {
@@ -835,7 +838,16 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
           }))
         : existing.fields || [],
     };
+  const currencyPricing = c.currency_pricing ?? existing.currency_pricing ?? {};
+  if (!currencyPricing || typeof currencyPricing !== "object" || Array.isArray(currencyPricing)) throw new AppError("F90_FIELDS");
+  const fixedPrices: Record<string, number> = {};
+  for (const [code, value] of Object.entries(currencyPricing.prices || {})) {
+    if (!/^[A-Z]{3,8}$/.test(code)) throw new AppError("F90_CURRENCY_CODE");
+    fixedPrices[code] = num(value, 0.000001, 1000000000);
+  }
+  if (currencyPricing.enabled === true && !Object.keys(fixedPrices).length) throw new AppError("F90_FIELDS",400,"أدخل سعرًا مستقلًا لعملة واحدة على الأقل");
   const result: any = {
+    currency_pricing: { enabled: currencyPricing.enabled === true, unit_quantity: integer(currencyPricing.unit_quantity || (c.type === "quantity" ? c.unit_quantity : c.pack_quantity) || (existing.type === "quantity" ? existing.unit_quantity : existing.pack_quantity) || 1), prices: fixedPrices },
     type: c.type === "quantity" ? "quantity" : "fixed",
     availability: c.availability === "refilling" ? "refilling" : "available",
     fulfillment: c.fulfillment === "automatic" ? "automatic" : "manual",
@@ -1793,7 +1805,7 @@ async function staff(a: Actor, b: any) {
     const userId = uuid(b.id);
     const [wallet, discount, rows, profile] = await Promise.all([
       db.from("f90_wallets").select("balance_usd").eq("user_id", userId).single(),
-      db.from("f90_user_discounts").select("extra_discount_percent").eq("user_id", userId).maybeSingle(),
+      db.from("f90_user_discounts").select("extra_discount_percent,purchase_markup_percent,purchase_markup_enabled").eq("user_id", userId).maybeSingle(),
       db.from("f90_wallet_ledger").select("id,amount_usd,balance_after,kind,description,created_at,actor_id,reference_id")
         .eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
       db.from("profiles").select("id,display_name,customer_id,email").eq("id",userId).single(),
@@ -1802,8 +1814,20 @@ async function staff(a: Actor, b: any) {
       profile: check(profile),
       balance_usd: check(wallet).balance_usd,
       extra_discount_percent: check(discount)?.extra_discount_percent ?? 0,
+      purchase_markup_percent: check(discount)?.purchase_markup_percent ?? 0,
+      purchase_markup_enabled: check(discount)?.purchase_markup_enabled === true,
       ledger: check(rows),
     };
+  }
+  if (action === "staff.markup") {
+    securityManager(a);
+    if (typeof b.enabled !== "boolean") throw new AppError("F90_FIELDS");
+    return rpc("f90_set_user_markup", { p_actor:a.id, p_user:uuid(b.id), p_percent:num(b.percent,0,10000), p_enabled:b.enabled===true });
+  }
+  if (action === "staff.currency_pricing") {
+    securityManager(a);
+    if (typeof b.enabled !== "boolean") throw new AppError("F90_FIELDS");
+    return rpc("f90_currency_pricing_toggle", {p_actor:a.id,p_enabled:b.enabled,p_reason:text(b.reason,500)});
   }
   if (action === "staff.discount") {
     requireRole(a, "manager");
@@ -1815,6 +1839,10 @@ async function staff(a: Actor, b: any) {
   }
   if (action === "staff.adjust") {
     requireRole(a, "manager");
+    if (b.currency !== undefined) {
+      if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      return rpc("f90_finance_adjust_currency",{p_actor:a.id,p_user:uuid(b.id),p_amount:num(b.amount,-1000000000,1000000000),p_currency:text(b.currency,8).toUpperCase(),p_note:text(b.note,500),p_request:uuid(b.request_id),p_expected:num(b.expected_balance,0,1e12),p_expected_rate:num(b.expected_rate,0.00000001,1e12)});
+    }
     const amount = Number(b.amount_usd);
     if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100000)
       throw new AppError("F90_AMOUNT");
@@ -2614,8 +2642,9 @@ Deno.serve(async (req: Request) => {
     if (action === "quote") {
       if (a?.keyId) scoped(a, "orders");
       return out(
-        await rpc("f90_quote", {
+        await rpc("f90_quote_currency", {
           p_user: a && !a.needsMfa ? a.id : null,
+          p_currency: text(b.currency || "USD",8).toUpperCase(),
           p_product: quoteProductId!,
           p_quantity: integer(b.quantity || 1),
           p_coupon: "",
@@ -2716,7 +2745,19 @@ Deno.serve(async (req: Request) => {
                 .select("product_id,trader_price_usd"),
             )
           : [];
-      const items = (await publicCatalog()).products.map((p: any) => ({
+      const catalog = await publicCatalog();
+      const userPricing = check(await db.from("f90_user_discounts").select("purchase_markup_percent,purchase_markup_enabled").eq("user_id",a.id).maybeSingle());
+      const markup = userPricing?.purchase_markup_enabled ? Number(userPricing.purchase_markup_percent) : 0;
+      const priceCurrency = String(a.profile.account_currency || "USD");
+      const fx = Number(catalog.rates.find((r:any)=>r.currency===priceCurrency&&r.is_enabled)?.per_usd);
+      if (!Number.isFinite(fx) || fx <= 0) throw new AppError("F90_RATE_MISSING");
+      const items = catalog.products.map((p: any) => {
+        const fixed=p.commerce.currency_pricing;
+        const independent=catalog.settings.config?.currency_pricing_enabled!==false && fixed?.enabled===true && Number(fixed.prices?.[priceCurrency])>0;
+        const baseRate=independent
+          ? Number(fixed.prices[priceCurrency])/fx * Number(p.commerce.type==='quantity' ? p.commerce.unit_quantity||1 : p.commerce.pack_quantity||1)/Number(fixed.unit_quantity)
+          : Number(prices.find((i:any)=>i.product_id===p.id)?.trader_price_usd ?? p.commerce.prices?.USD);
+        return ({
           service: p.id,
           name: p.name,
           description: p.description || "",
@@ -2725,9 +2766,11 @@ Deno.serve(async (req: Request) => {
           currency: "USD",
           category: p.category_id,
           type: p.commerce.type || "fixed",
-          rate:
-            prices.find((i: any) => i.product_id === p.id)?.trader_price_usd ??
-            p.commerce.prices?.USD,
+          rate: baseRate*(1+markup/100),
+          price_currency: priceCurrency,
+          currency_price_fixed: independent,
+          currency_unit_quantity: independent ? fixed.unit_quantity : p.commerce.unit_quantity || 1,
+          rate_currency: independent ? Number(fixed.prices[priceCurrency])*(1+markup/100) : baseRate*fx*(1+markup/100),
           unit_quantity: p.commerce.unit_quantity || 1,
           min: p.commerce.quantity_min || 1,
           max: p.commerce.quantity_max || 1,
@@ -2740,7 +2783,8 @@ Deno.serve(async (req: Request) => {
             p.stock === 0 || p.commerce.availability === "refilling"
               ? "refilling"
               : "available",
-        }));
+        });
+      });
       if (action === "service") {
         const item = items.find((p: any) => p.service === uuid(b.service || b.id));
         if (!item) throw new AppError("F90_NOT_FOUND");

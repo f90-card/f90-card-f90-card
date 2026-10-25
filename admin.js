@@ -605,9 +605,14 @@
       '<div class="f90-finance-editor-grid"><section class="panel"><h3>خصم إضافي للعميل</h3><p class="muted small">يُضاف إلى خصم VIP، ويُحسب تلقائيًا عند تسعير الطلب.</p>'+
       '<form id="userDiscountForm">'+field("percent","الخصم الإضافي ٪","number",data.extra_discount_percent || 0,'required min="0" max="50" step="0.001"')+
       '<button class="button secondary" type="submit">حفظ الخصم الخاص</button></form></section>'+
+      '<section class="panel"><h3>زيادة سعر الشراء لهذا المستخدم</h3><p class="muted small">تُطبق على مشترياته فقط، قبل خصومات VIP والقسائم. لا تغيّر سعر المنتج لبقية المستخدمين.</p>'+
+      '<form id="userMarkupForm">'+check("enabled","تفعيل زيادة سعر الشراء",data.purchase_markup_enabled===true)+field("percent","نسبة الزيادة ٪","number",data.purchase_markup_percent||0,'required min="0" max="10000" step="0.001"')+
+      '<button class="button secondary" type="submit">حفظ زيادة الشراء</button></form></section>'+
       '<section class="panel"><h3>إضافة أو خصم رصيد</h3><p class="muted small">كل حركة مسجلة مع السبب والتاريخ والرصيد قبل وبعد؛ الرصيد لا يصبح سالبًا.</p>'+
       '<form id="financeAdjustForm">'+select("direction","نوع الحركة",[["credit","إضافة رصيد"],["debit","خصم رصيد"]],"credit")+
-      field("amount","المبلغ بالدولار","number","",'required min="0.000001" max="100000" step="0.000001"')+
+      select("currency","عملة المبلغ",C.currencyOptions(S.rates).filter(([code])=>["USD","ILS","JOD"].includes(code)),"USD")+
+      field("amount","المبلغ بالعملة المختارة","number","",'required min="0.000001" max="1000000000" step="0.000001"')+
+      '<p class="muted small" data-adjustment-preview>يظهر المقابل بالدولار وسعر الصرف قبل التأكيد. الحركات السابقة تحتفظ بصرفها.</p>'+
       field("note","سبب الحركة","textarea","",'required minlength="5" maxlength="500"')+
       '<button class="button" type="submit">مراجعة حركة الرصيد</button></form></section></div>'+
       '<section class="panel"><h3>سجل الرصيد والعمليات</h3><div class="table-wrap"><table class="f90-finance-table"><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الحركة</th><th>الرصيد بعد</th></tr></thead><tbody>'+
@@ -625,6 +630,13 @@
       '<button class="button secondary" type="submit">حفظ صلاحيات الحساب</button></form></section></section>'
     );
     document.querySelector("#modalRoot .modal")?.classList.add("f90-finance-modal");
+  }
+  function currencyPricingEditor(commerce) {
+    const pricing=commerce.currency_pricing||{};
+    return '<div class="form-section"><h3>سعر مستقل لكل عملة وكمية</h3>'+check("currency_pricing_enabled","تفعيل الأسعار المستقلة لهذه الخدمة",pricing.enabled===true)+
+      '<p class="muted small">مثال: سعر مليون كوينز 114 دولارًا أو 80 دينارًا أو 375 شيقلًا. لكل عملة سعرها المباشر دون تحويل سعر الدولار. اترك السعر فارغًا للعملات التي تريد حسابها بالصرف. يتقدم السعر المستقل على شرائح سعر الدولار، وتُطبق زيادة المستخدم وخصوماته بعده.</p>'+
+      field("currency_pricing_unit","هذه الأسعار مقابل كم وحدة؟","number",pricing.unit_quantity||(commerce.type==="quantity"?commerce.unit_quantity:commerce.pack_quantity)||1,'required min="1" max="1000000000" step="1"')+
+      '<div class="field-row">'+S.rates.filter(r=>!r.is_archived).map(r=>field("currency_price_"+r.currency,"السعر بـ"+r.name_ar+(r.is_enabled?"":" (عملة غير مفعّلة)"),"number",pricing.prices?.[r.currency]??"",'min="0.000001" max="1000000000" step="0.000001"')).join("")+'</div></div>';
   }
   function categoryOptions(includeEmpty = true, exclude) {
     const list = includeEmpty ? [["", "بدون قسم / القسم الرئيسي"]] : [];
@@ -746,7 +758,7 @@
             ? "منتجاتك وخدماتك"
             : "صور الإعلانات",
         "اسحب لترتيب العناصر، أو استخدم الأسهم. التكرار ينشئ نسخة مخفية حتى تنشرها.",
-        `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>${kind === "products" && manager() ? '<button class="button secondary" data-action="provider-new">إضافة مورد جديد</button>' : ""}`,
+        `<button class="button" data-action="catalog-new">${I("plus")}إضافة ${kind === "categories" ? "قسم" : kind === "products" ? "منتج" : "إعلان"}</button>${kind === "products" && manager() ? '<button class="button secondary" data-action="provider-new">إضافة مورد جديد</button><button class="button secondary" data-action="currency-pricing-global" data-enabled="'+(S.settings.config?.currency_pricing_enabled===false)+'">'+(S.settings.config?.currency_pricing_enabled===false?'تفعيل الأسعار المستقلة لكل الخدمات':'إيقاف الأسعار المستقلة لكل الخدمات')+'</button>' : ""}`,
       ) +
       `<div class="toolbar">${kind === "products" ? select("providerFilter", "المورّد", [["", "جميع الموردين"], ["__local__", "بدون مورد"], ...(S.providers || []).map((p) => [p.id, p.name])], S.providerFilter || "").replace("<select ", '<select id="providerFilter" ') : ""}${kind === "products" ? select("categoryFilter", "القسم وما بداخله", [["", "كل الأقسام"], ...categoryOptions(false)], S.categoryFilter || "").replace("<select ", '<select id="categoryFilter" ') : kind === "categories" ? select("sectionFilter", "الأقسام المعروضة", [["root", "الأقسام الرئيسية"], ["all", "جميع الأقسام"], ...categoryOptions(false)], S.sectionFilter || "root").replace("<select ", '<select id="sectionFilter" ') : ""}${kind === "categories" ? `<input id="adminCategorySearch" type="search" placeholder="ابحث عن قسم فرعي..." aria-label="بحث الأقسام" value="${e(S.categorySearch || "")}">` : ""}</div>${productGroups}${kind === "products" ? `<div class="f90-bulk-bar"><input id="productNameSearch" type="search" placeholder="بحث عن الخدمات والمنتجات..." aria-label="بحث عن الخدمات" value="${e(S.productSearch || '')}" style="min-width:180px;flex:1"><button type="button" class="button secondary small" data-action="bulk-fulfillment" data-mode="manual">شحن يدوي للمحدد</button><button type="button" class="button secondary small" data-action="bulk-fulfillment" data-mode="automatic">شحن آلي للمحدد</button><button type="button" class="button secondary small" data-action="bulk-select-visible">تحديد الظاهر</button><button type="button" class="button secondary small" data-action="bulk-clear">إلغاء التحديد</button><span id="bulkSelectionCount" class="muted small">0 محدد</span><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="false">إخفاء المحدد</button><button type="button" class="button secondary small" data-action="bulk-visibility" data-active="true">إظهار المحدد</button><button type="button" class="button secondary small" data-action="bulk-move">نقل المحدد لقسم</button><button type="button" class="button secondary small" data-action="bulk-image">صورة موحدة/إزالة الصور</button><button type="button" class="button danger small" data-action="bulk-delete">حذف المحدد</button></div>` : ""}<p class="muted small">اعرض عناصر القسم المطلوب فقط، ثم حرّكها بالسحب أو بأسهم الترتيب. لا يتغير ترتيب العناصر خارج القسم.</p><div class="catalog-list">${
         rows
@@ -953,7 +965,7 @@
             ["automatic", "آلي — عبر مورّد"],
           ],
           c.fulfillment || "manual",
-        )}<div class="field-row">${field("delivery_time", "وصف مدة التنفيذ", "text", c.delivery_time || "")}${field("expected_minutes", "المدة المتوقعة بالدقائق <small>٠ = غير محددة</small>", "number", c.expected_minutes || 0, 'min="0" step="1"')}</div>${check("is_featured", "عرض في الخدمات المميزة", d.is_featured)}<h3>شرائح سعر حسب الكمية</h3><div id="tierRows" class="dynamic-rows">${tiersRows(c.pricing_tiers)}</div><button type="button" class="button secondary small" style="margin-top:12px" data-action="add-tier">إضافة شريحة</button></div><div class="form-section"><h3>المورّد والتكلفة</h3>${select("provider_id", "المورّد", [["", "بدون مورّد"], ...S.providers.map((p) => [p.id, p.name])], internal.provider_id || (item ? "" : (S.providers.find((p) => p.adapter === "f90")?.id || "")))}${field("provider_service", "رقم الخدمة عند المورّد", "text", internal.provider_service || "")}<div class="field-row">${field("cost_usd", "تكلفة وحدة التسعير بالدولار <small>اختياري</small>", "number", internal.cost_usd ?? "", 'min="0" step="0.000001"')}${field("trader_price_usd", "سعر التاجر لكل وحدة تسعير <small>اختياري</small>", "number", internal.trader_price_usd ?? "", 'min="0.000001" step="0.000001"')}</div>${check("auto_margin", "تحديث السعر وفق هامش المورّد عند مزامنة الأسعار", internal.auto_margin)}</div>`;
+        )}<div class="field-row">${field("delivery_time", "وصف مدة التنفيذ", "text", c.delivery_time || "")}${field("expected_minutes", "المدة المتوقعة بالدقائق <small>٠ = غير محددة</small>", "number", c.expected_minutes || 0, 'min="0" step="1"')}</div>${check("is_featured", "عرض في الخدمات المميزة", d.is_featured)}<h3>شرائح سعر حسب الكمية</h3><div id="tierRows" class="dynamic-rows">${tiersRows(c.pricing_tiers)}</div><button type="button" class="button secondary small" style="margin-top:12px" data-action="add-tier">إضافة شريحة</button></div>${currencyPricingEditor(c)}<div class="form-section"><h3>المورّد والتكلفة</h3>${select("provider_id", "المورّد", [["", "بدون مورّد"], ...S.providers.map((p) => [p.id, p.name])], internal.provider_id || (item ? "" : (S.providers.find((p) => p.adapter === "f90")?.id || "")))}${field("provider_service", "رقم الخدمة عند المورّد", "text", internal.provider_service || "")}<div class="field-row">${field("cost_usd", "تكلفة وحدة التسعير بالدولار <small>اختياري</small>", "number", internal.cost_usd ?? "", 'min="0" step="0.000001"')}${field("trader_price_usd", "سعر التاجر لكل وحدة تسعير <small>اختياري</small>", "number", internal.trader_price_usd ?? "", 'min="0.000001" step="0.000001"')}</div>${check("auto_margin", "تحديث السعر وفق هامش المورّد عند مزامنة الأسعار", internal.auto_margin)}</div>`;
       body += `<div class="form-section"><h3>البيانات المطلوبة من العميل</h3><p class="muted small">إذا لم تضف حقولًا، يُطلب معرّف الحساب تلقائيًا. لا تطلب كلمة مرور العميل.</p><div id="customerFields" class="dynamic-rows">${fieldsRows(c.fields)}</div><button type="button" class="button secondary small" style="margin-top:12px" data-action="add-field">إضافة حقل</button></div>`;
     }
     if (kind === "banner")
@@ -1605,6 +1617,16 @@
           delivery_time: d.delivery_time,
           expected_minutes: Number(d.expected_minutes),
           pricing_tiers: parseTiers(form),
+          currency_pricing: (()=>{
+            const prices={...(old.commerce?.currency_pricing?.prices||{})};
+            for(const r of S.rates.filter(r=>!r.is_archived)){
+              const input=form.elements["currency_price_"+r.currency];
+              if(!input)continue;
+              if(input.value.trim()==="")delete prices[r.currency];else prices[r.currency]=Number(input.value);
+            }
+            if(form.elements.currency_pricing_enabled.checked&&!Object.keys(prices).length)throw new Error("أدخل سعرًا مستقلًا لعملة واحدة على الأقل");
+            return {enabled:form.elements.currency_pricing_enabled.checked,unit_quantity:Number(d.currency_pricing_unit),prices};
+          })(),
         };
         data.internal = {
           provider_id: d.provider_id || null,
@@ -2526,14 +2548,23 @@
       toast("تم حفظ الخصم الإضافي");
       return detailUser(S.detail);
     }
+    if (form.id === "userMarkupForm") {
+      if (!manager()) throw new Error("للمدير فقط");
+      await A.call("staff.markup",{id:S.detail.id,percent:Number(d.percent),enabled:form.elements.enabled.checked});
+      toast("تم حفظ نسبة زيادة الشراء للمستخدم");
+      return detailUser(S.detail);
+    }
     if (form.id === "financeAdjustForm") {
       const raw=Number(d.amount);
-      if(!Number.isFinite(raw)||raw<=0||raw>100000)throw new Error("المبلغ غير صالح");
+      if(!Number.isFinite(raw)||raw<=0||raw>1000000000)throw new Error("المبلغ غير صالح");
       if(String(d.note||"").trim().length<5)throw new Error("سبب الحركة مطلوب");
       const amount=d.direction==="debit"?-raw:raw;
-      if(!window.confirm("تأكيد "+(amount>0?"إضافة":"خصم")+" "+C.money(Math.abs(amount))+" لحساب "+S.detail.display_name+"؟ السبب: "+d.note))return;
+      const currency=d.currency||"USD",rate=S.rates.find(r=>r.currency===currency&&r.is_enabled&&!r.is_archived);
+      const fx=Number(rate?.per_usd),usd=Math.round(amount/fx*1e6)/1e6;
+      if(!Number.isFinite(fx)||fx<=0||!Number.isFinite(usd)||usd===0||Math.abs(usd)>100000)throw new Error("سعر الصرف غير متاح أو المبلغ يتجاوز الحد المسموح");
+      if(!window.confirm("تأكيد "+(amount>0?"إضافة":"خصم")+" "+C.money(Math.abs(amount),currency,true)+" = "+C.money(Math.abs(usd),"USD",true)+" لحساب "+S.detail.display_name+"؟ سعر الصرف: "+fx+" "+currency+" لكل دولار. السبب: "+d.note))return;
       if(!form.dataset.requestId)form.dataset.requestId=crypto.randomUUID();
-      await A.call("staff.adjust",{id:S.detail.id,amount_usd:amount,note:d.note,request_id:form.dataset.requestId,expected_balance:Number(S.detail.balance_usd)});
+      await A.call("staff.adjust",{id:S.detail.id,amount,currency,expected_rate:fx,note:d.note,request_id:form.dataset.requestId,expected_balance:Number(S.detail.balance_usd)});
       toast("تم تسجيل حركة الرصيد");
       return detailUser(S.detail);
     }
@@ -2812,6 +2843,15 @@
           toast(pending.enable ? "تم تفعيل المورّد" : "تم إيقاف خدمات المورّد");
           await providers();
         } finally { if (b.isConnected) b.disabled = false; }
+      } else if (action === "currency-pricing-global") {
+        if(!manager())throw new Error("للمدير فقط");
+        const enabled=b.dataset.enabled==="true",reason=prompt("سبب "+(enabled?"تفعيل":"إيقاف")+" التسعير المستقل لكل الخدمات (8 أحرف على الأقل)");
+        if(reason===null)return;
+        if(reason.trim().length<8)throw new Error("أدخل سببًا واضحًا");
+        if(!confirm((enabled?"تفعيل الأسعار المستقلة المحفوظة والمفعّلة لكل خدمة؟":"إيقاف الأسعار المستقلة لكل الخدمات والعودة للتسعير المعتاد؟")+" لن تُحذف الأسعار المحفوظة."))return;
+        await A.call("staff.currency_pricing",{enabled,reason});
+        S.settings.config={...S.settings.config,currency_pricing_enabled:enabled};
+        toast("تم تحديث تفعيل الأسعار المستقلة");await catalogPage("products");
       } else if (action === "bulk-fulfillment") { const chosen = selectedBulkProducts(); if (!chosen.length) throw new Error("حدد منتجًا واحدًا على الأقل"); if (!manager()) throw new Error("هذا الإجراء متاح للمدير فقط"); const mode = b.dataset.mode; if (!["manual","automatic"].includes(mode)) throw new Error("طريقة تنفيذ غير صحيحة"); pendingBulk = { ids: chosen.map(p => p.id), mode: "fulfillment", fulfillment: mode }; modal("تعديل طريقة شحن " + chosen.length + " منتج", `<p>تغيير طريقة التنفيذ إلى ${mode === "automatic" ? "آلي عبر المورّد المرتبط" : "يدوي"} للمنتجات المحددة فقط. لن تتغير الأسعار أو الصور.</p><button class="button" data-action="bulk-confirm">تأكيد الحفظ</button><p id="bulkProgress" class="muted small"></p>`); } else if (action === "bulk-select-visible") {
         document.querySelectorAll(".f90-bulk-check").forEach((el) => { el.checked = !el.closest(".catalog-row")?.hidden && el.closest(".catalog-row")?.style.display !== "none"; });
         updateBulkCount();
@@ -3387,6 +3427,11 @@
     }
   });
   document.addEventListener("input", (ev) => {
+    if (ev.target.form?.id==="financeAdjustForm") {
+      const form=ev.target.form,code=form.elements.currency.value,fx=Number(S.rates.find(r=>r.currency===code&&r.is_enabled)?.per_usd),amount=Number(form.elements.amount.value);
+      const preview=form.querySelector('[data-adjustment-preview]');
+      if(preview)preview.textContent=Number.isFinite(fx)&&fx>0&&amount>0 ? C.money(amount,code,true)+" = "+C.money(amount/fx,"USD",true)+" · سعر الصرف "+fx+" لكل دولار" : "اختر العملة وأدخل المبلغ لعرض المقابل بالدولار";
+    }
     if (ev.target.name==="frame_inset") {
       const raw=Number(ev.target.value),preview=ev.target.form?.querySelector(".f90-frame-demo-artwrap");
       if(preview&&Number.isFinite(raw))preview.style.setProperty("--f90-frame-image-inset",Math.max(3,Math.min(23,raw))+"%");

@@ -104,6 +104,7 @@ async function harness(file = "index.html", options = {}) {
       email: "user@example.invalid",
       account_status: "active",
       is_verified: options.verified ?? true,
+      ...(options.currency?{account_currency:options.currency}:{}),
     },
     role: options.role || "customer",
     wallet: { balance_usd: wallet },
@@ -132,6 +133,7 @@ async function harness(file = "index.html", options = {}) {
       calls.push({ action, args });
       if (action === "catalog") return structuredClone(catalog);
       if (action === "me") return structuredClone(me);
+      if (action === "quote" && options.quote) return structuredClone(options.quote);
       if (action === "quote")
         return {
           product_id: "coins",
@@ -147,6 +149,8 @@ async function harness(file = "index.html", options = {}) {
         me.wallet.balance_usd = wallet;
         return { id: "order", order_number: 1 };
       }
+      if (action === "staff.list" && args.kind === "users" && options.users) return {items:options.users,count:options.users.length};
+      if (action === "staff.finance" && options.users) return {balance_usd:20,extra_discount_percent:0,purchase_markup_percent:5,purchase_markup_enabled:true,ledger:[],profile:options.users[0]};
       if (action === "history" || action === "staff.list")
         return { items: [], count: 0 };
       if (action === "staff.catalog")

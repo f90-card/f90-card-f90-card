@@ -170,3 +170,6 @@
  height:calc(100% - 2 * var(--f90-frame-image-inset,11%))!important;
  object-fit:contain!important;
 }
+
+/* Filtering must take precedence over the decorative frame display rule. */
+:root.f90-global-frame-on #mainContent .image-grid :is(.image-tile.f90-category-tile,.image-tile.f90-product-tile)[hidden]{display:none!important}
