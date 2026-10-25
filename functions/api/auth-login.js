@@ -9,14 +9,16 @@ export async function onRequest({request,env}){
  if(!input||typeof input!=='object'||Array.isArray(input)||typeof input.email!=='string'||typeof input.password!=='string'||input.email.length>320||input.password.length>1024)return json(400,{error:'INVALID_BODY'});
  const secret=env.F90_ACTIVITY_GATEWAY_SECRET;
  if(typeof secret!=='string'||secret.length<32)return json(503,{error:'GATEWAY_NOT_READY'});
+ let stage='SIGNATURE';
  try{
   const body=JSON.stringify({action:'login',email:input.email,password:input.password,...(input.gotrue_meta_security?{gotrue_meta_security:input.gotrue_meta_security}:{})});
   // Credentials go only to the same production Supabase project. They are never logged or stored in telemetry.
-  const clean=new Request(request.url,{headers:{'cf-connecting-ip':request.headers.get('cf-connecting-ip')||'','user-agent':request.headers.get('user-agent')||''}});
-  Object.defineProperty(clean,'cf',{value:request.cf});
+  const clean={headers:new Headers({'cf-connecting-ip':request.headers.get('cf-connecting-ip')||'','user-agent':request.headers.get('user-agent')||''}),cf:request.cf};
   const signed=await signContext(clean,body,secret);
+  stage='UPSTREAM_FETCH';
   const r=await fetch(upstream,{method:'POST',headers:{'Content-Type':'application/json','x-f90-activity-context':signed.payload,'x-f90-activity-signature':signed.signature},body,signal:AbortSignal.timeout(12000),redirect:'error'});
-  let result;try{result=JSON.parse(await readBoundedBody(r,65536));}catch{return json(502,{error:'AUTH_UNAVAILABLE'})}
+  stage='UPSTREAM_RESPONSE';
+  let result;try{result=JSON.parse(await readBoundedBody(r,65536));}catch{return json(503,{error:'AUTH_GATEWAY_RESPONSE'})}
   return json(r.status,result);
- }catch{return json(502,{error:'AUTH_UNAVAILABLE'})}
+ }catch{return json(503,{error:'AUTH_GATEWAY_'+stage})}
 }
