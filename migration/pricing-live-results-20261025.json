@@ -45,5 +45,25 @@
     "orders": 0,
     "wallet_ledger": 0,
     "currency_adjustments": 0
+  },
+  "official_artifacts": {
+    "checked": 6,
+    "status": 200
+  },
+  "official_browser": {
+    "parent_category_total": 5,
+    "parent_category_matches": 1,
+    "hidden_still_visible_before": 4,
+    "hidden_still_visible_after": 0,
+    "direct_products_total": 3,
+    "direct_products_matches": 1,
+    "no_matches_visible": 0,
+    "cleared_visible": 3,
+    "nested_products_search": true
+  },
+  "cloudflare": {
+    "runtime_commit": "11f3c92e9c54a0a990c92e5e1195d2f0533c178c",
+    "deployment": "732faf9f-c582-4220-8164-f119ebeda93f",
+    "status": "success"
   }
 }
