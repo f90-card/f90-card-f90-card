@@ -964,6 +964,8 @@
           : balance < Number(quote.total_usd) ? "رصيد غير كافٍ"
           : f90CheckoutMoney(balance-Number(quote.total_usd),true);
       }
+      const topBadge=$("f90ReferenceTopPrice");
+      if(topBadge)topBadge.textContent=(price?.textContent||"—")+" "+S.currency;
       const primaryLabel=$("f90ReferencePrimaryCurrency");
       if(primaryLabel)primaryLabel.textContent=S.currency;
       const secondary=$("f90ReferenceSecondaryPrice");
@@ -990,7 +992,8 @@
       if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       $("checkoutTotal").textContent = "السعر غير متاح";
       $("walletHint").textContent = "";
-      if ($("f90ReferenceSecondaryPrice")) $("f90ReferenceSecondaryPrice").textContent="";
+      if ($("f90ReferenceTopPrice")) $("f90ReferenceTopPrice").textContent="— "+S.currency;
+      if ($("f90ReferenceSecondaryPrice")) { $("f90ReferenceSecondaryPrice").textContent=""; $("f90ReferenceSecondaryPrice").hidden=true; }
       $("quoteError").textContent = message(err);
       if (button) button.disabled = true;
     }
@@ -1051,6 +1054,7 @@
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
+      <div class="f90-reference-top-prices" aria-live="polite"><strong id="f90ReferenceTopPrice" class="f90-reference-primary-badge">— ${e(S.currency)}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price" hidden></small></div>
       <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(previewUsd(p,c.quantity_min||1))}</div>
       <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
@@ -1058,7 +1062,7 @@
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
-          <div class="f90-visa-price"><span>الإجمالي · <b id="f90ReferencePrimaryCurrency">${e(S.currency)}</b></span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price"></small></div>
+          <div class="f90-visa-price"><span>الإجمالي · <b id="f90ReferencePrimaryCurrency">${e(S.currency)}</b></span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong></div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
