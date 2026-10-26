@@ -89,16 +89,30 @@
     return !String(description||"").trim() || /^أف تسعين كارد\s*[·|\-]\s*/.test(String(description).trim());
   }
   function instructions(product,commerce,fields,quantityVisible){
-    const description=String(product?.description||"").trim();
-    const labels=fields.filter(f=>f.required).map(f=>f.label);
     const title=String(product?.name||"الخدمة").trim();
-    const header="تعليمات طلب "+title;
-    const original=!isBoilerplate(description)?description:null;
-    const needs=labels.length?"البيانات المطلوبة: "+labels.join("، ")+"." : "راجع بيانات الطلب قبل تأكيد الشراء.";
-    const qty=quantityVisible?"حدد الكمية المناسبة ضمن الحدود المتاحة. ":"";
-    const reminder="راجع صحة البيانات قبل الشراء. يظهر السعر النهائي قبل تأكيد الطلب، ويمكن متابعة حالته من سجل الطلبات.";
-    // Original tailored descriptions take precedence, never fabricate execution time or verification.
-    return {header,lines:[...(original?[original]:[]),needs,qty+reminder]};
+    const description=String(product?.description||"").trim();
+    const original=isBoilerplate(description)?"":description;
+    const fulfillment=commerce?.fulfillment==="automatic"?"automatic":commerce?.fulfillment==="manual"?"manual":"unknown";
+    const automatic=fulfillment==="automatic";
+    const manual=fulfillment==="manual";
+    // These are user-provided estimates, not server-side execution guarantees.
+    const timing=automatic?"من 5 إلى 60 ثانية":manual?"من 5 إلى 120 دقيقة":"حسب نوع الخدمة";
+    const required=fields.filter(f=>f.required).map(f=>f.label);
+    const details=[
+      ...(original?[original]:[]),
+      ...(required.length?["البيانات المطلوبة: "+required.join("، ")+"."]:[]),
+      ...(quantityVisible?["اختر العدد المناسب ضمن الحد المسموح للخدمة."]:[]),
+    ];
+    return {
+      header:automatic?"💎 شحن تلقائي سريع":manual?"🕘 تنفيذ يدوي للطلب":"💎 تفاصيل تنفيذ الطلب",
+      timing,
+      timingLabel:automatic?"⚡ المدة المتوقعة من 5 إلى 60 ثانية":manual?"⏰ المدة المتوقعة من 5 إلى 120 دقيقة":"⏰ مدة التنفيذ حسب الخدمة",
+      note:"🚨 راجع صحة بياناتك قبل الشراء. يمكنك متابعة حالة التنفيذ من سجل الطلبات.",
+      details,
+      fulfillment,
+      title
+    };
   }
+
   root.F90CheckoutPresentation={fieldMeta,instructions,normalizeQuantity,validateQuantity};
 })(typeof window!=="undefined"?window:globalThis);
