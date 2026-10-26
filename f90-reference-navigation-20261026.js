@@ -39,18 +39,26 @@
    // Use the very same tier artwork from the VIP page.
    vip.dataset.f90VipLevel=String(level||1);
    vip.innerHTML=window.F90VipArtwork?.seal(level||1)||svgCrown+'<span class="f90-header-vip-level">'+(level?"VIP"+level:"VIP")+'</span>';
-   const picker=$("f90-language-control");
-   if(picker){
-     const textNode=Array.from(picker.childNodes).find(n=>n.nodeType===Node.TEXT_NODE);
-     if(textNode)textNode.nodeValue="文A ";
-     const select=picker.querySelector("select");
-     if(select)select.setAttribute("aria-label","تغيير لغة الموقع");
+   // Independent left group guarantees that the center logo is never displaced
+   // when the wallet amount, VIP tier, or route changes.
+   $("f90-language-control")?.remove();
+   let left=$("f90HeaderLeft");
+   if(!left){
+     left=document.createElement("div");
+     left.id="f90HeaderLeft";left.className="f90-header-left";
+     header.insertBefore(left,root);
    }
    const wallet=$("headerWallet");
-   if(wallet&&!wallet.querySelector(".f90-wallet-plus")){
-     wallet.querySelector("svg")?.remove();
-     const plus=document.createElement("span");plus.className="f90-wallet-plus";plus.textContent="+";wallet.prepend(plus);
+   if(wallet){
+     if(wallet.parentElement!==left)left.prepend(wallet);
+     if(!wallet.querySelector(".f90-wallet-plus")){
+       wallet.querySelector("svg")?.remove();
+       const plus=document.createElement("span");plus.className="f90-wallet-plus";plus.textContent="+";wallet.prepend(plus);
+     }
    }
+   if(back.parentElement!==left)left.append(back);
+   const actions=header.querySelector(".header-actions");
+   if(actions&&vip.parentElement!==actions)actions.append(vip);
    updateBack();
  }
  function updateBack(){
