@@ -403,9 +403,6 @@ html.f90-reference-theme[data-theme="cream"] #mainContent :is(a,button,input,sel
 html.f90-reference-theme[data-theme="cream"] #drawer :is(a,button,input,select):focus-visible{
  outline:2px solid #ad2b55!important;outline-offset:3px!important;
 }
-html.f90-reference-theme[data-theme="cream"] #mainContent :is(.price,.amount,.total-amount){
- color:#842047!important;
-}
 html.f90-reference-theme[data-theme="cream"] .f90-seo-directory-link a{
  color:#79435b!important;
 }
