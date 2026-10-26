@@ -325,49 +325,28 @@
     const drawerPreferences=document.querySelector("#drawer .drawer-preferences");
     if(drawerPreferences)document.querySelector("#drawerProfile .f90-drawer-wallet-card")?.insertAdjacentElement("afterend",drawerPreferences);
     const links = [
-      ["@store", "المتجر"],
       ["/", "الرئيسية", "grid"],
-      ["search", "ابحث عن خدمة", "search"],
-      ["welcome", "التعرّف على F90", "doc"],
-      ["agents", "وكلاؤنا", "user"],
-      ["quran", "القرآن الكريم", "book"],
-      ["favorites", "المفضلة", "heart"],
-      ["@account", "حسابي ومعاملاتي"],
-      ["profile", "حسابي", "user"],
-      ["wallet", "محفظتي", "wallet"],
-      ["deposit", "إضافة رصيد", "plus"],
-      ["orders", "سجل حركات الخدمات", "clock"],
-      ["history", "سجل الحركات", "doc"],
-      ["@membership", "المزايا والأمان"],
-      ["vip", "مستويات التميّز", "crown"],
-      ["security", "أمان الحساب", "shield"],
-      ["verification", "توثيق الهوية", "check"],
       ["notifications", "الإشعارات", "bell"],
-      ["@help", "المزيد"],
-      ["install", "تثبيت التطبيق", "plus"],
-      ...(me?.role === "trader" ? [["developers", "إنشاء مفتاح API", "link"]] : []),
-      ...(me?.role === "trader" ? [["api-guide", "دليل التاجر وربط المتاجر", "doc"]] : []),
+      ["deposit", "إضافة رصيد", "plus"],
+      ["deposits", "دفعاتي", "wallet"],
+      ["wallet", "محفظتي", "wallet"],
+      ["orders", "طلباتي", "clock"],
+      ["agents", "وكلاؤنا", "user"],
+      ["security", "الحماية", "shield"],
+      ["verification", "تحقق الهوية", "check"],
       ["policy/about", "من نحن", "doc"],
-      ["support", "الدعم الفني", "support"],
+      ...(me?.role === "trader" ? [["developers","مفتاح API","link"],["api-guide","دليل التاجر","doc"]] : []),
     ];
-    // Keep every existing destination; visually collapse secondary groups.
-    let drawerGroup = false;
-    $("drawerLinks").innerHTML = links.map(([route, label, icon]) => {
-      if (route.startsWith("@")) {
-        const close = drawerGroup ? "</div></details>" : "";
-        drawerGroup = true;
-        return close + `<details class="f90-drawer-accordion" ${route === "@store" ? "open" : ""}><summary>${e(label)}</summary><div class="f90-drawer-accordion-links">`;
-      }
-      return `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}<span>${e(label)}</span></a>`;
-    }).join("") + (drawerGroup ? "</div></details>" : "");
-    // Standalone final drawer links: accessible without opening accordions.
-    const extra=[];
-    if(me?.role==='charging_agent')extra.push('<a class="f90-drawer-standalone" href="./trader-commissions.html">'+I("wallet")+'<span>عمولاتي وعملائي</span></a>');
-    if(me?.role==='manager')extra.push('<a class="f90-drawer-standalone" href="./trader-commissions.html">'+I("users")+'<span>وكلاء الموقع</span></a>');
-    if(me && ['manager','admin','amin_card'].includes(me.role))extra.push('<a class="f90-drawer-standalone f90-amin-admin-link" href="./amin-card.html">'+I("grid")+'<span>'+(me.role==='amin_card'?'لوحة تحكم الامين كارد':'قسم الامين كارد')+'</span></a>');
-    $('drawerLinks').insertAdjacentHTML('beforeend',extra.join('')+'<section class="f90-drawer-social" style="margin:14px 8px 24px"><div class="f90-drawer-social-title">تابع قنواتنا الرسمية</div><div class="f90-social-card-grid">'+(f90SocialCards()||'<span class="muted small">روابط التواصل تُضاف من لوحة الإدارة.</span>')+'</div></section>');
-    document.getElementById('f90TraderCommissionsLink')?.remove();
-    if(me?.role==='trader')$('drawerProfile').insertAdjacentHTML('beforeend','<a id="f90TraderCommissionsLink" class="button secondary" href="./trader-commissions.html">عملائي وعمولاتي</a>');
+    $("drawerLinks").innerHTML = links.map(([route,label,icon]) =>
+      `<a href="${route === "/" ? "#/" : "#/" + route}">${I(icon)}<span>${e(label)}</span></a>`
+    ).join("");
+    if(me?.role==="charging_agent"||me?.role==="manager") $("drawerLinks").insertAdjacentHTML("beforeend",
+      `<a href="./trader-commissions.html">${I("wallet")}<span>${me.role==="manager"?"وكلاء الموقع":"عمولاتي وعملائي"}</span></a>`);
+    if(me && ["manager","admin","amin_card"].includes(me.role)) $("drawerLinks").insertAdjacentHTML("beforeend",
+      `<a href="./amin-card.html">${I("grid")}<span>قسم الأمين كارد</span></a>`);
+    const social=f90SocialLinks().filter(item=>item.enabled&&C.safeUrl(item.url)).slice(0,5);
+    if(social.length) $("drawerLinks").insertAdjacentHTML("beforeend",
+      `<div class="f90-reference-social">${social.map(s=>`<a href="${e(C.safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${e(s.name_ar||"تواصل")}</a>`).join("")}</div>`);
     const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
     let adminShortcut = document.getElementById("f90AdminShortcut");
     if (staff && !adminShortcut) {
@@ -389,12 +368,12 @@
       .join("");
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
-      ["profile", "حسابي", "user"],
+      ["search", "بحث", "search"],
+      ["orders", "طلباتي", "clock"],
+      ["notifications", "الإشعارات", "bell"],
       ["wallet", "المحفظة", "wallet"],
       ["", "الرئيسية", "grid"],
-      ["orders", "طلباتي", "clock"],
-      ["search", "بحث", "search"],
-    ].map(([page, label, icon]) => `<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${page === "" ? `<img class="f90-home-dock-logo" src="${e(C.safeUrl(S.settings.logo_url || S.settings.config?.app_icon_url || "./f90-logo.png") || "./f90-logo.png")}" alt="" loading="eager">` : I(icon)}<span>${label}</span></a>`).join("");
+    ].map(([page,label,icon])=>`<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
       `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav><a href="#/agents">وكلاؤنا</a>${Object.entries(
         {
@@ -883,7 +862,7 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div><section class="f90-category-top"><button class="button secondary small" data-action="share" aria-label="نسخ رابط القسم">${I("copy")} نسخ رابط القسم</button></section>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" data-category-id="${e(c.id)}" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid" id="categoryBaseGrid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" data-category-id="${e(c.id)}" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid" id="categoryBaseGrid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
     const copySection=main.querySelector(".f90-category-top button");
     if(copySection){copySection.innerHTML=I("copy");copySection.title="نسخ رابط القسم";}
     if ($("categoryFilter")) main.insertAdjacentHTML("beforeend",'<section id="categorySearchResults" hidden></section>');
@@ -1077,9 +1056,9 @@
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
         <p id="quoteError" class="inline-error" role="status"></p>
         <strong id="checkoutTotal" hidden>—</strong>
-        <div class="f90-visa-footer">
+        <div class="f90-visa-footer"><button type="button" class="f90-reference-cancel" data-action="close-quick-product">إلغاء</button>
           <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
-          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "شراء الآن" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
+          <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "شراء" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
         </div>
       </form>
     </div>`;
@@ -1931,7 +1910,7 @@ async function history(kind){
     closeQuickProduct();
     closeModal();
     toggleDrawer(false);
-    const raw = (location.hash || "#/welcome").replace(/^#\/?/, "");
+    const raw = (location.hash || "#/").replace(/^#\/?/, "");
     let [page, id, serviceChoice] = raw.split("/");
     try {
       id = id ? decodeURIComponent(id) : "";
