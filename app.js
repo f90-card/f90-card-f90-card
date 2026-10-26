@@ -387,7 +387,8 @@
       picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.currency)}</button>`).join("")}</div>`:"";
     }
     window.F90ReferenceNavigation?.sync({me:S.me,settings:S.settings,secondaryCurrency:S.secondaryCurrency,balanceText:S.me&&!S.me.needs_mfa?displayMoney(S.me.wallet?.balance_usd||0):"—",tierCount:S.vip.length});
-    window.F90LayoutMode?.apply(S.settings.config || {});
+    // Presentation transitions occur only after a FRESH public catalog response,
+    // never during chrome redraw/auth refresh and never from stale warm cache.
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
       ["search", "بحث", "search"],
@@ -3222,6 +3223,13 @@ async function history(kind){
     try {
       const warmCatalog=readWarmCatalog();
       const networkCatalog=A.call("catalog");
+      // Do not interpret the initial empty S.settings or 45-second warm catalog
+      // as authoritative. They previously made classic->current->classic loops.
+      networkCatalog.then(fresh=>{
+        const cfg=fresh?.settings?.config;
+        if(cfg && Object.prototype.hasOwnProperty.call(cfg,"ui_presentation_mode"))
+          window.F90LayoutMode?.apply(cfg);
+      }).catch(()=>{/* Keep whichever storefront is open during network trouble. */});
       const catalogRequest=warmCatalog?Promise.resolve(warmCatalog):networkCatalog;
       if(!warmCatalog)networkCatalog.then(saveWarmCatalog).catch(()=>{});
       const accountRequest = refreshMe().catch((error) => error);
