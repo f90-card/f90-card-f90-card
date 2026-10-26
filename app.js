@@ -384,7 +384,7 @@
       if(!picker){picker=document.createElement("section");picker.id="f90SecondaryCurrencies";picker.className="f90-secondary-currencies";secondaryHost.append(picker);}
       const active=enabled.filter(item=>item.currency!==S.currency);
       if(!active.some(item=>item.currency===S.secondaryCurrency))S.secondaryCurrency=active.some(item=>item.currency==="EGP")?"EGP":(active[0]?.currency||"");
-      picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.currency)}</button>`).join("")}</div>`:"";
+      picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.name_ar||item.currency)} <small dir="ltr">${e(item.currency)}</small></button>`).join("")}</div>`:"";
     }
     window.F90ReferenceNavigation?.sync({me:S.me,settings:S.settings,secondaryCurrency:S.secondaryCurrency,balanceText:S.me&&!S.me.needs_mfa?displayMoney(S.me.wallet?.balance_usd||0):"—",tierCount:S.vip.length});
     window.F90LayoutMode?.apply(S.settings.config || {});
