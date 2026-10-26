@@ -371,12 +371,13 @@
     // Secondary currency is a DISPLAY preference only, never a wallet/account change.
     const secondaryHost=document.querySelector("#drawer .drawer-preferences");
     if(secondaryHost){
-      let picker=secondaryHost.querySelector("#f90SecondaryCurrencies");
+      let picker=secondaryHost.querySelector("#f90SecondaryCurrencies") || document.getElementById("f90SecondaryCurrencies");
       if(!picker){picker=document.createElement("section");picker.id="f90SecondaryCurrencies";picker.className="f90-secondary-currencies";secondaryHost.append(picker);}
       const active=enabled.filter(item=>item.currency!==S.currency);
       if(!active.some(item=>item.currency===S.secondaryCurrency))S.secondaryCurrency=active.some(item=>item.currency==="EGP")?"EGP":(active[0]?.currency||"");
       picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.currency)}</button>`).join("")}</div>`:"";
     }
+    window.F90ReferenceNavigation?.sync({me:S.me,settings:S.settings,secondaryCurrency:S.secondaryCurrency,balanceText:S.me&&!S.me.needs_mfa?displayMoney(S.me.wallet?.balance_usd||0):"—",tierCount:S.vip.length});
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
       ["search", "بحث", "search"],
@@ -1944,6 +1945,7 @@ async function history(kind){
       id = "";
     }
     main.dataset.page = page || "home";
+    window.F90ReferenceNavigation?.updateBack();
     if(page) S.homeAnnouncementShown=false;
     document.body.classList.remove('f90-welcome-route');
     $("mobileDock")?.querySelectorAll("[data-dock-page]").forEach((link) => {
