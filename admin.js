@@ -57,6 +57,7 @@
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
     ["trader-commissions", "وكلاء الموقع", "wallet", ["manager"]],
     ["amin-card", "قسم الامين كارد", "grid", ["manager", "admin"]],
+    ["site-design", "غيّر ثيم الموقع بالكامل", "edit", ["manager"]],
     ["categories", "الأقسام", "grid", ["manager", "designer"]],
     ["products", "المنتجات", "grid", ["manager", "designer"]],
     ["refilling", "خدمات قيد التعبئة", "clock", ["manager"]],
@@ -184,14 +185,18 @@
   const adminOpenGroups = new Set();
   let adminSearchTerm = "";
   const adminBuckets = [
-    ["المتابعة والطلبات",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification"]],
-    ["العملاء والتجار",["users","traders","agents","trader-commissions","leaderboard"]],
-    ["المنتجات والموردون",["categories","products","refilling","providers","integration"]],
-    ["الأموال والأسعار",["ledger","payments","rates","vip","special-settings"]],
-    ["التصميم والمحتوى",["banners","promotions","content-text","content-images","content-links","content-branding","card-frames","policies","notifications"]],
-    ["أمان ومراقبة المتجر",["audit","security-sessions","security-alerts","customer-security","infrastructure","telegram-alerts"]],
-    ["إعدادات الموقع",["settings"]],
-    ["أقسام متخصصة",["amin-card"]]
+    ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","verification"]],
+    ["العملاء والتجار",["users","traders","agents"]],
+    ["الخدمات والمورّدون",["categories","products","providers","refilling"]],
+    ["الأرصدة والأسعار",["ledger","payments","rates","vip"]],
+    ["المظهر والإعلانات",["banners","notifications","settings"]],
+    ["أدوات متقدمة",[
+      "salary-requests","special-requests","trader-commissions","leaderboard",
+      "integration","infrastructure","special-settings","promotions","content-text",
+      "content-images","content-links","content-branding","card-frames","policies",
+      "audit","security-sessions","security-alerts","customer-security","telegram-alerts"
+    ]],
+    ["أقسام متخصصة",["amin-card","site-design"]]
   ];
   function filterAdminNavigation(term){
     const query=String(term||"").normalize("NFKC").trim().toLocaleLowerCase("ar");
@@ -1238,6 +1243,35 @@
     await refreshSettings();
     cardFrames();
     toast(mode==="image"?"تم رفع وتفعيل صورة الإطار لجميع الخدمات والأقسام":"تم تفعيل الإطار البرمجي الرفيع");
+  }
+  function siteDesignPage(){
+    if(!manager())throw new Error("تغيير تصميم المتجر متاح لمدير المتجر فقط");
+    const current=S.settings?.config?.ui_presentation_mode==="classic"?"classic":"current";
+    main.innerHTML=head("غيّر ثيم الموقع بالكامل",
+      "التبديل بين الواجهة الحالية والتنسيق السابق على مستوى الموقع كله، بدون تغيير الأسعار والمنتجات وصلاحيات المستخدمين.")+
+      '<section class="panel f90-site-layout-settings">'+
+      '<p class="notice">الواجهة السابقة تستعيد طبقة التصميم قبل تحديثات 26 أكتوبر 2026، مع الاحتفاظ بوظائف المتجر الحديثة. ليست استعادةً حرفية لكل ملفات البرمجة القديمة.</p>'+
+      '<form id="siteLayoutForm">'+
+      '<fieldset class="f90-layout-choices"><legend>اختر واجهة العرض لجميع زوار المتجر</legend>'+
+      '<label class="f90-layout-option '+(current==="current"?"selected":"")+'"><input type="radio" name="ui_presentation_mode" value="current" '+(current==="current"?"checked":"")+' required><span><strong>التصميم الحالي</strong><small>الواجهة المصممة حالياً مع الهيدر المركزي وكروت الشراء والتصميم المتجاوب والثيم الكريمي المحسّن.</small></span></label>'+
+      '<label class="f90-layout-option '+(current==="classic"?"selected":"")+'"><input type="radio" name="ui_presentation_mode" value="classic" '+(current==="classic"?"checked":"")+' required><span><strong>التصميم السابق</strong><small>الرجوع إلى تنسيقات الواجهة التي كانت قبل تعديلات التصميم، مع الإبقاء على النظام الحالي الآمن.</small></span></label>'+
+      '</fieldset>'+
+      '<p class="muted small">التغيير يطبّق على الصفحة العامة لكل الزوار بعد تحميل الإعدادات أو تحديث الصفحة. لا يؤثر على لوحة الإدارة ولا قاعدة البيانات.</p>'+
+      '<button class="button" type="submit">حفظ وتفعيل التصميم المختار</button>'+
+      '</form></section>';
+  }
+  async function saveSiteLayout(form,d){
+    if(!manager())throw new Error("هذه الصلاحية خاصة بمدير المتجر");
+    const mode=d.ui_presentation_mode;
+    if(mode!=="classic"&&mode!=="current")throw new Error("وضع التصميم غير صالح");
+    const old=S.settings||{},config=old.config||{};
+    if((config.ui_presentation_mode==="classic"?"classic":"current")===mode){
+      toast("التصميم المحدد مفعّل بالفعل");return;
+    }
+    await A.call("settings.save",{data:{...old,config:{...config,ui_presentation_mode:mode}}});
+    await refreshSettings();
+    siteDesignPage();
+    toast(mode==="classic"?"تم تفعيل تصميم المتجر السابق لكل الزوار":"تم تفعيل تصميم المتجر الحالي لكل الزوار");
   }
   async function settings() {
     const d = S.settings,
@@ -2521,6 +2555,7 @@
       )
         publicListPage(page);
       else if (page === "settings") await settings();
+      else if (page === "site-design") siteDesignPage();
       else if (page === "card-frames") await cardFrames();
       else if (page === "salary-requests") {
         main.innerHTML=head("طلبات رواتب Xena Live","طلبات السحب مستقلة عن بقية الإيداعات، ويمكنك اعتمادها أو رفضها بعد فحص الإيصال.");
@@ -2564,6 +2599,7 @@
     if (form.id === "catalogForm") return saveCatalog(form, d);
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
+    if (form.id === "siteLayoutForm") return saveSiteLayout(form, d);
     if (form.id === "cardFramesForm") return saveCardFrames(form, d);
     if (form.id === "designCenterForm") return saveVisualDesign(form, d);
     if (form.id === "mediaCenterForm") return saveMediaCenter(form,d);

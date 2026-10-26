@@ -387,6 +387,7 @@
       picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.currency)}</button>`).join("")}</div>`:"";
     }
     window.F90ReferenceNavigation?.sync({me:S.me,settings:S.settings,secondaryCurrency:S.secondaryCurrency,balanceText:S.me&&!S.me.needs_mfa?displayMoney(S.me.wallet?.balance_usd||0):"—",tierCount:S.vip.length});
+    window.F90LayoutMode?.apply(S.settings.config || {});
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
       ["search", "بحث", "search"],

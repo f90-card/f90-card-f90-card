@@ -266,3 +266,53 @@ html[data-theme="cream"] body.admin-body .admin-top .f90-admin-store-link{
  body.admin-body .admin-top .f90-admin-store-link{padding:8px!important;font-size:11px!important;}
  body.admin-body .admin-main{padding:13px 9px!important;}
 }
+
+/* Storefront appearance choice, manager-only via the existing route and auth API. */
+body.admin-body .f90-site-layout-settings{
+  width:min(100%,820px)!important;margin:16px auto!important;
+  padding:clamp(16px,3vw,28px)!important;
+  background:var(--surface)!important;color:var(--text)!important;
+  border:1px solid var(--line)!important;border-radius:18px!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-choices{
+  border:0!important;margin:14px 0 16px!important;padding:0!important;
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-choices legend{
+  grid-column:1/-1!important;float:none!important;
+  font-size:16px!important;color:var(--text)!important;
+  font-weight:800!important;margin:8px 0 14px!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option{
+  display:flex!important;align-items:flex-start!important;gap:12px!important;
+  padding:18px!important;min-width:0!important;cursor:pointer!important;
+  background:var(--surface2)!important;color:var(--text)!important;
+  border:2px solid var(--line)!important;border-radius:15px!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option.selected,
+body.admin-body .f90-site-layout-settings .f90-layout-option:has(input:checked){
+  border-color:var(--accent)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option input{
+  flex:0 0 18px!important;width:18px!important;height:18px!important;
+  margin-top:4px!important;accent-color:var(--accent)!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option>span{
+  display:flex!important;flex-direction:column!important;gap:8px!important;min-width:0!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option strong{
+  color:var(--text)!important;font-size:15px!important;
+}
+body.admin-body .f90-site-layout-settings .f90-layout-option small{
+  color:var(--muted)!important;font-size:12px!important;line-height:1.8!important;
+}
+body.admin-body .f90-site-layout-settings button[type=submit]{
+  width:100%!important;min-height:48px!important;font-weight:800!important;
+  background:var(--accent)!important;color:white!important;border-radius:12px!important;
+}
+@media(max-width:650px){
+ body.admin-body .f90-site-layout-settings .f90-layout-choices{
+  grid-template-columns:1fr!important;
+ }
+}
