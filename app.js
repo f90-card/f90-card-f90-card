@@ -1403,14 +1403,14 @@ async function wallet() {
     main.innerHTML=pageHead("المحفظة","ملخص الرصيد والحركات، مع الاحتفاظ بجميع السجلات الأصلية.")+
       '<section class="f90-fin-wallet-dashboard">'+
         '<div class="f90-fin-metric current"><small>رصيدي الحالي</small><strong>'+e(displayMoney(balance,true))+'</strong></div>'+
-        '<div class="f90-fin-metric purchases"><small>مشتريات الحساب</small><strong>'+e(displayMoney(me.spent_usd||0,true))+'</strong></div>'+
+        '<div class="f90-fin-metric purchases"><small>إجمالي مشترياتك</small><strong>'+e(displayMoney(me.spent_usd||0,true))+'</strong></div>'+
         '<div class="f90-fin-metric incoming"><small>وارد (الحركات المعروضة)</small><strong id="f90WalletIncoming">—</strong></div>'+
         '<div class="f90-fin-metric outgoing"><small>صادر (الحركات المعروضة)</small><strong id="f90WalletOutgoing">—</strong></div>'+
       '</section>'+
       '<nav class="f90-fin-quicklinks" aria-label="إجراءات المحفظة"><a href="#/deposit">إضافة رصيد</a><a href="#/deposits">دفعاتي</a><a href="#/orders">طلباتي</a></nav>'+
-      '<section class="f90-fin-wallet-ledger" id="f90WalletLedgerSection"><header class="f90-fin-subhead"><h2>حركات المحفظة</h2><a href="#/history">السجل الكامل</a></header>'+
+      '<section class="f90-fin-wallet-ledger" id="f90WalletLedgerSection"><header class="f90-fin-subhead"><h2>سجل عمليات المحفظة</h2><a href="#/history">جميع العمليات</a></header>'+
       '<div class="f90-fin-tools"><div class="f90-fin-date-row"><label>من<input type="date" id="walletDateFrom"></label><label>إلى<input type="date" id="walletDateTo"></label></div>'+
-      '<input id="walletLedgerSearch" type="search" placeholder="البحث في العمليات..." aria-label="البحث في حركات المحفظة"></div>'+
+      '<div class="f90-fin-search-row"><input id="walletLedgerSearch" type="search" placeholder="بحث في المعاملات" aria-label="البحث في حركات المحفظة"><button type="button" class="f90-fin-search-btn" data-action="finance-apply-search" aria-label="تنفيذ البحث">⌕</button></div></div>'+
       '<div class="f90-fin-filters" id="f90WalletFilters">'+[['all','الكل'],['deposit','إيداع'],['purchase','شراء'],['refund','استرداد'],['adjustment','تعديل']].map(([v,label])=>
         '<button type="button" data-f90-wallet-filter="'+v+'" aria-pressed="'+(v==="all")+'">'+label+'</button>').join("")+'</div>'+
       '<div id="f90WalletLedger" class="loading">جارٍ تحميل حركاتك…</div>'+
@@ -1578,7 +1578,7 @@ function orderRecord(o) {
     const picture=C.safeUrl(o.product_image);
     const pictureTag=picture?'<img class="f90-fin-product-icon" src="'+e(picture)+'" alt="" loading="lazy">':"";
     const row=financeLine(state,o.created_at,Number(o.total_usd)||0,o.product_name||"طلب خدمة",
-       "رقم "+String(o.id||"").slice(0,10),customerOrderStatus(state),details,financeStatusGroup(state),
+       "الكمية "+financeNumber(o.quantity||0)+" · رقم "+String(o.id||"").slice(0,12),customerOrderStatus(state),details,financeStatusGroup(state),
        [o.id,o.product_name,recipient.accountId,recipient.accountName].filter(Boolean).join(" "));
     return pictureTag?row.replace('<span class="f90-fin-heading">','<span class="f90-fin-heading">'+pictureTag):row;
   }
@@ -1665,12 +1665,12 @@ function applyFinanceRows(wrap,term,from,to,selected){
   
 async function history(kind){
     const seq=S.route,orders=kind==="orders",deposits=kind==="deposits";
-    const title=orders?"طلباتي":deposits?"دفعاتي":"حركات المحفظة";
+    const title=orders?"الطلبات":deposits?"الدفعات":"سجل العمليات";
     const links='<nav class="f90-history-nav f90-fin-nav" aria-label="أقسام السجلات">'+
       [['orders','الطلبات'],['deposits','الإيداعات'],['history','العمليات']].map(([id,label])=>
       '<a href="#/'+id+'" '+((orders&&id==="orders")||(deposits&&id==="deposits")||(!orders&&!deposits&&id==="history")?'aria-current="page"':'')+'>'+label+'</a>').join("")+'</nav>';
     const filterDefs=orders||deposits?
-      [['all','الكل'],['pending','انتظار'],['completed','مكتمل'],['rejected','مرفوض']]:
+      [['all','الكل'],['pending','قيد التنفيذ'],['completed','مقبول'],['rejected','مرفوض']]:
       [['all','الكل'],['deposit','إيداع'],['purchase','شراء'],['refund','استرداد'],['adjustment','تعديل']];
     main.innerHTML=pageHead(title,"",'<button class="button secondary small" data-action="report" data-kind="'+e(kind)+'">PDF</button>'+
       '<button class="button secondary small" data-action="report-csv" data-kind="'+e(kind)+'">تصدير Excel/CSV</button>')+
@@ -1679,12 +1679,12 @@ async function history(kind){
       '<label>من<input type="date" id="f90HistoryFrom" aria-label="من تاريخ"></label>'+
       '<label>إلى<input type="date" id="f90HistoryTo" aria-label="إلى تاريخ"></label>'+
       '<button type="button" data-action="finance-clear-dates" class="f90-fin-reset">مسح</button></div>'+
-      '<input id="orderHistorySearch" type="search" placeholder="ابحث برقم العملية أو اسم الخدمة" autocomplete="off" aria-label="بحث في '+e(title)+'">'+
+      '<div class="f90-fin-search-row"><input id="orderHistorySearch" type="search" placeholder="ابحث برقم الطلب أو اسم الخدمة" autocomplete="off" aria-label="بحث في '+e(title)+'"><button type="button" class="f90-fin-search-btn" data-action="finance-apply-search" aria-label="تنفيذ البحث">⌕</button></div>'+
       '<small id="f90OrderSearchCount" role="status"></small></div>'+
       '<div class="f90-history-filters f90-fin-filters" role="group" aria-label="تصفية السجل">'+
       filterDefs.map(([code,label])=>'<button type="button" data-f90-history-filter="'+code+'" aria-pressed="'+(code==="all")+'">'+
       e(label)+' <span data-count>0</span></button>').join("")+
-      '</div><div class="f90-fin-totals"><strong id="f90HistorySum"></strong><span>مجموع الحركات المعروضة في هذه الصفحة</span></div>'+
+      '</div><div class="f90-fin-totals"><strong id="f90HistorySum"></strong><span>الإجمالي للسجلات المعروضة</span></div>'+
       '<div id="records" class="loading">جارٍ تحميل السجل…</div></section>';
     const [r,salaryResult]=await Promise.all([
       A.call("history",{kind:orders?"orders":deposits?"deposits":"ledger",offset:S.offset}),
