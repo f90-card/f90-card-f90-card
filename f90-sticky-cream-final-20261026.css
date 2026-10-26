@@ -2,151 +2,130 @@
  * Loaded LAST so prior reference CSS cannot reset sticky positioning or force navy
  * surfaces into the cream customer theme. No HTML or account logic changes. */
 
-/* The old storefront declared position:relative!important, cancelling sticky. */
-html.f90-reference-theme body:not(.admin-body) > .site-header,
-html.f90-reference-theme .site-header {
-  position:sticky!important;
-  position:-webkit-sticky!important;
-  top:0!important;
-  inset-block-start:0!important;
-  z-index:60!important;
-  background:#0d111b!important;
-  color:#f8fafc!important;
-  border-bottom:1px solid #283145!important;
-  box-shadow:0 5px 15px #00000020!important;
-  transform:none!important;
-  filter:none!important;
-  opacity:1!important;
-  contain:none!important;
-  isolation:isolate!important;
+/* Deterministic physical header placement. CSS grid eliminates earlier
+   auto-margin/order interactions and never depends on which language is active at load. */
+html.f90-reference-theme .site-header{
+ position:sticky!important;top:0!important;inset-block-start:0!important;
+ z-index:60!important;transform:none!important;filter:none!important;
+ opacity:1!important;contain:none!important;
+ background:#0e1422!important;color:#fff!important;
+ box-shadow:0 3px 12px rgba(6,8,18,.19)!important;
+ border-bottom:1px solid #2b3446!important;
 }
 html.f90-reference-theme .site-header .header-inner.container{
-  display:flex!important;
-  flex-flow:row nowrap!important;
-  flex-direction:row!important;
-  direction:ltr!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:7px!important;
-  width:100%!important;max-width:none!important;
-  min-height:69px!important;
-  padding:4px clamp(8px,2vw,20px)!important;
-  box-sizing:border-box!important;
-  transform:none!important;
+ display:grid!important;
+ grid-template-columns:auto auto minmax(0,1fr) auto!important;
+ grid-template-rows:minmax(69px,auto)!important;
+ direction:ltr!important;
+ align-items:center!important;justify-items:stretch!important;
+ gap:5px!important;
+ min-height:69px!important;width:100%!important;max-width:none!important;
+ padding:3px clamp(7px,2vw,20px)!important;
+ margin:0 auto!important;box-sizing:border-box!important;
+ transform:none!important;position:relative!important;
 }
-/* RTL: arrow, logo at LEFT; large flexible middle spacer; menu/currency at RIGHT. */
-html.f90-reference-theme .site-header .header-inner #f90ReferenceBack:not([hidden]){
-  order:0!important;flex:0 0 28px!important;width:28px!important;
-  margin:0!important;align-self:center!important;
-  color:#f6f7fc!important;
+html.f90-reference-theme .site-header .header-inner #f90ReferenceBack{
+ grid-column:1!important;grid-row:1!important;order:0!important;
+ display:grid!important;place-items:center!important;
+ width:29px!important;min-width:29px!important;max-width:29px!important;
+ height:35px!important;min-height:35px!important;
+ margin:0!important;padding:3px!important;
+ background:transparent!important;border:0!important;color:#fff!important;
 }
+html.f90-reference-theme .site-header .header-inner #f90ReferenceBack[hidden]{display:none!important;}
 html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
-  order:1!important;display:flex!important;
-  align-items:center!important;justify-content:flex-start!important;
-  flex:0 0 86px!important;
-  width:86px!important;min-width:0!important;max-width:86px!important;
-  height:66px!important;
-  margin:0 auto 0 0!important;padding:0!important;
-  border:0!important;background:transparent!important;
-  transform:none!important;overflow:visible!important;
+ grid-column:2!important;grid-row:1!important;order:1!important;
+ width:88px!important;min-width:0!important;max-width:88px!important;
+ height:66px!important;
+ display:flex!important;justify-content:flex-start!important;align-items:center!important;
+ margin:0!important;padding:0!important;gap:0!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ overflow:visible!important;transform:none!important;
 }
 html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
-  display:block!important;width:84px!important;height:65px!important;
-  max-width:84px!important;max-height:65px!important;min-height:0!important;
-  object-fit:contain!important;object-position:left center!important;
-  filter:none!important;transform:none!important;
+ display:block!important;width:85px!important;max-width:85px!important;
+ height:65px!important;max-height:65px!important;min-height:0!important;
+ object-fit:contain!important;object-position:left center!important;
+ margin:0!important;padding:0!important;transform:none!important;filter:none!important;
 }
+html.f90-reference-theme .site-header .header-inner #headerBrand :is(.brand-name,.f90-reference-brand-name){display:none!important;}
 html.f90-reference-theme .site-header .header-inner .header-actions{
-  order:3!important;display:flex!important;flex-flow:row nowrap!important;
-  direction:rtl!important;
-  align-items:center!important;justify-content:flex-start!important;
-  flex:0 0 auto!important;
-  min-width:0!important;max-width:calc(100% - 110px)!important;
-  margin:0 0 0 auto!important;
-  gap:5px!important;padding:0!important;
+ grid-column:4!important;grid-row:1!important;order:3!important;
+ direction:rtl!important;display:flex!important;flex-flow:row nowrap!important;
+ align-items:center!important;justify-content:flex-start!important;
+ width:max-content!important;max-width:100%!important;min-width:0!important;
+ gap:5px!important;
+ padding:0!important;margin:0!important;
 }
-html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
-  max-width:calc(100% - 145px)!important;
+html.f90-reference-theme .site-header .header-actions :is(a,button,label),
+html.f90-reference-theme .site-header #f90ReferenceBack{
+ color:#f7f8fd!important;
 }
 html.f90-reference-theme .site-header .header-actions #menuButton{order:0!important;}
 html.f90-reference-theme .site-header .header-actions #f90-language-control{order:1!important;}
-html.f90-reference-theme .site-header .header-actions #headerWallet{order:2!important;}
-html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{order:3!important;}
-html.f90-reference-theme .site-header .header-actions :is(a,button,label){
-  color:#f7f8fc!important;
-}
 html.f90-reference-theme .site-header .header-actions #headerWallet{
-  direction:ltr!important;unicode-bidi:isolate!important;
+ order:2!important;direction:ltr!important;unicode-bidi:isolate!important;
 }
+html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{order:3!important;}
 html.f90-reference-theme .site-header .header-actions #headerWallet>span:not(.f90-wallet-plus){
-  color:#fff!important;
+ color:#fff!important;
 }
-/* Every non-Arabic language: FULL mirror. Logo at RIGHT and menu at LEFT.
- * dir changes synchronously in the existing i18n module, no reload needed. */
+/* Other languages fully reverse the four physical header tracks.
+   The existing language switcher writes html.dir synchronously. */
 html.f90-reference-theme[dir="ltr"] .site-header .header-inner.container{
-  flex-direction:row-reverse!important;direction:ltr!important;
-}
-html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
-  order:0!important;
-  justify-content:flex-end!important;
-  margin:0 0 0 auto!important;
-}
-html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand img{
-  object-position:right center!important;
-}
-html.f90-reference-theme[dir="ltr"] .site-header .header-inner #f90ReferenceBack:not([hidden]){
-  order:1!important;transform:scaleX(-1)!important;
+ grid-template-columns:auto minmax(0,1fr) auto auto!important;
+ direction:ltr!important;
 }
 html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions{
-  order:3!important;direction:ltr!important;
-  margin:0 auto 0 0!important;justify-content:flex-start!important;
+ grid-column:1!important;grid-row:1!important;
+ direction:ltr!important;justify-content:flex-start!important;
 }
-html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions #headerWallet{
-  direction:ltr!important;
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
+ grid-column:3!important;grid-row:1!important;
+ justify-content:flex-end!important;
 }
-/* No unwanted shrink into a tiny icon on inner pages. */
-@media (max-width:650px){
-  html.f90-reference-theme .site-header .header-inner.container{
-    min-height:67px!important;gap:4px!important;
-    padding:4px 7px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
-    flex:0 0 77px!important;width:77px!important;max-width:77px!important;
-    height:64px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
-    width:76px!important;height:63px!important;
-    max-width:76px!important;max-height:63px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner .header-actions{
-    max-width:calc(100% - 81px)!important;gap:3px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
-    max-width:calc(100% - 114px)!important;
-  }
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand img{
+ object-position:right center!important;
 }
-@media (max-width:380px){
-  html.f90-reference-theme .site-header .header-inner.container{
-    gap:3px!important;padding:4px 5px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
-    flex-basis:69px!important;width:69px!important;max-width:69px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
-    width:68px!important;max-width:68px!important;height:61px!important;max-height:61px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner .header-actions{
-    max-width:calc(100% - 73px)!important;gap:2px!important;
-  }
-  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
-    max-width:calc(100% - 106px)!important;
-  }
-  html.f90-reference-theme .site-header .header-actions #headerWallet{
-    max-width:59px!important;
-  }
-  html.f90-reference-theme .site-header .header-actions #headerWallet>span:not(.f90-wallet-plus){
-    max-width:39px!important;
-  }
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #f90ReferenceBack{
+ grid-column:4!important;grid-row:1!important;
+ transform:scaleX(-1)!important;
+}
+@media(max-width:650px){
+ html.f90-reference-theme .site-header .header-inner.container{
+  min-height:67px!important;grid-template-rows:minmax(67px,auto)!important;
+  gap:3px!important;padding:3px 7px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+  width:81px!important;max-width:81px!important;height:64px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+  width:79px!important;max-width:79px!important;height:63px!important;max-height:63px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner .header-actions{gap:3px!important;}
+}
+@media(max-width:365px){
+ html.f90-reference-theme .site-header .header-inner.container{gap:2px!important;padding:3px 5px!important;}
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand{width:72px!important;max-width:72px!important;}
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+  width:71px!important;max-width:71px!important;height:62px!important;max-height:62px!important;
+ }
+ html.f90-reference-theme .site-header .header-actions #headerWallet{max-width:58px!important;}
+ html.f90-reference-theme .site-header .header-actions #headerWallet>span:not(.f90-wallet-plus){
+  max-width:35px!important;
+ }
+}
+/* Top and bottom keep dark branding in both modes without theme flicker. */
+html.f90-reference-theme[data-theme="cream"] .site-header,
+html.f90-reference-theme[data-theme="cream"] .site-header .header-inner,
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock{
+ background:#0e1422!important;color:#fff!important;border-color:#293447!important;
+}
+html.f90-reference-theme[data-theme="cream"] .site-header :is(
+ #f90ReferenceBack,#menuButton,#f90-language-control,#headerWallet,#f90ReferenceHeaderVip
+),
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock>a svg{
+ color:#fff!important;
 }
 
 /* The requested cream skin: warm ivory, muted berry accents, dark readable ink.
@@ -355,4 +334,78 @@ html.f90-reference-theme[data-theme="cream"] #mainContent .f90-fin-wallet-dashbo
 }
 @media(prefers-reduced-motion:reduce){
   html.f90-reference-theme .site-header{transition:none!important;}
+}
+
+
+/* Refinements for all customer surfaces, preserving distinct finance/status
+   colors and the intentional dark checkout design. */
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-news-item,.news-item,.notification-item,.f90-notification-card,
+ .f90-history-card,.history-item,.order-card,.wallet-entry,
+ .f90-recipient-item,.f90-recipient-toolbar,.f90-recipient-list,
+ .product-card,.category-card,.f90-catalog-card,.f90-order-details,
+ .f90-bell-list,.f90-bell-notice
+){
+ background:#fffaf6!important;
+ color:#312632!important;border-color:#decac4!important;
+ box-shadow:0 4px 15px rgba(93,56,69,.075)!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-news-item,.news-item,.notification-item,.f90-notification-card,
+ .f90-history-card,.history-item,.order-card,.wallet-entry,
+ .f90-recipient-item,.f90-order-details
+) :is(h2,h3,strong,.title,.heading){
+ color:#332733!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-news-item,.news-item,.notification-item,.f90-notification-card,
+ .f90-history-card,.history-item,.order-card,.wallet-entry,
+ .f90-recipient-item,.f90-order-details
+) :is(p,small,.description,.muted,time){
+ color:#655662!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-fin-filters button,.filter-chip,.tabs button:not(.active),
+ .f90-fin-nav a:not([aria-current="page"])
+){
+ background:#eee1dc!important;color:#4c3345!important;
+ border:1px solid #d5c1ba!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-fin-filters button[aria-pressed="true"],.filter-chip.active,
+ .tabs button.active
+){
+ background:#a6204a!important;color:#fff!important;
+ border-color:#a6204a!important;
+}
+html.f90-reference-theme[data-theme="cream"] :is(
+ .toast,.f90-bell-panel,.f90-popup,.f90-popover,.f90-dropdown,
+ .f90-notification-panel
+){
+ color:#342834!important;
+ background:#fffaf6!important;
+ border-color:#d5c0bb!important;
+}
+html.f90-reference-theme[data-theme="cream"] :is(
+ .toast,.f90-bell-panel,.f90-popup,.f90-popover,.f90-dropdown,
+ .f90-notification-panel
+) :is(a,button){
+ color:#8a1c46!important;
+}
+html.f90-reference-theme[data-theme="cream"] :is(
+ .f90-bell-panel,.f90-popup,.f90-popover,.f90-dropdown,
+ .f90-notification-panel
+) :is(input,select,textarea){
+ background:#f0e5df!important;color:#322633!important;
+ border:1px solid #d1bbb6!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(a,button,input,select,textarea):focus-visible,
+html.f90-reference-theme[data-theme="cream"] #drawer :is(a,button,input,select):focus-visible{
+ outline:2px solid #ad2b55!important;outline-offset:3px!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-seo-directory-link a{
+ color:#79435b!important;
+}
+@media(prefers-reduced-motion:reduce){
+ html.f90-reference-theme .site-header{transition:none!important;}
 }
