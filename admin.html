@@ -48,7 +48,7 @@
     <script src="./f90-security-ui.js?v=20261024-security-final2" defer></script>
 <script src="./f90-security-admin.js?v=20261024-security-final2" defer></script>
 <script src="./f90-catalog-search.js?v=20261025-search1" defer></script>
-<script src="./admin.js?v=20261025-quantity-tiers1" defer></script>
+<script src="./admin.js?v=20261026-organized1" defer></script>
 <script src="./f90-ops-menu.js?v=20261022-ops1" defer></script>
       <link rel="stylesheet" href="./f90-admin-center.css?v=5" />
     <link rel="stylesheet" href="./f90-admin-album.css?v=20261015-album2" />
@@ -62,6 +62,7 @@
   <link rel="stylesheet" href="./f90-global-frame.css?v=20261025-filter1" />
 <link rel="stylesheet" href="./f90-security-ui.css?v=20261024-security-final2" />
     <link rel="stylesheet" href="./f90-i18n.css?v=20261025-mobile-icon9" />
+    <link rel="stylesheet" href="./f90-admin-organized-20261026.css?v=1" />
     <script src="./f90-i18n.js?v=20261025-db8" defer></script>
 </head>
   <body class="admin-body">
@@ -77,13 +78,22 @@
         ><span id="adminIdentity" class="muted small"></span>
       </div>
       <button class="icon-button f90-admin-bell" id="adminBell" type="button" aria-label="فتح صندوق إشعارات الإدارة" title="صندوق إشعارات الإدارة">🔔<span id="adminBellCount" hidden></span></button>
-      <button class="button secondary small" type="button" id="adminInstall">تثبيت الإدارة</button>
-      <button class="button secondary small" id="adminThemeToggle" type="button" aria-label="التبديل بين الثيم الأسود والأحمر والثيم الحليبي">الثيم الحليبي</button>
-      <a class="button secondary small" href="./index.html">عرض المتجر</a>
+      <a class="f90-admin-store-link" href="./index.html" title="العودة للمتجر">المتجر</a>
     </header>
     <div class="admin-layout">
       <aside class="admin-sidebar" id="adminSidebar">
-        <nav id="adminNav"></nav>
+        <div class="f90-admin-sideheading">
+          <strong>أقسام لوحة الإدارة</strong>
+          <label for="adminNavSearch" class="sr-only">ابحث في أقسام لوحة الإدارة</label>
+          <input id="adminNavSearch" type="search" placeholder="ابحث عن أداة إدارية..." autocomplete="off" aria-label="ابحث في أدوات لوحة الإدارة" />
+        </div>
+        <nav id="adminNav" aria-label="أقسام الإدارة حسب الصلاحية"></nav>
+        <p class="f90-admin-navempty" id="adminNavEmpty" role="status" hidden>لا توجد أدوات مطابقة للبحث.</p>
+        <div class="f90-admin-utilities">
+          <button class="button secondary small" id="adminThemeToggle" type="button" aria-label="تغيير المظهر">تغيير المظهر</button>
+          <button class="button secondary small" type="button" id="adminInstall">تثبيت تطبيق الإدارة</button>
+          <a href="./index.html" class="f90-admin-side-store">العودة للمتجر</a>
+        </div>
         <button class="button secondary" id="adminLogout">تسجيل الخروج</button>
       </aside>
       <main id="adminMain" class="admin-main" tabindex="-1">
