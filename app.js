@@ -934,7 +934,13 @@
   async function quoteProduct(p) {
     const f = $("checkoutForm");
     if (!p || !f || f.dataset.product !== String(p.id)) return;
-    const qty = Number(f.elements.quantity?.value || 1);
+    const checkedQuantity=window.F90CheckoutPresentation.validateQuantity(f.elements.quantity?.value||"1",p.commerce||{});
+    if(!checkedQuantity.valid){
+      S.quote=null;
+      if($("buyButton"))$("buyButton").disabled=true;
+      return;
+    }
+    const qty = checkedQuantity.quantity;
     const seq = ++S.quoteSeq;
     const button = $("buyButton");
     if (button) button.disabled = true;
@@ -2582,8 +2588,20 @@ async function history(kind){
       const form=ev.target.closest("form");
       const p=S.products.find(x=>x.id===form.dataset.product);
       if (!p) return;
-      const raw=ev.target.value,qty=Number(raw);
-      if (S.quote && form.dataset.quotedQuantity===String(qty)) return;
+      // Arabic/Persian phone-keyboard digits are normalized without losing the
+      // supplier's numeric constraints or repeatedly changing the cursor.
+      const normalized=window.F90CheckoutPresentation.normalizeQuantity(ev.target.value);
+      if(normalized!==ev.target.value){
+        const cursor=ev.target.selectionStart;
+        ev.target.value=normalized;
+        try{ev.target.setSelectionRange(Math.min(cursor??normalized.length,normalized.length),Math.min(cursor??normalized.length,normalized.length));}catch{}
+      }
+      const checked=window.F90CheckoutPresentation.validateQuantity(ev.target.value,p.commerce||{});
+      const raw=ev.target.value,qty=checked.quantity;
+      ev.target.setCustomValidity(checked.message);
+      const hint=$("f90QuantityHelp");
+      if(hint){hint.textContent=checked.message;hint.hidden=checked.valid;}
+      if(checked.valid && S.quote && form.dataset.quotedQuantity===String(qty)) return;
       // Customer ID, saved account and notes never affect the supplier's price.
       // Invalidate only on quantity changes to avoid an RPC per typed character.
       S.quote=null;
@@ -2603,13 +2621,15 @@ async function history(kind){
         shown.setAttribute("aria-busy","true");
       }
       clearTimeout(quoteTimer);
-      if(raw===""||!Number.isFinite(qty)||qty<=0||
-        qty<Number(p.commerce?.quantity_min||1)||
-        qty>Number(p.commerce?.quantity_max||1000000000)){
+      if(!checked.valid){
         if(shown){shown.textContent="—";shown.removeAttribute("aria-busy");}
+        const topPrice=$("f90ReferenceTopPrice");
+        if(topPrice)topPrice.textContent="— "+S.currency;
+        const secondary=$("f90ReferenceSecondaryPrice");
+        if(secondary){secondary.textContent="";secondary.hidden=true;}
         return;
       }
-      quoteTimer=setTimeout(()=>quoteProduct(p),85);
+      quoteTimer=setTimeout(()=>quoteProduct(p),220);
     }
     if (ev.target.closest("#depositForm")) {
       const f = $("depositForm");
