@@ -349,17 +349,19 @@
     const social=f90SocialLinks().filter(item=>item.enabled&&C.safeUrl(item.url)).slice(0,5);
     if(social.length) $("drawerLinks").insertAdjacentHTML("beforeend",
       `<div class="f90-reference-social">${social.map(s=>`<a href="${e(C.safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${e(s.name_ar||"تواصل")}</a>`).join("")}</div>`);
-    const staff = me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
-    let adminShortcut = document.getElementById("f90AdminShortcut");
-    if (staff && !adminShortcut) {
-      adminShortcut = document.createElement("a");
+    // Admin shortcut exists ONLY inside the drawer and only for authorized roles.
+    // Recreate after every drawerLinks render; never show it in the public header.
+    const staff = !!me && ["manager", "admin", "designer", "support", "amin_card"].includes(me.role);
+    document.querySelector(".header-actions #f90AdminShortcut")?.remove();
+    if (staff) {
+      const adminShortcut = document.createElement("a");
       adminShortcut.id = "f90AdminShortcut";
-      adminShortcut.className = "icon-button f90-admin-shortcut";
+      adminShortcut.className = "f90-drawer-admin-link";
       adminShortcut.href = "./admin.html";
-      adminShortcut.title = adminShortcut.ariaLabel = "لوحة الإدارة";
-      adminShortcut.innerHTML = I("chart");
-      $("menuButton").after(adminShortcut);
-    } else if (!staff) adminShortcut?.remove();
+      adminShortcut.title = adminShortcut.ariaLabel = "لوحة تحكم الإدارة";
+      adminShortcut.innerHTML = I("chart") + "<span>لوحة تحكم الإدارة</span>";
+      $("drawerLinks").appendChild(adminShortcut);
+    } else document.querySelector("#f90AdminShortcut")?.remove();
     const enabled = S.rates.filter((r) => r.is_enabled && r.per_usd);
     if (!enabled.some((r) => r.currency === S.currency)) S.currency = S.settings.currency && enabled.some(r=>r.currency===S.settings.currency) ? S.settings.currency : "USD";
     $("currencySelect").innerHTML = enabled
@@ -387,7 +389,7 @@
       ["", "الرئيسية", "home"],
     ].map(([page,label,icon])=>`<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
-      `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav><a href="#/agents">وكلاؤنا</a>${Object.entries(
+      `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav><a href="#/agents">وكلاؤنا</a>${Object.entries(
         {
           about: "من نحن",
           privacy: "الخصوصية",
@@ -1808,7 +1810,7 @@ async function history(kind){
             ),
           )
         : 100;
-    main.innerHTML = `${pageHead("كل خطوة لها امتياز", "خمسة عشر مستوى VIP. تتدرج المزايا مع الإنفاق المكتمل، وخصم المستوى لا يتجاوز 3٪.")}<section class="vip-hero"><div><div class="eyebrow" style="color:var(--gold)">مستويات التميّز</div><h2>${me ? "مستواك الحالي " + me.vip_level : "اكتشف امتيازاتك القادمة"}</h2><p>خصمك الحالي ${e(current.discount_percent)}٪ على الخدمات المؤهّلة.</p><div class="vip-progress"><span style="width:${pct}%"></span></div><p class="small">${next ? "متبقّي " + e(C.money(Math.max(0, Number(next.minimum_spend) - spent))) + " للمستوى التالي" : "وصلت إلى أعلى مستوى"}</p><a class="button" href="#/">اكتشف الخدمات</a></div><div class="vip-emblem">${I("crown")}<strong>${e(me?.vip_level || 1)}</strong><span>عالم التميّز</span></div></section><div class="vip-grid">${S.vip.map((t) => `<div class="vip-card f90-vip-${Math.max(1, Math.min(15, Number(t.level) || 1))} ${Number(me?.vip_level) === t.level ? "current" : ""}"><span class="f90-vip-seal">${I("crown")}<b>${e(t.level)}</b></span><strong>المستوى ${e(t.level)}</strong><div class="discount">${e(t.discount_percent)}٪</div><small class="muted">من ${e(displayMoney(t.minimum_spend))}</small>${Number(me?.vip_level) === t.level ? '<span class="f90-vip-current-label">مستواك الحالي</span>' : ""}</div>`).join("")}</div><div class="notice">يُحسب المستوى من قيمة الطلبات المكتملة بعد الاسترداد. إذا أُدخل رمز خصم، يُطبّق الخصم الأعلى دون جمعه مع خصم المستوى. قد تخصّص الإدارة مستواك، وتسعير التاجر منفصل.</div>`;
+    main.innerHTML = `${pageHead("كل خطوة لها امتياز", "خمسة عشر مستوى VIP. تتدرج المزايا مع الإنفاق المكتمل، وخصم المستوى لا يتجاوز 3٪.")}<section class="vip-hero"><div><div class="eyebrow" style="color:var(--gold)">مستويات التميّز</div><h2>${me ? "مستواك الحالي " + me.vip_level : "اكتشف امتيازاتك القادمة"}</h2><p>خصمك الحالي ${e(current.discount_percent)}٪ على الخدمات المؤهّلة.</p><div class="vip-progress"><span style="width:${pct}%"></span></div><p class="small">${next ? "متبقّي " + e(C.money(Math.max(0, Number(next.minimum_spend) - spent))) + " للمستوى التالي" : "وصلت إلى أعلى مستوى"}</p><a class="button" href="#/">اكتشف الخدمات</a></div><div class="vip-emblem">${window.F90VipArtwork?.seal(me?.vip_level||1)||I("crown")}<strong>VIP${e(me?.vip_level||1)}</strong></div></section><div class="vip-grid">${S.vip.map((t) => `<div class="vip-card f90-vip-${Math.max(1, Math.min(15, Number(t.level) || 1))} ${Number(me?.vip_level) === t.level ? "current" : ""}">${window.F90VipArtwork?.seal(t.level)||`<span class="f90-vip-seal">${I("crown")}<b>${e(t.level)}</b></span>`}<strong>المستوى ${e(t.level)}</strong><div class="discount">${e(t.discount_percent)}٪</div><small class="muted">من ${e(displayMoney(t.minimum_spend))}</small>${Number(me?.vip_level) === t.level ? '<span class="f90-vip-current-label">مستواك الحالي</span>' : ""}</div>`).join("")}</div><div class="notice">يُحسب المستوى من قيمة الطلبات المكتملة بعد الاسترداد. إذا أُدخل رمز خصم، يُطبّق الخصم الأعلى دون جمعه مع خصم المستوى. قد تخصّص الإدارة مستواك، وتسعير التاجر منفصل.</div>`;
   }
   async function security() {
     const factors = await A.client.auth.mfa.listFactors();
