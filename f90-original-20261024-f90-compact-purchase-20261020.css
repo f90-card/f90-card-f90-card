@@ -1,0 +1,28 @@
+/* Compact F90 checkout: presentation only, no pricing or order changes. */
+body.f90-checkout-open #quickProductPanel:not([hidden]){width:min(360px,calc(100vw - 20px))!important;max-height:calc(100dvh - 24px)!important}
+.f90-premium-checkout.product-page,body.f90-checkout-open #quickProductPanel .f90-premium-checkout.product-page{width:100%!important;max-width:360px!important;padding:12px!important;gap:7px!important;border-radius:19px!important;background:linear-gradient(145deg,#111216,#08090c)!important;border:1px solid #92313b!important;box-shadow:0 16px 40px #0009!important}
+:root[data-theme="cream"] .f90-premium-checkout.product-page{background:#fffaf9!important}
+.f90-premium-checkout .f90-visa-card-header{height:38px!important;min-height:38px!important}
+.f90-premium-checkout .f90-visa-logo{height:35px!important}
+.f90-premium-checkout .f90-visa-product,body.f90-checkout-open .f90-premium-checkout .f90-visa-product{min-height:65px!important;grid-template-columns:55px minmax(0,1fr)!important;gap:9px!important;padding:7px 9px!important;border-radius:12px!important}
+.f90-premium-checkout .f90-visa-product .product-art,body.f90-checkout-open .f90-premium-checkout .f90-visa-product .product-art{width:52px!important;height:52px!important;max-height:52px!important;border-radius:10px!important}
+.f90-premium-checkout .f90-visa-product .product-info h1{font-size:15px!important;line-height:1.3!important}
+.f90-premium-checkout .f90-visa-subtitle,.f90-premium-checkout .f90-visa-statuses,.f90-premium-checkout .f90-premium-chip,.f90-premium-checkout .f90-visa-favorite,.f90-premium-checkout .f90-visa-product::after,.f90-premium-checkout .f90-visa-watermark,.f90-premium-checkout .f90-quantity-limits,.f90-premium-checkout .f90-visa-note,.f90-premium-checkout .f90-visa-balance,.f90-premium-checkout .f90-visa-remaining,.f90-premium-checkout #discountHint{display:none!important}
+.f90-premium-checkout #checkoutForm{gap:7px!important}
+.f90-premium-checkout .f90-visa-inputicon{display:none!important}
+.f90-premium-checkout .f90-visa-inputrow,body.f90-checkout-open .f90-premium-checkout .f90-visa-inputrow{display:block!important;direction:rtl!important}
+.f90-premium-checkout #checkoutForm .field>span{font-size:11px!important}
+.f90-premium-checkout #checkoutForm input:not([type="hidden"]){min-height:40px!important;height:40px!important}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary{order:10!important;padding:7px 12px!important;border-color:#d7213e!important;background:linear-gradient(120deg,#200f15,#141217)!important}
+:root[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-premium-summary{background:#fff1f1!important}
+.f90-premium-checkout #checkoutForm>.f90-premium-summary .f90-visa-price{min-height:45px!important}
+.f90-premium-checkout #f90CheckoutTopTotal{font-size:clamp(20px,6vw,27px)!important;color:#ff3652!important;font-variant-numeric:tabular-nums!important;direction:ltr}
+.f90-premium-checkout .f90-visa-footer{order:20!important}
+.f90-premium-checkout .f90-visa-buy{min-height:45px!important;border-radius:12px!important;background:linear-gradient(120deg,#b80826,#f22e47)!important}
+.f90-premium-checkout #quoteError:not(:empty),.f90-premium-checkout #walletHint:not(:empty){display:block!important;font-size:11px!important}
+.f90-premium-checkout .f90-visa-inputrow:has(input[name="quantity"]){position:relative!important}
+.f90-premium-checkout .f90-visa-inputrow input[name="quantity"]{text-align:center!important;padding-inline:42px!important;appearance:textfield!important;font-weight:800!important;font-variant-numeric:tabular-nums}
+.f90-premium-checkout .f90-visa-inputrow input[name="quantity"]::-webkit-inner-spin-button,.f90-premium-checkout .f90-visa-inputrow input[name="quantity"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.f90-qty-button{position:absolute!important;bottom:3px!important;width:34px!important;height:34px!important;display:grid!important;place-items:center!important;border-radius:9px!important;color:white!important;font-size:22px!important;border:1px solid #a92b41!important;background:#242126!important;cursor:pointer;z-index:2}
+.f90-qty-plus{right:4px!important;background:#d81839!important}.f90-qty-minus{left:4px!important}
+@media(max-width:390px){.f90-premium-checkout.product-page{padding:10px!important}.f90-premium-checkout .f90-visa-product{min-height:58px!important}}

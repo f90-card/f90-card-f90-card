@@ -1,0 +1,121 @@
+/* F90 CARD checkout v2: one calm, compact design with two true themes.
+   Presentation only. Financial quotes and wallet logic remain untouched. */
+.f90-route-jump{scroll-behavior:auto!important}
+.f90-quantity-limits{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:4px 10px;padding:6px 10px;border-radius:10px;
+ border:1px solid var(--f90-checkout-stroke,#762332);
+ color:var(--f90-checkout-muted,#cbb6bd);
+ background:var(--f90-checkout-soft,#26121b);
+ font-size:11px;line-height:1.5;font-weight:600;
+}
+.f90-quantity-limits strong{color:var(--f90-checkout-text,#fff);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+:root[data-theme="dark"] .f90-visa-purchase{
+ --f90-checkout-text:#fff2f3;--f90-checkout-muted:#bbacb6;
+ --f90-checkout-soft:#2a111a;--f90-checkout-stroke:#8d3249;
+ --f90-checkout-field:#13141c;--f90-checkout-card:#160d12;
+ --f90-checkout-strong:#f7c9d2;
+}
+:root[data-theme="cream"] .f90-visa-purchase{
+ --f90-checkout-text:#30232a;--f90-checkout-muted:#736068;
+ --f90-checkout-soft:#f5e5e5;--f90-checkout-stroke:#dbafb7;
+ --f90-checkout-field:#fffaf7;--f90-checkout-card:#fff8f3;
+ --f90-checkout-strong:#971e3c;
+}
+body.f90-checkout-open #quickProductPanel:not([hidden]){
+ width:min(356px,calc(100vw - 22px))!important;
+ border-radius:20px!important;
+ box-shadow:0 16px 38px #0007!important;
+}
+body.f90-checkout-open #quickProductPanel .f90-visa-purchase{
+ color:var(--f90-checkout-text)!important;
+ background:var(--f90-checkout-card)!important;
+ border:1px solid var(--f90-checkout-stroke)!important;
+ box-shadow:0 12px 27px #0005!important;
+ padding:12px!important;border-radius:19px!important;gap:8px!important;
+}
+:root[data-theme="dark"] body.f90-checkout-open #quickProductPanel .f90-visa-purchase{
+ background:linear-gradient(140deg,#120e13 0%,#270b16 53%,#100f17 100%)!important;
+ border-color:#bb3252!important;
+}
+:root[data-theme="cream"] body.f90-checkout-open #quickProductPanel .f90-visa-purchase{
+ background:linear-gradient(135deg,#fffdf8 0%,#fff0ed 55%,#f9f1ec 100%)!important;
+ border-color:#bd4965!important;
+ box-shadow:0 12px 28px #42212b32!important;
+}
+.f90-visa-purchase::before,.f90-visa-purchase::after{animation:none!important}
+.f90-visa-purchase,.f90-visa-purchase *{animation:none!important;transition:none!important}
+.f90-visa-purchase .f90-visa-watermark{opacity:.045!important}
+.f90-visa-purchase .f90-visa-product{
+ border-bottom:1px solid var(--f90-checkout-stroke);
+ padding-bottom:9px;align-items:center;
+}
+.f90-visa-purchase .product-info h1{color:var(--f90-checkout-text)!important}
+.f90-visa-purchase .f90-visa-subtitle{color:var(--f90-checkout-muted)!important}
+.f90-visa-purchase #checkoutForm>.f90-checkout-summary{
+ background:var(--f90-checkout-soft)!important;
+ border:1px solid var(--f90-checkout-stroke)!important;
+ box-shadow:none!important;padding:9px 10px!important;
+}
+.f90-visa-purchase #checkoutForm .f90-visa-price span{color:var(--f90-checkout-muted)!important}
+.f90-visa-purchase #checkoutForm .f90-visa-price strong{
+ color:var(--f90-checkout-strong)!important;line-height:1.35;white-space:normal!important
+}
+.f90-visa-purchase #checkoutForm .f90-visa-balance span,
+.f90-visa-purchase #checkoutForm .f90-visa-balance strong{
+ color:var(--f90-checkout-muted)!important;
+}
+.f90-visa-purchase #checkoutForm .field>span{color:var(--f90-checkout-text)!important}
+.f90-visa-purchase #checkoutForm input:not([type="hidden"]),
+.f90-visa-purchase #checkoutForm textarea,
+.f90-visa-purchase #checkoutForm select{
+ border-color:var(--f90-checkout-stroke)!important;
+ background:var(--f90-checkout-field)!important;
+ color:var(--f90-checkout-text)!important;
+ box-shadow:none!important;
+}
+.f90-visa-purchase #checkoutForm .f90-visa-inputicon{
+ background:var(--f90-checkout-soft)!important;
+ border-color:var(--f90-checkout-stroke)!important;
+ color:var(--f90-checkout-strong)!important;
+ box-shadow:none!important;
+}
+.f90-visa-purchase .f90-visa-close{
+ background:var(--f90-checkout-soft)!important;
+ border-color:var(--f90-checkout-stroke)!important;
+ color:var(--f90-checkout-text)!important;
+}
+.f90-visa-purchase #checkoutForm .f90-visa-note{
+ background:var(--f90-checkout-soft)!important;
+ border:1px solid var(--f90-checkout-stroke)!important;
+ color:var(--f90-checkout-muted)!important;
+}
+.f90-visa-purchase #checkoutForm #buyButton.f90-visa-buy{
+ color:#fff!important;
+ background:linear-gradient(110deg,#c62048,#8f1534)!important;
+ border:1px solid #e95a78!important;
+ text-shadow:none!important;
+ box-shadow:none!important;
+}
+.f90-visa-purchase #checkoutForm #buyButton .f90-visa-buy-arrow{
+ background:#72132c!important;border-color:#f195a9!important;color:#fff!important;
+}
+.f90-visa-purchase .f90-visa-status{border-color:#138b77!important;color:#00b998!important;background:transparent!important}
+.f90-visa-purchase .f90-visa-available{color:#b97914!important;background:transparent!important;border-color:#c7a35d!important}
+:root[data-theme="cream"] .f90-visa-purchase .f90-visa-status{color:#007c6b!important}
+:root[data-theme="cream"] .f90-visa-purchase .f90-visa-available{color:#995d15!important}
+:root[data-theme="cream"] .f90-visa-purchase .f90-visa-price .f90-visa-coins{color:#a93255!important}
+:root[data-theme="cream"] .f90-visa-purchase .f90-visa-favorite{
+ color:#9e3152!important;background:#fff5f4!important;border-color:#d9a6ae!important;
+}
+:root[data-theme="cream"] .f90-visa-purchase #checkoutForm input::placeholder{color:#8b7880!important}
+.f90-visa-purchase .f90-visa-wallet-hint{margin:0!important}
+.f90-visa-purchase .f90-visa-discount{color:var(--f90-checkout-strong)!important}
+@media(max-width:480px){
+ body.f90-checkout-open #quickProductPanel .f90-visa-purchase{padding:10px!important;gap:6px!important}
+ .f90-quantity-limits{font-size:10px;padding:5px 8px}
+}
+@media(max-height:580px){
+ body.f90-checkout-open #quickProductPanel .f90-visa-purchase{padding:8px!important;gap:4px!important}
+ .f90-visa-purchase .f90-visa-product{padding-bottom:5px}
+}
