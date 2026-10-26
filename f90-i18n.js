@@ -143,7 +143,7 @@ function addControl(){
   if(document.querySelector(".admin-top-title"))document.querySelector(".admin-top-title").insertAdjacentElement("afterend",control);
   else {const admin=document.getElementById("f90AdminShortcut");const menu=document.getElementById("menuButton");if(menu)menu.after(control);else toolbar.appendChild(control);}
  }
- const drawer=document.querySelector(".drawer-preferences")||document.querySelector("#adminSidebar");
+ const drawer=document.querySelector("#adminSidebar"); // Storefront language switch stays beside the menu, as in the reference.
  if(drawer&&!document.getElementById("f90-language-drawer")){
   const control=makePicker("f90-language-drawer");control.id="f90-language-drawer-control";
   drawer.prepend(control);
