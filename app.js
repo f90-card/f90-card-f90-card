@@ -966,6 +966,12 @@
           : balance < Number(quote.total_usd) ? "رصيد غير كافٍ"
           : f90CheckoutMoney(balance-Number(quote.total_usd),true);
       }
+      const secondary=$("f90ReferenceSecondaryPrice");
+      if(secondary){
+        const secondaryCode=S.currency==="EGP"?"USD":"EGP";
+        const converted=C.convert(quote.total_usd,secondaryCode,S.rates);
+        secondary.textContent=converted==null?"":C.money(converted,secondaryCode,true);
+      }
       $("discountHint").textContent = Number(quote.discount_usd)>0
         ? "خصم VIP: " + displayMoney(quote.discount_usd,true) : "";
       $("quoteError").textContent = "";
@@ -983,6 +989,7 @@
       if ($("f90CheckoutTopRemaining")) $("f90CheckoutTopRemaining").textContent = "—";
       $("checkoutTotal").textContent = "السعر غير متاح";
       $("walletHint").textContent = "";
+      if ($("f90ReferenceSecondaryPrice")) $("f90ReferenceSecondaryPrice").textContent="";
       $("quoteError").textContent = message(err);
       if (button) button.disabled = true;
     }
@@ -1050,7 +1057,7 @@
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
-          <div class="f90-visa-price"><span>الإجمالي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong></div>
+          <div class="f90-visa-price"><span>الإجمالي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price"></small></div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
@@ -1060,6 +1067,7 @@
           <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
           <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "شراء" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
         </div>
+        ${p.description ? `<div class="f90-reference-instructions">${e(p.description)}</div>` : ""}
       </form>
     </div>`;
     if (inline) {
