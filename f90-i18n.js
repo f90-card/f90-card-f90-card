@@ -9,15 +9,31 @@ const translation=new Map(Object.entries(TABLE));
 // Public, read-only localization overlay. It never writes customer or catalog records.
 let remoteReady=false;
 async function loadSavedTranslations(){
+ // PostgREST is limited to 1,000 rows per query. The public catalog contains far more.
+ // Fetch every public page, without leaking admin-only phrases or blocking initial paint.
  try{
   const db=window.F90API?.client||window.f90Supabase;
   if(!db?.from)return;
-  const {data,error}=await db.from("f90_i18n_text").select("source_text,en,fr,pt").limit(1000);
-  if(error||!Array.isArray(data))return;
-  for(const item of data){if(typeof item.source_text==="string"&&[item.en,item.fr,item.pt].every(x=>typeof x==="string"&&x.length))translation.set(item.source_text,[item.en,item.fr,item.pt]);}
+  const pageSize=700;
+  for(let offset=0;offset<12000;offset+=pageSize){
+   const {data,error}=await db.from("f90_i18n_text")
+     .select("source_text,en,fr,pt")
+     .eq("is_public",true)
+     .order("source_text",{ascending:true})
+     .range(offset,offset+pageSize-1);
+   if(error){console.warn("F90 public localization data incomplete");break;}
+   if(!Array.isArray(data))break;
+   for(const item of data){
+    if(typeof item.source_text!=="string"||!item.source_text.trim())continue;
+    const original=translation.get(item.source_text)||[];
+    const result=[item.en||original[0]||"",item.fr||original[1]||""];
+    if(result.every(x=>typeof x==="string"&&x.trim()))translation.set(item.source_text,result);
+   }
+   if(data.length<pageSize)break;
+  }
   remoteReady=true;
-  scan();
- }catch(e){console.warn("F90 localization database unavailable");}
+  if(lang!=="ar")scan();
+ }catch(error){console.warn("F90 translation database unavailable; using local language dictionary");}
 }
 const supported=Object.keys(NAMES);
 const choiceKey="f90-language";
@@ -32,8 +48,10 @@ function catalogFallback(value){
  const index={en:0,fr:1}[lang];
  let replaced=0;
  const output=value.replace(tokenPattern,token=>{
-   const translated=(lang==="tr"||lang==="bg")?window.F90ReferenceLanguageData?.words?.[token]?.[lang]:CATALOG_WORDS[token]?.[index];
-   if(translated){replaced++;return translated;}
+   const translated=(lang==="tr"||lang==="bg")
+    ?(window.F90ReferenceLanguageData?.words?.[token]?.[lang]||window.F90ReferenceLanguageData?.phrases?.[token]?.[lang])
+    :(CATALOG_WORDS[token]?.[index]||translation.get(token)?.[index]);
+   if(translated&&translated!==token){replaced++;return translated;}
    return token;
  });
  // Keep unrecognized brand names and numbers intact, never invent a translation.
@@ -41,7 +59,23 @@ function catalogFallback(value){
 }
 const original=new WeakMap();
 const last=new WeakMap();
-function convert(value){const match=/^(\s*)(.*?)(\s*)$/s.exec(value||"");if(!match)return value;if(lang==="ar")return value;if(lang==="tr"||lang==="bg"){const direct=window.F90ReferenceLanguageData?.phrases?.[match[2]]?.[lang];return direct?match[1]+direct+match[3]:catalogFallback(value);}const val=translation.get(match[2]);if(!val)return catalogFallback(value);const index={en:0,fr:1}[lang];return match[1]+val[index]+match[3];}
+function convert(value){
+ const match=/^(\s*)(.*?)(\s*)$/s.exec(value||"");
+ if(!match||lang==="ar")return value;
+ const originalText=match[2];
+ const normalized=originalText.normalize("NFC").replace(/\s+/g," ").trim();
+ if(!normalized)return value;
+ const phrase=window.F90ReferenceLanguageData?.phrases?.[normalized];
+ if(lang==="tr"||lang==="bg"){
+   const direct=phrase?.[lang];
+   if(direct)return match[1]+direct+match[3];
+   return catalogFallback(value);
+ }
+ const index={en:0,fr:1}[lang];
+ const exact=translation.get(originalText)||translation.get(normalized);
+ if(exact?.[index])return match[1]+exact[index]+match[3];
+ return catalogFallback(value);
+}
 function isExcluded(el){return !!el.closest('script,style,code,pre,textarea,[contenteditable="true"],[data-f90-no-translate]');}
 function textNode(node){
  const el=node.parentElement;if(!el||isExcluded(el))return;
@@ -115,6 +149,46 @@ function addControl(){
   drawer.prepend(control);
  }
 }
-function bootstrap(){addControl();setLanguage(lang,false);loadSavedTranslations();const observer=new MutationObserver(records=>{if(pending||isRunning)return;let meaningful=false;for(const m of records){if(m.type==="childList"&&m.addedNodes.length){meaningful=true;break;}if(m.type==="characterData"&&m.target.nodeValue!==last.get(m.target)){meaningful=true;break;}if(m.type==="attributes"){const originals=originalAttrs.get(m.target);const translated=translatedAttrs.get(m.target);if(!translated||m.target.getAttribute(m.attributeName)!==translated[m.attributeName]){meaningful=true;break;}}}if(!meaningful)return;pending=true;requestAnimationFrame(()=>{pending=false;observer.disconnect();try{scan();}finally{observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});}});});observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),translate:convert,supported:[...supported]};}
+function bootstrap(){
+ addControl();
+ setLanguage(lang,false);
+ // One initial scan, then translate only changed subtrees, not the whole storefront
+ // for every price update or count refresh.
+ loadSavedTranslations();
+ const queued=new Set();
+ let frame=0;
+ let observer;
+ function schedule(){
+  if(frame)return;
+  frame=requestAnimationFrame(()=>{
+   frame=0;
+   if(!queued.size)return;
+   const nodes=[...queued];queued.clear();
+   observer.disconnect();
+   isRunning=true;
+   try{for(const node of nodes)if(node.isConnected)translateTree(node);}
+   finally{
+    isRunning=false;
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});
+   }
+  });
+ }
+ observer=new MutationObserver(records=>{
+  if(isRunning)return;
+  for(const m of records){
+   if(m.type==="childList")for(const node of m.addedNodes){
+    if(node.nodeType===1||node.nodeType===3)queued.add(node);
+   }
+   else if(m.type==="characterData"&&m.target.nodeValue!==last.get(m.target))queued.add(m.target);
+   else if(m.type==="attributes"){
+    const rendered=translatedAttrs.get(m.target);
+    if(!rendered||m.target.getAttribute(m.attributeName)!==rendered[m.attributeName])queued.add(m.target);
+   }
+  }
+  if(queued.size)schedule();
+ });
+ observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attributeNames});
+ window.F90Language={get:()=>lang,set:(l)=>setLanguage(l,true),translate:convert,supported:[...supported]};
+}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootstrap,{once:true});else bootstrap();
 })();
