@@ -37,6 +37,7 @@
     savedRecipients: [],
     authMode: "login",
     currencyPreference: false,
+    secondaryCurrency: "EGP",
   };
   let authUiRefreshTimer,
     authSignOutTimer,
@@ -54,6 +55,7 @@
   try {
     S.currencyPreference = !!localStorage.getItem("f90-currency");
     S.currency = localStorage.getItem("f90-currency") || "USD";
+    S.secondaryCurrency = localStorage.getItem("f90-secondary-currency") || "EGP";
     S.favorites = JSON.parse(localStorage.getItem("f90-favorites") || "[]");
   } catch {}
   const href = (kind, id) => `#/${kind}/${encodeURIComponent(id)}`;
@@ -366,6 +368,15 @@
           `<option value="${e(r.currency)}" ${r.currency === S.currency ? "selected" : ""}>${e(r.name_ar)}</option>`,
       )
       .join("");
+    // Secondary currency is a DISPLAY preference only, never a wallet/account change.
+    const secondaryHost=document.querySelector("#drawer .drawer-preferences");
+    if(secondaryHost){
+      let picker=secondaryHost.querySelector("#f90SecondaryCurrencies");
+      if(!picker){picker=document.createElement("section");picker.id="f90SecondaryCurrencies";picker.className="f90-secondary-currencies";secondaryHost.append(picker);}
+      const active=enabled.filter(item=>item.currency!==S.currency);
+      if(!active.some(item=>item.currency===S.secondaryCurrency))S.secondaryCurrency=active.some(item=>item.currency==="EGP")?"EGP":(active[0]?.currency||"");
+      picker.innerHTML=active.length?`<span class="f90-secondary-heading">العملات الثانوية</span><div class="f90-secondary-currency-list">${active.map(item=>`<button type="button" data-f90-secondary-currency="${e(item.currency)}" aria-pressed="${item.currency===S.secondaryCurrency}" title="${e(item.name_ar||item.currency)}" class="${item.currency===S.secondaryCurrency?"active":""}">${e(item.currency)}</button>`).join("")}</div>`:"";
+    }
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
       ["search", "بحث", "search"],
@@ -724,7 +735,8 @@
  ${window.F90Special?.home(S.settings) || ''}
 
  ${window.F90Partners?.aboveIntro() || ''}
- ${c.show_intro===false ? "" : `<section class="f90-welcome-hero f90-home-intro" id="categories" aria-label="تعرّف على أف تسعين كارد"><div class="f90-welcome-copy"><span class="eyebrow">F90 CARD · أف تسعين كارد</span><h2>تعرّف على أف تسعين كارد</h2><p>${e(c.welcome?.subtitle_ar || "خدمات رقمية وشحن الألعاب والتطبيقات والبطاقات في مكان واحد. استعرض الأقسام، وتابع طلباتك ومحفظتك من حسابك.")}</p><div class="actions"><a class="button" href="#/deposit">إيداع نقود الآن</a><a class="button secondary" href="#/policy/about">من نحن</a></div></div>${C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png") ? `<img class="f90-intro-carousel-image" src="${e(C.safeUrl(c.welcome?.image_url || c.hero_image || "./assets/sections/hero.png"))}" alt="${e(c.welcome?.image_alt_ar || "أف تسعين كارد")}" loading="lazy" decoding="async">` : ""}</section>`}
+
+
  ${c.promo_video?.enabled ? window.F90WelcomeScene.homePhone(c,S.settings.logo_url) : ''}
  <div class="section-head"><h2>أقسام المتجر</h2><span>اختر الخدمة المناسبة لك</span></div>${
    S.categories.some((c) => !c.parent_id)
@@ -770,20 +782,6 @@
       const safeLink=C.safeUrl(banner.link_url);
       if(safeLink){const a=document.createElement('a');a.href=safeLink;a.target='_blank';a.rel='noopener noreferrer';a.append(pic);card.append(a);}else card.append(pic);
       partnerStrip.append(card);
-    }
-    // After the first view the exact original introduction is still available
-    // in a small expandable section; its image and markup are never removed.
-    const introSection = main.querySelector(".f90-home-intro");
-    if (introSection && !showHomeIntro) {
-      const wrapper = document.createElement("details");
-      wrapper.className = "f90-home-intro-fold";
-      const summary = document.createElement("summary");
-      summary.textContent = "تعرّف على F90 CARD";
-      introSection.before(wrapper);
-      wrapper.append(summary, introSection);
-    }
-    if (showHomeIntro) {
-      try { localStorage.setItem("f90-home-intro-viewed-v1", "1"); } catch {}
     }
     syncHomePhoneVideo();
     const promoEl=$("promotionBar");
@@ -966,11 +964,14 @@
           : balance < Number(quote.total_usd) ? "رصيد غير كافٍ"
           : f90CheckoutMoney(balance-Number(quote.total_usd),true);
       }
+      const primaryLabel=$("f90ReferencePrimaryCurrency");
+      if(primaryLabel)primaryLabel.textContent=S.currency;
       const secondary=$("f90ReferenceSecondaryPrice");
+      const secondaryCode=S.secondaryCurrency&&S.secondaryCurrency!==S.currency&&C.enabledCurrency(S.secondaryCurrency,S.rates)?S.secondaryCurrency:(S.currency==="EGP"?"USD":"EGP");
       if(secondary){
-        const secondaryCode=S.currency==="EGP"?"USD":"EGP";
         const converted=C.convert(quote.total_usd,secondaryCode,S.rates);
-        secondary.textContent=converted==null?"":C.money(converted,secondaryCode,true);
+        secondary.textContent=converted==null?"":new Intl.NumberFormat("en-US",{maximumFractionDigits:4}).format(converted)+" "+secondaryCode;
+        secondary.hidden=converted==null;
       }
       $("discountHint").textContent = Number(quote.discount_usd)>0
         ? "خصم VIP: " + displayMoney(quote.discount_usd,true) : "";
@@ -1057,7 +1058,7 @@
         ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
         ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
-          <div class="f90-visa-price"><span>الإجمالي</span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price"></small></div>
+          <div class="f90-visa-price"><span>الإجمالي · <b id="f90ReferencePrimaryCurrency">${e(S.currency)}</b></span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price"></small></div>
         </div>
         <p id="discountHint" class="f90-visa-discount"></p>
         <p class="f90-visa-note"><span class="f90-visa-warn-icon" aria-hidden="true">!</span> تأكد من صحة البيانات قبل الشراء</p>
@@ -2921,6 +2922,27 @@ async function history(kind){
     try{localStorage.setItem("f90-currency",chosen)}catch{}
     S.currencyPreference = true;
     chrome();route();
+  });
+  document.addEventListener("click",(event)=>{
+    const control=event.target.closest?.("[data-f90-secondary-currency]");
+    if(!control)return;
+    event.preventDefault();
+    const currency=control.dataset.f90SecondaryCurrency;
+    if(!C.enabledCurrency(currency,S.rates)||currency===S.currency)return;
+    S.secondaryCurrency=currency;
+    try{localStorage.setItem("f90-secondary-currency",currency)}catch{}
+    document.querySelectorAll("[data-f90-secondary-currency]").forEach(el=>{
+      const active=el.dataset.f90SecondaryCurrency===currency;
+      el.classList.toggle("active",active);
+      el.setAttribute("aria-pressed",String(active));
+    });
+    // Reprice presentation from existing authoritative quote; no new financial requests or ledger writes.
+    const secondary=$("f90ReferenceSecondaryPrice");
+    if(secondary&&S.quote&&$("checkoutForm")){
+      const amount=C.convert(S.quote.total_usd,currency,S.rates);
+      secondary.textContent=amount==null?"":new Intl.NumberFormat("en-US",{maximumFractionDigits:4}).format(amount)+" "+currency;
+      secondary.hidden=amount==null;
+    }
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
