@@ -1250,11 +1250,11 @@
     main.innerHTML=head("غيّر ثيم الموقع بالكامل",
       "التبديل بين الواجهة الحالية والتنسيق السابق على مستوى الموقع كله، بدون تغيير الأسعار والمنتجات وصلاحيات المستخدمين.")+
       '<section class="panel f90-site-layout-settings">'+
-      '<p class="notice">الواجهة السابقة تستعيد طبقة التصميم قبل تحديثات 26 أكتوبر 2026، مع الاحتفاظ بوظائف المتجر الحديثة. ليست استعادةً حرفية لكل ملفات البرمجة القديمة.</p>'+
+      '<p class="notice">تم حفظ نسخة فعلية من ملفات واجهة 24 أكتوبر 2026 (HTML وCSS الأصليين). اختيار التصميم السابق يفتحها دون تغيير الكود المالي أو الحسابات أو الموردين. والعودة للتصميم الحالي تعيد الواجهة الحالية كما هي.</p>'+
       '<form id="siteLayoutForm">'+
       '<fieldset class="f90-layout-choices"><legend>اختر واجهة العرض لجميع زوار المتجر</legend>'+
       '<label class="f90-layout-option '+(current==="current"?"selected":"")+'"><input type="radio" name="ui_presentation_mode" value="current" '+(current==="current"?"checked":"")+' required><span><strong>التصميم الحالي</strong><small>الواجهة المصممة حالياً مع الهيدر المركزي وكروت الشراء والتصميم المتجاوب والثيم الكريمي المحسّن.</small></span></label>'+
-      '<label class="f90-layout-option '+(current==="classic"?"selected":"")+'"><input type="radio" name="ui_presentation_mode" value="classic" '+(current==="classic"?"checked":"")+' required><span><strong>التصميم السابق</strong><small>الرجوع إلى تنسيقات الواجهة التي كانت قبل تعديلات التصميم، مع الإبقاء على النظام الحالي الآمن.</small></span></label>'+
+      '<label class="f90-layout-option '+(current==="classic"?"selected":"")+'"><input type="radio" name="ui_presentation_mode" value="classic" '+(current==="classic"?"checked":"")+' required><span><strong>التصميم السابق</strong><small>عرض الصفحة الأصلية المحفوظة مع ألوانها وخطوطها وتوزيعها القديم، مع الحفاظ على نظام الحساب والشراء الحديث.</small></span></label>'+
       '</fieldset>'+
       '<p class="muted small">التغيير يطبّق على الصفحة العامة لكل الزوار بعد تحميل الإعدادات أو تحديث الصفحة. لا يؤثر على لوحة الإدارة ولا قاعدة البيانات.</p>'+
       '<button class="button" type="submit">حفظ وتفعيل التصميم المختار</button>'+
