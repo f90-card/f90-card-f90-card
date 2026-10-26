@@ -1,0 +1,93 @@
+/* Checkout-only service fields and reference card polish. */
+html.f90-reference-theme .f90-premium-checkout #checkoutForm{
+  direction:rtl!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-visa-inputrow.f90-quantity-input:has(input[name="quantity"]){
+  grid-column:1!important;grid-row:1!important;order:0!important;align-self:stretch!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-checkout-summary,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-checkout-summary{
+  grid-column:2!important;grid-row:1!important;order:0!important;display:flex!important;
+  align-items:center!important;justify-content:center!important;min-width:0!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="false"]>.f90-checkout-summary,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="false"]>.f90-checkout-summary{
+  display:none!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-input{
+  grid-column:1/-1!important;grid-row:auto!important;order:1!important;
+  margin:0!important;min-width:0!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-input .field,
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-quantity-input .field{
+  min-width:0!important;gap:3px!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-input .field>span,
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-quantity-input .field>span{
+  display:block!important;font-size:11px!important;color:var(--muted)!important;
+  line-height:1.35!important;padding:0 9px 2px!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-input input,
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-input textarea,
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-quantity-input input{
+  min-width:0!important;max-width:100%!important;
+  width:100%!important;box-sizing:border-box!important;min-height:43px!important;
+  font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm input[data-f90-numeric-quantity]{
+  direction:ltr!important;text-align:center!important;unicode-bidi:plaintext!important;
+  font-family:ui-monospace,Consolas,system-ui,sans-serif!important;
+  font-size:15px!important;letter-spacing:.2px!important;touch-action:manipulation!important;
+  caret-color:var(--accent)!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm input[data-f90-numeric-quantity]:invalid{
+  outline:1px solid #d3495e!important;outline-offset:1px!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-quantity-validation{
+  grid-column:1/-1!important;grid-row:auto!important;order:2!important;
+  padding:2px 8px!important;color:#ed8799!important;text-align:start!important;
+  font-size:11px!important;border:0!important;background:transparent!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-quantity-validation[hidden]{display:none!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-footer{
+  grid-column:1/-1!important;order:6!important;
+  grid-template-columns:1fr 1fr!important;direction:rtl!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-footer #buyButton{
+  grid-column:1!important;grid-row:1!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-footer .f90-reference-cancel{
+  grid-column:2!important;grid-row:1!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-footer #walletHint{
+  grid-column:1/-1!important;grid-row:2!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-description{
+  grid-column:1/-1!important;order:7!important;grid-row:auto!important;
+  display:block!important;max-height:240px!important;overflow:auto!important;
+  overflow-wrap:anywhere!important;text-wrap:pretty!important;line-height:1.8!important;
+  font-size:11px!important;
+  border-inline-start:2px solid color-mix(in srgb,var(--accent) 64%,white)!important;
+  margin-top:4px!important;padding:6px 12px!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-instructions-title{
+  display:block!important;font-size:12px!important;font-weight:800!important;margin:0 0 5px!important;
+  color:var(--text)!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-service-description p{
+  color:var(--text)!important;margin:0 0 8px!important;white-space:pre-wrap!important;line-height:1.8!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-service-description p:last-child{margin-bottom:0!important;}
+/* Preserve fixed services with no editable quantities, at any screen width. */
+html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="false"]>.f90-service-input:first-of-type{
+  margin-top:0!important;
+}
+@media(max-width:400px){
+ html.f90-reference-theme .f90-premium-checkout #checkoutForm,
+ html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm{
+   gap:9px!important;
+ }
+ html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-service-description{
+   max-height:190px!important;
+ }
+}

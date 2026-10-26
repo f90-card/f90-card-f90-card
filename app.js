@@ -934,7 +934,13 @@
   async function quoteProduct(p) {
     const f = $("checkoutForm");
     if (!p || !f || f.dataset.product !== String(p.id)) return;
-    const qty = Number(f.elements.quantity?.value || 1);
+    const checkedQuantity=window.F90CheckoutPresentation.validateQuantity(f.elements.quantity?.value||"1",p.commerce||{});
+    if(!checkedQuantity.valid){
+      S.quote=null;
+      if($("buyButton"))$("buyButton").disabled=true;
+      return;
+    }
+    const qty = checkedQuantity.quantity;
     const seq = ++S.quoteSeq;
     const button = $("buyButton");
     if (button) button.disabled = true;
@@ -1029,6 +1035,13 @@
             required: true,
           },
         ];
+    const checkoutFields=fields.map(f=>window.F90CheckoutPresentation.fieldMeta(f));
+    // When the configured quantity has a single allowed value, it remains
+    // in the order payload, but the customer need not see a pointless input.
+    const quantityMin=Number(c.quantity_min??1)||1;
+    const quantityMax=Number(c.quantity_max??1000000000)||1000000000;
+    const showQuantity=quantity&&quantityMax>quantityMin;
+    const serviceHelp=window.F90CheckoutPresentation.instructions(p,c,checkoutFields,showQuantity);
     const checkoutWords = [cat?.name, cat?.slug, p.name].filter(Boolean).join(" ").toLowerCase();
     const checkoutKind = /تطبيق|لايف|كوينز|coins|live|شات|chat/.test(checkoutWords) ? "apps"
       : /ببجي|جواكر|العاب|ألعاب|game|pubg|free fire|roblox|steam|ludo/.test(checkoutWords) ? "games"
@@ -1056,11 +1069,11 @@
       </div>
       <div class="f90-reference-top-prices" aria-live="polite"><strong id="f90ReferenceTopPrice" class="f90-reference-primary-badge">— ${e(S.currency)}</strong><small id="f90ReferenceSecondaryPrice" class="f90-reference-secondary-price" hidden></small></div>
       <div class="price-board f90-purchase-hidden" id="priceBoard" hidden>${priceBoard(previewUsd(p,c.quantity_min||1))}</div>
-      <form id="checkoutForm" data-product="${e(p.id)}" class="f90-visa-form">
+      <form id="checkoutForm" data-product="${e(p.id)}" data-f90-variable-quantity="${showQuantity}" class="f90-visa-form">
         ${S.me && fields.some(recipientFieldKind) ? '<label class="field f90-recipient-chooser"><span>اختيار حساب محفوظ</span><select id="savedRecipient" disabled><option>جارٍ التحميل…</option></select></label>' : ""}
-        ${fields.map((f)=>'<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label_ar||f.id),["email","number","textarea","url"].includes(f.type)?f.type:"text","",(f.required?"required ":"")+'maxlength="1000" placeholder="'+e(f.placeholder_ar||"")+'"')+'</div>').join("")}
-        ${quantity ? '<div class="f90-visa-inputrow"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"number",c.quantity_min||1,'min="'+(Number(c.quantity_min)||1)+'" max="'+(Number(c.quantity_max)||1000000000)+'" step="'+(Number(c.quantity_step)||1)+'" required')+'</div>' : '<input type="hidden" name="quantity" value="1">'}
-        ${quantity?'<div class="f90-quantity-limits"><span>الحد الأدنى: <strong>'+f90ShortLimit(c.quantity_min||1)+'</strong></span><span>الحد الأقصى: <strong>'+f90ShortLimit(c.quantity_max||1000000000)+'</strong></span></div>':""}
+        ${checkoutFields.map((f,index)=>'<div class="f90-visa-inputrow f90-service-input" data-service-field="'+e(f.id)+'"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg></span>'+field("customer_"+f.id,e(f.label),f.inputType,"",(f.required?"required ":"")+'maxlength="'+(f.inputType==="email"?320:1000)+'" placeholder="'+e(f.hint)+'" '+(f.inputMode!=="text"?'inputmode="'+e(f.inputMode)+'" ':"")+(["email","tel","url"].includes(f.inputType)?'dir="ltr" ':'')+'autocomplete="off"')+'</div>').join("")}
+        ${showQuantity ? '<div class="f90-visa-inputrow f90-quantity-input"><span class="f90-visa-inputicon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v5c0 2 4 3 9 3s9-1 9-3V5M3 10v5c0 2 4 3 9 3s9-1 9-3v-5M3 15v4c0 2 4 3 9 3s9-1 9-3v-4"></path></svg></span>'+field("quantity",e(checkoutQuantityLabel),"text",String(quantityMin),'inputmode="decimal" dir="ltr" autocomplete="off" required pattern="[0-9]+(?:\\.[0-9]+)?" aria-describedby="f90QuantityHelp" data-f90-numeric-quantity="true"')+'</div>' : '<input type="hidden" name="quantity" value="'+e(quantity?quantityMin:1)+'">'}
+        ${showQuantity?'<div id="f90QuantityHelp" class="f90-quantity-limits f90-quantity-validation" role="status" aria-live="polite" hidden></div>':""}
         <div class="f90-checkout-summary f90-premium-summary" aria-label="ملخص الشراء">
           <div class="f90-visa-price"><span>الإجمالي · <b id="f90ReferencePrimaryCurrency">${e(S.currency)}</b></span><strong id="f90CheckoutTopTotal" aria-live="polite" aria-label="المبلغ في عملة حسابك">${e(f90CheckoutPreview(p,Number(c.quantity_min)||1))}</strong></div>
         </div>
@@ -1072,7 +1085,7 @@
           <p id="walletHint" class="f90-visa-wallet-hint" role="status"></p>
           <button class="button full f90-visa-buy" id="buyButton" type="submit" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 2h3l2.2 13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-1.6L23 7H5"></path></svg><span>${S.me ? "شراء" : "سجّل الدخول للشراء"}</span><span class="f90-visa-buy-arrow" aria-hidden="true">‹</span></button>
         </div>
-        ${p.description ? `<div class="f90-reference-instructions">${e(p.description)}</div>` : ""}
+        <section class="f90-reference-instructions f90-service-description" aria-label="تعليمات الخدمة"><strong class="f90-instructions-title">${e(serviceHelp.header)}</strong>${serviceHelp.lines.map(line=>`<p>${e(line)}</p>`).join("")}</section>
       </form>
     </div>`;
     if (inline) {
@@ -2575,8 +2588,20 @@ async function history(kind){
       const form=ev.target.closest("form");
       const p=S.products.find(x=>x.id===form.dataset.product);
       if (!p) return;
-      const raw=ev.target.value,qty=Number(raw);
-      if (S.quote && form.dataset.quotedQuantity===String(qty)) return;
+      // Arabic/Persian phone-keyboard digits are normalized without losing the
+      // supplier's numeric constraints or repeatedly changing the cursor.
+      const normalized=window.F90CheckoutPresentation.normalizeQuantity(ev.target.value);
+      if(normalized!==ev.target.value){
+        const cursor=ev.target.selectionStart;
+        ev.target.value=normalized;
+        try{ev.target.setSelectionRange(Math.min(cursor??normalized.length,normalized.length),Math.min(cursor??normalized.length,normalized.length));}catch{}
+      }
+      const checked=window.F90CheckoutPresentation.validateQuantity(ev.target.value,p.commerce||{});
+      const raw=ev.target.value,qty=checked.quantity;
+      ev.target.setCustomValidity(checked.message);
+      const hint=$("f90QuantityHelp");
+      if(hint){hint.textContent=checked.message;hint.hidden=checked.valid;}
+      if(checked.valid && S.quote && form.dataset.quotedQuantity===String(qty)) return;
       // Customer ID, saved account and notes never affect the supplier's price.
       // Invalidate only on quantity changes to avoid an RPC per typed character.
       S.quote=null;
@@ -2596,13 +2621,15 @@ async function history(kind){
         shown.setAttribute("aria-busy","true");
       }
       clearTimeout(quoteTimer);
-      if(raw===""||!Number.isFinite(qty)||qty<=0||
-        qty<Number(p.commerce?.quantity_min||1)||
-        qty>Number(p.commerce?.quantity_max||1000000000)){
+      if(!checked.valid){
         if(shown){shown.textContent="—";shown.removeAttribute("aria-busy");}
+        const topPrice=$("f90ReferenceTopPrice");
+        if(topPrice)topPrice.textContent="— "+S.currency;
+        const secondary=$("f90ReferenceSecondaryPrice");
+        if(secondary){secondary.textContent="";secondary.hidden=true;}
         return;
       }
-      quoteTimer=setTimeout(()=>quoteProduct(p),85);
+      quoteTimer=setTimeout(()=>quoteProduct(p),220);
     }
     if (ev.target.closest("#depositForm")) {
       const f = $("depositForm");
