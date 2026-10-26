@@ -1730,12 +1730,13 @@ async function history(kind){
     const subtotal=Number(o.subtotal_usd);
     const unit=quantity>0&&Number.isFinite(subtotal)?subtotal/quantity:quantity>0?Number(o.total_usd)/quantity:0;
     return [
+      ["رقم العملية",String(o.id||"—")],
       ["اسم المنتج",String(o.product_name||"—")],
       ["الكمية",String(o.quantity??"—")],
-      ["السعر",accountMoney(unit)],
       ["السعر الإجمالي",orderMoney(o)],
       ["التاريخ والوقت",C.date(o.created_at)],
-      ...(recipient.accountId?[["ID الشحن",recipient.accountId]]:[]),
+      ["السعر للوحدة",accountMoney(unit)],
+      ...(recipient.accountId?[["آيدي المستلم",recipient.accountId]]:[]),
       ...(recipient.accountName?[["اسم الحساب",recipient.accountName]]:[])
     ];
   }
