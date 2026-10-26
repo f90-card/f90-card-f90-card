@@ -2,7 +2,7 @@
 html.f90-reference-theme .f90-premium-checkout #checkoutForm{
   direction:rtl!important;
 }
-html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-quantity-input{
+html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-visa-inputrow.f90-quantity-input:has(input[name="quantity"]){
   grid-column:1!important;grid-row:1!important;order:0!important;align-self:stretch!important;
 }
 html.f90-reference-theme .f90-premium-checkout #checkoutForm[data-f90-variable-quantity="true"]>.f90-checkout-summary,
