@@ -42,6 +42,19 @@
     function sync(){full.value=[names.querySelector("#f90ReferenceFirstName").value.trim(),names.querySelector("#f90ReferenceLastName").value.trim()].filter(Boolean).join(" ");}
     names.addEventListener("input",sync);
     form.addEventListener("submit",sync,true);
+    // The screenshot uses an editable camera badge over the profile avatar.
+    // Keep the native file input bound to profileForm, so existing upload logic works.
+    const avatarInput=form.elements.namedItem("avatar");
+    const avatarField=avatarInput?.closest(".field");
+    const cover=main.querySelector(".profile-cover");
+    if(avatarField&&cover){
+      avatarInput.setAttribute("form","profileForm");
+      avatarField.classList.add("f90-reference-avatar-upload");
+      const label=avatarField.querySelector("span");
+      if(label){label.textContent="📷";label.setAttribute("aria-label","تغيير صورة الحساب");}
+      cover.appendChild(avatarField);
+    }
+
   }
   function cancelDirectCheckout(event){
     const control=event.target.closest?.(".f90-reference-cancel");
