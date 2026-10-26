@@ -1,0 +1,146 @@
+/* F90 customer header: complete integer balance, corner back control, stable centered logo.
+   Visual-only additions to the existing Arabic-only header. */
+html.f90-reference-theme .site-header .header-inner.container{
+  position:relative!important;
+  grid-template-columns:minmax(0,1fr) 102px minmax(0,1fr)!important;
+  align-items:center!important;
+  overflow:visible!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+  grid-column:2!important;grid-row:1!important;
+  justify-self:center!important;align-self:center!important;
+  margin:0!important;padding:0!important;
+  transform:none!important;animation:none!important;transition:none!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+  width:98px!important;height:70px!important;max-width:98px!important;max-height:70px!important;
+  object-fit:contain!important;object-position:center!important;
+  margin:auto!important;transform:none!important;animation:none!important;transition:none!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  grid-column:1!important;grid-row:1!important;
+  justify-content:flex-start!important;align-items:center!important;
+  overflow:visible!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet{
+  flex:1 1 auto!important;width:100%!important;max-width:100%!important;
+  min-width:0!important;min-height:35px!important;height:auto!important;
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:5px!important;overflow:visible!important;
+  margin:0!important;padding:0!important;
+  color:#fff!important;text-decoration:none!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+  display:block!important;
+  flex:1 1 auto!important;
+  max-width:none!important;min-width:0!important;
+  white-space:normal!important;overflow:visible!important;
+  text-overflow:clip!important;overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  font-family:system-ui,Arial,sans-serif!important;
+  font-size:clamp(10px,1.55vw,13px)!important;
+  font-weight:750!important;
+  line-height:1.35!important;letter-spacing:0!important;
+  direction:ltr!important;text-align:left!important;
+  unicode-bidi:isolate!important;
+  color:#fff!important;font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet .f90-wallet-plus{
+  flex:0 0 17px!important;width:17px!important;height:17px!important;
+  min-width:17px!important;min-height:17px!important;
+  font-size:13px!important;margin:0!important;
+}
+/* Back arrow is anchored to the OUTER left corner and stays independent
+   of the center column and of changes in wallet balance length. */
+html.f90-reference-theme .site-header .header-inner #f90HeaderLeft #f90ReferenceBack,
+html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack{
+  position:absolute!important;
+  left:0!important;right:auto!important;top:0!important;bottom:auto!important;
+  inset-inline-start:auto!important;inset-inline-end:auto!important;
+  z-index:2!important;
+  width:19px!important;max-width:19px!important;min-width:19px!important;
+  height:20px!important;min-height:20px!important;
+  padding:1px!important;margin:0!important;
+  display:grid!important;place-items:center!important;
+  border:0!important;background:transparent!important;box-shadow:none!important;
+  color:#fff!important;transform:none!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack svg{
+  width:17px!important;height:17px!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack[hidden]{display:none!important;}
+html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden]))
+  #f90HeaderLeft #headerWallet{padding-left:13px!important;}
+/* The brand is intentionally larger than every surrounding control. */
+html.f90-reference-theme .site-header .header-actions #menuButton{
+  flex:0 0 29px!important;width:29px!important;min-width:29px!important;
+  height:34px!important;min-height:34px!important;
+  padding:3px!important;box-shadow:none!important;
+}
+html.f90-reference-theme .site-header .header-actions #menuButton svg{
+  width:20px!important;height:20px!important;
+}
+html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{
+  flex:0 0 31px!important;width:31px!important;min-width:31px!important;
+  max-width:31px!important;height:35px!important;min-height:35px!important;
+}
+html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip svg.f90-vip-artwork{
+  width:30px!important;height:34px!important;max-width:30px!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions{
+  justify-self:end!important;align-items:center!important;gap:5px!important;
+  max-width:100%!important;width:max-content!important;
+}
+@media(max-width:440px){
+  html.f90-reference-theme .site-header .header-inner.container{
+    grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr)!important;
+    padding-inline:6px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+    width:90px!important;max-width:90px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+    width:88px!important;height:66px!important;max-width:88px!important;max-height:66px!important;
+  }
+  html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+    font-size:11px!important;max-width:none!important;
+  }
+  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden]))
+    #f90HeaderLeft #headerWallet{padding-left:10px!important;}
+  html.f90-reference-theme .site-header .header-actions #menuButton{
+    flex-basis:28px!important;min-width:28px!important;width:28px!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{
+    flex-basis:30px!important;min-width:30px!important;width:30px!important;max-width:30px!important;
+  }
+}
+@media(max-width:350px){
+  html.f90-reference-theme .site-header .header-inner.container{
+    grid-template-columns:minmax(0,1fr) 78px minmax(0,1fr)!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+    width:78px!important;max-width:78px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+    width:76px!important;height:64px!important;max-width:76px!important;max-height:64px!important;
+  }
+  html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+    font-size:10px!important;
+    max-width:none!important;white-space:normal!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #menuButton{
+    flex:0 0 27px!important;min-width:27px!important;width:27px!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{
+    flex:0 0 28px!important;min-width:28px!important;width:28px!important;max-width:28px!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip svg.f90-vip-artwork{
+    width:28px!important;height:31px!important;
+  }
+}
+/* For reduced motion preferences, all logo animation is disabled, too. */
+html.f90-reference-theme #headerBrand,
+html.f90-reference-theme #headerBrand img{
+ animation:none!important;transition:none!important;transform:none!important;
+}
