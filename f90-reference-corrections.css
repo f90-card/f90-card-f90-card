@@ -234,3 +234,34 @@ html.f90-reference-theme .f90-premium-checkout #checkoutForm>#discountHint{grid-
  html.f90-reference-theme body.f90-checkout-open #quickProductPanel .product-page.f90-premium-checkout{padding:13px!important;}
  html.f90-reference-theme #mainContent[data-page="home"] .image-grid{gap:8px!important;}
 }
+
+
+/* Prices match reference placement: pink price badge, secondary yellow line at left. */
+html.f90-reference-theme .f90-premium-checkout .f90-reference-top-prices,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-reference-top-prices{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  direction:ltr!important;gap:2px!important;margin:0!important;padding:0!important;
+  min-height:54px!important;align-self:stretch!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-reference-primary-badge{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  min-width:55px!important;max-width:100%!important;padding:5px 11px!important;
+  border-radius:24px!important;color:#fff!important;font-size:12px!important;line-height:1.45!important;
+  background:linear-gradient(110deg,#b70c35,#fa2444)!important;box-shadow:none!important;
+  direction:ltr!important;unicode-bidi:isolate!important;font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .f90-premium-checkout #f90ReferenceSecondaryPrice{
+  display:block!important;margin-inline-start:4px!important;line-height:1.45!important;
+  color:#f3bd44!important;font-size:11px!important;direction:ltr!important;unicode-bidi:isolate!important;
+}
+html.f90-reference-theme .f90-premium-checkout #f90ReferenceSecondaryPrice[hidden]{display:none!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm:not(:has(input[name="quantity"][type="number"]))>.f90-checkout-summary{
+  display:none!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm:not(:has(input[name="quantity"][type="number"]))>.f90-visa-inputrow:not(:has(input[name="quantity"])){
+  grid-column:1/-1!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow:has(input[name="quantity"]) .field{height:100%!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow:has(input[name="quantity"]) input[name="quantity"]{
+  min-height:45px!important;max-height:none!important;
+}
