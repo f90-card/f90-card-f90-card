@@ -1,0 +1,236 @@
+/* F90 CARD: owner-requested corrective release (2026-10-26).
+   F90's watermelon-black + cream themes, legacy category dimensions,
+   screenshot purchase layout, separate top language/menu, currency pills.
+   Visual-only declarations; checkout quotes remain server-authoritative. */
+:root.f90-reference-theme[data-theme="dark"]{
+  color-scheme:dark!important;
+  --bg:#090b10!important;--surface:#12151d!important;--surface2:#191e28!important;
+  --line:#292e3a!important;--text:#f5f5f7!important;--muted:#9da5b5!important;
+  --accent:#fa2444!important;--accent2:#be1235!important;--f90-focus:#ff7088!important;
+}
+:root.f90-reference-theme[data-theme="cream"]{
+  color-scheme:light!important;
+  --bg:#f4f0eb!important;--surface:#fffdfa!important;--surface2:#eee7df!important;
+  --line:#c6b8b0!important;--text:#25212a!important;--muted:#60565f!important;
+  --accent:#9b1638!important;--accent2:#7e102d!important;--f90-focus:#9b1638!important;
+}
+html.f90-reference-theme[data-theme="dark"] body,
+html.f90-reference-theme[data-theme="dark"] .site-header,
+html.f90-reference-theme[data-theme="dark"] .site-footer{background:#090b10!important;color:#f5f5f7!important;}
+html.f90-reference-theme[data-theme="cream"] body,
+html.f90-reference-theme[data-theme="cream"] .site-header,
+html.f90-reference-theme[data-theme="cream"] .site-footer{background:#f4f0eb!important;color:#25212a!important;}
+html.f90-reference-theme[data-theme="dark"] #mainContent .section-head h2,
+html.f90-reference-theme[data-theme="dark"] #mainContent .page-head h1{color:#f5f5f7!important;}
+html.f90-reference-theme[data-theme="cream"] #mainContent .section-head h2,
+html.f90-reference-theme[data-theme="cream"] #mainContent .page-head h1{color:#25212a!important;}
+/* The home category square cards are exactly the pre-reference size. */
+html.f90-reference-theme #mainContent[data-page="home"] .image-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:22px!important;
+}
+html.f90-reference-theme.f90-global-frame-on #mainContent[data-page="home"] .image-grid .image-tile .f90-flip-inner,
+html.f90-reference-theme.f90-global-frame-on #mainContent .image-grid .f90-category-tile .f90-flip-inner{
+  aspect-ratio:1/1!important;width:100%!important;border-radius:14px!important;
+  background:#11131a!important;box-shadow:0 3px 10px #0003!important;
+}
+html.f90-reference-theme.f90-global-frame-on #mainContent[data-page="home"] .image-grid .image-tile .tile-caption{
+  display:grid!important;place-items:center!important;min-height:32px!important;
+  border:1px solid #ff3e5a40!important;border-radius:9px!important;
+  padding:6px 4px!important;background:#171923!important;color:#f8f8fa!important;
+  -webkit-text-fill-color:#f8f8fa!important;font-size:clamp(10px,1.3vw,13px)!important;
+}
+html.f90-reference-theme[data-theme="cream"].f90-global-frame-on #mainContent[data-page="home"] .image-grid .image-tile .tile-caption{
+  background:#fff9fb!important;border-color:#dcb9c3!important;color:#241b25!important;
+  -webkit-text-fill-color:#241b25!important;
+}
+@media(max-width:800px){
+ html.f90-reference-theme #mainContent[data-page="home"] .image-grid{
+   grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;
+ }
+}
+@media(max-width:400px){
+ html.f90-reference-theme #mainContent[data-page="home"] .image-grid{
+   grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;
+ }
+}
+/* No unwanted introduction or collapsed 'Learn about F90' link on home. */
+html.f90-reference-theme #mainContent[data-page="home"] .f90-home-intro,
+html.f90-reference-theme #mainContent[data-page="home"] .f90-home-intro-fold{
+  display:none!important;
+}
+/* Compact F90 header: right edge menu; immediately to its left language globe,
+   then VIP/profile/wallet. Native select remains clickable and keyboard accessible. */
+html.f90-reference-theme .header-inner{direction:rtl!important;}
+html.f90-reference-theme .header-actions{
+  direction:rtl!important;display:flex!important;align-items:center!important;
+  gap:5px!important;flex-wrap:nowrap!important;min-width:0!important;
+}
+html.f90-reference-theme .header-actions #menuButton{order:0!important;flex:0 0 31px!important;}
+html.f90-reference-theme .header-actions #f90-language-control{
+  order:1!important;position:relative!important;display:inline-flex!important;opacity:1!important;
+  width:33px!important;height:33px!important;min-width:33px!important;max-width:33px!important;flex:0 0 33px!important;
+  margin:0!important;padding:0!important;border:0!important;
+  border-radius:7px!important;background:transparent!important;
+  box-shadow:none!important;color:var(--text)!important;z-index:4!important;
+}
+html.f90-reference-theme .header-actions #f90-language-control select{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  opacity:.01!important;appearance:none!important;cursor:pointer!important;
+}
+html.f90-reference-theme .header-actions #headerWallet{
+  order:2!important;color:var(--text)!important;background:transparent!important;
+  min-width:0!important;padding:3px!important;border:0!important;
+}
+html.f90-reference-theme .header-actions #f90AdminShortcut{order:3!important;}
+html.f90-reference-theme .header-actions #menuButton svg,
+html.f90-reference-theme .header-actions #headerWallet svg{color:var(--text)!important;}
+html.f90-reference-theme #drawer.drawer{
+  background:#11141b!important;border-inline-start:1px solid #442632!important;
+}
+html.f90-reference-theme[data-theme="cream"] #drawer.drawer{
+  background:#fffafa!important;border-inline-start:1px solid #e0b8c6!important;
+}
+html.f90-reference-theme[data-theme="dark"] #drawer #drawerLinks>a{color:#f5f5f7!important;}
+html.f90-reference-theme[data-theme="cream"] #drawer #drawerLinks>a{color:#2f2631!important;}
+html.f90-reference-theme #drawer #drawerLinks>a:first-child{
+  background:color-mix(in srgb,var(--accent) 15%,var(--surface2))!important;
+}
+html.f90-reference-theme #drawer #drawerLinks>a svg{color:var(--accent)!important;}
+html.f90-reference-theme #drawer .drawer-preferences{
+  background:transparent!important;padding:12px!important;gap:9px!important;
+}
+html.f90-reference-theme #drawer #themeToggle .f90-theme-toggle-track{background:var(--accent)!important;}
+html.f90-reference-theme #drawer #currencySelect{
+  color:var(--text)!important;background:var(--surface2)!important;border:1px solid var(--line)!important;
+}
+html.f90-reference-theme #drawer .f90-secondary-currencies{margin:6px 0 0!important;padding:12px 0 0!important;border-top:1px solid var(--line)!important;}
+html.f90-reference-theme #drawer .f90-secondary-heading{
+  display:block!important;color:var(--muted)!important;font-size:12px!important;margin:0 0 10px!important;
+}
+html.f90-reference-theme #drawer .f90-secondary-currency-list{
+  display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:7px!important;
+}
+html.f90-reference-theme #drawer .f90-secondary-currency-list button{
+  border:1px solid #247951!important;background:#06b868!important;color:#062c19!important;
+  min-height:30px!important;padding:5px 10px!important;border-radius:20px!important;
+  font-size:12px!important;font-weight:700!important;cursor:pointer!important;
+}
+html.f90-reference-theme #drawer .f90-secondary-currency-list button.active{
+  border-color:var(--accent)!important;background:var(--accent)!important;color:#fff!important;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent)!important;
+}
+html.f90-reference-theme #mobileDock.f90-mobile-dock{background:#10131b!important;}
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock{background:#fff9f8!important;border-top:1px solid #e6d8d9!important;}
+html.f90-reference-theme #mobileDock.f90-mobile-dock>a.active svg{
+  background:var(--accent)!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock>a svg{color:#392531!important;}
+html.f90-reference-theme .f90-reference-search,
+html.f90-reference-theme #mainContent .f90-category-search input{background:var(--surface2)!important;color:var(--text)!important;border:1px solid var(--line)!important;}
+html.f90-reference-theme .f90-reference-search input{color:var(--text)!important;}
+/* Screenshot purchase sheet, with original F90 pink/black instead of imported navy/blue. */
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel:not([hidden]){
+  width:min(355px,calc(100vw - 24px))!important;max-width:355px!important;
+  overflow-y:auto!important;max-height:calc(100dvh - 30px)!important;
+}
+html.f90-reference-theme .product-page.f90-premium-checkout,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .product-page.f90-premium-checkout{
+  --f90-checkout-text:var(--text)!important;
+  --f90-checkout-muted:var(--muted)!important;
+  --f90-checkout-stroke:var(--line)!important;
+  --f90-checkout-soft:var(--surface2)!important;
+  --f90-checkout-card:var(--surface)!important;
+  width:100%!important;max-width:355px!important;min-width:0!important;
+  border:1px solid #873249!important;border-radius:14px!important;
+  background:#12141c!important;color:#f5f5f7!important;
+  padding:18px 16px 20px!important;gap:10px!important;
+  box-shadow:0 20px 50px #000a!important;
+}
+html.f90-reference-theme[data-theme="cream"] .product-page.f90-premium-checkout,
+html.f90-reference-theme[data-theme="cream"] body.f90-checkout-open #quickProductPanel .product-page.f90-premium-checkout{
+  background:#fffaf7!important;color:#30232a!important;border-color:#d4b0bb!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-visa-product{display:flex!important;align-items:center!important;min-width:0!important;}
+html.f90-reference-theme .f90-premium-checkout .product-info h1{color:inherit!important;line-height:1.55!important;font-size:14px!important;}
+html.f90-reference-theme .f90-premium-checkout .f90-visa-favorite{color:#f2a5b7!important;background:transparent!important;border:0!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:11px!important;align-items:end!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-checkout-summary,
+html.f90-reference-theme body.f90-checkout-open #quickProductPanel .f90-premium-checkout #checkoutForm>.f90-premium-summary{
+  grid-row:1!important;grid-column:1!important;order:0!important;
+  width:100%!important;height:auto!important;max-height:none!important;min-height:62px!important;
+  padding:7px 8px!important;overflow:visible!important;border:0!important;
+  border-radius:15px!important;background:#242630!important;box-shadow:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-checkout-summary{
+  background:#efe7e6!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow:has(input[name=quantity]){
+  grid-row:1!important;grid-column:2!important;order:0!important;
+  width:100%!important;min-width:0!important;margin:0!important;align-self:stretch!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm:not(:has(input[name=quantity][type=number]))>.f90-checkout-summary{
+  grid-column:1/-1!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow:not(:has(input[name=quantity])){
+  grid-column:1/-1!important;grid-row:auto!important;min-width:0!important;order:1!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-footer{
+  grid-row:auto!important;grid-column:1/-1!important;order:6!important;
+  display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch!important;
+  gap:12px!important;padding:0!important;margin:5px 0 0!important;min-height:44px!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm #buyButton{
+  grid-column:2!important;grid-row:1!important;min-height:43px!important;
+  background:linear-gradient(110deg,#c90e39,#fa2444)!important;color:#fff!important;
+  border-radius:24px!important;box-shadow:none!important;
+}
+html.f90-reference-theme .f90-premium-checkout .f90-reference-cancel{
+  grid-column:1!important;grid-row:1!important;min-height:43px!important;
+  color:#fa6b82!important;border:1px solid #ae3b51!important;border-radius:24px!important;
+}
+html.f90-reference-theme .f90-premium-checkout #walletHint{grid-column:1/-1!important;grid-row:2!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-reference-instructions{
+  grid-row:auto!important;grid-column:1/-1!important;order:7!important;
+  color:#e0d5db!important;border-inline-start:2px solid #e1c2cb!important;
+  max-height:230px!important;overflow-y:auto!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-reference-instructions{color:#413941!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow input:not([type=hidden]),
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-visa-inputrow textarea{
+  background:#272932!important;color:#fff!important;border:1px solid #323544!important;
+  border-radius:25px!important;box-shadow:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-visa-inputrow input:not([type=hidden]){
+  background:#eee8e9!important;border-color:#e4d5d9!important;color:#251b21!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm .f90-visa-price{
+  display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;
+  width:100%!important;height:auto!important;min-height:45px!important;max-height:none!important;gap:1px!important;
+  padding:0!important;margin:0!important;overflow:visible!important;white-space:normal!important;
+  text-align:center!important;
+}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm .f90-visa-price>span{font-size:10px!important;color:#b8adb6!important;}
+html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm .f90-visa-price>span{color:#755964!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm #f90CheckoutTopTotal{
+  display:block!important;min-width:0!important;font-size:16px!important;
+  font-weight:800!important;color:#fff!important;direction:ltr!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm #f90CheckoutTopTotal{color:#30232a!important;}
+html.f90-reference-theme .f90-premium-checkout #f90ReferencePrimaryCurrency{
+  font-size:10px!important;direction:ltr!important;unicode-bidi:isolate!important;font-weight:700!important;color:var(--accent)!important;
+}
+html.f90-reference-theme .f90-premium-checkout #f90ReferenceSecondaryPrice{
+  display:block!important;font-size:11px!important;font-weight:800!important;
+  color:#f0c555!important;direction:ltr!important;margin-top:0!important;text-align:center!important;
+}
+html.f90-reference-theme .f90-premium-checkout #f90ReferenceSecondaryPrice[hidden]{display:none!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>.f90-checkout-summary:only-child{grid-column:1/-1!important;}
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>#quoteError,
+html.f90-reference-theme .f90-premium-checkout #checkoutForm>#discountHint{grid-column:1/-1!important;order:3!important;}
+@media(max-width:370px){
+ html.f90-reference-theme body.f90-checkout-open #quickProductPanel .product-page.f90-premium-checkout{padding:13px!important;}
+ html.f90-reference-theme #mainContent[data-page="home"] .image-grid{gap:8px!important;}
+}
