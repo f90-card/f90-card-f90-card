@@ -179,29 +179,62 @@
     $("adminIdentity").textContent =
       `${S.me?.profile.display_name || ""} · ${C.roles[S.me?.role] || ""}`;
   }
-  // Keep staff sidebar groups open when staff navigate between pages.
+  // All existing admin routes are retained. Grouping is visual and role-scoped:
+  // only pages in the source-of-truth sections/permissions list are rendered.
   const adminOpenGroups = new Set();
-  function navigation() {
-    const allowed=sections.filter((item)=>item[3].includes(S.me.role));
-    const buckets=[
-      ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification","ledger","audit","security-sessions","security-alerts","customer-security"]],
-      ["العملاء والتجار",["users","traders","trader-commissions","agents","leaderboard"]],
-      ["الأقسام والكتالوج",["categories","products","refilling","banners","providers","integration","infrastructure"]],
-      ["المدفوعات والأسعار",["rates","payments","vip","special-settings"]],
-      ["المظهر والمحتوى",["content-text","content-images","content-links","content-branding","promotions","notifications","policies","settings","card-frames"]],
-      ["الإشعارات والإضافات",["telegram-alerts"]]
-    ];
-    const link=item=>'<a href="#/'+item[0]+'" class="'+(S.active===item[0]?'active':'')+'">'+I(item[2])+item[1]+'</a>';
-    $("adminNav").innerHTML=buckets.map(([title,ids])=>{
-      const items=ids.map(id=>allowed.find(x=>x[0]===id)).filter(Boolean);
-      if(!items.length)return '';
-      const expanded=items.some(x=>x[0]===S.active) || adminOpenGroups.has(title);
-      return '<details class="f90-admin-group" data-admin-group="'+e(title)+'" '+(expanded?'open':'')+'><summary>'+e(title)+'</summary>'+
+  let adminSearchTerm = "";
+  const adminBuckets = [
+    ["المتابعة والطلبات",["dashboard","alerts","orders","order-requests","deposits","salary-requests","special-requests","verification"]],
+    ["العملاء والتجار",["users","traders","agents","trader-commissions","leaderboard"]],
+    ["المنتجات والموردون",["categories","products","refilling","providers","integration"]],
+    ["الأموال والأسعار",["ledger","payments","rates","vip","special-settings"]],
+    ["التصميم والمحتوى",["banners","promotions","content-text","content-images","content-links","content-branding","card-frames","policies","notifications"]],
+    ["أمان ومراقبة المتجر",["audit","security-sessions","security-alerts","customer-security","infrastructure","telegram-alerts"]],
+    ["إعدادات الموقع",["settings"]],
+    ["أقسام متخصصة",["amin-card"]]
+  ];
+  function filterAdminNavigation(term){
+    const query=String(term||"").normalize("NFKC").trim().toLocaleLowerCase("ar");
+    const nav=$("adminNav");
+    if(!nav)return;
+    let total=0;
+    nav.querySelectorAll("details.f90-admin-group").forEach(group=>{
+      let matches=0;
+      group.querySelectorAll(".f90-admin-group-links>a").forEach(link=>{
+        const found=!query||link.textContent.normalize("NFKC").toLocaleLowerCase("ar").includes(query);
+        link.hidden=!found;
+        if(found)matches++;
+      });
+      group.hidden=matches===0;
+      total+=matches;
+      if(query)group.open=matches>0;
+      else group.open=group.dataset.defaultOpen==="true"||adminOpenGroups.has(group.dataset.adminGroup);
+    });
+    const empty=$("adminNavEmpty");
+    if(empty)empty.hidden=total!==0;
+  }
+  function navigation(){
+    if(!S.me)return;
+    const allowed=sections.filter(item=>item[3].includes(S.me.role));
+    const seen=new Set();
+    const link=item=>'<a href="#/'+e(item[0])+'" class="'+(S.active===item[0]?'active':'')+'" '+(S.active===item[0]?'aria-current="page" ':'')+'>'+I(item[2])+'<span>'+e(item[1])+'</span></a>';
+    $("adminNav").innerHTML=adminBuckets.map(([title,ids])=>{
+      const items=ids.map(id=>allowed.find(item=>item[0]===id)).filter(item=>item&&!seen.has(item[0])&&seen.add(item[0]));
+      if(!items.length)return "";
+      const expanded=items.some(item=>item[0]===S.active)||adminOpenGroups.has(title);
+      return '<details class="f90-admin-group" data-admin-group="'+e(title)+'" data-default-open="'+(expanded?'true':'false')+'" '+(expanded?'open':'')+'>'+
+        '<summary><span>'+e(title)+'</span><small>'+items.length+'</small></summary>'+
         '<div class="f90-admin-group-links">'+items.map(link).join("")+'</div></details>';
     }).join("");
-    const amin=allowed.find(x=>x[0]==='amin-card');
-    if(amin)$("adminNav").insertAdjacentHTML('beforeend','<div class="f90-admin-separate-link">'+link([amin[0],"قسم الامين كارد",amin[2],amin[3]])+'</div>');
+    // No role-authorized route should disappear if the grouping is updated.
+    const ungrouped=allowed.filter(item=>!seen.has(item[0]));
+    if(ungrouped.length)$("adminNav").insertAdjacentHTML("beforeend",
+      '<details class="f90-admin-group" data-admin-group="أدوات إضافية" data-default-open="false"><summary><span>أدوات إضافية</span><small>'+ungrouped.length+'</small></summary><div class="f90-admin-group-links">'+ungrouped.map(link).join("")+'</div></details>');
+    filterAdminNavigation(adminSearchTerm);
+    const search=$("adminNavSearch");
+    if(search&&search.value!==adminSearchTerm)search.value=adminSearchTerm;
   }
+
   async function catalogs() {
     const data = await A.call("staff.catalog");
     Object.assign(S, data);
@@ -3662,6 +3695,10 @@
   $("adminMenu").addEventListener("click", () =>
     setAdminMenu(!document.body.classList.contains("admin-menu-open")),
   );
+  $("adminNavSearch")?.addEventListener("input",ev=>{
+    adminSearchTerm=ev.target.value||"";
+    filterAdminNavigation(adminSearchTerm);
+  });
   $("adminNav").addEventListener("click", (event) => {
     const summary = event.target.closest("summary");
     const section = summary?.closest("details[data-admin-group]");
