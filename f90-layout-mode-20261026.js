@@ -13,7 +13,12 @@
     if(explicit!=="classic" && explicit!=="current")return null;
     const selected=explicit;
     const isClassic=/\/classic\.html$/i.test(location.pathname);
-    if((selected==="classic")===isClassic)return selected;
+    if((selected==="classic")===isClassic){
+      // Clear previous loop protection after a healthy, verified arrival.
+      // This allows managers to switch back and forth as often as desired.
+      try{sessionStorage.removeItem(KEY)}catch{}
+      return selected;
+    }
     const now=Date.now();
     try{
       const previous=JSON.parse(sessionStorage.getItem(KEY)||"null");
