@@ -15,7 +15,7 @@
     const step=Number(commerce?.quantity_step??1);
     if(raw===""||!/^\d+(?:\.\d+)?$/.test(raw))return {valid:false,quantity:null,message:"أدخل كمية رقمية صحيحة"};
     const quantity=Number(raw);
-    if(!Number.isSafeInteger(quantity) && (step===1||!Number.isFinite(quantity)))
+    if(!Number.isFinite(quantity)||quantity>Number.MAX_SAFE_INTEGER)
       return {valid:false,quantity:null,message:"الكمية أكبر من الحد المسموح"};
     if(quantity<minimum||quantity>maximum)
       return {valid:false,quantity,message:"الكمية يجب أن تكون بين "+minimum.toLocaleString("en-US")+" و"+maximum.toLocaleString("en-US")};
@@ -31,7 +31,11 @@
     const key=String(field?.id||"").toLowerCase();
     const text=(raw+" "+key).toLowerCase();
     let label=raw||"معلومات الحساب", hint="", mode="text", type="text";
-    if(field?.type==="email"||/بريد|ايميل|إيميل|اليميل|email|e.mail/.test(text)){
+    if(/هاتف|جوال|phone|mobile/.test(text)&&/بريد|إلكتروني|الكتروني|ايميل|email/.test(text)){
+      label="رقم الهاتف أو البريد الإلكتروني";hint="أدخل رقم الهاتف أو البريد حسب متطلبات الخدمة";
+    }else if(/رقم الحساب/.test(text)&&/هاتف|رقم عاتف|جوال/.test(text)){
+      label="رقم الحساب أو رقم الهاتف";hint="أدخل رقم الحساب أو الهاتف المطلوب";
+    }else if(field?.type==="email"||/بريد|ايميل|إيميل|اليميل|email|e.mail/.test(text)){
       label="البريد الإلكتروني";hint="أدخل البريد الإلكتروني المرتبط بالخدمة";mode="email";type="email";
     }else if(/سيرفر|server|zone.id/.test(text)){
       label="رقم السيرفر";hint="أدخل رقم السيرفر كما يظهر داخل اللعبة";mode="text";
@@ -64,6 +68,7 @@
       if(/حساب/.test(text))label="رقم التحويل أو رقم الحساب";
     }else if(/محفظة|محفضة|wallet/.test(text)){
       label=/اسم/.test(text)?"اسم المحفظة":"رقم المحفظة";
+      if(/كليك|click/.test(text))label="اسم المحفظة أو كليك";
       if(/رمز/.test(text))label="رمز المحفظة";
       hint="أدخل بيانات المحفظة المطلوبة";
     }else if(/اسم\s*البنك/.test(text)){
@@ -73,6 +78,7 @@
         .replace(/^(?:ادخل|أدخل|إدخل|اسادخل)\s*/,"").trim()||"بيانات الطلب";
       hint="أدخل "+label+" بدقة";
     }
+    if(/(?:^|\s)(?:2|٢)$/.test(raw)&&!/(?:2|٢)$/.test(label))label+=" 2";
     // The supplier controls the field id and mandatory flag; UI only clarifies its label.
     if(field?.type==="textarea")type="textarea";
     else if(field?.type==="url")type="url";
@@ -90,7 +96,7 @@
     const original=!isBoilerplate(description)?description:null;
     const needs=labels.length?"البيانات المطلوبة: "+labels.join("، ")+"." : "راجع بيانات الطلب قبل تأكيد الشراء.";
     const qty=quantityVisible?"حدد الكمية المناسبة ضمن الحدود المتاحة. ":"";
-    const reminder="راجع صحة البيانات قبل الشراء. يظهر السعر النهائي بعد تحديد الكمية، ويمكن متابعة الطلب من سجل الطلبات.";
+    const reminder="راجع صحة البيانات قبل الشراء. يظهر السعر النهائي قبل تأكيد الطلب، ويمكن متابعة حالته من سجل الطلبات.";
     // Original tailored descriptions take precedence, never fabricate execution time or verification.
     return {header,lines:[...(original?[original]:[]),needs,qty+reminder]};
   }
