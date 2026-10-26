@@ -267,6 +267,12 @@
   }
   // Display-only formatting; full precision is retained in the authoritative
   // server quote, wallet checks, idempotency key and order confirmation.
+  // Header only: keep every integer digit visible. Fractional wallet precision
+  // remains untouched in data, checkout, transactions and full wallet pages.
+  function f90HeaderBalance(usd){
+    const formatted=displayMoney(usd);
+    return formatted.replace(/([0-9][0-9,]*)\.[0-9]{2,6}(?![0-9])/g,"$1");
+  }
   function f90CheckoutMoney(usd, balance = false){
     const rate=S.rates.find(r=>r.currency===S.currency&&r.is_enabled&&Number(r.per_usd)>0);
     const code=rate?.currency||"USD";
@@ -315,7 +321,7 @@
     $("headerWallet").setAttribute("aria-label","إضافة رصيد إلى حسابك");
     $("headerWallet").innerHTML =
       I("wallet") +
-      `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(displayMoney(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
+      `<span>${me && !me.needs_mfa ? (S.walletStale ? "تحديث الرصيد" : e(f90HeaderBalance(me.wallet?.balance_usd || 0))) : "المحفظة"}</span>`;
     // Preserve preference controls (and their event listeners) across drawer rebuilds.
     const preservedPreferences=document.querySelector("#drawer .drawer-preferences");
     if(preservedPreferences && preservedPreferences.parentElement?.id==="drawerProfile")
