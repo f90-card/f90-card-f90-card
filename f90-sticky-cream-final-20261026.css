@@ -1,0 +1,358 @@
+/* F90 CARD | Final header direction + sticky header + complete cream storefront palette
+ * Loaded LAST so prior reference CSS cannot reset sticky positioning or force navy
+ * surfaces into the cream customer theme. No HTML or account logic changes. */
+
+/* The old storefront declared position:relative!important, cancelling sticky. */
+html.f90-reference-theme body:not(.admin-body) > .site-header,
+html.f90-reference-theme .site-header {
+  position:sticky!important;
+  position:-webkit-sticky!important;
+  top:0!important;
+  inset-block-start:0!important;
+  z-index:60!important;
+  background:#0d111b!important;
+  color:#f8fafc!important;
+  border-bottom:1px solid #283145!important;
+  box-shadow:0 5px 15px #00000020!important;
+  transform:none!important;
+  filter:none!important;
+  opacity:1!important;
+  contain:none!important;
+  isolation:isolate!important;
+}
+html.f90-reference-theme .site-header .header-inner.container{
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  flex-direction:row!important;
+  direction:ltr!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  width:100%!important;max-width:none!important;
+  min-height:69px!important;
+  padding:4px clamp(8px,2vw,20px)!important;
+  box-sizing:border-box!important;
+  transform:none!important;
+}
+/* RTL: arrow, logo at LEFT; large flexible middle spacer; menu/currency at RIGHT. */
+html.f90-reference-theme .site-header .header-inner #f90ReferenceBack:not([hidden]){
+  order:0!important;flex:0 0 28px!important;width:28px!important;
+  margin:0!important;align-self:center!important;
+  color:#f6f7fc!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+  order:1!important;display:flex!important;
+  align-items:center!important;justify-content:flex-start!important;
+  flex:0 0 86px!important;
+  width:86px!important;min-width:0!important;max-width:86px!important;
+  height:66px!important;
+  margin:0 auto 0 0!important;padding:0!important;
+  border:0!important;background:transparent!important;
+  transform:none!important;overflow:visible!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+  display:block!important;width:84px!important;height:65px!important;
+  max-width:84px!important;max-height:65px!important;min-height:0!important;
+  object-fit:contain!important;object-position:left center!important;
+  filter:none!important;transform:none!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions{
+  order:3!important;display:flex!important;flex-flow:row nowrap!important;
+  direction:rtl!important;
+  align-items:center!important;justify-content:flex-start!important;
+  flex:0 0 auto!important;
+  min-width:0!important;max-width:calc(100% - 110px)!important;
+  margin:0 0 0 auto!important;
+  gap:5px!important;padding:0!important;
+}
+html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
+  max-width:calc(100% - 145px)!important;
+}
+html.f90-reference-theme .site-header .header-actions #menuButton{order:0!important;}
+html.f90-reference-theme .site-header .header-actions #f90-language-control{order:1!important;}
+html.f90-reference-theme .site-header .header-actions #headerWallet{order:2!important;}
+html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip{order:3!important;}
+html.f90-reference-theme .site-header .header-actions :is(a,button,label){
+  color:#f7f8fc!important;
+}
+html.f90-reference-theme .site-header .header-actions #headerWallet{
+  direction:ltr!important;unicode-bidi:isolate!important;
+}
+html.f90-reference-theme .site-header .header-actions #headerWallet>span:not(.f90-wallet-plus){
+  color:#fff!important;
+}
+/* Every non-Arabic language: FULL mirror. Logo at RIGHT and menu at LEFT.
+ * dir changes synchronously in the existing i18n module, no reload needed. */
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner.container{
+  flex-direction:row-reverse!important;direction:ltr!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
+  order:0!important;
+  justify-content:flex-end!important;
+  margin:0 0 0 auto!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand img{
+  object-position:right center!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #f90ReferenceBack:not([hidden]){
+  order:1!important;transform:scaleX(-1)!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions{
+  order:3!important;direction:ltr!important;
+  margin:0 auto 0 0!important;justify-content:flex-start!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions #headerWallet{
+  direction:ltr!important;
+}
+/* No unwanted shrink into a tiny icon on inner pages. */
+@media (max-width:650px){
+  html.f90-reference-theme .site-header .header-inner.container{
+    min-height:67px!important;gap:4px!important;
+    padding:4px 7px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+    flex:0 0 77px!important;width:77px!important;max-width:77px!important;
+    height:64px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+    width:76px!important;height:63px!important;
+    max-width:76px!important;max-height:63px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner .header-actions{
+    max-width:calc(100% - 81px)!important;gap:3px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
+    max-width:calc(100% - 114px)!important;
+  }
+}
+@media (max-width:380px){
+  html.f90-reference-theme .site-header .header-inner.container{
+    gap:3px!important;padding:4px 5px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+    flex-basis:69px!important;width:69px!important;max-width:69px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+    width:68px!important;max-width:68px!important;height:61px!important;max-height:61px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner .header-actions{
+    max-width:calc(100% - 73px)!important;gap:2px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) .header-actions{
+    max-width:calc(100% - 106px)!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #headerWallet{
+    max-width:59px!important;
+  }
+  html.f90-reference-theme .site-header .header-actions #headerWallet>span:not(.f90-wallet-plus){
+    max-width:39px!important;
+  }
+}
+
+/* The requested cream skin: warm ivory, muted berry accents, dark readable ink.
+ * All variables intentionally inherit throughout account, catalog and checkout. */
+html.f90-reference-theme[data-theme="cream"]{
+  color-scheme:light!important;
+  --bg:#f7f0e9!important;
+  --surface:#fffaf6!important;
+  --surface2:#f0e5df!important;
+  --line:#d8c4bb!important;
+  --text:#2d2630!important;
+  --muted:#60525d!important;
+  --accent:#a6204a!important;
+  --accent2:#791735!important;
+  --gold:#966017!important;
+  --shadow:0 12px 29px rgba(91,47,60,.105)!important;
+  --f90-focus:#b33761!important;
+  --f90-original-bg:#f7f0e9!important;
+  --f90-original-surface:#fffaf6!important;
+  --f90-original-surface2:#f0e5df!important;
+  --f90-original-line:#d8c4bb!important;
+  background-color:#f7f0e9!important;
+}
+html.f90-reference-theme[data-theme="cream"] body:not(.admin-body){
+  background:#f7f0e9!important;
+  color:#2d2630!important;
+  -webkit-text-fill-color:initial;
+}
+html.f90-reference-theme[data-theme="cream"] body:not(.admin-body)::before{
+  background:
+    radial-gradient(ellipse at 13% 12%,rgba(177,87,101,.075) 0%,transparent 43%),
+    radial-gradient(ellipse at 88% 73%,rgba(188,142,104,.10) 0%,transparent 50%),
+    linear-gradient(150deg,rgba(255,255,255,.18),rgba(238,221,212,.1))!important;
+  pointer-events:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] #f90ThemeBackdrop[data-theme="cream"] .f90-theme-watermark{
+  opacity:.075!important;
+}
+/* Brand bars stay dark even on the light theme. */
+html.f90-reference-theme[data-theme="cream"] .site-header,
+html.f90-reference-theme[data-theme="cream"] .site-header .header-inner,
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock,
+html.f90-reference-theme[data-theme="cream"] .f90-mobile-dock{
+  background:#0e1422!important;color:#fafbff!important;
+  border-color:#273145!important;
+}
+html.f90-reference-theme[data-theme="cream"] .site-header .header-actions :is(a,button,label,select),
+html.f90-reference-theme[data-theme="cream"] .site-header #f90ReferenceBack,
+html.f90-reference-theme[data-theme="cream"] .site-header #headerWallet>span:not(.f90-wallet-plus),
+html.f90-reference-theme[data-theme="cream"] #mobileDock.f90-mobile-dock>a svg{
+  color:#fff!important;
+}
+html.f90-reference-theme[data-theme="cream"] .site-header #headerWallet .f90-wallet-plus{
+  color:#141922!important;background:#fff!important;
+}
+html.f90-reference-theme[data-theme="cream"] :is(.site-footer,.f90-seo-directory-link){
+  background:transparent!important;color:#675562!important;
+}
+/* Cards and panels across public account screens. */
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .panel,.record,.catalog-row,.method-tile,.product-info,
+  .f90-fin-row,.f90-fin-field,.f90-order-secondary,.profile-card,
+  .payment-card,.f90-deposit-request-card,.f90-deposit-destination,
+  .f90-deposit-compact,.f90-fin-tools,.f90-fin-list
+){
+  color:#2d2630!important;border-color:#dbc9c2!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .panel,.record,.catalog-row,.method-tile,.product-info,
+  .profile-card,.payment-card,.f90-deposit-request-card,.f90-fin-field
+){
+  background-color:#fffaf6!important;
+  box-shadow:0 5px 17px rgba(77,47,51,.055)!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  h1,h2,h3,h4,.section-head h2,.page-head h1,.tile-caption,
+  .record-main strong,.field>span,.f90-fin-heading strong
+){
+  color:#2d2630!important;
+  text-shadow:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  p,small,.muted,.card-meta,.hint,.subtitle,.f90-fin-mid small,
+  .f90-fin-heading small,.f90-fin-field span,.field-help
+){
+  color:#60525d!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .image-grid .image-tile .tile-caption{
+  color:#382a36!important;-webkit-text-fill-color:#382a36!important;
+  text-shadow:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,textarea
+){
+  background:#f3eae5!important;color:#2c2430!important;
+  border:1px solid #cfbcb5!important;
+  caret-color:#8f193d!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(input,textarea)::placeholder{
+  color:#6e6169!important;opacity:1!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(input,select,textarea):focus-visible{
+  outline:2px solid #b13760!important;outline-offset:2px!important;
+  border-color:#a6204a!important;
+}
+/* Buttons and active controls: consistent deep berry, clean cream alternatives. */
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .button:not(.secondary):not(.ghost):not(.danger),
+  button.button:not(.secondary):not(.ghost):not(.danger),
+  .f90-fin-search-btn,.f90-fin-reset
+){
+  background:#a6204a!important;color:#fff!important;
+  border-color:#a6204a!important;
+  box-shadow:0 4px 10px rgba(142,32,72,.13)!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .button.secondary,.button.ghost,.f90-fin-quicklinks a,
+ .f90-fin-nav a
+){
+  background:#f0e3e0!important;color:#7a2348!important;
+  border:1px solid #d3b9b7!important;
+  box-shadow:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .button,.f90-fin-filters button,.f90-fin-nav a
+):focus-visible{
+  outline:2px solid #a6204a!important;outline-offset:3px!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .button,.f90-fin-nav a
+):hover:not(:disabled){
+  filter:brightness(.97);
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+  .button,button
+):disabled{
+  opacity:.58!important;cursor:not-allowed!important;
+}
+/* Stay readable in specialized page widgets without painting their status badges. */
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-fin-totals,.f90-fin-page .f90-fin-tools,.f90-fin-wallet-ledger .f90-fin-tools,
+ .f90-history-filters,.f90-fin-wallet-deposits
+){
+  color:#352732!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent :is(
+ .f90-fin-date-row input,.f90-fin-search-row input,.f90-reference-search input,
+ .f90-category-search input
+){
+  color:#342632!important;background:#f0e5df!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-fin-list .f90-fin-row,
+html.f90-reference-theme[data-theme="cream"] #f90HistoryView #historyRecords.f90-fin-list .f90-fin-row{
+  background:#fffaf6!important;border-color:#d9c8c3!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-fin-row .f90-fin-summary :is(
+ .f90-fin-heading strong,.f90-fin-price
+){
+  color:#342631!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-fin-row .f90-fin-expanded{
+  background:#f4ebe5!important;border-color:#decfc9!important;
+}
+/* Dialog and drawer should be legible without replacing intentionally dark checkout art. */
+html.f90-reference-theme[data-theme="cream"] #drawer.drawer{
+  background:#fff9f4!important;
+  color:#332733!important;
+  border-color:#ddc6c2!important;
+}
+html.f90-reference-theme[data-theme="cream"] #drawer #drawerLinks>a:not(#f90AdminShortcut){
+  color:#30232e!important;
+}
+html.f90-reference-theme[data-theme="cream"] #drawer :is(
+ .f90-drawer-username,.f90-drawer-customerid,.drawer-preferences,
+ .f90-theme-toggle-label,.drawer-profile,.f90-drawer-account-actions a
+){
+  color:#342631!important;
+}
+html.f90-reference-theme[data-theme="cream"] #drawer #drawerLinks>a:first-child:not(#f90AdminShortcut){
+  color:#392332!important;background:#ede0de!important;
+}
+html.f90-reference-theme[data-theme="cream"] #drawer #currencySelect{
+  color:#302331!important;background:#f0e5df!important;border-color:#d5bdc3!important;
+}
+html.f90-reference-theme[data-theme="cream"] .modal:not(.f90-precise-checkout),
+html.f90-reference-theme[data-theme="cream"] .modal:not(.f90-precise-checkout) :is(
+  .field input,.field textarea,.field select
+){
+  background:#fffaf6!important;color:#2d2630!important;
+  border-color:#d8c4bb!important;
+}
+/* Checkout-specific dark reference has its own layout and color contract. */
+html.f90-reference-theme[data-theme="cream"] #quickProductPanel .f90-precise-checkout,
+html.f90-reference-theme[data-theme="cream"] .f90-precise-checkout{
+  color:#f4f7fd!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-order-summary-row :is(span,strong){
+  color:#fff!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-order-summary-row :is(span,small,strong){
+  color:#fff!important;
+}
+html.f90-reference-theme[data-theme="cream"] #mainContent .f90-fin-wallet-dashboard .f90-fin-metric :is(small,strong){
+  color:#fff!important;
+}
+@media(prefers-reduced-motion:reduce){
+  html.f90-reference-theme .site-header{transition:none!important;}
+}
