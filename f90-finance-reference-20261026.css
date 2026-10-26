@@ -1,0 +1,400 @@
+/* F90 responsive finance reference and loading, 2026-10-26.
+   Color identity follows store themes. Layout follows reference screenshots. */
+:root.f90-reference-theme{
+  --f90-fin-accent:#fa3157;
+  --f90-fin-deep:#111827;
+  --f90-fin-panel:#202738;
+  --f90-fin-ink:#f5f6fb;
+}
+html.f90-reference-theme #mainContent>.f90-logo-loading,
+html.f90-reference-theme .f90-session-recovery>.f90-logo-loading{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:calc(100dvh - 190px);width:100%;margin:0 auto;gap:16px;
+  background:transparent!important;border:0!important;
+}
+html.f90-reference-theme .f90-logo-loading img{
+  display:block;width:clamp(75px,17vw,118px);height:auto;max-height:128px;
+  object-fit:contain;filter:drop-shadow(0 0 12px #fa315740);
+  animation:f90LogoLoading 1.8s ease-in-out infinite alternate;
+}
+html.f90-reference-theme .f90-loading-dots{display:flex;gap:11px;align-items:center;justify-content:center;}
+html.f90-reference-theme .f90-loading-dots i{
+  width:9px;height:9px;transform:rotate(45deg);
+  background:var(--accent,#fa3157);animation:f90LoadingDots 1.15s ease-in-out infinite;
+}
+html.f90-reference-theme .f90-loading-dots i:nth-child(2){animation-delay:.2s;}
+html.f90-reference-theme .f90-loading-dots i:nth-child(3){animation-delay:.4s;}
+@keyframes f90LogoLoading{from{opacity:.8;transform:scale(.94)}to{opacity:1;transform:scale(1.035)}}
+@keyframes f90LoadingDots{0%,80%,100%{opacity:.35;transform:rotate(45deg) scale(.75)}45%{opacity:1;transform:rotate(45deg) scale(1.08)}}
+@media(prefers-reduced-motion:reduce){
+  html.f90-reference-theme .f90-logo-loading img,
+  html.f90-reference-theme .f90-loading-dots i{animation:none!important;}
+}
+/* Keep F90 logo truly at the outer edge and nav controls at the opposite edge. */
+html.f90-reference-theme .site-header .header-inner.container{
+  position:relative!important;box-sizing:border-box!important;
+  width:100%!important;max-width:none!important;
+  padding-inline:clamp(9px,2vw,26px)!important;
+  justify-content:space-between!important;direction:ltr!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+  order:1!important;flex-shrink:0!important;margin-right:auto!important;
+  margin-left:0!important;justify-content:flex-start!important;
+  z-index:1!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions{
+  order:3!important;margin-left:auto!important;margin-right:0!important;
+  justify-content:flex-end!important;flex-shrink:0!important;
+  max-width:calc(100% - 90px)!important;min-width:0!important;
+}
+html.f90-reference-theme .site-header .header-inner #f90ReferenceBack:not([hidden]){
+  order:0!important;flex-shrink:0!important;
+  margin-inline:0 3px!important;
+}
+html.f90-reference-theme .site-header .header-inner #f90ReferenceBack[hidden]{display:none!important;}
+html.f90-reference-theme .site-header .header-inner #headerBrand img{
+  object-position:left center!important;
+}
+/* In left-to-right languages the brand shifts to the far right,
+   and controls flow from the opposite edge without crowding. */
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner.container{
+  flex-direction:row-reverse!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
+  margin-inline-start:0!important;margin-left:auto!important;margin-right:0!important;
+  justify-content:flex-end!important;order:1!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand img{
+  object-position:right center!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions{
+  margin-right:auto!important;margin-left:0!important;
+  order:3!important;
+}
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #f90ReferenceBack{
+  transform:scaleX(-1);order:0!important;
+}
+@media(max-width:440px){
+  html.f90-reference-theme .site-header .header-inner.container{gap:3px!important;padding-inline:6px!important;}
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+    flex:0 0 60px!important;width:60px!important;min-width:53px!important;max-width:60px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+    width:58px!important;max-width:58px!important;height:55px!important;max-height:55px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner .header-actions{
+    max-width:calc(100% - 68px)!important;gap:2px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) #headerBrand.brand{
+    flex-basis:48px!important;min-width:46px!important;width:48px!important;
+  }
+  html.f90-reference-theme .site-header .header-inner:has(#f90ReferenceBack:not([hidden])) #headerBrand img{
+    width:46px!important;max-width:46px!important;
+  }
+}
+/* Wallet: metric cards, dates and entries follow the compact reference rhythm. */
+html.f90-reference-theme #mainContent[data-page="wallet"] .page-head,
+html.f90-reference-theme #mainContent[data-page="orders"] .page-head,
+html.f90-reference-theme #mainContent[data-page="history"] .page-head,
+html.f90-reference-theme #mainContent[data-page="deposits"] .page-head{
+  margin:14px auto 16px!important;max-width:980px!important;
+  padding:0!important;gap:6px!important;
+}
+html.f90-reference-theme #mainContent[data-page="wallet"] .page-head h1,
+html.f90-reference-theme #mainContent[data-page="orders"] .page-head h1,
+html.f90-reference-theme #mainContent[data-page="history"] .page-head h1{
+  font-size:clamp(22px,4.5vw,29px)!important;
+  font-weight:850!important;text-align:right!important;
+}
+html.f90-reference-theme .f90-fin-wallet-dashboard{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:9px!important;margin:14px auto 19px!important;
+  width:min(100%,980px)!important;max-width:100%!important;
+}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric{
+  display:flex!important;flex-direction:column-reverse!important;
+  align-items:center!important;justify-content:center!important;
+  min-width:0!important;min-height:106px!important;
+  gap:9px!important;border-radius:10px!important;
+  padding:13px 8px!important;box-sizing:border-box!important;
+  color:#fff!important;text-align:center!important;
+  box-shadow:0 3px 9px #00000020!important;
+}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric strong{
+  color:#fff!important;font-size:clamp(13px,2.5vw,22px)!important;
+  font-weight:900!important;direction:ltr!important;line-height:1.35!important;
+  font-variant-numeric:tabular-nums!important;overflow-wrap:anywhere!important;
+}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric small{
+  font-size:clamp(10px,1.7vw,15px)!important;font-weight:760!important;
+  color:#fff!important;line-height:1.4!important;
+}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric.current{background:#04c971!important;}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric.purchases{background:#f34d5e!important;}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric.incoming{background:#972cb0!important;}
+html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric.outgoing{background:#239d95!important;}
+html.f90-reference-theme .f90-fin-quicklinks{
+  display:flex!important;gap:8px!important;justify-content:center!important;
+  flex-wrap:wrap!important;max-width:980px!important;margin:0 auto 18px!important;
+}
+html.f90-reference-theme .f90-fin-quicklinks>a{
+  border-radius:24px!important;padding:8px 15px!important;
+  font-size:12px!important;
+}
+html.f90-reference-theme .f90-fin-wallet-ledger,
+html.f90-reference-theme .f90-fin-wallet-deposits,
+html.f90-reference-theme .f90-fin-page{
+  width:min(100%,980px)!important;
+}
+html.f90-reference-theme .f90-history-view .f90-fin-tools,
+html.f90-reference-theme .f90-fin-wallet-ledger .f90-fin-tools{
+  display:flex!important;flex-direction:column!important;
+  align-items:stretch!important;gap:15px!important;
+  border:0!important;border-radius:0!important;
+  margin:0 0 18px!important;padding:6px 0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+html.f90-reference-theme .f90-fin-date-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto!important;
+  align-items:center!important;gap:11px!important;
+}
+html.f90-reference-theme .f90-fin-date-row:has(>label:only-child){grid-template-columns:1fr!important;}
+html.f90-reference-theme .f90-fin-date-row label{
+  position:relative!important;display:flex!important;flex-direction:column!important;
+  gap:0!important;min-width:0!important;
+  text-align:right!important;font-size:11px!important;color:var(--muted)!important;
+}
+html.f90-reference-theme .f90-fin-date-row input{
+  width:100%!important;min-width:0!important;
+  min-height:40px!important;margin:3px 0 0!important;padding:7px 8px!important;
+  border-radius:28px!important;border:1px solid var(--line)!important;
+  background:color-mix(in srgb,var(--surface2) 80%,var(--surface))!important;
+  color:var(--text)!important;text-align:center!important;
+  font-size:clamp(11px,2.5vw,16px)!important;font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .f90-fin-date-row .f90-fin-reset{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  height:37px!important;min-height:37px!important;
+  align-self:end!important;background:var(--accent)!important;
+  color:#fff!important;border:0!important;border-radius:22px!important;
+  padding:5px 12px!important;
+}
+html.f90-reference-theme .f90-fin-search-row{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;gap:9px!important;width:100%!important;
+  max-width:100%!important;min-width:0!important;
+}
+html.f90-reference-theme .f90-fin-search-row input[type=search]{
+  order:0!important;flex:1 1 auto!important;width:100%!important;
+  min-width:0!important;min-height:44px!important;
+  border:0!important;border-radius:30px!important;
+  padding:9px 16px!important;background:var(--surface2)!important;
+  color:var(--text)!important;font-size:14px!important;
+}
+html.f90-reference-theme .f90-fin-search-row .f90-fin-search-btn{
+  order:1!important;display:grid!important;place-items:center!important;
+  flex:0 0 43px!important;width:43px!important;height:43px!important;
+  padding:0!important;border:0!important;border-radius:50%!important;
+  background:var(--accent)!important;color:#fff!important;
+  font-size:29px!important;font-weight:700!important;
+  cursor:pointer!important;box-shadow:0 3px 8px #0002!important;
+}
+html.f90-reference-theme .f90-history-view .f90-fin-nav{
+  display:flex!important;gap:8px!important;align-items:center!important;
+  justify-content:center!important;flex-wrap:wrap!important;margin:0 auto 22px!important;
+}
+html.f90-reference-theme .f90-history-view .f90-fin-nav a{
+  padding:9px 14px!important;border-radius:20px!important;
+  font-size:12px!important;font-weight:750!important;color:var(--text)!important;
+  background:color-mix(in srgb,var(--surface2) 92%,#451254)!important;
+  text-decoration:none!important;
+}
+html.f90-reference-theme .f90-history-view .f90-fin-nav a[aria-current=page]{
+  color:#fff!important;background:var(--accent)!important;
+}
+html.f90-reference-theme .f90-fin-filters{
+  display:flex!important;flex-wrap:wrap!important;justify-content:flex-start!important;
+  gap:7px!important;width:100%!important;margin:11px 0 14px!important;
+}
+html.f90-reference-theme .f90-fin-filters button{
+  display:inline-flex!important;align-items:center!important;flex-direction:row!important;
+  justify-content:center!important;gap:6px!important;
+  min-height:31px!important;border-radius:20px!important;
+  padding:5px 12px!important;
+  border:0!important;background:var(--surface2)!important;
+  color:var(--text)!important;font-size:12px!important;
+}
+html.f90-reference-theme .f90-fin-filters button[aria-pressed="true"]{
+  background:linear-gradient(115deg,#05aa9b,#32cfb7)!important;color:#fff!important;
+}
+html.f90-reference-theme .f90-fin-filters [data-count]{
+  min-width:20px!important;min-height:19px!important;
+  padding:1px 5px!important;background:#70717b!important;color:#fff!important;
+  border:0!important;border-radius:15px!important;font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .f90-fin-totals{
+  display:flex!important;flex-direction:row!important;justify-content:flex-start!important;
+  align-items:center!important;width:max-content!important;max-width:100%!important;
+  gap:7px!important;margin-inline:0 auto!important;margin-block:8px 13px!important;
+  padding:9px 13px!important;border:1px solid #c8953d!important;
+  border-radius:30px!important;background:transparent!important;
+}
+html.f90-reference-theme .f90-fin-totals strong{
+  color:#efc34f!important;font-size:clamp(13px,2.8vw,18px)!important;
+  font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .f90-fin-totals span{
+  color:var(--muted)!important;font-size:10px!important;font-weight:650!important;
+}
+/* Reference order and transaction rows, fully readable on narrow screens. */
+html.f90-reference-theme .f90-fin-list{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;gap:9px!important;
+}
+html.f90-reference-theme .f90-fin-list .f90-fin-row,
+html.f90-reference-theme #f90HistoryView #historyRecords .f90-fin-row{
+  background:color-mix(in srgb,#2e1944 33%,var(--surface))!important;
+  border:1px solid color-mix(in srgb,#714b8b 35%,var(--line))!important;
+  border-radius:12px!important;box-shadow:none!important;
+  overflow:hidden!important;
+}
+html.f90-reference-theme .f90-fin-list .f90-fin-summary,
+html.f90-reference-theme #f90HistoryView .f90-fin-row .f90-fin-summary{
+  display:grid!important;grid-template-columns:minmax(0,1.3fr) minmax(0,.84fr) minmax(0,.72fr) 12px!important;
+  align-items:center!important;gap:8px!important;
+  min-height:69px!important;padding:12px 11px!important;
+  direction:rtl!important;box-sizing:border-box!important;
+}
+html.f90-reference-theme .f90-fin-summary .f90-fin-heading{align-items:flex-start!important;text-align:right!important;}
+html.f90-reference-theme .f90-fin-summary .f90-fin-heading strong{
+  color:var(--text)!important;font-size:clamp(11px,2.5vw,14px)!important;
+  font-weight:780!important;line-height:1.45!important;
+}
+html.f90-reference-theme .f90-fin-summary :is(.f90-fin-heading small,.f90-fin-mid small){
+  color:var(--muted)!important;font-size:clamp(9px,2vw,11px)!important;
+  line-height:1.4!important;overflow-wrap:anywhere!important;
+}
+html.f90-reference-theme .f90-fin-summary .f90-fin-mid{
+  display:flex!important;flex-direction:column!important;
+  justify-content:center!important;align-items:center!important;gap:5px!important;
+  text-align:center!important;min-width:0!important;
+}
+html.f90-reference-theme .f90-fin-summary .f90-fin-price{
+  color:var(--text)!important;direction:ltr!important;text-align:left!important;
+  font-size:clamp(10px,2.6vw,15px)!important;font-weight:780!important;
+  min-width:0!important;overflow-wrap:anywhere!important;
+}
+html.f90-reference-theme .f90-fin-summary .f90-fin-chevron{color:var(--accent)!important;}
+html.f90-reference-theme .f90-fin-expanded{
+  padding:10px 11px!important;
+  background:color-mix(in srgb,var(--surface2) 78%,var(--surface))!important;
+}
+html.f90-reference-theme .f90-fin-field-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;
+}
+html.f90-reference-theme .f90-fin-field{
+  padding:9px!important;border-radius:9px!important;
+  background:var(--surface)!important;
+}
+html.f90-reference-theme .f90-fin-field strong{
+  user-select:text!important;overflow-wrap:anywhere!important;
+}
+/* Detailed order panel: status, response time, 2x2 color tiles, date strip */
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-layout{
+  display:flex!important;flex-direction:column!important;
+  gap:15px!important;width:min(100%,870px)!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-card{
+  border:0!important;border-radius:14px!important;
+  padding:15px 10px!important;background:transparent!important;
+  box-shadow:none!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-heading{
+  display:flex!important;flex-direction:column!important;
+  align-items:flex-start!important;gap:8px!important;margin:0 0 16px!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-heading img{
+  width:65px!important;height:55px!important;object-fit:contain!important;align-self:center!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-heading>div{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:7px!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-heading h2{
+  display:none!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] #f90OrderSeconds{
+  order:2!important;color:#efc34f!important;font-weight:800!important;
+  font-size:clamp(12px,2.7vw,17px)!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-rows{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:11px!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row{
+  display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:flex-start!important;
+  gap:12px!important;min-width:0!important;min-height:123px!important;
+  padding:16px 10px!important;border:0!important;border-radius:8px!important;
+  color:#fff!important;text-align:center!important;
+  box-sizing:border-box!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(1){
+  grid-column:2!important;grid-row:1!important;background:#bb8a04!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(2){
+  grid-column:1!important;grid-row:1!important;background:#05a747!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(3){
+  grid-column:2!important;grid-row:2!important;background:#087b77!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(4){
+  grid-column:1!important;grid-row:2!important;background:#bd1757!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(5){
+  grid-column:1/-1!important;grid-row:3!important;background:#211477!important;
+  min-height:88px!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row:nth-child(n+6){
+  grid-column:auto!important;grid-row:auto!important;background:#7b4591!important;min-height:82px!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row :is(span,strong){
+  color:#fff!important;line-height:1.5!important;
+  font-size:clamp(12px,2.8vw,17px)!important;font-weight:750!important;
+  overflow-wrap:anywhere!important;word-break:break-word!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row strong{
+  font-variant-numeric:tabular-nums!important;user-select:text!important;
+}
+html.f90-reference-theme #mainContent[data-page="order"] .f90-order-secondary{
+  background:transparent!important;border:0!important;
+  padding:14px 8px!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-fin-list .f90-fin-row,
+html.f90-reference-theme[data-theme="cream"] #f90HistoryView #historyRecords .f90-fin-row{
+  background:#fff9f6!important;border-color:#d5c5cd!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-fin-summary :is(.f90-fin-heading strong,.f90-fin-price){
+  color:#332535!important;
+}
+html.f90-reference-theme[data-theme="cream"] .f90-fin-list .f90-fin-mid .badge{color:#333!important;}
+html.f90-reference-theme[data-theme="cream"] .f90-fin-totals strong{color:#795112!important;}
+@media(max-width:480px){
+ html.f90-reference-theme .f90-fin-wallet-dashboard{gap:6px!important;}
+ html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric{min-height:83px!important;padding:8px 4px!important;}
+ html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric strong{font-size:clamp(10px,2.4vw,14px)!important;}
+ html.f90-reference-theme .f90-fin-wallet-dashboard .f90-fin-metric small{font-size:10px!important;}
+ html.f90-reference-theme .f90-fin-totals{flex-wrap:wrap!important;}
+ html.f90-reference-theme .f90-fin-list .f90-fin-summary,
+ html.f90-reference-theme #f90HistoryView .f90-fin-row .f90-fin-summary{
+    grid-template-columns:minmax(0,1.15fr) minmax(0,.75fr) minmax(0,.68fr) 9px!important;
+    gap:4px!important;padding:9px 7px!important;
+ }
+ html.f90-reference-theme .f90-fin-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media(max-width:360px){
+ html.f90-reference-theme .f90-fin-wallet-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ html.f90-reference-theme .f90-fin-date-row{gap:6px!important;}
+ html.f90-reference-theme .f90-fin-date-row input{font-size:11px!important;padding:7px 2px!important;}
+ html.f90-reference-theme #mainContent[data-page="order"] .f90-order-summary-row{min-height:110px!important;}
+}
