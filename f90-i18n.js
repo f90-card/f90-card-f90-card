@@ -35,7 +35,7 @@ async function loadSavedTranslations(){
   if(lang!=="ar")scan();
  }catch(error){console.warn("F90 translation database unavailable; using local language dictionary");}
 }
-const supported=Object.keys(NAMES);
+const supported=["ar"]; // The public store and its associated UI are Arabic-only.
 const choiceKey="f90-language";
 function deviceLanguage(){const raw=(navigator.languages&&navigator.languages[0])||navigator.language||"ar";return supported.includes(raw.toLowerCase().split("-")[0])?raw.toLowerCase().split("-")[0]:"ar";}
 function savedLanguage(){try{const v=localStorage.getItem(choiceKey);return supported.includes(v)?v:null;}catch{return null;}}
@@ -137,18 +137,11 @@ function makePicker(id){
  select.value=lang;select.addEventListener("change",()=>setLanguage(select.value,true));holder.appendChild(select);return holder;
 }
 function addControl(){
- const toolbar=document.querySelector(".header-actions")||document.querySelector(".admin-top");
- if(toolbar&&!document.getElementById("f90-language-select")){
-  const control=makePicker("f90-language-select");control.id="f90-language-control";
-  if(document.querySelector(".admin-top-title"))document.querySelector(".admin-top-title").insertAdjacentElement("afterend",control);
-  else {const admin=document.getElementById("f90AdminShortcut");const menu=document.getElementById("menuButton");if(menu)menu.after(control);else toolbar.appendChild(control);}
- }
- const drawer=document.querySelector("#adminSidebar"); // Storefront language switch stays beside the menu, as in the reference.
- if(drawer&&!document.getElementById("f90-language-drawer")){
-  const control=makePicker("f90-language-drawer");control.id="f90-language-drawer-control";
-  drawer.prepend(control);
- }
+ // No language selector in either the storefront header or administration drawer.
+ document.getElementById("f90-language-control")?.remove();
+ document.getElementById("f90-language-drawer-control")?.remove();
 }
+
 function bootstrap(){
  addControl();
  setLanguage(lang,false);

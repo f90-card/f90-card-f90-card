@@ -106,9 +106,9 @@
 <script src="./f90-security-ui.js?v=20261024-security-final2" defer></script>
 <script src="./f90-checkout-service-presentation.js?v=20261026-ref-v4" defer></script>
     <script src="./f90-vip-artwork.js?v=15ranks1" defer></script>
-    <script src="./f90-reference-navigation-20261026.js?v=nav2" defer></script>
+    <script src="./f90-reference-navigation-20261026.js?v=arabic-center1" defer></script>
     <script src="./f90-finance-ui-20261026.js?v=1" defer></script>
-    <script src="./app.js?v=20261026-finance1" defer></script>
+    <script src="./app.js?v=20261026-arabic-center1" defer></script>
     <link rel="stylesheet" href="./f90-merchant-hub.css?v=1" />
     <link rel="stylesheet" href="./f90-experience-v3.css?v=20261017-welcome-entry1" />
       <link rel="stylesheet" href="./f90-social.css?v=1" />
@@ -136,7 +136,7 @@
 <link rel="stylesheet" href="./f90-security-ui.css?v=20261024-security-final2" />
     <link rel="stylesheet" href="./f90-i18n.css?v=20261025-mobile-icon9" />
     <script src="./f90-reference-locales.js?v=20261026-1" defer></script>
-    <script src="./f90-i18n.js?v=20261026-public-pagination3" defer></script>
+    <script src="./f90-i18n.js?v=20261026-arabic-only1" defer></script>
     <link rel="stylesheet" href="./f90-reference-storefront.css?v=20261026-2" />
     <script src="./f90-reference-storefront.js?v=20261026-2" defer></script>
     <link rel="stylesheet" href="./f90-reference-corrections.css?v=20261026-3" />
@@ -146,11 +146,13 @@
     <link rel="stylesheet" href="./f90-header-vip-cream-fix.css?v=20261026-vip1" />
     <link rel="stylesheet" href="./f90-finance-reference-20261026.css?v=1" />
     <link rel="stylesheet" href="./f90-sticky-cream-final-20261026.css?v=3" />
+    <link rel="stylesheet" href="./f90-arabic-centered-header-20261026.css?v=1" />
 </head>
   <body>
     <a class="skip-link" href="#mainContent">إلى المحتوى</a>
     <header class="site-header">
       <div class="header-inner container">
+        <div id="f90HeaderLeft" class="f90-header-left"><a class="wallet-chip" href="#/deposit" id="headerWallet" aria-label="رصيد حسابك"></a></div>
         <a
           class="brand"
           href="#/"
@@ -174,7 +176,6 @@
         
         <div class="header-actions">
           <a class="icon-button f90-header-bell" id="storeBell" href="#/notifications" aria-label="الأخبار والإشعارات" title="الأخبار والإشعارات"><svg class="f90-bell-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="f90-bell-count" id="storeBellCount" hidden></span></a>
-          <a class="wallet-chip" href="#/wallet" id="headerWallet"></a>
           <button
             class="icon-button"
             id="menuButton"

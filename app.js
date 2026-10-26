@@ -150,9 +150,9 @@
       y = Math.max(-100, Math.min(100, Number(c.logo_y) || 0));
     for (const id of ["headerBrand"]) {
       const el = $(id);
-      el.className = `brand ${c.logo_fit === "contain" ? "brand-contain" : ""} ${c.logo_motion ? "motion" : ""}`;
-      el.style.setProperty("--logo-x", x + "px");
-      el.style.setProperty("--logo-y", y + "px");
+      el.className = `brand ${c.logo_fit === "contain" ? "brand-contain" : ""}`;
+      el.style.setProperty("--logo-x", "0px");
+      el.style.setProperty("--logo-y", "0px");
       el.innerHTML = S.settings.logo_url
         ? image(S.settings.logo_url, S.settings.store_name)
         : `<span class="brand-name">${e(S.settings.store_name || "أف تسعين كارد")}</span>`;
@@ -337,6 +337,7 @@
       ["security", "الحماية", "shield"],
       ["verification", "تحقق الهوية", "check"],
       ["policy/about", "من نحن", "doc"],
+      ["welcome", "التعرّف على أف تسعين", "home"],
       ...(me?.role === "trader" ? [["developers","مفتاح API","link"],["api-guide","دليل التاجر","doc"]] : []),
     ];
     $("drawerLinks").innerHTML = links.map(([route,label,icon]) =>
@@ -412,7 +413,7 @@
         )
         .join(
           "",
-        )}${f90InstallShortcuts(["ios","android","windows"],"footer")}</nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div></div>`;
+        )}${f90InstallShortcuts(["ios","android","windows"],"footer")}</nav></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ${e(S.settings.store_name || "أف تسعين كارد")} · جميع الحقوق محفوظة</span><span>تم تطوير هذا الموقع بواسطة F90</span></div><nav class="f90-official-legal" aria-label="سياسات الموقع والمعلومات الرسمية"><a href="#/policy/privacy">سياستنا · الخصوصية</a><a href="#/policy/terms">الشروط والأحكام</a><a href="#/policy/purchase">سياسة الشراء والاسترداد</a><a href="#/policy/usage">سياسة الاستخدام</a><a href="#/policy/about">عن أف تسعين</a><a href="#/support">التواصل معنا</a></nav></div>`;
   }
   let previousUnreadCount = null;
   function updateStoreBell() {

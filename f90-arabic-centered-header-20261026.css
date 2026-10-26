@@ -1,0 +1,231 @@
+/* F90 CARD – one Arabic language / exactly centered, motionless official logo.
+ * Deliberately loaded after every earlier header stylesheet. */
+html.f90-reference-theme,
+html.f90-reference-theme[dir="ltr"]{
+  direction:rtl!important;
+}
+html.f90-reference-theme .site-header{
+  position:sticky!important;top:0!important;inset-block-start:0!important;
+  z-index:60!important;transform:none!important;
+  background:#0e1422!important;color:#fff!important;
+}
+html.f90-reference-theme .site-header .header-inner.container,
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner.container{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 102px minmax(0,1fr)!important;
+  grid-template-rows:74px!important;
+  direction:ltr!important;
+  align-items:center!important;
+  justify-content:stretch!important;justify-items:stretch!important;
+  column-gap:4px!important;
+  width:100%!important;max-width:none!important;min-height:74px!important;
+  padding:0 clamp(8px,2vw,18px)!important;margin:0!important;
+  box-sizing:border-box!important;
+  transform:none!important;
+}
+html.f90-reference-theme .site-header .header-inner #f90HeaderLeft.f90-header-left{
+  grid-column:1!important;grid-row:1!important;
+  direction:ltr!important;display:flex!important;flex-flow:row nowrap!important;
+  justify-self:start!important;justify-content:flex-start!important;
+  align-items:center!important;
+  min-width:0!important;max-width:100%!important;
+  gap:5px!important;padding:0!important;margin:0!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand,
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
+  grid-column:2!important;grid-row:1!important;
+  display:grid!important;place-items:center!important;
+  position:static!important;
+  width:102px!important;min-width:0!important;max-width:102px!important;
+  height:71px!important;max-height:71px!important;
+  margin:0!important;padding:0!important;order:0!important;
+  background:transparent!important;box-shadow:none!important;
+  overflow:visible!important;border:0!important;
+  text-decoration:none!important;
+  animation:none!important;transition:none!important;
+  transform:none!important;
+  --logo-x:0px!important;--logo-y:0px!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand.brand img,
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand img{
+  display:block!important;
+  position:static!important;
+  width:98px!important;max-width:98px!important;
+  height:70px!important;min-height:0!important;max-height:70px!important;
+  padding:0!important;margin:0 auto!important;
+  object-fit:contain!important;object-position:center center!important;
+  animation:none!important;transition:none!important;
+  transform:none!important;filter:none!important;will-change:auto!important;
+}
+html.f90-reference-theme .site-header .header-inner #headerBrand :is(.brand-name,.f90-reference-brand-name){
+  display:none!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions,
+html.f90-reference-theme[dir="ltr"] .site-header .header-inner .header-actions{
+  grid-column:3!important;grid-row:1!important;
+  direction:rtl!important;
+  display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+  justify-self:end!important;justify-content:flex-start!important;
+  align-items:center!important;
+  min-width:0!important;max-width:100%!important;width:max-content!important;
+  gap:7px!important;order:0!important;
+  margin:0!important;padding:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions #menuButton{
+  display:grid!important;place-items:center!important;
+  order:0!important;flex:0 0 36px!important;
+  width:36px!important;min-width:36px!important;height:39px!important;
+  margin:0!important;padding:3px!important;
+}
+html.f90-reference-theme .site-header .header-inner .header-actions #f90ReferenceHeaderVip{
+  display:grid!important;place-items:center!important;
+  order:1!important;flex:0 0 38px!important;
+  width:38px!important;min-width:38px!important;max-width:38px!important;
+  height:43px!important;padding:0!important;margin:0!important;
+  background:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip svg.f90-vip-artwork{
+  display:block!important;width:37px!important;height:42px!important;max-width:37px!important;
+  filter:drop-shadow(0 0 2px #acb4e880)!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet{
+  order:0!important;display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:flex-start!important;
+  flex:0 1 auto!important;max-width:100%!important;min-width:0!important;
+  height:40px!important;gap:4px!important;margin:0!important;padding:0!important;
+  direction:ltr!important;color:#fff!important;
+  text-decoration:none!important;font-size:12px!important;
+  font-variant-numeric:tabular-nums!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+  max-width:clamp(40px,17vw,105px)!important;
+  display:block!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;
+  color:#fff!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet .f90-wallet-plus{
+  display:grid!important;place-items:center!important;
+  flex:0 0 20px!important;width:20px!important;height:20px!important;
+  border-radius:50%!important;background:#fff!important;color:#111827!important;
+  font-size:16px!important;font-weight:900!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack{
+  order:1!important;display:grid!important;place-items:center!important;
+  position:static!important;flex:0 0 25px!important;
+  width:25px!important;min-width:25px!important;max-width:25px!important;
+  height:36px!important;
+  margin:0!important;padding:0!important;
+  background:transparent!important;border:0!important;
+  color:#fff!important;transform:none!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack[hidden]{display:none!important;}
+/* Only Arabic: remove unused language, duplicate header bell and admin shortcut;
+   all corresponding functions are still accessible in bottom nav/drawer. */
+html.f90-reference-theme .site-header :is(
+ #f90-language-control,#f90-language-select,#storeBell,#f90AdminShortcut
+){display:none!important;}
+html.f90-reference-theme .site-header .header-inner .header-search{display:none!important;}
+html.f90-reference-theme #headerBrand.motion,
+html.f90-reference-theme #headerBrand.motion img{
+  animation:none!important;transition:none!important;transform:none!important;
+}
+html.f90-reference-theme[data-theme="cream"] .site-header,
+html.f90-reference-theme[data-theme="cream"] .site-header .header-inner.container{
+  background:#0e1422!important;color:#fff!important;
+}
+html.f90-reference-theme .site-header #f90HeaderLeft,
+html.f90-reference-theme .site-header .header-actions{color:#fff!important;}
+/* Official compact policies section, deliberately placed at the actual page footer. */
+html.f90-reference-theme #footer .f90-official-legal{
+  display:flex!important;flex-flow:row wrap!important;
+  align-items:center!important;justify-content:center!important;
+  gap:8px 17px!important;
+  margin:14px auto 0!important;padding:16px 11px!important;
+  border-top:1px solid var(--line,#333d51)!important;
+  max-width:100%!important;text-align:center!important;
+}
+html.f90-reference-theme #footer .f90-official-legal a{
+  display:inline-block!important;max-width:100%!important;
+  padding:6px 4px!important;margin:0!important;
+  font-size:12px!important;line-height:1.5!important;
+  text-decoration:none!important;
+  color:var(--text,#f2f4fb)!important;
+  border-radius:5px!important;
+}
+html.f90-reference-theme #footer .f90-official-legal a:hover{
+  text-decoration:underline!important;
+}
+html.f90-reference-theme #footer .f90-official-legal a:focus-visible{
+  outline:2px solid var(--accent,#d73661)!important;outline-offset:3px!important;
+}
+html.f90-reference-theme[data-theme="cream"] #footer .f90-official-legal{
+  border-top-color:#d8c4bb!important;
+}
+html.f90-reference-theme[data-theme="cream"] #footer .f90-official-legal a{
+  color:#513044!important;
+}
+@media(max-width:440px){
+ html.f90-reference-theme .site-header .header-inner.container,
+ html.f90-reference-theme[dir="ltr"] .site-header .header-inner.container{
+   grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr)!important;
+   grid-template-rows:69px!important;min-height:69px!important;
+   padding:0 7px!important;gap:2px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand,
+ html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand{
+   width:90px!important;max-width:90px!important;height:67px!important;max-height:67px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand img,
+ html.f90-reference-theme[dir="ltr"] .site-header .header-inner #headerBrand.brand img{
+   width:88px!important;max-width:88px!important;height:66px!important;max-height:66px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner .header-actions{
+   gap:3px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner .header-actions #menuButton{
+   flex-basis:32px!important;width:32px!important;min-width:32px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner .header-actions #f90ReferenceHeaderVip{
+   flex-basis:33px!important;width:33px!important;min-width:33px!important;height:38px!important;
+ }
+ html.f90-reference-theme .site-header .header-actions #f90ReferenceHeaderVip svg.f90-vip-artwork{
+   width:33px!important;height:37px!important;max-width:33px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet{
+   gap:3px!important;font-size:11px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+   max-width:56px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet .f90-wallet-plus{
+   flex-basis:17px!important;width:17px!important;height:17px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft{gap:2px!important;}
+ html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack{
+   flex-basis:19px!important;width:19px!important;min-width:19px!important;
+ }
+}
+@media(max-width:350px){
+ html.f90-reference-theme .site-header .header-inner.container{
+   grid-template-columns:minmax(0,1fr) 78px minmax(0,1fr)!important;
+   padding:0 5px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand{
+   width:78px!important;max-width:78px!important;
+ }
+ html.f90-reference-theme .site-header .header-inner #headerBrand.brand img{
+   width:77px!important;max-width:77px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft #headerWallet>span:not(.f90-wallet-plus){
+   max-width:42px!important;
+ }
+ html.f90-reference-theme .site-header #f90HeaderLeft #f90ReferenceBack{
+   display:none!important; /* Navigation still available in footer/browser history */
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ html.f90-reference-theme .site-header #headerBrand,
+ html.f90-reference-theme .site-header #headerBrand img{animation:none!important;}
+}
