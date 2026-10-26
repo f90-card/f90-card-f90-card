@@ -20,10 +20,11 @@
    const header=root&&root.closest(".header-inner");
    if(!root||!header)return;
    document.documentElement.dataset.f90SignedIn=ctx.me?"true":"false";
-   let name=root.querySelector(".f90-reference-brand-name");
-   if(!name){name=document.createElement("span");name.className="f90-reference-brand-name";root.append(name);}
-   name.textContent=escapeText(ctx.settings?.store_name||"أف تسعين كارد");
-   root.setAttribute("aria-label",name.textContent);
+   // The configured logo image is the entire visible brand; no duplicated text.
+   root.querySelectorAll(".f90-reference-brand-name,.brand-name").forEach(el=>el.remove());
+   root.setAttribute("aria-label",escapeText(ctx.settings?.store_name||"أف تسعين كارد"));
+   const img=root.querySelector("img");
+   if(img){img.alt=escapeText(ctx.settings?.store_name||"F90 CARD");img.loading="eager";img.decoding="async";}
    let back=$("f90ReferenceBack");
    if(!back){back=document.createElement("a");back.id="f90ReferenceBack";back.className="f90-reference-back";back.href="#/";back.innerHTML=svgBack;back.title="العودة للرئيسية";back.setAttribute("aria-label","العودة للرئيسية");header.insertBefore(back,root);}
    let vip=$("f90ReferenceHeaderVip");
@@ -35,7 +36,9 @@
      if(actions)actions.append(vip);
    }
    const level=ctx.me?num(ctx.me.vip_level,1,Math.max(1,ctx.tierCount||15)):null;
-   vip.querySelector(".f90-header-vip-level").textContent=level?"VIP"+level:"VIP";
+   // Use the very same tier artwork from the VIP page.
+   vip.dataset.f90VipLevel=String(level||1);
+   vip.innerHTML=window.F90VipArtwork?.seal(level||1)||svgCrown+'<span class="f90-header-vip-level">'+(level?"VIP"+level:"VIP")+'</span>';
    const picker=$("f90-language-control");
    if(picker){
      const textNode=Array.from(picker.childNodes).find(n=>n.nodeType===Node.TEXT_NODE);
@@ -124,19 +127,41 @@
    $("f90DrawerSecondaryToggle").setAttribute("aria-label","تغيير العملة الثانوية الحالية "+active);
    // The account currency selector remains in the normal preferences section.
  }
- function syncSocial(){
-   const list=$("drawerLinks")?.querySelector(".f90-reference-social");
-   if(!list)return;
-   list.classList.add("f90-reference-social-icons");
-   for(const a of list.querySelectorAll("a")){
-     const label=(a.textContent||"").trim();
-     const url=a.getAttribute("href")||"";
-     const key=/whatsapp|واتساب/i.test(label+url)?"wa":/youtube|youtu|يوتيوب/i.test(label+url)?"yt":/facebook|fb\.com|فيسبوك/i.test(label+url)?"fb":/telegram|t\.me|تلغرام/i.test(label+url)?"tg":/instagram|انست/i.test(label+url)?"ig":"web";
-     a.dataset.social=key;
-     a.setAttribute("aria-label",label||"رابط اجتماعي");
-     a.setAttribute("title",label||"رابط اجتماعي");
-     a.textContent=({wa:"☎",yt:"▶",fb:"f",tg:"➤",ig:"◎",web:"↗"})[key];
+ function syncSocial(ctx){
+   const host=$("drawerLinks")?.querySelector(".f90-reference-social");
+   if(!host)return;
+   host.classList.add("f90-reference-social-icons");
+   // Use only actual configured Instagram, TikTok and the official customer-service
+   // WhatsApp number (not the public announcement/channel URL).
+   const links=Array.isArray(ctx.settings?.config?.social_links)?ctx.settings.config.social_links:[];
+   const allowed=[
+      {key:"ig",hostnames:["instagram.com","www.instagram.com"],icon:"https://cdn.simpleicons.org/instagram/E4405F",name:"إنستجرام"},
+      {key:"tt",hostnames:["tiktok.com","www.tiktok.com"],icon:"https://cdn.simpleicons.org/tiktok/25F4EE",name:"تيك توك"}
+   ];
+   const entries=[];
+   for(const kind of allowed){
+     const item=links.find(v=>{
+       if(v?.enabled===false)return false;
+       try {const u=new URL(String(v.url));return u.protocol==="https:"&&kind.hostnames.includes(u.hostname);}catch{return false;}
+     });
+     if(item)entries.push({key:kind.key,name:kind.name,url:item.url,icon:kind.icon});
    }
+   const phone=String(ctx.settings?.config?.whatsapp||"").replace(/\D/g,"");
+   if(/^\d{8,15}$/.test(phone))entries.push({
+      key:"wa",name:"خدمة العملاء واتساب",url:"https://wa.me/"+phone,
+      icon:"https://cdn.simpleicons.org/whatsapp/25D366"
+   });
+   host.replaceChildren();
+   for(const entry of entries){
+     const a=document.createElement("a");
+     a.href=entry.url;a.target="_blank";a.rel="noopener noreferrer";
+     a.dataset.social=entry.key;a.title=entry.name;a.setAttribute("aria-label",entry.name);
+     const img=document.createElement("img");
+     img.src=entry.icon;img.alt=entry.name;img.loading="lazy";img.width=25;img.height=25;
+     a.appendChild(img);
+     host.appendChild(a);
+   }
+   host.hidden=!entries.length;
  }
  function syncWhatsapp(ctx){
    let bubble=$("f90CustomerWhatsapp");
@@ -192,7 +217,7 @@
    buildHeader(ctx);
    addDrawerProfile(ctx);
    syncSecondaryCurrency(ctx);
-   syncSocial();
+   syncSocial(ctx);
    syncWhatsapp(ctx);
    syncMfa(ctx);
  }
