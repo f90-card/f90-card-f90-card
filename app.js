@@ -325,7 +325,7 @@
     const drawerPreferences=document.querySelector("#drawer .drawer-preferences");
     if(drawerPreferences)document.querySelector("#drawerProfile .f90-drawer-wallet-card")?.insertAdjacentElement("afterend",drawerPreferences);
     const links = [
-      ["/", "الرئيسية", "grid"],
+      ["/", "الرئيسية", "home"],
       ["notifications", "الإشعارات", "bell"],
       ["deposit", "إضافة رصيد", "plus"],
       ["deposits", "دفعاتي", "wallet"],
@@ -369,10 +369,10 @@
     $("categoryNav").innerHTML = "";
     $("mobileDock").innerHTML = [
       ["search", "بحث", "search"],
-      ["orders", "طلباتي", "clock"],
+      ["orders", "طلباتي", "cart"],
       ["notifications", "الإشعارات", "bell"],
       ["wallet", "المحفظة", "wallet"],
-      ["", "الرئيسية", "grid"],
+      ["", "الرئيسية", "home"],
     ].map(([page,label,icon])=>`<a href="#/${page}" data-dock-page="${page}" aria-label="${label}">${I(icon)}<span>${label}</span></a>`).join("");
     $("footer").innerHTML =
       `<div class="container"><div class="footer-grid"><div><img class="f90-footer-logo" src="./assets/icons/icon-192.png" width="54" height="54" alt="شعار F90 Card"><h3>${e(S.settings.store_name || "أف تسعين كارد")}</h3><p>${e(c.footer_ar || "كل عالمك الرقمي في مكان واحد. خدمات تُشترى من محفظتك، وتتابعها من حسابك.")}</p><span class="muted small">فلسطين · رام الله</span></div><div><h3>عالم المتجر</h3><nav><a href="#/">الأقسام</a><a href="#/wallet">محفظتي</a><a href="#/orders">طلباتي</a>${me?.role === "trader" ? '<a href="#/developers">صفحة التاجر</a>' : ""}</nav></div><div><h3>المعلومات</h3><nav><a href="#/agents">وكلاؤنا</a>${Object.entries(
