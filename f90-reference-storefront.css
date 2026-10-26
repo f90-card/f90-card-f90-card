@@ -317,3 +317,24 @@ html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm
 html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-checkout-summary{background:#e1e8f5!important;color:#1b2640!important;}
 html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm .f90-visa-price strong,
 html.f90-reference-theme[data-theme="cream"] .f90-premium-checkout #checkoutForm>.f90-reference-instructions{color:#1b2640!important;}
+
+
+/* Editable circular photo with small camera action as in the profile reference. */
+html.f90-reference-theme #mainContent[data-page="profile"] .profile-cover{position:relative!important;}
+html.f90-reference-theme #mainContent[data-page="profile"] .f90-reference-avatar-upload{
+  position:absolute!important;top:82px!important;left:calc(50% + 25px)!important;
+  display:grid!important;place-items:center!important;width:25px!important;height:25px!important;
+  padding:0!important;border:2px solid #111827!important;border-radius:50%!important;
+  background:#e84b57!important;color:#fff!important;box-shadow:none!important;z-index:5!important;
+  cursor:pointer!important;overflow:hidden!important;
+}
+html.f90-reference-theme #mainContent[data-page="profile"] .f90-reference-avatar-upload span{
+  display:grid!important;place-items:center!important;font-size:11px!important;padding:0!important;line-height:1!important;
+}
+html.f90-reference-theme #mainContent[data-page="profile"] .f90-reference-avatar-upload input[type=file]{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  min-height:0!important;margin:0!important;padding:0!important;opacity:0!important;cursor:pointer!important;z-index:1!important;
+}
+html.f90-reference-theme #mainContent[data-page="profile"] .f90-reference-avatar-upload:focus-within{
+  outline:2px solid #63a9ff!important;outline-offset:2px!important;
+}
