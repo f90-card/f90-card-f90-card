@@ -43,12 +43,17 @@
      const select=picker.querySelector("select");
      if(select)select.setAttribute("aria-label","تغيير لغة الموقع");
    }
+   const wallet=$("headerWallet");
+   if(wallet&&!wallet.querySelector(".f90-wallet-plus")){
+     wallet.querySelector("svg")?.remove();
+     const plus=document.createElement("span");plus.className="f90-wallet-plus";plus.textContent="+";wallet.prepend(plus);
+   }
    updateBack();
  }
  function updateBack(){
    const back=$("f90ReferenceBack");
    if(!back)return;
-   const page=decodeURIComponent((location.hash||"#/").replace(/^#\//,"").split("/")[0]||"");
+   const page=(location.hash||"#/").replace(/^#\//,"").split("/")[0]||"";
    back.hidden=!page;
    document.documentElement.dataset.f90InnerPage=page?"true":"false";
  }
