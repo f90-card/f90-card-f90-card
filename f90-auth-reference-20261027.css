@@ -1,0 +1,503 @@
+/* F90 CARD authentication redesign: reference-inspired navy login & registration.
+   Strictly scoped to login/register/forgot. Supabase, sessions and financial pages unchanged. */
+html:has(#mainContent .f90-auth-layout),
+html:has(#mainContent .f90-auth-layout) body {
+  min-height:100%!important;
+  background:#111827!important;
+  color-scheme:dark!important;
+  --bg:#111827!important;
+  --surface:#111827!important;
+  --surface2:#262c3c!important;
+  --text:#f7f8fb!important;
+  --muted:#a3aabc!important;
+}
+body:has(#mainContent .f90-auth-layout) {
+  min-height:100dvh!important;
+  overflow-x:hidden!important;
+  background:#111827!important;
+}
+body:has(#mainContent .f90-auth-layout)::before,
+body:has(#mainContent .f90-auth-layout) #f90ThemeBackdrop,
+body:has(#mainContent .f90-auth-layout) .site-header,
+body:has(#mainContent .f90-auth-layout) .site-footer,
+body:has(#mainContent .f90-auth-layout) #mobileDock,
+body:has(#mainContent .f90-auth-layout) #promotionBar,
+body:has(#mainContent .f90-auth-layout) #f90MfaReminder,
+body:has(#mainContent .f90-auth-layout) .f90-seo-directory-link,
+body:has(#mainContent .f90-auth-layout) .f90-customer-whatsapp,
+body:has(#mainContent .f90-auth-layout) #f90CustomerWhatsapp,
+body:has(#mainContent .f90-auth-layout) #f90WelcomeScene {
+  display:none!important;
+}
+body:has(#mainContent .f90-auth-layout) #mainContent.container.main-content {
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:100dvh!important;
+  padding:0!important;
+  margin:0!important;
+  background:#111827!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#mainContent .f90-auth-layout {
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:100%!important;
+  min-height:100dvh!important;
+  padding:36px 16px 20px!important;
+  margin:0 auto!important;
+  background:#111827!important;
+  color:#e7eaf2!important;
+  box-sizing:border-box!important;
+  isolation:isolate!important;
+  text-align:center!important;
+}
+#mainContent .f90-auth-card {
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  width:min(100%,470px)!important;
+  max-width:470px!important;
+  min-width:0!important;
+  padding:22px 20px 28px!important;
+  margin:0 auto!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+  color:#e7eaf2!important;
+  box-sizing:border-box!important;
+}
+#mainContent .f90-auth-register .f90-auth-card {
+  width:min(100%,495px)!important;
+  max-width:495px!important;
+  padding:34px 20px 31px!important;
+  border:1px solid #0d2650!important;
+  background:#111827!important;
+  box-shadow:0 0 19px rgba(0,60,160,.11)!important;
+}
+#mainContent .f90-auth-brand {
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:100%!important;
+  height:154px!important;
+  margin:0 auto 21px!important;
+  padding:0!important;
+  text-align:center!important;
+  overflow:visible!important;
+}
+#mainContent .f90-auth-brand img {
+  display:block!important;
+  width:155px!important;
+  height:146px!important;
+  max-width:65%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  margin:0 auto!important;
+  border:none!important;
+  background:transparent!important;
+  filter:drop-shadow(0 4px 14px #0003)!important;
+}
+#mainContent .f90-auth-login .f90-auth-brand,
+#mainContent .f90-auth-recover .f90-auth-brand {
+  height:170px!important;
+  margin-bottom:36px!important;
+}
+#mainContent .f90-auth-form {
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:16px!important;
+  margin:0!important;
+  padding:0!important;
+}
+#mainContent .f90-auth-name-row {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:100%!important;
+  gap:16px!important;
+  margin:0 0 3px!important;
+}
+#mainContent .f90-auth-input {
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:52px!important;
+  background:#262c3b!important;
+  border:1px solid transparent!important;
+  border-radius:999px!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  transition:border-color .15s,box-shadow .15s!important;
+}
+#mainContent .f90-auth-input:focus-within {
+  border-color:#3d78fc!important;
+  box-shadow:0 0 0 3px #1456f527!important;
+}
+#mainContent .f90-auth-input input {
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:50px!important;
+  height:50px!important;
+  padding:0 22px!important;
+  margin:0!important;
+  background:transparent!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:999px!important;
+  box-shadow:none!important;
+  color:#f7f9ff!important;
+  -webkit-text-fill-color:#f7f9ff!important;
+  font-family:inherit!important;
+  font-size:15px!important;
+  line-height:1.4!important;
+  font-weight:650!important;
+  text-align:right!important;
+  direction:rtl!important;
+}
+#mainContent .f90-auth-input input::placeholder {
+  color:#aeb3bf!important;
+  -webkit-text-fill-color:#aeb3bf!important;
+  opacity:1!important;
+  font-weight:650!important;
+}
+#mainContent .f90-auth-input input:-webkit-autofill,
+#mainContent .f90-auth-input input:-webkit-autofill:focus {
+  -webkit-box-shadow:0 0 0 100px #262c3b inset!important;
+  -webkit-text-fill-color:#f7f9ff!important;
+  caret-color:#f7f9ff!important;
+}
+#mainContent .f90-auth-input .f90-auth-field-icon,
+#mainContent .f90-auth-input .f90-auth-eye {
+  position:absolute!important;
+  left:18px!important;
+  right:auto!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  display:grid!important;
+  place-items:center!important;
+  width:25px!important;
+  height:29px!important;
+  margin:0!important;
+  padding:2px!important;
+  background:transparent!important;
+  color:#f7f8fb!important;
+  border:0!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+}
+#mainContent .f90-auth-input .f90-auth-field-icon {
+  pointer-events:none!important;
+}
+#mainContent .f90-auth-input :is(.f90-auth-field-icon,.f90-auth-eye) svg {
+  width:22px!important;
+  height:22px!important;
+}
+#mainContent .f90-auth-input .f90-auth-eye.is-visible svg path:last-child {
+  display:none!important;
+}
+#mainContent .f90-auth-input:has(.f90-auth-eye) input,
+#mainContent .f90-auth-input:has(.f90-auth-field-icon) input {
+  padding-left:56px!important;
+}
+#mainContent .f90-auth-pass-hints {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+  width:100%!important;
+  padding:2px 12px 4px!important;
+  margin:-5px 0 1px!important;
+  color:#aeb5c4!important;
+  text-align:right!important;
+  font-size:11px!important;
+  line-height:1.65!important;
+}
+#mainContent .f90-auth-pass-hints p {
+  position:relative!important;
+  margin:0!important;
+  padding-right:11px!important;
+  color:inherit!important;
+  font-size:inherit!important;
+}
+#mainContent .f90-auth-pass-hints p::before {
+  content:"·";
+  position:absolute;
+  right:0;
+  top:0;
+}
+#mainContent .f90-auth-primary {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:51px!important;
+  min-height:51px!important;
+  padding:8px 16px!important;
+  margin:4px 0 0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:linear-gradient(105deg,#0961fc,#063bd7)!important;
+  box-shadow:0 3px 10px #0650e123!important;
+  color:#f7f9ff!important;
+  -webkit-text-fill-color:#f7f9ff!important;
+  text-align:center!important;
+  font-size:16px!important;
+  font-weight:700!important;
+}
+#mainContent .f90-auth-primary:disabled {opacity:.68!important;}
+#mainContent .f90-auth-account-prompt {
+  color:#9ca5b8!important;
+  font-weight:700!important;
+  font-size:14px!important;
+  margin:20px 0 4px!important;
+}
+#mainContent .f90-auth-text-link {
+  display:block!important;
+  text-align:center!important;
+  color:#f0f2f7!important;
+  font-weight:700!important;
+  font-size:14px!important;
+  text-decoration:none!important;
+}
+#mainContent .f90-auth-forgot {
+  display:block!important;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:15px 0 9px!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  color:#1c65f7!important;
+  text-decoration:underline!important;
+  text-underline-offset:3px!important;
+  font-size:14px!important;
+  font-weight:650!important;
+  align-self:flex-start!important;
+}
+#mainContent .f90-auth-register-link {
+  display:block!important;
+  width:100%!important;
+  margin:6px auto!important;
+  padding:0!important;
+  color:#2376ff!important;
+  text-align:center!important;
+  font-size:15px!important;
+  font-weight:700!important;
+}
+#mainContent .f90-auth-divider {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  margin:8px auto!important;
+  color:#ffffff!important;
+  gap:0!important;
+}
+#mainContent .f90-auth-divider::before,
+#mainContent .f90-auth-divider::after {
+  content:""!important;
+  height:1px!important;
+  background:#293345!important;
+  flex:1 1 auto!important;
+}
+#mainContent .f90-auth-divider span {
+  flex:0 0 auto!important;
+  display:grid!important;
+  place-items:center!important;
+  width:30px!important;
+  height:30px!important;
+  margin:0 0!important;
+  border-radius:50%!important;
+  background:#565960!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:750!important;
+}
+#mainContent .google-button.f90-auth-google {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-height:48px!important;
+  margin:10px 0 0!important;
+  padding:6px 16px!important;
+  gap:21px!important;
+  background:#fff!important;
+  border:0!important;
+  border-radius:999px!important;
+  box-shadow:0 2px 9px #0002!important;
+  color:#343434!important;
+  font-size:14px!important;
+  font-weight:750!important;
+  direction:ltr!important;
+}
+#mainContent .f90-auth-google-g {
+  font:bold 28px Arial,sans-serif!important;
+  line-height:1!important;
+  color:#4285f4!important;
+  background:conic-gradient(from -35deg,#4285f4 0 93deg,#34a853 93deg 155deg,#fbbc05 155deg 218deg,#ea4335 218deg 291deg,#4285f4 291deg)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+}
+#mainContent .f90-auth-extra {
+  width:100%!important;
+  margin:-2px 0 0!important;
+  color:#b2bed2!important;
+  text-align:right!important;
+  font-size:12px!important;
+}
+#mainContent .f90-auth-extra summary {
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:30px!important;
+  padding:3px 10px!important;
+  cursor:pointer!important;
+  color:#9bacd2!important;
+  font-size:12px!important;
+}
+#mainContent .f90-auth-extra-fields {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  padding:9px 4px 0!important;
+  width:100%!important;
+}
+#mainContent .f90-auth-extra-fields .field {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  text-align:right!important;
+  color:#c1c9d7!important;
+  font-size:12px!important;
+}
+#mainContent .f90-auth-extra-fields :is(input,select) {
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:43px!important;
+  padding:7px 10px!important;
+  border:1px solid #45506a!important;
+  border-radius:12px!important;
+  background:#262c3b!important;
+  color:#fff!important;
+  font-size:14px!important;
+}
+#mainContent .f90-auth-phone-fields {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+#mainContent .f90-auth-consent {
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  margin:-4px 4px 0!important;
+  color:#b6bed0!important;
+  font-size:11px!important;
+  line-height:1.6!important;
+  text-align:right!important;
+  cursor:pointer!important;
+}
+#mainContent .f90-auth-consent input {
+  width:17px!important;
+  height:17px!important;
+  flex:0 0 17px!important;
+  margin:0!important;
+  accent-color:#1760f5!important;
+}
+#mainContent .f90-auth-consent a {color:#79aaff!important;text-decoration:underline!important;}
+#mainContent .f90-auth-form .inline-error {
+  min-height:0!important;
+  margin:0!important;
+  color:#ff8896!important;
+  text-align:right!important;
+  font-size:12px!important;
+}
+#mainContent .f90-auth-form .inline-error:empty {
+  display:none!important;
+}
+#mainContent .f90-auth-help {
+  margin:10px 0!important;
+  color:#a5b2c7!important;
+  font-size:12px!important;
+  line-height:1.8!important;
+}
+#mainContent .f90-auth-privacy {
+  width:min(100%,495px)!important;
+  max-width:495px!important;
+  margin:26px auto 0!important;
+  color:#7c89a5!important;
+  font-size:10px!important;
+  line-height:1.8!important;
+  text-align:center!important;
+}
+#mainContent .f90-auth-privacy a {color:#a8bde3!important;text-decoration:underline!important;}
+@media (max-width:600px) {
+  #mainContent .f90-auth-layout {
+    padding:24px 15px 18px!important;
+    min-height:100dvh!important;
+  }
+  #mainContent .f90-auth-card {
+    width:min(100%,425px)!important;
+    padding:20px 5px 27px!important;
+  }
+  #mainContent .f90-auth-login .f90-auth-brand,
+  #mainContent .f90-auth-recover .f90-auth-brand {
+    height:150px!important;
+    margin-bottom:34px!important;
+  }
+  #mainContent .f90-auth-register .f90-auth-card {
+    width:min(100%,420px)!important;
+    padding:23px 13px 24px!important;
+  }
+  #mainContent .f90-auth-register .f90-auth-brand {
+    height:142px!important;
+    margin-bottom:16px!important;
+  }
+  #mainContent .f90-auth-register .f90-auth-brand img {
+    width:142px!important;
+    height:132px!important;
+  }
+  #mainContent .f90-auth-name-row {gap:12px!important;}
+  #mainContent .f90-auth-form {gap:14px!important;}
+  #mainContent .f90-auth-input input {
+    font-size:14px!important;
+    padding-inline:18px!important;
+  }
+  #mainContent .f90-auth-input:has(.f90-auth-eye) input,
+  #mainContent .f90-auth-input:has(.f90-auth-field-icon) input {
+    padding-left:51px!important;
+  }
+  #mainContent .f90-auth-privacy {font-size:10px!important;margin-top:20px!important;}
+}
+@media (max-width:365px) {
+  #mainContent .f90-auth-register .f90-auth-card {padding-inline:10px!important;}
+  #mainContent .f90-auth-name-row {gap:8px!important;}
+  #mainContent .f90-auth-input input {font-size:12px!important;padding-inline:14px!important;}
+  #mainContent .f90-auth-input {min-height:49px!important;}
+  #mainContent .f90-auth-input input {height:47px!important;min-height:47px!important;}
+  #mainContent .f90-auth-form {gap:12px!important;}
+  #mainContent .f90-auth-primary {min-height:48px!important;height:48px!important;}
+}
+@media (max-height:690px) {
+  #mainContent .f90-auth-layout {justify-content:flex-start!important;}
+  #mainContent .f90-auth-login .f90-auth-card {margin-top:5vh!important;}
+}
+@media (prefers-reduced-motion:reduce) {
+  #mainContent .f90-auth-input {transition:none!important;}
+}
