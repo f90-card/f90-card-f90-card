@@ -524,7 +524,7 @@
             const url=type==="product"?'./index.html#/product/'+encodeURIComponent(x.target_id):type==="category"?'./index.html#/category/'+encodeURIComponent(x.target_id):"";
             const link=type==="customer"&&x.target_id?'<button type="button" class="button secondary small" data-action="find-user" data-id="'+e(x.target_id)+'">فتح حساب العميل</button>':
               url?'<a href="'+url+'" target="_blank" rel="noopener noreferrer">فتح العنصر</a>':
-              type==="order"?'<a href="#/orders">إدارة الطلبات</a>':type==="deposit"?'<a href="#/deposits">إدارة الإيداعات</a>':"";
+              type==="order"?'<button type="button" class="button secondary small" data-action="audit-target" data-kind="order" data-id="'+e(x.target_id)+'">تفاصيل الطلب مباشرة</button>':type==="deposit"?'<button type="button" class="button secondary small" data-action="audit-target" data-kind="deposit" data-id="'+e(x.target_id)+'">تفاصيل الإيداع مباشرة</button>':"";
             return '<tr><td>'+e(C.date(x.created_at))+'<br><small>#'+e(x.id)+'</small></td>'+
               '<td><strong>'+e(auditName(x.action))+'</strong><br><small dir="ltr">'+e(x.action)+'</small></td>'+
               '<td><strong>'+e(x.customer_name||x.item_name||x.target_id||"غير محدد")+'</strong>'+
@@ -572,13 +572,25 @@
         "catalog.update": "تعديل عنصر",
         "provider.save": "حفظ إعدادات مورّد",
         "provider.toggle": "تفعيل أو إيقاف مورّد",
+        "catalog.bulk_image":"استبدال صور عناصر",
+        "catalog.bulk_show":"تفعيل أو إخفاء مجموعة",
+        "catalog.bulk_delete":"حذف مجموعة عناصر",
+        "currency.save":"تعديل سعر عملة",
+        "currency.delete":"حذف عملة",
+        "user.discount":"تعديل خصم مستخدم",
+        "wallet.adjust":"تعديل رصيد محفظة",
+        "salary.review":"مراجعة إيداع رواتب",
+        "credit_code.issued":"إصدار كود رصيد",
+        "credit_code.redeemed":"استخدام كود رصيد",
+        "credit_code.revoked":"إلغاء كود رصيد",
+        "radio.configure":"تعديل إعدادات الراديو",
         "key.create": "إصدار مفتاح تاجر",
         "key.update": "تعديل صلاحيات مفتاح تاجر",
         "key.revoke": "إلغاء مفتاح تاجر",
       }[a] ||
       (a.startsWith("order.")
         ? "تغيير حالة الطلب: " + (C.statuses[a.split(".")[1]] || "مراجعة")
-        : "إجراء إداري")
+        : "إجراء: "+a)
     );
   }
   function detailOrder(o) {
@@ -3107,6 +3119,17 @@
         });
         $("identityImage").innerHTML =
           `<img class="receipt-preview" src="${e(r.signedUrl)}" alt="مستند توثيق خاص">`;
+      } else if (action === "audit-target") {
+        const kind=b.dataset.kind;
+        const {data,error}=await A.client.rpc("f90_manager_audit_target",{p_kind:kind,p_id:b.dataset.id});
+        if(error)throw new Error(error.message||"تعذّر فتح سجل العملية");
+        if(!data?.id)throw new Error("العنصر غير موجود");
+        const labels={id:"معرّف العملية",type:"نوع العملية",customer_name:"اسم العميل",customer_id:"معرّف العميل",customer_email:"البريد الإلكتروني",item_name:"العنصر",currency:"العملة",amount:"المبلغ",usd_amount:"القيمة بالدولار",rate_snapshot:"سعر الصرف وقت الطلب",status:"الحالة",created_at:"وقت الإنشاء",reviewed_at:"وقت المراجعة",review_note:"ملاحظة المراجعة",reference:"الرقم المرجعي",fee_percent:"نسبة العمولة المحفوظة"};
+        modal("تفاصيل "+data.type+": "+String(data.item_name||"عملية"),
+          '<section class="f90-user-facts">'+Object.entries(labels)
+            .filter(([key])=>data[key]!==undefined&&data[key]!==null&&data[key]!=="")
+            .map(([key,label])=>'<div class="f90-user-fact"><span>'+e(label)+'</span><strong>'+e(String(data[key]))+'</strong></div>').join("")+
+          '</section><div class="actions"><a class="button secondary" href="#/'+(kind==="order"?"orders":"deposits")+'">فتح قسم '+(kind==="order"?"الطلبات":"الإيداعات")+'</a></div>');
       } else if (action === "find-user") {
         const r = await A.call("staff.list", {
           kind: "users",
