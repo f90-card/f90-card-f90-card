@@ -279,7 +279,7 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   padding:7px 10px;margin:6px 0 0;border-radius:8px;min-height:32px;
 }
 
-/* Deposit method art cards: polished image corners WITHOUT any outer frame or box. */
+/* Storefront deposit method images: no extra box, clean rounded art. */
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile,
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile:hover,
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile.selected {
@@ -302,17 +302,20 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   overflow:visible!important;
   text-decoration:none!important;
 }
+/* Clip only the artwork corners, without a frame around the tile. */
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame {
   display:block!important;
   width:100%!important;
   aspect-ratio:1/1!important;
+  padding:0!important;
+  margin:0!important;
   overflow:hidden!important;
   border:0!important;
   outline:0!important;
-  border-radius:15px!important;
+  border-radius:16px!important;
   background:transparent!important;
   background-image:none!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.19)!important;
+  box-shadow:0 6px 18px rgba(0,0,0,.18)!important;
   transition:transform .18s ease,box-shadow .18s ease!important;
 }
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame img {
@@ -323,11 +326,11 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   margin:0!important;
   border:0!important;
   outline:0!important;
-  border-radius:15px!important;
+  border-radius:16px!important;
   background:transparent!important;
   background-image:none!important;
   box-shadow:none!important;
-  object-fit:contain!important;
+  object-fit:cover!important;
 }
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile > strong {
   display:flex!important;
@@ -335,18 +338,18 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   align-items:center!important;
   justify-content:center!important;
   min-height:29px!important;
-  margin:0!important;
+  margin:6px 0 0!important;
   padding:0 2px!important;
-  color:#f6f7fb!important;
+  color:#f5f7fb!important;
   text-align:center!important;
   font-size:clamp(10px,1.75vw,13px)!important;
-  font-weight:760!important;
+  font-weight:750!important;
   line-height:1.4!important;
   overflow-wrap:anywhere!important;
 }
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile:hover .f90-method-image-frame {
   transform:translateY(-2px)!important;
-  box-shadow:0 8px 20px rgba(0,0,0,.24)!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.24)!important;
 }
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile:active .f90-method-image-frame {
   transform:scale(.985)!important;
@@ -355,12 +358,19 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   outline:2px solid #92b8ff!important;
   outline-offset:4px!important;
 }
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile::before,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile::after,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame::before,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame::after {
+  display:none!important;
+  content:none!important;
+}
 #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile.f90-method-unavailable {
-  opacity:.50!important;
+  opacity:.5!important;
   filter:saturate(.75)!important;
 }
-@media(max-width:410px) {
-  #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile {gap:6px!important;}
+@media(max-width:410px){
+  #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile {gap:5px!important;}
   #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame,
   #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame img {
     border-radius:12px!important;
@@ -368,9 +378,10 @@ body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile > strong {
     font-size:10px!important;
     min-height:28px!important;
+    margin-top:6px!important;
   }
 }
-@media(prefers-reduced-motion:reduce) {
+@media(prefers-reduced-motion:reduce){
   #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame {
     transition:none!important;
   }
