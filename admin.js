@@ -1175,7 +1175,7 @@
         check("require_reference","إلزام إدخال الحقل عندما يظهر",d.require_reference===true) +
         field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
-        field("accepted_currencies","عملات هذه الطريقة (من العملات المفعّلة)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
+        '<p class="muted small">كل العملات المفعّلة في المتجر متاحة لاختيار العميل وقت طلب الإيداع، بغضّ النظر عن عملة حسابه. لا تتغيّر عمليات الإيداع القديمة.</p>'+
 
         field("barcode_url", "رابط صورة الباركود (اختياري)", "url", d.barcode_url || "") +
         field("barcode_file", "رفع صورة باركود طريقة الدفع", "file", "", 'accept="image/png,image/jpeg,image/webp"') +
@@ -1816,7 +1816,8 @@
           if(!Number.isFinite(value)||value<0||value>50)throw new Error("يجب أن تكون عمولة الإيداع بين 0 و50٪");
           return Math.round(value*1000)/1000;
         })(),
-        accepted_currencies: String(d.accepted_currencies||"").toUpperCase().split(/[,،\s]+/).filter(Boolean).filter((code,index,all)=>all.indexOf(code)===index).slice(0,20),
+        accepted_currencies: Array.isArray(old.accepted_currencies)&&old.accepted_currencies.length?
+          old.accepted_currencies:S.rates.filter(r=>r.is_enabled&&!r.is_archived).map(r=>r.currency),
         barcode_url: d.barcode_file?.size ? (await A.upload(d.barcode_file, "f90-images", "payment-barcodes")).url : (d.barcode_url || ""),
         image_url: await selectedImage(form),
       });
@@ -2452,7 +2453,7 @@
         '<div class="notice error">'+e(String(error.message||error))+'</div>';return;
     }
     const labels={salary_new:"سحب رواتب Xena Live",deposit_new:"إيداع جديد",verification_new:"توثيق جديد",order_review:"طلب إلغاء أو اعتراض",user_new:"عميل جديد",order_manual:"طلب يدوي جديد",manual_request:"طلب خدمة يدوية",test:"رسالة اختبار"};
-    const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة"};
+    const states={pending:"بانتظار الإرسال",sending:"جارٍ الإرسال",sent:"أُرسلت",failed:"محاولة فاشلة",suppressed:"تجاهله النظام حسب إعداداتك"};
     const recent=(result.recent||[]).map(x=>
       '<tr><td>'+e(labels[x.event_type]||x.event_type)+'</td><td>'+e(states[x.status]||x.status)+'</td>'+
       '<td>'+e(C.date(x.created_at))+'</td><td>'+e(x.attempt_count||0)+'</td></tr>').join("");
