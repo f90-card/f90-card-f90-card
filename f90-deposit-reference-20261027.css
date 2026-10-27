@@ -1,0 +1,234 @@
+/* F90 CARD - reference-style top-up catalog and payment method details (2026-10-27).
+   Scoped: only the top-up route. Financial calculation/validation remains server-owned. */
+body:has(#mainContent[data-page="deposit"]) {
+  --bg:#111827!important;--surface:#111827!important;--surface2:#252c3c!important;
+  --line:#2c364c!important;--text:#f5f7fb!important;--muted:#aeb7cb!important;
+  --accent:#1164f6!important;--accent2:#0047d4!important;
+  background:#111827!important;color:#f5f7fb!important;
+}
+body:has(#mainContent[data-page="deposit"])::before,
+body:has(#mainContent[data-page="deposit"]) #f90ThemeBackdrop {
+  display:none!important;
+}
+body:has(#mainContent[data-page="deposit"]) .site-header{
+  background:#111827!important;color:#fff!important;
+  box-shadow:none!important;
+}
+body:has(#mainContent[data-page="deposit"]) #mobileDock{
+  background:#111827!important;
+}
+#mainContent[data-page="deposit"]{
+  width:100%!important;max-width:1250px!important;min-height:65dvh!important;
+  color:#f5f7fb!important;
+  padding:16px clamp(12px,2.2vw,28px) 100px!important;
+  margin:0 auto!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-overview{
+  max-width:1100px!important;margin:0 auto!important;width:100%!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero{
+  width:100%!important;min-height:152px!important;
+  padding:26px clamp(18px,4vw,40px)!important;
+  margin:12px 0 27px!important;
+  background:linear-gradient(113deg,#5724a7 0%,#4c3d9b 27%,#2779ad 65%,#00cda5 100%)!important;
+  border:1px solid #5c699b30!important;border-radius:10px!important;
+  box-shadow:0 4px 12px #0002!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  gap:7px!important;direction:rtl!important;color:#fff!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero>strong{
+  display:block!important;text-align:right!important;
+  color:#f2f9ff!important;font-size:clamp(15px,2.6vw,20px)!important;
+  font-weight:850!important;line-height:1.5!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero>span{
+  color:#eaf4ff!important;font-weight:750!important;font-size:13px!important;text-align:right!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-entry-controls{
+  width:100%!important;display:flex!important;align-items:center!important;
+  gap:8px!important;direction:ltr!important;min-width:0!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-entry-controls>input{
+  flex:1 1 auto!important;min-width:0!important;width:100%!important;height:42px!important;
+  padding:7px 14px!important;border-radius:24px!important;
+  background:#141c2bd6!important;color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  border:1px solid #ffffff55!important;outline:none!important;
+  font:700 13px ui-monospace,monospace!important;text-align:left!important;letter-spacing:.5px!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-entry-controls>input::placeholder{color:#c3ccdf!important;-webkit-text-fill-color:#c3ccdf!important;}
+#mainContent[data-page="deposit"] .f90-credit-entry-controls>button{
+  flex:0 0 auto!important;min-height:42px!important;padding:8px 17px!important;
+  background:#0762ed!important;border:1px solid #fff4!important;border-radius:22px!important;
+  color:#fff!important;font-size:12px!important;font-weight:800!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero>small{color:#f5faff!important;font-size:11px!important;font-weight:700!important;}
+#mainContent[data-page="deposit"] .f90-credit-hero-note{color:#e0f4f4!important;font-size:11px!important;line-height:1.6!important;margin:0!important;}
+#mainContent[data-page="deposit"] #f90CreditRedeemStatus:not(:empty){padding:6px 10px!important;background:#063c615c!important;border-radius:8px!important;font-weight:700!important;font-size:12px!important;}
+#mainContent[data-page="deposit"] .f90-credit-actions{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  gap:10px!important;margin:12px auto 17px!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-actions h2{margin:0!important;font-size:clamp(16px,2.4vw,23px)!important;font-weight:800!important;color:#fff!important;}
+#mainContent[data-page="deposit"] .f90-credit-actions a{color:#a3c6ff!important;font-size:12px!important;}
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:clamp(9px,2vw,20px)!important;width:100%!important;
+  align-items:stretch!important;justify-content:center!important;
+}
+#mainContent[data-page="deposit"] .method-grid .method-tile{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  justify-content:flex-start!important;gap:3px!important;
+  min-height:0!important;padding:0!important;margin:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  border-radius:12px!important;overflow:visible!important;
+  text-decoration:none!important;color:#fff!important;
+}
+#mainContent[data-page="deposit"] .method-grid .method-tile .f90-method-image-frame{
+  display:block!important;width:100%!important;aspect-ratio:1/1!important;
+  padding:0!important;margin:0!important;overflow:hidden!important;
+  background:#0c1425!important;border-radius:11px!important;
+  border:1px solid #23334c!important;box-shadow:0 2px 8px #0004!important;
+}
+#mainContent[data-page="deposit"] .method-grid .method-tile .f90-method-image-frame img{
+  display:block!important;width:100%!important;height:100%!important;max-width:none!important;
+  margin:0!important;object-fit:contain!important;border:0!important;
+  border-radius:9px!important;
+}
+#mainContent[data-page="deposit"] .method-grid .method-tile>strong{
+  display:block!important;text-align:center!important;
+  padding:5px 2px 2px!important;font-size:clamp(9px,1.8vw,14px)!important;
+  line-height:1.4!important;font-weight:800!important;color:#fff!important;
+  overflow-wrap:anywhere!important;
+}
+#mainContent[data-page="deposit"] .method-grid .method-tile>small{display:none!important;}
+#mainContent[data-page="deposit"] .method-grid .method-tile.f90-method-unavailable{
+  opacity:.44!important;filter:grayscale(.7)!important;cursor:not-allowed!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form{
+  width:min(100%,570px)!important;max-width:570px!important;
+  margin:35px auto 40px!important;padding:16px 20px 22px!important;
+  border:1px solid #15223a!important;border-radius:13px!important;
+  background:#111827!important;box-shadow:0 6px 18px #0002!important;
+  color:#f0f2f8!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-navigation{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:7px!important;margin-bottom:16px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-navigation a{font-size:11px!important;color:#aac6ff!important;}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-request-card{
+  margin:0!important;padding:0!important;width:100%!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-request-head{
+  width:100%!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  text-align:right!important;margin:0 0 12px!important;padding:0!important;
+  background:transparent!important;border:0!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-request-head h1{
+  color:#fafbfe!important;font-size:clamp(22px,4vw,29px)!important;
+  font-weight:850!important;margin:0 0 12px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-request-head :is(strong,span){
+  color:#aeb7c7!important;font-size:12px!important;font-weight:600!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-finance-visible-instructions{
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;margin:12px 0 23px!important;
+  padding:0!important;text-align:right!important;
+  color:#b9c1d1!important;line-height:1.8!important;font-size:13px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-finance-visible-instructions strong{
+  font-weight:600!important;color:#b9c1d1!important;font-size:12px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-finance-visible-instructions p{
+  color:#b9c1d1!important;white-space:pre-line!important;
+  overflow-wrap:anywhere!important;margin:5px 0!important;font-size:12px!important;line-height:1.8!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-destination{
+  margin:6px 0!important;padding:11px!important;background:#1f2736!important;
+  border:1px solid #35445f!important;border-radius:14px!important;
+  display:flex!important;flex-wrap:wrap!important;gap:8px!important;
+  color:#d2dae9!important;font-size:12px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-order-form{
+  display:flex!important;flex-direction:column!important;gap:19px!important;
+  padding:0!important;margin:0!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .field{
+  display:flex!important;flex-direction:column!important;gap:4px!important;
+  margin:0!important;padding:0!important;border:0!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .field>span{
+  display:block!important;text-align:right!important;
+  color:#b8c4db!important;font-size:11px!important;font-weight:650!important;
+  padding-right:15px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .field>input:not([type="file"]){
+  width:100%!important;min-width:0!important;min-height:58px!important;height:58px!important;
+  padding:10px 22px!important;
+  background:#252c3c!important;color:#f6f7fb!important;
+  -webkit-text-fill-color:#f6f7fb!important;
+  border:1px solid transparent!important;border-radius:999px!important;
+  text-align:right!important;direction:rtl!important;font-size:15px!important;
+  box-shadow:none!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm input::placeholder{color:#b0b8c9!important;-webkit-text-fill-color:#b0b8c9!important;opacity:1!important;}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .field>small{color:#b5c3d6!important;font-size:10px!important;}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositEstimate.f90-deposit-net-box{
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+  gap:4px!important;min-height:65px!important;
+  margin:0!important;padding:12px 20px!important;
+  border-radius:999px!important;border:0!important;
+  background:#0e3828!important;box-shadow:none!important;text-align:right!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositEstimate :is(small,span){
+  color:#b5e5ce!important;font-size:11px!important;line-height:1.4!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositEstimate .f90-deposit-net-amount{
+  color:#e7fff1!important;font-weight:800!important;font-size:18px!important;
+  direction:ltr!important;text-align:left!important;line-height:1.3!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-deposit-upload{
+  display:flex!important;align-items:stretch!important;flex-direction:column!important;
+  background:#252c3c!important;border-radius:26px!important;
+  padding:11px 14px!important;overflow:hidden!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-deposit-upload input[type=file]{
+  width:100%!important;min-height:43px!important;background:transparent!important;
+  color:#f5f5f8!important;font-size:12px!important;padding:6px!important;border:0!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-deposit-upload input[type=file]::file-selector-button{
+  background:#101828!important;color:#fff!important;border:1px solid #64748b!important;
+  border-radius:12px!important;padding:7px 10px!important;margin-inline-end:10px!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-submit{
+  width:100%!important;min-height:54px!important;border:0!important;
+  background:#0961f6!important;color:#fff!important;border-radius:999px!important;
+  font-size:16px!important;font-weight:750!important;box-shadow:none!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form .f90-deposit-request-footnote{
+  font-size:11px!important;color:#a9b3c9!important;
+  line-height:1.7!important;text-align:center!important;margin:0!important;
+}
+body.admin-body .f90-credit-admin .f90-code-issue-form{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px;align-items:end;margin:14px 0 20px;
+}
+body.admin-body .f90-credit-admin .f90-code-issue-form .field{min-width:0;}
+body.admin-body .f90-credit-admin .table-wrap{max-height:65vh;overflow:auto;}
+@media(max-width:650px){
+ #mainContent[data-page="deposit"]{padding-inline:10px!important;}
+ #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images{gap:10px!important;}
+ #mainContent[data-page="deposit"] .f90-credit-hero{min-height:132px!important;padding:20px 13px!important;}
+ #mainContent[data-page="deposit"] .f90-credit-entry-controls>input{font-size:11px!important;}
+ #mainContent[data-page="deposit"] .f90-credit-entry-controls>button{padding-inline:12px!important;font-size:11px!important;}
+ #mainContent[data-page="deposit"] .f90-reference-bank-form{margin:17px auto 38px!important;padding:14px!important;}
+ #mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .field>input:not([type=file]){height:53px!important;min-height:53px!important;}
+}
+@media(max-width:360px){
+ #mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images{gap:7px!important;}
+ #mainContent[data-page="deposit"] .method-grid .method-tile>strong{font-size:9px!important;}
+ #mainContent[data-page="deposit"] .f90-credit-entry-controls{gap:5px!important;}
+ #mainContent[data-page="deposit"] .f90-credit-entry-controls>button{padding-inline:8px!important;}
+}
