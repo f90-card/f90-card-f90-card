@@ -65,6 +65,7 @@
     ["integration", "مركز الربط والبروتوكولات", "link", ["manager"]],
     ["infrastructure", "الخوادم والمراقبة", "chart", ["manager"]],
     ["payments", "طرق الإيداع", "wallet", ["manager"]],
+    ["credit-codes", "أكواد شحن الرصيد", "wallet", ["manager"]],
     ["special-settings", "أسعار وخدمات F90", "edit", ["manager"]],
     ["rates", "العملات والصرف", "chart", ["manager"]],
     ["vip", "مستويات التميّز", "crown", ["manager"]],
@@ -187,7 +188,7 @@
     ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","verification"]],
     ["العملاء والتجار",["users","traders","agents"]],
     ["الخدمات والمورّدون",["categories","products","providers","refilling"]],
-    ["الأرصدة والأسعار",["ledger","payments","rates","vip"]],
+    ["الأرصدة والأسعار",["ledger","payments","credit-codes","rates","vip"]],
     ["المظهر والإعلانات",["banners","notifications","settings"]],
     ["أدوات متقدمة",[
       "salary-requests","special-requests","trader-commissions","leaderboard",
@@ -1091,7 +1092,12 @@
           : "يمكنك تعديل العنصر أو إخفاؤه أو تكراره وترتيبه.",
         `<button class="button" data-action="dynamic-new">${I("plus")}إضافة</button>`,
       ) +
-      (kind === "payments" ? (window.F90SpecialAdmin?.salaryEditor(S.settings,S.rates)||"") : "") +
+      (kind === "payments" ? '<section class="panel f90-deposit-hero-editor"><h2>إعداد واجهة شحن الرصيد</h2><form id="f90DepositPageConfigForm">'+
+      field("hero_title","عنوان البطاقة الملونة","text",S.settings.config.deposit_page?.hero_title||"F90 CARD Credit Card",'maxlength="120"')+
+      field("hero_subtitle","نص البطاقة الملونة","text",S.settings.config.deposit_page?.hero_subtitle||"إدخال كود شحن الرصيد",'maxlength="200"')+
+      field("voucher_heading","عنوان إدخال الكود","text",S.settings.config.deposit_page?.voucher_heading||"شحن الرصيد بكود F90",'maxlength="120"')+
+      field("voucher_help","وصف استخدام الكود","textarea",S.settings.config.deposit_page?.voucher_help||"أدخل كود شحن صالحًا لمرة واحدة ليضاف الرصيد إلى محفظتك مباشرة.",'maxlength="600" rows="2"')+
+      '<button type="submit" class="button">حفظ تصميم صفحة الإيداع</button></form></section>' + (window.F90SpecialAdmin?.salaryEditor(S.settings,S.rates)||"") : "") +
       `<div class="catalog-list">${rows.map((r, n) => `<article class="catalog-row" draggable="true" data-dynamic-index="${n}"><span class="catalog-drag-handle" aria-hidden="true">⠿</span>${r.image_url ? image(r.image_url, r.name_ar || r.text_ar, "row-image") : I(kind === "coupons" ? "doc" : "bell")}<div class="row-content"><h3>${e(r.name_ar || r.title_ar || r.text_ar || r.code || "عنصر")}</h3><p>${r.enabled ? "مفعّل" : "مخفي"}${kind === "coupons" ? " · " + e(r.percent) + "٪" : ""}</p></div><div class="row-actions">${kind === "payments" ? `<button type="button" class="button secondary small" data-action="dynamic-toggle" data-index="${n}">${r.enabled === false ? "تفعيل" : "إيقاف"}</button>` : ""}<button class="icon-button" data-action="dynamic-up" data-index="${n}" aria-label="تحريك للأعلى">↑</button><button class="icon-button" data-action="dynamic-down" data-index="${n}" aria-label="تحريك للأسفل">↓</button><button class="icon-button" data-action="dynamic-edit" data-index="${n}" aria-label="تعديل">${I("edit")}</button><button class="icon-button" data-action="dynamic-duplicate" data-index="${n}" aria-label="تكرار">${I("copy")}</button><button class="icon-button" data-action="dynamic-delete" data-index="${n}" aria-label="حذف">${I("trash")}</button></div></article>`).join("") || empty("لا توجد عناصر بعد")}</div>`;
   }
   function editDynamic(kind, item = null, index = -1) {
@@ -1115,7 +1121,8 @@
         field("network_ar","اسم الشبكة أو معلومات إضافية (اختياري)","text",d.network_ar||"",'maxlength="160"') +
         field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
         field("minimum_amount","الحد الأدنى للتحويل بعملة الطريقة (0 = دون حد إضافي)","number",d.minimum_amount??0,'min="0" max="1000000000000" step="any"') +
-        field("reference_label","اسم حقل الإشعار أو رقم العملية","text",d.reference_label||"إشعار أو رقم العملية (اختياري)",'maxlength="150"') +
+        field("reference_label","اسم حقل رقم البطاقة أو الإشعار","text",d.reference_label||"رقم البطاقة أو الإشعار",'maxlength="150"') +
+        check("require_reference","إلزام العميل بإدخال رقم البطاقة أو المرجع",d.require_reference===true) +
         field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
         field("accepted_currencies","عملات هذه الطريقة (من العملات المفعّلة)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
@@ -1750,6 +1757,7 @@
           return x;
         })(),
         reference_label: String(d.reference_label||"").trim().slice(0,150),
+        require_reference: form.elements.require_reference.checked,
         receipt_help: String(d.receipt_help||"").trim().slice(0,500),
         details_ar: d.details_ar,
         deposit_fee_percent: (()=>{
@@ -1762,7 +1770,7 @@
         image_url: await selectedImage(form),
       });
     if (kind === "payments" && (!row.accepted_currencies.length || row.accepted_currencies.some(code=>!C.enabledCurrency(code,S.rates))))
-      throw new Error("اختر عملة متاحة من الدولار أو الدينار أو الشيقل فقط.");
+      throw new Error("اختر عملة مفعّلة من قسم العملات والصرف.");
     if (kind === "promotions")
       Object.assign(row, {
         text_ar: d.text_ar,
@@ -2532,6 +2540,7 @@
       }
       else if (page === "special-requests" || page === "special-settings") await window.F90SpecialAdmin.render(page,main,S.settings,S.rates);
       else if (page.startsWith("content-")) await window.F90ContentAdmin.render(page,main,S.settings);
+      else if (page === "credit-codes") await window.F90CreditAdmin.render(main,S.rates);
       else if (page === "rates") rates();
       else if (page === "vip") vip();
       else if (page === "policies") policies();
@@ -2566,6 +2575,10 @@
       return listPage("ledger");
     }
     if (form.id === "catalogForm") return saveCatalog(form, d);
+    if (form.id === "f90DepositPageConfigForm") {
+      await configSave({deposit_page:{hero_title:String(d.hero_title||"").slice(0,120),hero_subtitle:String(d.hero_subtitle||"").slice(0,200),voucher_heading:String(d.voucher_heading||"").slice(0,120),voucher_help:String(d.voucher_help||"").slice(0,600)}});
+      toast("تم حفظ إعدادات صفحة الإيداع");return publicListPage("payments");
+    }
     if (form.id === "dynamicForm") return saveDynamic(form, d);
     if (form.id === "settingsForm") return saveSettings(form, d);
     if (form.id === "cardFramesForm") return saveCardFrames(form, d);
