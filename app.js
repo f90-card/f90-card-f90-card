@@ -1123,33 +1123,71 @@
   }
   function auth(mode = S.authMode) {
     S.authMode = mode;
-    main.innerHTML = `<div class="auth-layout"><div class="auth-art">${image("./assets/sections/services.png", "عالم أف تسعين كارد")}</div><section class="panel auth-panel"><div class="eyebrow">رحلتك تبدأ هنا</div><h1>${mode === "register" ? "أهلًا بعالمك الرقمي" : mode === "forgot" ? "استعادة الحساب" : "أهلًا بعودتك"}</h1><div class="auth-tabs"><button data-action="auth-tab" data-mode="login" class="${mode === "login" ? "active" : ""}">تسجيل الدخول</button><button data-action="auth-tab" data-mode="register" class="${mode === "register" ? "active" : ""}">حساب جديد</button></div><form id="authForm" data-mode="${mode}">${mode !== "forgot" ? select("account_currency", "عملة حسابك (يمكن تغييرها لاحقًا من القائمة)", C.currencyOptions(S.rates), C.enabledCurrency(S.currency,S.rates) ? S.currency : "USD") : ""}${mode === "register" ? field("display_name", "اسمك", "text", "", 'required maxlength="100" autocomplete="name"') : ""}${field("email", "البريد الإلكتروني", "email", "", 'required autocomplete="email" dir="ltr"')}${mode !== "forgot" ? field("password", "كلمة المرور", "password", "", 'required minlength="' + (mode === "register" ? "10" : "1") + '" autocomplete="' + (mode === "register" ? "new-password" : "current-password") + '" dir="ltr"') : ""}${
-      mode === "register"
-        ? `<div class="field-row">${select(
-            "phone_country",
-            "رمز الدولة",
-            [
-              ["+970", "فلسطين +970"],
-              ["+972", "+972"],
-              ["+962", "الأردن +962"],
-              ["+966", "السعودية +966"],
-              ["+971", "الإمارات +971"],
-              ["+20", "مصر +20"],
-              ["+90", "تركيا +90"],
-              ["+964", "العراق +964"],
-              ["+961", "لبنان +961"],
-              ["+963", "سوريا +963"],
-              ["+212", "المغرب +212"],
-              ["+968", "عُمان +968"],
-              ["+1", "+1"],
-              ["+44", "+44"],
-            ],
-            "+970",
-          )}${field("phone", "رقم الهاتف <small>اختياري</small>", "tel", "", 'autocomplete="tel-national" maxlength="25" dir="ltr"')}</div><label class="check-field"><input type="checkbox" required>أوافق على <a href="#/policy/terms">الشروط</a> و<a href="#/policy/privacy">سياسة الخصوصية</a></label>`
-        : ""
-    }<p class="inline-error" id="authError"></p><button class="button full" type="submit">${mode === "register" ? "إنشاء حساب" : mode === "forgot" ? "أرسل رابط الاستعادة" : "دخول"}</button></form>${mode !== "forgot" ? `<div class="divider">أو</div><button class="google-button" data-action="google"><span class="f90-google-mark" aria-hidden="true">G</span>المتابعة باستخدام جوجل</button><button class="button ghost small" style="margin-top:16px" data-action="auth-tab" data-mode="forgot">نسيت كلمة المرور؟</button>` : '<p class="muted small" style="margin-top:16px">ستصلك رسالة إذا كان البريد مرتبطًا بحساب.</p>'}</section></div>`;
-    main.insertAdjacentHTML("beforeend",
-      '<p class="f90-security-disclosure">لحماية حسابات العملاء، يسجل المتجر نشاط الجلسات ومعلومات الشبكة والجهاز العامة لمدة تصل إلى 30 يومًا. يمكن مراجعتها من صفحة أمان الحساب. لا نستخدم تحديد الموقع الدقيق.</p>');
+    const registering = mode === "register";
+    const recovering = mode === "forgot";
+    const logo = C.safeUrl(S.settings?.logo_url || "./f90-logo.png") || "./f90-logo.png";
+    const mark = '<div class="f90-auth-brand"><img src="' + e(logo) + '" alt="شعار أف تسعين كارد" width="156" height="156" decoding="async" fetchpriority="high"></div>';
+    const input = (name, placeholder, type = "text", attrs = "", icon = "") =>
+      '<div class="f90-auth-input"><label class="sr-only" for="f90-auth-' + e(name) + '">' + e(placeholder) + '</label>' +
+      '<input id="f90-auth-' + e(name) + '" name="' + e(name) + '" type="' + e(type) + '" placeholder="' + e(placeholder) + '" ' + attrs + '>' +
+      (icon ? '<span class="f90-auth-field-icon" aria-hidden="true">' + icon + '</span>' : '') + '</div>';
+    const iconPerson = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="4"></circle><path d="M4 21v-2c0-6 16-6 16 0v2z"></path></svg>';
+    const passwordInput = (registration) =>
+      '<div class="f90-auth-input f90-auth-password"><label class="sr-only" for="f90-auth-password">كلمة المرور</label>' +
+      '<input id="f90-auth-password" name="password" type="password" placeholder="كلمة السر" required minlength="' + (registration ? '10' : '1') + '" autocomplete="' + (registration ? 'new-password' : 'current-password') + '" dir="rtl">' +
+      '<button type="button" class="f90-auth-eye" data-action="auth-password-visibility" aria-label="إظهار كلمة المرور" aria-pressed="false">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-linecap="round"/></svg></button></div>';
+    const extra = '<details class="f90-auth-extra"><summary>العملة ورقم الهاتف (اختياري)</summary><div class="f90-auth-extra-fields">' +
+      select("account_currency", "عملة الحساب (يمكن تغييرها لاحقًا)", C.currencyOptions(S.rates), C.enabledCurrency(S.currency, S.rates) ? S.currency : "USD") +
+      '<div class="f90-auth-phone-fields">' +
+      select("phone_country", "رمز الدولة", [
+        ["+970", "فلسطين +970"],["+972", "+972"],["+962", "الأردن +962"],
+        ["+966", "السعودية +966"],["+971", "الإمارات +971"],["+20", "مصر +20"],
+        ["+90", "تركيا +90"],["+964", "العراق +964"],["+961", "لبنان +961"],
+        ["+963", "سوريا +963"],["+212", "المغرب +212"],["+968", "عُمان +968"],
+        ["+1", "+1"],["+44", "+44"]
+      ], "+970") + field("phone", "رقم الهاتف (اختياري)", "tel", "", 'autocomplete="tel-national" maxlength="25" dir="ltr"') +
+      '</div></div></details>';
+    const registerForm =
+      '<form id="authForm" class="f90-auth-form" data-mode="register">' +
+      '<div class="f90-auth-name-row">' +
+      input("first_name", "الاسم الأول", "text", 'required maxlength="50" autocomplete="given-name"') +
+      input("last_name", "الاسم الأخير", "text", 'required maxlength="50" autocomplete="family-name"') +
+      '</div>' +
+      input("username", "اسم المستخدم", "text", 'required maxlength="50" minlength="2" autocomplete="nickname"') +
+      passwordInput(true) +
+      '<div class="f90-auth-pass-hints" aria-label="متطلبات كلمة المرور"><p>كلمة المرور لا تقل عن 10 أحرف.</p><p>يُفضّل أن تتضمن أحرفًا وأرقامًا ورمزًا لزيادة الحماية.</p></div>' +
+      input("email", "البريد الإلكتروني", "email", 'required autocomplete="email" dir="rtl"') +
+      extra +
+      '<label class="f90-auth-consent"><input type="checkbox" required><span>أوافق على <a href="#/policy/terms">الشروط والأحكام</a> و<a href="#/policy/privacy">سياسة الخصوصية</a></span></label>' +
+      '<p class="inline-error" id="authError" role="alert" aria-live="polite"></p>' +
+      '<button class="f90-auth-primary" type="submit">تسجيل</button></form>' +
+      '<div class="f90-auth-account-prompt">هل لديك حساب؟</div>' +
+      '<a class="f90-auth-text-link" href="#/auth">دخول</a>';
+    const loginForm =
+      '<form id="authForm" class="f90-auth-form" data-mode="login">' +
+      input("email", "البريد الإلكتروني", "email", 'required autocomplete="email" dir="rtl"', iconPerson) +
+      passwordInput(false) +
+      '<p class="inline-error" id="authError" role="alert" aria-live="polite"></p>' +
+      '<button class="f90-auth-primary" type="submit">تسجيل الدخول</button></form>' +
+      '<button type="button" class="f90-auth-forgot" data-action="auth-tab" data-mode="forgot">نسيت كلمة السر؟</button>' +
+      '<div class="f90-auth-divider"><span>أو</span></div>' +
+      '<a href="#/register" class="f90-auth-register-link">إنشاء حساب جديد</a>' +
+      '<div class="f90-auth-divider"><span>أو</span></div>' +
+      '<button type="button" class="google-button f90-auth-google" data-action="google"><span class="f90-auth-google-g" aria-hidden="true">G</span><span>بواسطة حساب GOOGLE</span></button>';
+    const forgotForm =
+      '<form id="authForm" class="f90-auth-form" data-mode="forgot">' +
+      input("email", "البريد الإلكتروني", "email", 'required autocomplete="email" dir="rtl"', iconPerson) +
+      '<p class="inline-error" id="authError" role="alert" aria-live="polite"></p>' +
+      '<button class="f90-auth-primary" type="submit">إرسال رابط استعادة كلمة المرور</button></form>' +
+      '<p class="f90-auth-help">إذا كان البريد مسجلًا، ستصلك رسالة لاستعادة حسابك.</p>' +
+      '<button type="button" class="f90-auth-forgot" data-action="auth-tab" data-mode="login">العودة لتسجيل الدخول</button>';
+    main.innerHTML = '<div class="f90-auth-layout ' + (registering ? 'f90-auth-register' : recovering ? 'f90-auth-recover' : 'f90-auth-login') + '" dir="rtl">' +
+      '<section class="f90-auth-card" aria-label="' + (registering ? 'إنشاء حساب جديد' : recovering ? 'استعادة كلمة المرور' : 'تسجيل الدخول') + '">' +
+      mark + (registering ? registerForm : recovering ? forgotForm : loginForm) +
+      '</section>' +
+      '<p class="f90-auth-privacy">لحماية حسابات العملاء، يُسجّل المتجر بيانات الجلسات ومعلومات الشبكة والجهاز العامة لمدة تصل إلى 30 يومًا. لا نستخدم تحديد الموقع الدقيق. <a href="#/policy/privacy">الخصوصية</a></p>' +
+      '</div>';
   }
   function loginRequired() {
     auth();
@@ -2089,7 +2127,7 @@ async function history(kind){
       else if (page === "music") musicPage();
       else if (page === "category") category(id);
       else if (page === "product") product(id);
-      else if (page === "auth") auth();
+      else if (page === "auth") auth("login");
       else if (page === "register") auth("register");
       else if (page === "profile") profile();
       else if (page === "recipients") profile();
@@ -2161,6 +2199,10 @@ async function history(kind){
   async function submit(form) {
     const data = Object.fromEntries(new FormData(form));
     if (form.id === "authForm") {
+      if (form.dataset.mode === "register") {
+        data.display_name = [data.first_name, data.last_name].map(v => String(v || "").trim()).filter(Boolean).join(" ");
+        if (data.display_name.length < 2) throw new Error("أدخل الاسم الأول والأخير");
+      }
       if (
         data.password &&
         String(data.password).length < 10 &&
@@ -2176,6 +2218,9 @@ async function history(kind){
             emailRedirectTo: redirect,
             data: {
               display_name: data.display_name,
+              username: String(data.username || "").trim(),
+              first_name: String(data.first_name || "").trim(),
+              last_name: String(data.last_name || "").trim(),
               account_currency: C.enabledCurrency(String(data.account_currency),S.rates) ? String(data.account_currency) : "USD",
               phone: data.phone || null,
               phone_country: data.phone_country,
@@ -2774,7 +2819,21 @@ async function history(kind){
           action === "share" ? location.href : button.dataset.text,
         );
         toast("تم النسخ");
-      } else if (action === "auth-tab") auth(button.dataset.mode);
+      } else if (action === "auth-tab") {
+        const mode = button.dataset.mode;
+        if (mode === "register") { S.authMode = "register"; if(location.hash !== "#/register") location.hash = "#/register"; else auth("register"); }
+        else if (mode === "login") { S.authMode = "login"; if(location.hash !== "#/auth") location.hash = "#/auth"; else auth("login"); }
+        else auth("forgot");
+      } else if (action === "auth-password-visibility") {
+        const input = button.closest(".f90-auth-password")?.querySelector("input[name=password]");
+        if (input) {
+          const revealing = input.type === "password";
+          input.type = revealing ? "text" : "password";
+          button.setAttribute("aria-pressed", String(revealing));
+          button.setAttribute("aria-label", revealing ? "إخفاء كلمة المرور" : "إظهار كلمة المرور");
+          button.classList.toggle("is-visible", revealing);
+        }
+      }
       else if (action === "google") {
         // Carry the guest's currency choice only into a newly created Google account.
         // Existing accounts always retain their saved profile currency.
