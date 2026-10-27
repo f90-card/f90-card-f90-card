@@ -1556,12 +1556,10 @@ function depositRecord(d) {
         '<div class="f90-credit-overview">'+
         '<form id="f90CreditRedeemForm" class="f90-credit-hero" autocomplete="off">'+
         '<strong>'+e(config.hero_title||"F90 CARD Credit Card")+'</strong>'+
-        '<span>'+e(config.hero_subtitle||"إدخال كود شحن الرصيد")+'</span>'+
         '<label class="sr-only" for="f90CreditCodeInput">كود شحن الرصيد</label>'+
         '<div class="f90-credit-entry-controls"><input id="f90CreditCodeInput" name="code" type="text" dir="ltr" maxlength="50" required placeholder="F90-XXXX..." aria-label="كود الشحن">'+
         '<button type="submit">شحن الرصيد</button></div>'+
-        '<small>'+e(config.voucher_heading||"شحن الرصيد بكود F90")+'</small>'+
-        '<p class="f90-credit-hero-note">'+e(config.voucher_help||"أدخل كود شحن صالحًا لمرة واحدة ليضاف الرصيد إلى محفظتك مباشرة.")+'</p>'+
+        ''+
         '<p id="f90CreditRedeemStatus" role="status" aria-live="polite"></p></form>'+
         '<div class="f90-credit-actions"><h2>طرق تعبئة الرصيد</h2><a href="#/deposits">سجل الإيداعات</a></div>'+
         '<div class="method-grid f90-deposit-methods-with-images">'+methods.map(x=>x.enabled===true?
@@ -1579,14 +1577,17 @@ function depositRecord(d) {
       return;
     }
     const accountCurrency=S.me?.profile?.account_currency||"USD";
-    const accountRate=S.rates.find(r=>r.currency===accountCurrency&&r.is_enabled&&Number(r.per_usd)>0);
-    const methodSupports=!Array.isArray(m.accepted_currencies)||m.accepted_currencies.includes(accountCurrency);
-    const canDeposit=!!accountRate&&methodSupports;
+    const availableRates=S.rates.filter(r=>r.is_enabled&&!r.is_archived&&Number(r.per_usd)>0);
+    const paymentCurrency=availableRates.some(r=>r.currency===accountCurrency)?accountCurrency:"USD";
+    const canDeposit=availableRates.length>0;
     const min=Number(m.minimum_amount)>0?Number(m.minimum_amount):0;
     const name=e(m.name_ar||"إيداع");
     const receiver=e(m.receiver_name||"");
     const destination=e(m.destination||"");
-    const instructions=e(m.details_ar||"أكمل التحويل إلى بيانات الحساب المعتمدة ثم أرسل إيصال التحويل للمراجعة.");
+    const instructions=e(m.details_ar||"أكمل التحويل إلى الحساب المعتمد ثم أرفق الإيصال.");
+    const referenceMode=["none","transaction","card"].includes(m.reference_mode)?m.reference_mode:
+      (/binance|باينانس|usdt|تيثر|tether/i.test(String(m.name_ar||"")+" "+String(m.network_ar||""))?"transaction":"none");
+    const referenceLabel=e(referenceMode==="card"?(m.reference_label||"رقم البطاقة"):m.reference_label||"رقم الحركة");
     main.innerHTML=
       '<div class="f90-deposit-compact f90-reference-bank-form">'+
       '<nav class="f90-deposit-navigation"><a href="#/deposit">‹ جميع طرق الإيداع</a><a href="#/deposits">سجل الإيداعات</a></nav>'+
@@ -1603,12 +1604,13 @@ function depositRecord(d) {
         '<div class="f90-deposit-barcode"><img src="'+e(C.safeUrl(m.barcode_url))+'" alt="باركود '+name+'" loading="lazy" decoding="async"></div></details>':"")+
       '<form id="depositForm" class="f90-deposit-order-form">'+
       
-      '<input type="hidden" name="currency" value="'+e(accountCurrency)+'">'+
-      (!canDeposit?'<div class="notice warning">طريقة الإيداع لا تدعم عملة حسابك حاليًا. اختر طريقة أخرى أو غيّر عملة حسابك من شريط العملات.</div>':"")+
-      '<label class="field f90-bank-reference"><span>'+e(m.reference_label||"رقم البطاقة أو الإشعار")+'</span><input name="reference" type="text" maxlength="300" '+(m.require_reference?'required':'')+' placeholder="'+e(m.reference_label||"رقم البطاقة أو الإشعار")+'"></label>'+
-      '<label class="field f90-bank-amount"><span>القيمة ('+e(accountCurrency)+')</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="القيمة">'+
+      '<label class="field f90-bank-currency"><span>عملة الإيداع</span><select name="currency" required>'+
+        availableRates.map(r=>'<option value="'+e(r.currency)+'" '+(r.currency===paymentCurrency?'selected':'')+'>'+e(r.name_ar||r.currency)+' · '+e(r.currency)+'</option>').join("")+
+      '</select></label>'+
+      (referenceMode!=="none"?'<label class="field f90-bank-reference"><span>'+referenceLabel+'</span><input name="reference" type="text" maxlength="300" '+(m.require_reference?'required':'')+' placeholder="'+referenceLabel+'"></label>':"")+
+      '<label class="field f90-bank-amount"><span>القيمة</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000" step="any" placeholder="القيمة">'+
       (min?'<small>الحد الأدنى لهذه الطريقة: '+e(min)+' بعملة التحويل</small>':"")+'</label>'+
-      '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><small>سينضاف لرصيدك بعد الموافقة</small><strong class="f90-deposit-net-amount">—</strong></div>'+
+      '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><small>المبلغ المتوقع إضافته بعملة حسابك ('+e(accountCurrency)+') بعد الخصومات</small><strong class="f90-deposit-net-amount">—</strong></div>'+
       ''+
       '<label class="field f90-deposit-upload"><span>صورة الإيصال</span>'+
         '<input type="file" name="receipt" required accept="image/jpeg,image/png,image/webp">'+
@@ -2438,7 +2440,7 @@ async function history(kind){
       const signature = file ? [file.name, file.size, file.lastModified].join(":") : "";
       const depositDetails = JSON.stringify({
         method_id: S.selectedMethod?.id,
-        currency: S.me?.profile?.account_currency||"USD",
+        currency: String(data.currency||"USD"),
         amount: Number(data.amount),
         reference: data.reference || "",
       });
@@ -2460,14 +2462,16 @@ async function history(kind){
       }
       let submittedDeposit=null;
       try {
-        submittedDeposit=await A.call("deposit.submit", {
-          method_id: S.selectedMethod.id,
-          currency: S.me?.profile?.account_currency||"USD",
-          amount: Number(data.amount),
-          reference: data.reference,
-          receipt_path: receiptPath,
-          idempotency_key: reference,
+        const submitted=await A.client.rpc("f90_submit_deposit_any_currency",{
+          p_method:S.selectedMethod.id,
+          p_currency:String(data.currency||"USD"),
+          p_amount:Number(data.amount),
+          p_reference:String(data.reference||""),
+          p_receipt:receiptPath,
+          p_key:reference,
         });
+        if(submitted.error) { const err=new Error(submitted.error.message||"تعذّر حفظ الإيداع");err.code=submitted.error.code;throw err; }
+        submittedDeposit=submitted.data;
       } catch (error) {
         if (!error.uncertain) throw error;
         let recovered;
@@ -2485,8 +2489,8 @@ async function history(kind){
       const recordedUsd=Number(submittedDeposit?.usd_amount||0);
       const savedPct=Number(submittedDeposit?.method_snapshot?.deposit_fee_percent??S.selectedMethod?.deposit_fee_percent??2);
       const netUsd=recordedUsd>0?recordedUsd*(1-Math.max(0,Math.min(50,savedPct))/100):0;
-      const savedCode=submittedDeposit?.currency||S.me?.profile?.account_currency||"USD";
-      const savedRate=Number(submittedDeposit?.rate_snapshot||0);
+      const savedCode=S.me?.profile?.account_currency||"USD";
+      const savedRate=Number(S.rates.find(r=>r.currency===savedCode)?.per_usd||0);
       const expected=netUsd>0?(savedRate>0?
         new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:3}).format(netUsd*savedRate)+" "+savedCode:
         accountMoney(netUsd,savedCode)):"";
@@ -2716,34 +2720,27 @@ async function history(kind){
       quoteTimer=setTimeout(()=>quoteProduct(p),220);
     }
     if (ev.target.closest("#depositForm")) {
-      const f = $("depositForm");
-      const estimate = $("depositEstimate");
-      if (!estimate) return;
-      const amount = Number(f.elements.amount.value);
-      const min = Number(S.selectedMethod?.minimum_amount || 0);
-      if (Number.isFinite(amount) && Number.isFinite(min) && min>0 && amount<min) {
-        estimate.innerHTML='<strong class="f90-finance-inline-error">الحد الأدنى '+e(min)+' '+e(S.me?.profile?.account_currency||"USD")+'</strong>';
+      const f=$("depositForm"), estimate=$("depositEstimate");
+      if(!f||!estimate)return;
+      const amount=Number(f.elements.amount.value);
+      const currency=String(f.elements.currency?.value||"USD");
+      const accountCurrency=S.me?.profile?.account_currency||"USD";
+      const min=Number(S.selectedMethod?.minimum_amount||0);
+      const sourceRate=Number(S.rates.find(r=>r.currency===currency&&r.is_enabled&&!r.is_archived)?.per_usd||0);
+      const accountRate=Number(S.rates.find(r=>r.currency===accountCurrency&&r.is_enabled&&!r.is_archived)?.per_usd||0);
+      if(!f.elements.amount.value||!Number.isFinite(amount)||amount<=0){
+        estimate.innerHTML='<small>المبلغ المتوقع إضافته بعملة حسابك ('+e(accountCurrency)+') بعد الخصومات</small><strong class="f90-deposit-net-amount">—</strong>';
         return;
       }
-      const rate = S.rates.find((row) => row.currency === (S.me?.profile?.account_currency||"USD") && row.is_enabled);
-      const perUsd = Number(rate?.per_usd);
-      if (!f.elements.amount.value || !Number.isFinite(amount) || amount <= 0) {
-        estimate.innerHTML='<small>سينضاف لرصيدك بعد الموافقة</small><strong class="f90-deposit-net-amount">—</strong>';
-        return;
-      }
-      if (!Number.isFinite(perUsd) || perUsd <= 0) {
-        estimate.innerHTML='<strong class="f90-finance-inline-error">سعر الصرف غير متاح</strong>';
-        return;
-      }
-      const gross = amount / perUsd;
-      const configured = Number(S.selectedMethod?.deposit_fee_percent ?? 2);
-      const pct = Number.isFinite(configured) ? Math.max(0,Math.min(50,configured)) : 2;
-      const fee = Math.round(gross * pct / 100 * 1000000) / 1000000;
-      const net = gross - fee;
-      const currency=S.me?.profile?.account_currency||"USD";
-      estimate.innerHTML='<small>سينضاف لرصيدك بعد الموافقة</small>'+
-        '<strong class="f90-deposit-net-amount">'+e(accountMoney(net,currency))+'</strong>'+
-        '<span class="f90-finance-fee-hint">شامل خصم عمولة الإيداع '+e(pct)+'٪</span>';
+      if(amount<min){estimate.textContent="الحد الأدنى "+min+" "+currency;return;}
+      if(sourceRate<=0||accountRate<=0){estimate.textContent="سعر الصرف غير متاح";return;}
+      const gross=amount/sourceRate;
+      const pct=Math.max(0,Math.min(50,Number(S.selectedMethod?.deposit_fee_percent??2)));
+      const fee=Math.round(gross*pct/100*1000000)/1000000;
+      const netUsd=gross-fee;
+      const netAccount=Math.round(netUsd*accountRate*1000000)/1000000;
+      estimate.innerHTML='<small>سيضاف لرصيدك بعد المراجعة والخصومات ('+e(accountCurrency)+')</small>'+
+        '<strong class="f90-deposit-net-amount">'+e(new Intl.NumberFormat("en-US",{maximumFractionDigits:3,minimumFractionDigits:2}).format(netAccount))+' '+e(accountCurrency)+'</strong>';
     }
   });
   document.addEventListener("change", (ev) => {
