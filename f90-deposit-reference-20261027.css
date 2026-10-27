@@ -87,13 +87,13 @@ body:has(#mainContent[data-page="deposit"]) #mobileDock{
 #mainContent[data-page="deposit"] .method-grid .method-tile .f90-method-image-frame{
   display:block!important;width:100%!important;aspect-ratio:1/1!important;
   padding:0!important;margin:0!important;overflow:hidden!important;
-  background:#0c1425!important;border-radius:11px!important;
-  border:1px solid #23334c!important;box-shadow:0 2px 8px #0004!important;
+  background:transparent!important;border-radius:0!important;
+  border:0!important;outline:0!important;box-shadow:none!important;
 }
 #mainContent[data-page="deposit"] .method-grid .method-tile .f90-method-image-frame img{
   display:block!important;width:100%!important;height:100%!important;max-width:none!important;
   margin:0!important;object-fit:contain!important;border:0!important;
-  border-radius:9px!important;
+  border-radius:0!important;box-shadow:none!important;background:transparent!important;
 }
 #mainContent[data-page="deposit"] .method-grid .method-tile>strong{
   display:block!important;text-align:center!important;
@@ -277,4 +277,27 @@ body.admin-body .f90-audit-details{
 body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
   display:inline-flex;align-items:center;justify-content:center;
   padding:7px 10px;margin:6px 0 0;border-radius:8px;min-height:32px;
+}
+
+/* Remove decorative outlines and hover frames only from payment method tiles. */
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile:hover,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile.selected,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame img {
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background-color:transparent!important;
+  background-image:none!important;
+}
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile::before,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile::after,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame::before,
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile .f90-method-image-frame::after {
+  content:none!important;display:none!important;
+}
+#mainContent[data-page="deposit"] .method-grid.f90-deposit-methods-with-images > .method-tile:focus-visible {
+  outline:2px solid #80b6ff!important;
+  outline-offset:4px!important;
 }
