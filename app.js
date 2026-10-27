@@ -1530,7 +1530,7 @@ function depositRecord(d) {
   }
   
     function deposit(methodId) {
-    if (S.settings?.config?.deposit_requires_verification===true && !S.me?.profile?.is_verified) {
+    if (methodId && S.settings?.config?.deposit_requires_verification===true && !S.me?.profile?.is_verified) {
       main.innerHTML = pageHead("توثيق الحساب مطلوب", "يلزم توثيق حسابك قبل تقديم طلب الإيداع.") +
         '<section class="panel"><p>ارفع بيانات التوثيق من صفحة التحقق، وبعد موافقة الإدارة ستتمكن من الإيداع.</p><a class="button" href="#/verification">الانتقال إلى توثيق الهوية</a></section>';
       return;
@@ -1551,8 +1551,19 @@ function depositRecord(d) {
       S.settings.config?.special_services?.show_salary!==false;
     const fallbackSalary=salaryEnabled&&!methods.some(salaryMethod);
     if(!m){
-      main.innerHTML=pageHead("طرق الإيداع", "اختر وسيلة الإيداع المناسبة. ستظهر لك تفاصيلها قبل الطلب.",
-        '<a class="button secondary small" href="#/deposits">طلبات الإيداع</a>')+
+      const config=S.settings.config.deposit_page||{};
+      main.innerHTML=
+        '<div class="f90-credit-overview">'+
+        '<form id="f90CreditRedeemForm" class="f90-credit-hero" autocomplete="off">'+
+        '<strong>'+e(config.hero_title||"F90 CARD Credit Card")+'</strong>'+
+        '<span>'+e(config.hero_subtitle||"إدخال كود شحن الرصيد")+'</span>'+
+        '<label class="sr-only" for="f90CreditCodeInput">كود شحن الرصيد</label>'+
+        '<div class="f90-credit-entry-controls"><input id="f90CreditCodeInput" name="code" type="text" dir="ltr" maxlength="50" required placeholder="F90-XXXX..." aria-label="كود الشحن">'+
+        '<button type="submit">شحن الرصيد</button></div>'+
+        '<small>'+e(config.voucher_heading||"شحن الرصيد بكود F90")+'</small>'+
+        '<p class="f90-credit-hero-note">'+e(config.voucher_help||"أدخل كود شحن صالحًا لمرة واحدة ليضاف الرصيد إلى محفظتك مباشرة.")+'</p>'+
+        '<p id="f90CreditRedeemStatus" role="status" aria-live="polite"></p></form>'+
+        '<div class="f90-credit-actions"><h2>طرق تعبئة الرصيد</h2><a href="#/deposits">سجل الإيداعات</a></div>'+
         '<div class="method-grid f90-deposit-methods-with-images">'+methods.map(x=>x.enabled===true?
           '<a class="method-tile f90-method-active" href="'+(salaryMethod(x)?"#/special/salary":href("deposit",x.id))+'" aria-label="'+e(x.name_ar)+'">'+
           '<span class="f90-method-image-frame">'+image(x.image_url,x.name_ar,"f90-deposit-method-art")+'</span>'+
@@ -1577,7 +1588,7 @@ function depositRecord(d) {
     const destination=e(m.destination||"");
     const instructions=e(m.details_ar||"أكمل التحويل إلى بيانات الحساب المعتمدة ثم أرسل إيصال التحويل للمراجعة.");
     main.innerHTML=
-      '<div class="f90-deposit-compact">'+
+      '<div class="f90-deposit-compact f90-reference-bank-form">'+
       '<nav class="f90-deposit-navigation"><a href="#/deposit">‹ جميع طرق الإيداع</a><a href="#/deposits">سجل الإيداعات</a></nav>'+
       '<section class="f90-deposit-request-card">'+
 
@@ -1594,17 +1605,16 @@ function depositRecord(d) {
       
       '<input type="hidden" name="currency" value="'+e(accountCurrency)+'">'+
       (!canDeposit?'<div class="notice warning">طريقة الإيداع لا تدعم عملة حسابك حاليًا. اختر طريقة أخرى أو غيّر عملة حسابك من شريط العملات.</div>':"")+
-      '<label class="field"><span>مبلغ الإيداع ('+e(accountCurrency)+')</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="أدخل قيمة التحويل">'+
+      '<label class="field f90-bank-reference"><span>'+e(m.reference_label||"رقم البطاقة أو الإشعار")+'</span><input name="reference" type="text" maxlength="300" '+(m.require_reference?'required':'')+' placeholder="'+e(m.reference_label||"رقم البطاقة أو الإشعار")+'"></label>'+
+      '<label class="field f90-bank-amount"><span>القيمة ('+e(accountCurrency)+')</span><input type="number" name="amount" required inputmode="decimal" min="'+e(min||0.000001)+'" max="1000000000000" step="any" placeholder="القيمة">'+
       (min?'<small>الحد الأدنى لهذه الطريقة: '+e(min)+' بعملة التحويل</small>':"")+'</label>'+
       '<div class="f90-deposit-net-box f90-deposit-output" id="depositEstimate" role="status" aria-live="polite"><small>سينضاف لرصيدك بعد الموافقة</small><strong class="f90-deposit-net-amount">—</strong></div>'+
-      '<details class="f90-finance-help f90-salary-optional-note"><summary>ملاحظة (اختياري)</summary>'+
-      '<label class="field"><span>'+e(m.reference_label||"رقم العملية")+'</span>'+
-        '<input name="reference" type="text" maxlength="300" placeholder="رقم العملية أو ملاحظة"></label></details>'+
+      ''+
       '<label class="field f90-deposit-upload"><span>صورة الإيصال</span>'+
         '<input type="file" name="receipt" required accept="image/jpeg,image/png,image/webp">'+
         '<small>'+e(m.receipt_help||"ارفع إيصالًا واضحًا بصيغة JPG أو PNG أو WEBP، بحد أقصى 5 ميجابايت. لا يظهر الإيصال للعامة.")+'</small></label>'+
-      '<p class="f90-deposit-request-footnote">يُضاف الرصيد بعد موافقة الإدارة.</p>'+
-      '<button type="submit" class="button full" '+(!canDeposit?'disabled':'')+'>تقديم طلب الإيداع</button>'+
+      '<p class="f90-deposit-request-footnote">يُضاف الرصيد بعد التحقق من التحويل وموافقة الإدارة.</p>'+
+      '<button type="submit" class="button full f90-bank-submit" '+(!canDeposit?'disabled':'')+'>طلب</button>'+
       '</form></section></div>';
   }
 
@@ -2405,6 +2415,21 @@ async function history(kind){
       toast("تم تحديث ملفك");
       return;
     }
+    if (form.id === "f90CreditRedeemForm") {
+      const status=$("f90CreditRedeemStatus");
+      if (!S.me) { location.hash="#/auth";return; }
+      const code=String(data.code||"").toUpperCase().trim();
+      if (!/^F90-[0-9A-F]{32}$/.test(code)) throw new Error("صيغة كود الشحن غير صحيحة");
+      const {data:result,error}=await A.client.rpc("f90_redeem_credit_code",{p_code:code});
+      if(error){
+        const msg=String(error.message||"");
+        throw new Error(({F90_INVALID_CODE:"الكود غير صحيح",F90_ALREADY_REDEEMED:"تم استخدام هذا الكود سابقًا",F90_REVOKED_CODE:"تم إلغاء هذا الكود",F90_CODE_WRONG_ACCOUNT:"الكود مخصص لحساب آخر",F90_FORBIDDEN:"أكمل تسجيل الدخول والتحقق من حسابك",F90_WALLET_NOT_FOUND:"محفظتك غير متاحة"})[msg]||msg);
+      }
+      if(status)status.textContent="تمت إضافة "+Number(result.amount_usd).toLocaleString("en-US")+" دولار إلى رصيدك.";
+      form.querySelector('input[name="code"]').value="";
+      await refreshMe();chrome();toast("تم شحن الرصيد بنجاح");
+      return;
+    }
     if (form.id === "depositForm") {
       const reference = S.depositKey;
       // Reuse the uploaded receipt on an uncertain retry, rather than uploading
@@ -2592,6 +2617,7 @@ async function history(kind){
         "recipientForm",
         "orderRequestForm",
         "depositForm",
+        "f90CreditRedeemForm",
         "verificationForm",
         "passwordForm",
         "mfaForm",
