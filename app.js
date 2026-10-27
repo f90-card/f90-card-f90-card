@@ -1574,7 +1574,7 @@ function depositRecord(d) {
         (fallbackSalary?'<a class="method-tile f90-method-active" href="#/special/salary">'+
           '<span class="f90-method-image-frame">'+image(S.settings.config?.salary_withdrawal?.image_url||"./assets/f90-new/xena-salary-v2.webp","سحب رواتب Xena Live","f90-deposit-method-art")+'</span>'+
           '<strong>سحب رواتب Xena Live</strong><small>حساب الكوينز وتقديم الطلب</small></a>':"")+
-        '</div>'+
+        '</div></div>'+
         (!active.length&&!fallbackSalary?empty("لا توجد طرق إيداع مفعّلة حاليًا","wallet"):"");
       return;
     }
