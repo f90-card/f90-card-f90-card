@@ -391,6 +391,15 @@
       r={items:[],count:0};
     }
     if (seq !== S.token) return;
+    if(kind==="audit"){
+      try{
+        const {data,error}=await A.client.rpc("f90_manager_audit_enriched",{p_offset:S.offset});
+        if(!error&&Array.isArray(data)){
+          const byId=new Map(data.map(x=>[String(x.id),x]));
+          r.items=r.items.map(x=>({...x,...(byId.get(String(x.id))||{})}));
+        }
+      }catch(_){}
+    }
     S.list = r.items;
     S.count = r.count;
     const filters =
@@ -508,8 +517,23 @@
       columns = ["التاريخ", "العملية", "العنصر", "المنفّذ"];
       rows = r.items
         .map(
-          (x) =>
-            `<tr><td>${e(C.date(x.created_at))}</td><td>${e(auditName(x.action))}</td><td><small>${e(x.target_id || "—")}</small><br><small>${e(x.details?.reason || x.details?.note || "")}</small></td><td><small>${e(x.actor?.display_name || x.actor?.email || x.actor_id || "النظام الآلي")}</small></td></tr>`
+          (x) => {
+            const details=x.details||{},keys=["reason","note","amount_usd","status","kind","name","product_name","old_status","new_status","currency","role","new_role","previous_role","percent","method_id","source"];
+            const meta=keys.filter(k=>details[k]!==undefined).map(k=>'<span><b>'+e(k)+':</b> '+e(typeof details[k]==="object"?JSON.stringify(details[k]):String(details[k]))+'</span>').join(" · ");
+            const type=x.item_kind||"other";
+            const url=type==="product"?'./index.html#/product/'+encodeURIComponent(x.target_id):type==="category"?'./index.html#/category/'+encodeURIComponent(x.target_id):"";
+            const link=type==="customer"&&x.target_id?'<button type="button" class="button secondary small" data-action="find-user" data-id="'+e(x.target_id)+'">فتح حساب العميل</button>':
+              url?'<a href="'+url+'" target="_blank" rel="noopener noreferrer">فتح العنصر</a>':
+              type==="order"?'<a href="#/orders">إدارة الطلبات</a>':type==="deposit"?'<a href="#/deposits">إدارة الإيداعات</a>':"";
+            return '<tr><td>'+e(C.date(x.created_at))+'<br><small>#'+e(x.id)+'</small></td>'+
+              '<td><strong>'+e(auditName(x.action))+'</strong><br><small dir="ltr">'+e(x.action)+'</small></td>'+
+              '<td><strong>'+e(x.customer_name||x.item_name||x.target_id||"غير محدد")+'</strong>'+
+              (x.customer_email?'<br><small>'+e(x.customer_email)+'</small>':"")+
+              '<br><small dir="ltr">'+e(x.target_id||"—")+'</small>'+(meta?'<p class="f90-audit-details">'+meta+'</p>':"")+
+              (link?'<div class="f90-audit-link">'+link+'</div>':"")+'</td>'+
+              '<td><strong>'+e(x.actor_name||x.actor?.display_name||"النظام")+'</strong>'+
+              (x.actor_email||x.actor?.email?'<br><small>'+e(x.actor_email||x.actor?.email)+'</small>':"")+'</td></tr>';
+          }
         )
         .join("");
     }
@@ -635,12 +659,25 @@
     if (!u?.id) throw new Error("حساب العميل غير موجود");
     const data = await A.call("staff.finance", { id: u.id });
     const bal = Number(data.balance_usd || 0);
-    S.detail = {...u, balance_usd: bal};
+    let live={};
+    try{const res=await A.client.rpc("f90_manager_customer_overview",{p_user:u.id});if(!res.error&&res.data)live=res.data;}catch(_){}
+    const actual={...u,...live};
+    const fact=(label,value)=>'<div class="f90-user-fact"><span>'+e(label)+'</span><strong>'+e(value===null||value===undefined||value===""?"غير متوفر":value)+'</strong></div>';
+    const overview='<section class="panel f90-user-overview"><h3>معلومات الحساب المسجلة</h3><div class="f90-user-facts">'+
+      fact("اسم العميل",actual.display_name)+fact("معرّف العميل",actual.customer_id)+fact("البريد الإلكتروني",actual.email)+
+      fact("رقم الهاتف",actual.phone?String(actual.phone_country||"")+" "+String(actual.phone):"غير متوفر")+
+      fact("عملة الحساب",actual.account_currency)+fact("دولة الشبكة التقريبية",actual.country_code)+
+      fact("المنطقة",actual.region)+fact("المدينة",actual.city)+
+      fact("نوع الجهاز",actual.device_type)+fact("طراز الجهاز",actual.device_model)+
+      fact("النظام",actual.os_name)+fact("المتصفح",actual.browser_name)+
+      fact("آخر اتصال مسجل",actual.device_last_seen_at?C.date(actual.device_last_seen_at):actual.last_seen_at?C.date(actual.last_seen_at):"غير متوفر")+
+      '</div><p class="muted small">بيانات الدولة والجهاز مستمدة من السجلات المتوفرة، وقد تكون غير دقيقة بسبب VPN أو تعذّر التعرّف على الجهاز.</p></section>';
+    S.detail = {...u,...live,balance_usd:bal};
     const ledger = data.ledger || [];
     modal("العميل والمحفظة: " + u.display_name,
       '<section class="f90-admin-customer"><div class="f90-admin-customer-head">'+customer(u)+
       '<div class="f90-customer-current"><small>رصيد المحفظة</small><strong>'+e(C.money(bal,"USD",true))+'</strong><small>الرصيد الأساسي بالدولار</small></div></div>'+
-      '<div class="f90-finance-editor-grid"><section class="panel"><h3>خصم إضافي للعميل</h3><p class="muted small">يُضاف إلى خصم VIP، ويُحسب تلقائيًا عند تسعير الطلب.</p>'+
+      overview+'<div class="f90-finance-editor-grid"><section class="panel"><h3>خصم إضافي للعميل</h3><p class="muted small">يُضاف إلى خصم VIP، ويُحسب تلقائيًا عند تسعير الطلب.</p>'+
       '<form id="userDiscountForm">'+field("percent","الخصم الإضافي ٪","number",data.extra_discount_percent || 0,'required min="0" max="50" step="0.001"')+
       '<button class="button secondary" type="submit">حفظ الخصم الخاص</button></form></section>'+
       '<section class="panel"><h3>زيادة سعر الشراء لهذا المستخدم</h3><p class="muted small">تُطبق على مشترياته فقط، قبل خصومات VIP والقسائم. لا تغيّر سعر المنتج لبقية المستخدمين.</p>'+
@@ -648,7 +685,7 @@
       '<button class="button secondary" type="submit">حفظ زيادة الشراء</button></form></section>'+
       '<section class="panel"><h3>إضافة أو خصم رصيد</h3><p class="muted small">كل حركة مسجلة مع السبب والتاريخ والرصيد قبل وبعد؛ الرصيد لا يصبح سالبًا.</p>'+
       '<form id="financeAdjustForm">'+select("direction","نوع الحركة",[["credit","إضافة رصيد"],["debit","خصم رصيد"]],"credit")+
-      select("currency","عملة المبلغ",C.currencyOptions(S.rates).filter(([code])=>["USD","ILS","JOD"].includes(code)),"USD")+
+      select("currency","عملة المبلغ",C.currencyOptions(S.rates).filter(([code])=>S.rates.some(r=>r.currency===code&&r.is_enabled&&!r.is_archived)),"USD")+
       field("amount","المبلغ بالعملة المختارة","number","",'required min="0.000001" max="1000000000" step="0.000001"')+
       '<p class="muted small" data-adjustment-preview>يظهر المقابل بالدولار وسعر الصرف قبل التأكيد. الحركات السابقة تحتفظ بصرفها.</p>'+
       field("note","سبب الحركة","textarea","",'required minlength="5" maxlength="500"')+
@@ -1121,8 +1158,9 @@
         field("network_ar","اسم الشبكة أو معلومات إضافية (اختياري)","text",d.network_ar||"",'maxlength="160"') +
         field("details_ar", "الوصف الكامل وتعليمات الإيداع", "textarea", d.details_ar || "", 'required maxlength="8000" rows="8"') +
         field("minimum_amount","الحد الأدنى للتحويل بعملة الطريقة (0 = دون حد إضافي)","number",d.minimum_amount??0,'min="0" max="1000000000000" step="any"') +
-        field("reference_label","اسم حقل رقم البطاقة أو الإشعار","text",d.reference_label||"رقم البطاقة أو الإشعار",'maxlength="150"') +
-        check("require_reference","إلزام العميل بإدخال رقم البطاقة أو المرجع",d.require_reference===true) +
+        select("reference_mode","خانات هذه الطريقة",[["none","بدون حقول إضافية"],["transaction","رقم الحركة"],["card","رقم البطاقة"]],d.reference_mode||(/binance|باينانس|usdt|تيثر/i.test(d.name_ar||"")?"transaction":"none")) +
+        field("reference_label","اسم الحقل إن وُجد","text",d.reference_label||"رقم الحركة",'maxlength="150"') +
+        check("require_reference","إلزام إدخال الحقل عندما يظهر",d.require_reference===true) +
         field("receipt_help","تعليمات رفع الإيصال","textarea",d.receipt_help||"",'maxlength="500" rows="2"') +
         field("deposit_fee_percent","عمولة الإيداع لهذه الطريقة ٪","number",d.deposit_fee_percent ?? 2,'required min="0" max="50" step="0.001"') +
         field("accepted_currencies","عملات هذه الطريقة (من العملات المفعّلة)","text",Array.isArray(d.accepted_currencies)?d.accepted_currencies.join(","):"USD,ILS,JOD",'required dir="ltr" placeholder="USD,ILS,JOD"')+
@@ -1757,6 +1795,7 @@
           return x;
         })(),
         reference_label: String(d.reference_label||"").trim().slice(0,150),
+        reference_mode: ["none","transaction","card"].includes(d.reference_mode)?d.reference_mode:"none",
         require_reference: form.elements.require_reference.checked,
         receipt_help: String(d.receipt_help||"").trim().slice(0,500),
         details_ar: d.details_ar,
@@ -2407,7 +2446,7 @@
       '<td>'+e(C.date(x.created_at))+'</td><td>'+e(x.attempt_count||0)+'</td></tr>').join("");
     main.innerHTML=head("تنبيهات الإدارة عبر Telegram","الإيداعات الجديدة والأحداث المهمة فقط، من خادم المتجر إلى محادثة الإدارة.")+
       '<section class="panel"><h2>اختيار أنواع التنبيهات</h2><form id="telegramAlertsForm">'+
-      check("telegram_deposits","إشعار عن كل طلب إيداع جديد",prefs.deposits_enabled!==false)+
+      '<p class="muted small">الإيداعات العادية لا تُرسل إشعارات إلى تلجرام.</p>'+
        check("telegram_salary","إشعار جديد عند طلب إيداع رواتب Xena Live",prefs.salary_enabled!==false)+
       check("telegram_verification","إشعار طلب توثيق جديد بدون إرسال وثائق الهوية",prefs.verification_enabled!==false)+
       check("telegram_order_reviews","طلبات اعتراض أو إلغاء تتطلب المراجعة",prefs.order_reviews_enabled!==false)+
@@ -2463,7 +2502,7 @@
   async function saveTelegramAlerts(form){
     const c=S.settings.config||{};
     const telegram_alerts={...c.telegram_alerts,
-      deposits_enabled:form.elements.telegram_deposits.checked,
+      deposits_enabled:false,
       salary_enabled:form.elements.telegram_salary.checked,
       verification_enabled:form.elements.telegram_verification.checked,
       order_reviews_enabled:form.elements.telegram_order_reviews.checked,
