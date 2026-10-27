@@ -232,3 +232,49 @@ body.admin-body .f90-credit-admin .table-wrap{max-height:65vh;overflow:auto;}
  #mainContent[data-page="deposit"] .f90-credit-entry-controls{gap:5px!important;}
  #mainContent[data-page="deposit"] .f90-credit-entry-controls>button{padding-inline:8px!important;}
 }
+
+/* 2026-10-27 refinement: compact voucher without instructions, full currency selector and scoped administrative facts. */
+#mainContent[data-page="deposit"] .f90-credit-hero {
+  min-height:128px!important;justify-content:center!important;
+  padding-block:20px!important;gap:11px!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero>strong {
+  margin:0!important;font-size:16px!important;
+}
+#mainContent[data-page="deposit"] .f90-credit-hero #f90CreditRedeemStatus:empty {display:none!important;}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-currency select{
+  display:block!important;width:100%!important;min-width:0!important;
+  min-height:54px!important;height:54px!important;
+  border-radius:999px!important;background:#252c3c!important;
+  border:1px solid #364358!important;color:#fff!important;
+  font-size:14px!important;padding:10px 20px!important;
+  direction:rtl!important;text-align:right!important;
+  outline:none!important;box-sizing:border-box!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-currency select:focus,
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-reference input:focus,
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-amount input:focus{
+  border-color:#3b82f6!important;box-shadow:0 0 0 3px #2563eb22!important;
+}
+#mainContent[data-page="deposit"] .f90-reference-bank-form #depositForm .f90-bank-amount input{
+  direction:ltr!important;text-align:right!important;
+}
+body.admin-body .f90-user-facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;
+}
+body.admin-body .f90-user-fact{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  background:var(--surface2);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;overflow-wrap:anywhere;
+}
+body.admin-body .f90-user-fact>span{font-size:11px;color:var(--muted);font-weight:650;}
+body.admin-body .f90-user-fact>strong{font-size:13px;font-weight:850;text-align:start;}
+body.admin-body .f90-audit-details{
+  margin:7px 0;padding:8px 11px;border-radius:9px;
+  background:var(--surface2);color:var(--text);line-height:1.8;
+  font-size:11px;overflow-wrap:anywhere;
+}
+body.admin-body .f90-audit-link a,body.admin-body .f90-audit-link button{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:7px 10px;margin:6px 0 0;border-radius:8px;min-height:32px;
+}
