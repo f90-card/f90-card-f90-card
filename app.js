@@ -80,7 +80,19 @@
   const status = (s) =>
     `<span class="badge status-${e(s)}">${e(C.statuses[s] || s)}</span>`;
   function customerOrderStatus(value) {
-    const labels={completed:"مكتمل",partial:"مكتمل جزئيًا",failed:"لم يكتمل",refunded:"مسترد"};
+    // These are F90 order states, not assumptions about the supplier's delivery.
+    // Supplier-reported completion/failure is recorded only by the background worker.
+    const labels={
+      pending:"بانتظار المعالجة",
+      queued:"بانتظار الإرسال للمورد",
+      submitting:"جارٍ إرسال الطلب",
+      processing:"قيد التنفيذ",
+      completed:"مكتمل",
+      partial:"مكتمل جزئيًا",
+      failed:"لم يكتمل",
+      review:"بانتظار مراجعة النتيجة",
+      refunded:"مسترد"
+    };
     return '<span class="badge status-'+e(value)+'">'+e(labels[value]||"قيد التنفيذ")+'</span>';
   }
   function toast(text) {
