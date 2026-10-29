@@ -68,8 +68,13 @@ export function normalizeService(s) {
     s._f90_yassen === true && rate < 0.01 ? 1000 : 1;
   const allowed = Array.isArray(s.qty_values) ? s.qty_values.map(Number) : null;
   const min = Number(s.min ?? s.qty_values?.min ?? (allowed?.length ? Math.min(...allowed) : 1)),
-    max = Number(s.max ?? s.qty_values?.max ??
+    rawMax = Number(s.max ?? s.qty_values?.max ??
       (allowed?.length ? Math.max(...allowed) : omega && productType !== "amount" ? 1 : 1000000)),
+    // Yassen can advertise a maximum larger than F90's 1-billion checkout cap.
+    // Clamp it instead of rejecting a valid, available supplier service.
+    // Never allow quantities greater than F90's existing checkout limit.
+    max = s._f90_yassen === true && Number.isFinite(rawMax)
+      ? Math.min(rawMax, 1000000000) : rawMax,
     unit = Number(s.unit_quantity ?? (omega ? scale : 1000));
   if (
     (s.service == null && s.id == null) ||
