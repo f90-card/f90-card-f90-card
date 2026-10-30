@@ -589,10 +589,12 @@ async function provider(id: string, readOnly = false) {
   const p = check(
     await db.from("f90_providers").select("*").eq("id", id).single(),
   );
-  const secret = await rpc("f90_provider_secret", {
-    p_actor: null,
-    p_provider: id,
-  });
+  const secret = p.adapter === "shihab"
+    ? Deno.env.get("SHIHAB_API_TOKEN")
+    : await rpc("f90_provider_secret", {
+      p_actor: null,
+      p_provider: id,
+    });
   if (p.config?.archived_at || !secret || (!p.is_enabled && !readOnly)) throw new ProviderError("المورّد غير مفعّل");
   if (!readOnly && (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new ProviderError("الطلبات الآلية غير مفعّلة لهذا المورّد");
@@ -2127,15 +2129,17 @@ async function staff(a: Actor, b: any) {
   if (action === "provider.save") {
     requireRole(a, "manager");
     const adapter = b.adapter === "f90_merchant_get" ? "f90_merchant" :
-      ["f90", "f90_merchant", "smm", "json", "omega", "yassen"].includes(b.adapter) ? b.adapter : "smm";
+      ["f90", "f90_merchant", "smm", "json", "omega", "yassen", "shihab"].includes(b.adapter) ? b.adapter : "smm";
     if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
       .eq("id", uuid(b.id)).single()) : null;
     if (old?.config?.archived_at) throw new AppError("F90_FIELDS", 400, "المورّد مؤرشف");
-    if (!old && !b.token && adapter !== "f90") throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
+    if (!old && !b.token && !["f90","shihab"].includes(adapter)) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
     if (adapter !== "f90" && new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
+    if (adapter === "shihab" && new URL(b.endpoint).origin !== "https://api.shihabcard.com")
+      throw new AppError("F90_FIELDS", 400, "استخدم رابط API شهاب المعتمد");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API العامل https://api.yassen-card.com");
     const endpoint = adapter === "f90" ? "https://www.f90card.online/" : text(b.endpoint, 2000);
@@ -2149,9 +2153,9 @@ async function staff(a: Actor, b: any) {
         (old.config?.f90_transport || "post") !== f90Transport));
     if (old && old.currency !== currency)
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
-    if (connectionChanged && !b.token && adapter !== "f90")
+    if (connectionChanged && !b.token && !["f90","shihab"].includes(adapter))
       throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد بعد تغيير رابط أو بروتوكول الاتصال");
-    const autoOrders = adapter === "f90" ? false : b.automatic_orders_enabled == null
+    const autoOrders = adapter === "f90" || adapter === "shihab" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
     if (adapter === "f90_merchant" && currency !== "USD")
@@ -2194,7 +2198,7 @@ async function staff(a: Actor, b: any) {
             .single()
         : await db.from("f90_providers").insert(d).select().single(),
     );
-    if (b.token)
+    if (b.token && adapter !== "shihab")
       await rpc("f90_provider_secret", {
         p_actor: a.id,
         p_provider: p.id,
