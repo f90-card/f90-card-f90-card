@@ -1407,6 +1407,7 @@
           ["json", "طلبات JSON بمفتاح Bearer"],
           ["omega", "أوميغا ستور (قراءة الخدمات والرصيد)"],
           ["yassen", "Yassen Card API (api-token / GET)"],
+          ["shihab", "شهاب كارد API (api-token / GET)"],
         ],
         p?.adapter === "f90_merchant" && p?.config?.f90_transport === "get" ? "f90_merchant_get" : (p?.adapter || "smm"),
       )}${select(
@@ -1426,6 +1427,7 @@
       const local = mode === "f90";
       const merchant = mode === "f90_merchant" || mode === "f90_merchant_get";
       const yassen = mode === "yassen";
+      const shihab = mode === "shihab";
       const u = (() => { try { return new URL(endpointInput?.value || ""); } catch { return null; } })();
       const host = u?.hostname.toLowerCase() || "";
       const self = merchant && (
@@ -1437,7 +1439,7 @@
       const yassenGuide = $("modalRoot").querySelector("#f90YassenProtocolGuide");
       if (merchantGuide) merchantGuide.hidden = mode !== "f90_merchant";
       if (getGuide) getGuide.hidden = mode !== "f90_merchant_get";
-      if (yassenGuide) yassenGuide.hidden = !yassen;
+      if (yassenGuide) yassenGuide.hidden = !(yassen || shihab);
       const currencyInput = $("modalRoot").querySelector('#providerForm [name="currency"]');
       if (merchant && currencyInput) currencyInput.value = "USD";
       if (endpointInput) {
