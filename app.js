@@ -3351,6 +3351,7 @@ async function history(kind){
         accountRequest.then(async(result)=>{
           if(result instanceof Error)return;
           try{
+            await mergePrivateCatalog();
             chrome();
             const current=(location.hash||"#/").split("/")[1]||"";
             if(["profile","wallet","deposit","orders","history","deposits","verification","developers"].includes(current) ||
@@ -3362,6 +3363,7 @@ async function history(kind){
         S.walletStale=true;
         console.warn("F90 account refresh pending");
       }
+      await mergePrivateCatalog();
       chrome();
       window.F90Support?.configure(S.settings.config);
       let initialTheme = S.settings.config.default_theme || "dark";
