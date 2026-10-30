@@ -405,6 +405,9 @@ async function buildPublicCatalog() {
     db.from("f90_store_news").select("id,kind,title_ar,body_ar,product_id,created_at")
       .order("created_at", { ascending: false }).limit(40),
   ]);
+  const privateSlugs = new Set(["f90-shihab-private","f90-shihab-apps","f90-shihab-games","f90-shihab-social","f90-shihab-streaming","f90-shihab-other"]);
+  const privateIds = new Set(check(rows[1]).filter((c:any)=>privateSlugs.has(c.slug)).map((c:any)=>c.id));
+  const privateProductIds = new Set(check(rows[2]).filter((p:any)=>privateIds.has(p.category_id)).map((p:any)=>p.id));
   const categories = check(rows[1]);
   const products = check(rows[2]);
   const linked = check(rows[6]);
@@ -496,7 +499,7 @@ async function buildPublicCatalog() {
       },
     },
     categories: categories
-      .filter((c: any) => allowedCategoryIds.has(c.id) && visible(c.id))
+      .filter((c: any) => allowedCategoryIds.has(c.id) && !privateIds.has(c.id) && visible(c.id))
       .map((c: any) =>
         isCategoryRefilling(c.id)
           ? {
@@ -506,7 +509,7 @@ async function buildPublicCatalog() {
           : c,
       ),
     products: products
-      .filter((p: any) => (allowedProductIds.has(p.id) || (ownerCategoryIds.has(p.category_id) && !providerProductIds.has(p.id))) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
+      .filter((p: any) => (allowedProductIds.has(p.id) || (ownerCategoryIds.has(p.category_id) && !providerProductIds.has(p.id))) && !privateProductIds.has(p.id) && !hiddenProductIds.has(p.id) && (!p.category_id || visible(p.category_id)))
       .map((p: any) =>
         isCategoryRefilling(p.category_id) || pausedProductIds.has(p.id)
           ? { ...p, commerce: { ...p.commerce, availability: "refilling" } }
@@ -2694,8 +2697,18 @@ Deno.serve(async (req: Request) => {
     securityActor=a;
     if (a?.keyId)
       usage = { key_id: a.keyId, user_id: a.id, action };
+    if (action === "catalog.private") {
+      if (!a || !["manager","trader"].includes(a.role) || a.needsMfa || a.keyId)
+        throw new AppError("F90_FORBIDDEN",403);
+      const cats = check(await db.from("categories").select("*").like("slug","f90-shihab-%"));
+      const ids = cats.map((c:any)=>c.id);
+      const items = ids.length ? check(await db.from("products").select("*").in("category_id",ids).eq("is_active",true)) : [];
+      return out({categories:cats.filter((c:any)=>c.is_active),products:items.filter((p:any)=>cats.some((c:any)=>c.id===p.category_id&&c.is_active))});
+    }
     if (action === "quote") {
       if (a?.keyId) scoped(a, "orders");
+      const privateLink=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",quoteProductId!).maybeSingle());
+      if(privateLink?.provider_id==="9c95e9bc-8930-490d-bb23-92d67a0dc428" && (!a || !["manager","trader"].includes(a.role))) throw new AppError("F90_FORBIDDEN",403);
       return out(
         await rpc("f90_quote_currency", {
           p_user: a && !a.needsMfa ? a.id : null,
@@ -2875,6 +2888,8 @@ Deno.serve(async (req: Request) => {
       const purchaseConfig=check(await db.from("site_settings").select("config").eq("id",1).single()).config||{};
       if(purchaseConfig.purchase_requires_verification===true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED",403,"يجب توثيق الحساب قبل الشراء.");
       const product = uuid(b.product_id || b.service);
+      const privateLink=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",product).maybeSingle());
+      if(privateLink?.provider_id==="9c95e9bc-8930-490d-bb23-92d67a0dc428" && !["manager","trader"].includes(a.role)) throw new AppError("F90_FORBIDDEN",403);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const reference = paymentReference(b.idempotency_key);
       const requestedQuantity = integer(b.quantity || 1);
