@@ -107,6 +107,7 @@ export function normalizeService(s) {
     params,
     allowed_quantities: allowed,
     omega,
+    ...(s._f90_yassen === true && typeof s.category_img === "string" && /^https:\/\//.test(s.category_img) ? { image_url: s.category_img.slice(0,2000) } : {}),
     ...(s._f90_merchant === true ? {
       fields: Array.isArray(s.fields) ? s.fields : [],
       quantity_step: s.quantity_step || 1,
