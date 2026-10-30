@@ -484,6 +484,16 @@
   // A network error or an expired access token is not a user sign-out.
   // Keep a single restoration attempt in flight while Supabase refreshes tokens.
   let pendingMeRefresh = null;
+  async function mergePrivateCatalog() {
+    if (!["manager","trader"].includes(S.me?.role)) return;
+    try {
+      const result=await A.call("catalog.private");
+      const categories=result?.categories||[], products=result?.products||[];
+      const privateCategoryIds=new Set(categories.map(c=>c.id));
+      S.categories=[...S.categories.filter(c=>!String(c.slug||"").startsWith("f90-shihab-")),...categories];
+      S.products=[...S.products.filter(p=>!privateCategoryIds.has(p.category_id)),...products];
+    } catch(err) { console.warn("Private catalog unavailable",err); }
+  }
   async function refreshMe() {
     if (pendingMeRefresh) return pendingMeRefresh;
     pendingMeRefresh = (async () => {
@@ -532,13 +542,7 @@
           }
         }
         S.me = me;
-        if (["manager","trader"].includes(me?.role)) {
-          try {
-            const privateCatalog = await A.call("catalog.private");
-            S.categories = [...S.categories.filter(c=>!String(c.slug||"").startsWith("f90-shihab-")),...(privateCatalog.categories||[])];
-            S.products = [...S.products.filter(p=>!(privateCatalog.products||[]).some(x=>x.id===p.id)),...(privateCatalog.products||[])];
-          } catch(err) { console.warn("Private catalog unavailable",err); }
-        }
+        await mergePrivateCatalog();
 
         const accountCurrency=me?.profile?.account_currency;
         if(/^[A-Z]{3,8}$/.test(String(accountCurrency||""))){
@@ -3368,13 +3372,14 @@ async function history(kind){
       promotions();
       await route();
       if(warmCatalog){
-        networkCatalog.then(fresh=>{
+        networkCatalog.then(async fresh=>{
           saveWarmCatalog(fresh);
           // Preserve an open quote or a focused user form without re-rendering.
           if(!document.getElementById("checkoutForm") &&
              !document.getElementById("depositForm") &&
              !document.getElementById("modalRoot")?.children.length){
             Object.assign(S,fresh);
+            await mergePrivateCatalog();
           }
         }).catch(()=>{/* Public pages remain usable with the short-lived cache. */});
       }
@@ -3412,6 +3417,7 @@ async function history(kind){
             const incoming = snapshot(latest.products, latest.categories);
             S.products = latest.products;
             S.categories = latest.categories;
+            await mergePrivateCatalog();
             // Only repaint browse pages when the supplier-facing catalog actually changed.
             // Never interrupt an active modal, a focused input, or a checkout.
             const page = (location.hash || "#/").split("/")[1] || "";
