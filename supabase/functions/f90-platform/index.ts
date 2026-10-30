@@ -2703,7 +2703,7 @@ Deno.serve(async (req: Request) => {
       const cats = check(await db.from("categories").select("*").like("slug","f90-shihab-%"));
       const ids = cats.map((c:any)=>c.id);
       const items = ids.length ? check(await db.from("products").select("*").in("category_id",ids).eq("is_active",true)) : [];
-      return out({categories:cats.filter((c:any)=>c.is_active),products:items.filter((p:any)=>cats.some((c:any)=>c.id===p.category_id&&c.is_active)).map((p:any)=>({...p,commerce:{...p.commerce,availability:"refilling"}}))});
+      return out({categories:cats.filter((c:any)=>c.is_active),products:items.filter((p:any)=>cats.some((c:any)=>c.id===p.category_id&&c.is_active))});
     }
     if (action === "quote") {
       if (a?.keyId) scoped(a, "orders");
