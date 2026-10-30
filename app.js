@@ -3354,7 +3354,7 @@ async function history(kind){
             await mergePrivateCatalog();
             chrome();
             const current=(location.hash||"#/").split("/")[1]||"";
-            if(["profile","wallet","deposit","orders","history","deposits","verification","developers"].includes(current) ||
+            if(["","home","category","profile","wallet","deposit","orders","history","deposits","verification","developers"].includes(current) ||
                (location.hash||"").startsWith("#/special/salary"))
               await route();
           }catch(err){console.warn("F90 deferred account refresh",err);}
@@ -3382,6 +3382,8 @@ async function history(kind){
              !document.getElementById("modalRoot")?.children.length){
             Object.assign(S,fresh);
             await mergePrivateCatalog();
+            const page=(location.hash||"#/").split("/")[1]||"";
+            if(["","home","category"].includes(page)) await route();
           }
         }).catch(()=>{/* Public pages remain usable with the short-lived cache. */});
       }
