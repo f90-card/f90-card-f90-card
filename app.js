@@ -532,6 +532,13 @@
           }
         }
         S.me = me;
+        if (["manager","trader"].includes(me?.role)) {
+          try {
+            const privateCatalog = await A.call("catalog.private");
+            S.categories = [...S.categories.filter(c=>!String(c.slug||"").startsWith("f90-shihab-")),...(privateCatalog.categories||[])];
+            S.products = [...S.products.filter(p=>!(privateCatalog.products||[]).some(x=>x.id===p.id)),...(privateCatalog.products||[])];
+          } catch(err) { console.warn("Private catalog unavailable",err); }
+        }
 
         const accountCurrency=me?.profile?.account_currency;
         if(/^[A-Z]{3,8}$/.test(String(accountCurrency||""))){
