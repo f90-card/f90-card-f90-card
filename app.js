@@ -3260,6 +3260,17 @@ async function history(kind){
           }catch {/* A failed network read is not a confirmed sign-out. */}
           return;
         }
+        // Confirm a missing session after reload before redirecting the customer.
+        await new Promise(resolve => setTimeout(resolve, 1600));
+        let confirmed;
+        try { confirmed = await A.client.auth.getSession(); }
+        catch { S.walletStale = true; return; }
+        if (confirmed.error) { S.walletStale = true; return; }
+        if (confirmed.data?.session) {
+          try { if (await refreshMe()) { chrome(); await route(); } }
+          catch { S.walletStale = true; }
+          return;
+        }
         S.me = null;
         S.walletStale = false;
         S.savedRecipients = [];
