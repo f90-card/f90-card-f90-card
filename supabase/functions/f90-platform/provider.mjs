@@ -255,7 +255,7 @@ export async function callProvider(
     const yassen = provider.adapter === "yassen" || provider.adapter === "shihab";
     if (provider.adapter === "shihab" && u.origin !== "https://api.shihabcard.com")
       throw new ProviderError("عنوان API شهاب غير معتمد");
-    if (yassen && u.origin !== "https://api.yassen-card.com")
+    if (provider.adapter === "yassen" && u.origin !== "https://api.yassen-card.com")
       throw new ProviderError("عنوان API ياسين الفعلي هو https://api.yassen-card.com");
     if (yassen && action === "add") {
       if (!/^[0-9]+$/.test(String(args.service ?? "")) ||
