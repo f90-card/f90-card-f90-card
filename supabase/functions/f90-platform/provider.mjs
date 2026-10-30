@@ -251,8 +251,10 @@ export async function callProvider(
     if (!data?.id) throw new ProviderError("لم تؤكد F90 رقم الطلب", true);
     return { order_id: data.id, status: data.status };
   }
-  if (provider.adapter === "omega" || provider.adapter === "yassen") {
-    const yassen = provider.adapter === "yassen";
+  if (provider.adapter === "omega" || provider.adapter === "yassen" || provider.adapter === "shihab") {
+    const yassen = provider.adapter === "yassen" || provider.adapter === "shihab";
+    if (provider.adapter === "shihab" && u.origin !== "https://api.shihabcard.com")
+      throw new ProviderError("عنوان API شهاب غير معتمد");
     if (yassen && u.origin !== "https://api.yassen-card.com")
       throw new ProviderError("عنوان API ياسين الفعلي هو https://api.yassen-card.com");
     if (yassen && action === "add") {
