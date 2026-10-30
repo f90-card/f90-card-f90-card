@@ -2358,7 +2358,8 @@ async function staff(a: Actor, b: any) {
       if (![supplierPrice, unit, min, max, cost, price].every(Number.isFinite) ||
           supplierPrice <= 0 || unit <= 0 || min <= 0 || max < min || price <= 0)
         throw new AppError("F90_FIELDS", 400, "بيانات سعر أو كمية غير صالحة للخدمة " + id);
-      const name = text(b.names?.[id] ?? service.name, 200);
+      const originalName = text(b.names?.[id] ?? service.name, 194);
+      const name = p.adapter === "shihab" ? `F90 | ${originalName.replace(/^F90\s*[|:-]\s*/i, "")}` : originalName;
       if (!name) throw new AppError("F90_FIELDS", 400, "اسم الخدمة مفقود: " + id);
       const chosenCategoryId = uuid(categoriesByService[id] || categoryId);
       if (!categoryIds.has(chosenCategoryId))
