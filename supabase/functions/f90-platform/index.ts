@@ -726,11 +726,11 @@ async function work() {
         const currentProvider = check(await db.from("f90_providers")
           .select("adapter").eq("id", o.provider_id).single());
         let params: Record<string, string> = {};
-        if (currentProvider.adapter === "yassen") {
+        if (currentProvider.adapter === "yassen" || currentProvider.adapter === "shihab") {
           const products = (await providerAction(o.provider_id, "services"))
             .map(normalizeService).filter(Boolean);
           const service = products.find((item: any) => item.id === String(o.provider_service));
-          if (!service) throw new ProviderError("خدمة ياسين غير متاحة");
+          if (!service) throw new ProviderError("خدمة المورّد غير متاحة");
           const permitted = service.allowed_quantities;
           if (permitted && !permitted.includes(Number(o.quantity)))
             throw new ProviderError("الكمية غير مدعومة لدى ياسين");
