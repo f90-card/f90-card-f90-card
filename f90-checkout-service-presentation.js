@@ -95,8 +95,10 @@
     const fulfillment=commerce?.fulfillment_status==="unconfirmed"?"unknown":commerce?.fulfillment==="automatic"?"automatic":commerce?.fulfillment==="manual"?"manual":"unknown";
     const automatic=fulfillment==="automatic";
     const manual=fulfillment==="manual";
+    const supplierDetails=!!commerce?.supplier_details_checked_at || commerce?.fulfillment_status==="unconfirmed";
+    const supplierTime=commerce?.supplier_delivery_time?.text;
     // These are user-provided estimates, not server-side execution guarantees.
-    const timing=automatic?"من 5 إلى 60 ثانية":manual?"من 5 إلى 120 دقيقة":"حسب نوع الخدمة";
+    const timing=supplierDetails?(supplierTime||"لم يحدد المورّد مدة التنفيذ"):automatic?"من 5 إلى 60 ثانية":manual?"من 5 إلى 120 دقيقة":"حسب نوع الخدمة";
     const required=fields.filter(f=>f.required).map(f=>f.label);
     const details=[
       ...(original?[original]:[]),
@@ -104,9 +106,9 @@
       ...(quantityVisible?["اختر العدد المناسب ضمن الحد المسموح للخدمة."]:[]),
     ];
     return {
-      header:automatic?"💎 شحن تلقائي سريع":manual?"🕘 تنفيذ يدوي للطلب":"📨 إرسال الطلب تلقائيًا إلى المورّد",
+      header:supplierDetails?(automatic?"⚡ تنفيذ تلقائي لدى المورّد":manual?"🕘 تنفيذ يدوي لدى المورّد":"نوع التنفيذ: لم يحدده المورّد"):automatic?"💎 شحن تلقائي سريع":manual?"🕘 تنفيذ يدوي للطلب":"📨 إرسال الطلب تلقائيًا إلى المورّد",
       timing,
-      timingLabel:automatic?"⚡ المدة المتوقعة من 5 إلى 60 ثانية":manual?"⏰ المدة المتوقعة من 5 إلى 120 دقيقة":"⏰ مدة التنفيذ حسب الخدمة",
+      timingLabel:supplierDetails?(supplierTime?"⏰ المدة المتوقعة حسب المورّد: "+supplierTime:"⏰ لم يحدد المورّد مدة التنفيذ"):automatic?"⚡ المدة المتوقعة من 5 إلى 60 ثانية":manual?"⏰ المدة المتوقعة من 5 إلى 120 دقيقة":"⏰ مدة التنفيذ حسب الخدمة",
       note:commerce?.fulfillment_status==="unconfirmed"?"يُرسل طلبك تلقائيًا إلى المورّد، ويمكنك متابعة حالته من طلباتي. 🚨 راجع صحة بياناتك قبل الشراء.":"🚨 راجع صحة بياناتك قبل الشراء. يمكنك متابعة حالة التنفيذ من سجل الطلبات.",
       details,
       fulfillment,

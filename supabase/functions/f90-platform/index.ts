@@ -3,6 +3,7 @@ import { parentRefilling } from "./catalog.mjs";
 import { recipientNameFromSupplier } from "./recipient-name.mjs";
 import { cleanCurrencyPricing, nativePrice } from "./currency-pricing.mjs";
 import { SHIHAB_ID, shihabSnapshot, shihabStatus, shihabPublicProduct } from "./shihab.mjs";
+import { fetchSupplierDetail } from "./shihab-details.mjs";
 import {
   callProvider,
   endpointURL,
@@ -633,6 +634,15 @@ async function syncShihab() {
   const items=await callProvider(p,secret,"services",{},fetch,dns);
   return rpc("f90_shihab_apply_snapshot",{p_items:shihabSnapshot(items)});
 }
+async function syncShihabDetails() {
+  const ids=await rpc("f90_shihab_claim_details");
+  const items=[];
+  for(let n=0;n<ids.length;n+=10){
+    const results=await Promise.allSettled(ids.slice(n,n+10).map((id:string)=>fetchSupplierDetail(id)));
+    for(const result of results)if(result.status==="fulfilled")items.push(result.value);
+  }
+  return items.length?rpc("f90_shihab_apply_details",{p_items:items}):{processed:0};
+}
 async function assertShihabCatalogAccess(productId:string,a:Actor|null) {
   const link=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",productId).maybeSingle());
   if(link?.provider_id!==SHIHAB_ID || (a && ["manager","trader"].includes(a.role)))return;
@@ -912,7 +922,7 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
   // Only the trusted catalog sync can replace an established supplier classification.
   if (["confirmed","unconfirmed"].includes(existing.fulfillment_status)) {
     for (const key of ["fulfillment_status","fulfillment_evidence","fulfillment_reason",
-      "supplier_available","catalog_visibility","admin_only"])
+      "supplier_available","catalog_visibility","admin_only","supplier_delivery_time","supplier_details_checked_at"])
       if (Object.hasOwn(existing,key)) result[key]=existing[key];
     result.fulfillment=existing.fulfillment;
   } else if (c.fulfillment_status === "unconfirmed") result.fulfillment_status="unconfirmed";
@@ -2675,7 +2685,7 @@ Deno.serve(async (req: Request) => {
       return out(action==="i18n.worker.claim"?await rpc("f90_i18n_claim",{}):await rpc("f90_i18n_complete",{p_lease:uuid(payload.lease_id),p_rows:payload.rows}));
     }
     // Production financial actions enabled on explicit owner request, 2026-10-20.
-    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync" || action === "shihab.audit.content") {
+    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync" || action === "shihab.audit.content" || action === "shihab.details") {
       const token = req.headers.get("x-f90-worker");
       if (
         !token ||
@@ -2689,6 +2699,7 @@ Deno.serve(async (req: Request) => {
       if (action === "shihab.audit") return out(await providerAction("9c95e9bc-8930-490d-bb23-92d67a0dc428", "services"));
       if (action === "shihab.audit.content") return out(await providerAction(SHIHAB_ID,"content",{category:0}));
       if (action === "shihab.sync") return out(await syncShihab());
+      if (action === "shihab.details") return out(await syncShihabDetails());
       return out(action === "worker" ? await work() : await smmCatalogFetch());
     }
     if (action === "media.state") {
