@@ -267,14 +267,22 @@ export async function callProvider(
     } else if (yassen && action === "status") {
       if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(args.order ?? "")))
         throw new ProviderError("معرّف طلب ياسين غير صالح");
+    } else if (provider.adapter === "shihab" && action === "content") {
+      if (!/^[0-9]{1,100}$/.test(String(args.category ?? ""))) throw new ProviderError("معرّف قسم شهاب غير صالح");
     } else if (!["services", "balance"].includes(action))
       throw new ProviderError(yassen ? "عملية المورّد غير متاحة" : "طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
     let path = "/client/api/products";
     if (action === "balance") path = "/client/api/profile";
     if (action === "status") path = "/client/api/check";
+    if (provider.adapter === "shihab" && action === "content") path = `/client/api/content/${args.category}`;
     if (action === "add") path = `/client/api/newOrder/${args.service}/params`;
     const target = new URL(path, u.origin);
     if (action === "status") target.searchParams.set("orders", `[${args.order}]`);
+    if (provider.adapter === "shihab" && action === "status" && args.by_uuid === true) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(args.order)))
+        throw new ProviderError("مرجع طلب شهاب غير صالح");
+      target.searchParams.set("uuid", "1");
+    }
     if (action === "add") {
       target.searchParams.set("qty", String(args.quantity));
       target.searchParams.set("order_uuid", String(args.client_reference));
@@ -299,7 +307,7 @@ export async function callProvider(
     if (!response.ok || response.status >= 300)
       throw new ProviderError("رفض المورّد الاتصال، تحقق من الرابط والتوكن", action === "add" && response.status >= 500);
     const raw = await response.text();
-    if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا");
+    if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا", provider.adapter === "shihab" && action === "add");
     let data;
     try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة المورّد غير مفهومة", action === "add"); }
     if (data?.status === "error" || data?.error)
@@ -317,12 +325,16 @@ export async function callProvider(
         ...(nickname ? { account_name: nickname.trim() } : {}) };
     }
     if (yassen && action === "status") {
+      if (provider.adapter === "shihab" && args.by_uuid === true && data?.status === "OK" &&
+          Array.isArray(data.data) && data.data.length === 0) return null;
       if (data?.status !== "OK" || !Array.isArray(data.data) || data.data.length !== 1)
         throw new ProviderError("حالة طلب ياسين غير واضحة");
       if (provider.adapter === "shihab") {
         const row=data.data[0];
         const returnedId=row.order_id ?? row.id;
-        if (returnedId != null && String(returnedId)!==String(args.order))
+        if (args.by_uuid === true && (!returnedId || (row.order_uuid != null && String(row.order_uuid)!==String(args.order))))
+          throw new ProviderError("مرجع نتيجة شهاب لا يطابق الطلب");
+        if (args.by_uuid !== true && returnedId != null && String(returnedId)!==String(args.order))
           throw new ProviderError("معرّف نتيجة شهاب لا يطابق الطلب");
         return {...row, supplier_status:String(row.status??""), status:shihabStatus(row.status)};
       }

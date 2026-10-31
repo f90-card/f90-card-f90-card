@@ -622,7 +622,7 @@ async function dns(host: string) {
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }
 async function providerAction(id: string, action: string, args: any = {}) {
-  const { p, secret } = await provider(id, ["services", "balance", "status"].includes(action));
+  const { p, secret } = await provider(id, ["services", "balance", "status", "content"].includes(action));
   return callProvider(p, secret, action, args, fetch, dns);
 }
 async function syncShihab() {
@@ -743,7 +743,15 @@ async function work() {
   let processed = 0;
   for (const o of orders) {
     try {
-      if (o.status === "submitting") {
+      if (o.provider_id === SHIHAB_ID && o.status === "review" && o.provider_status === "submission_uncertain") {
+        // Read-only UUID reconciliation. Never resubmit, refund, or infer failure from an empty response.
+        const recovered=await providerAction(SHIHAB_ID,"status",{order:o.id,by_uuid:true});
+        if (!recovered?.order_id) throw new ProviderError("لم يؤكد المورد نتيجة الطلب بعد");
+        await rpc("f90_order_transition",{p_actor:null,p_id:o.id,p_status:"processing",
+          p_note:"تمت مطابقة الطلب لدى المورد بمرجعه الأصلي دون إعادة الإرسال",p_external:String(recovered.order_id)});
+        check(await db.from("f90_orders").update({provider_status:text(recovered.supplier_status || recovered.status,100)})
+          .eq("id",o.id));
+      } else if (o.status === "submitting") {
         const link =
           o.customer_fields.link ||
           o.customer_fields.account_id ||
@@ -818,6 +826,9 @@ async function work() {
             .eq("id", o.id);
       }
     } catch (e) {
+      if (o.provider_id === SHIHAB_ID && o.status === "submitting" &&
+          !(e instanceof ProviderError && !e.uncertain))
+        check(await db.from("f90_orders").update({provider_status:"submission_uncertain"}).eq("id",o.id));
       if (o.status === "submitting")
         await rpc("f90_order_transition", {
           p_actor: null,
@@ -826,7 +837,7 @@ async function work() {
             e instanceof ProviderError && !e.uncertain ? "failed" : "review",
           p_note:
             e instanceof ProviderError && e.uncertain
-              ? "نتيجة الاتصال غير مؤكدة؛ تحتاج الإدارة مراجعة المورّد قبل الإعادة أو الاسترداد"
+              ? o.provider_id === SHIHAB_ID ? "نتيجة الاتصال غير مؤكدة؛ سيُفحص المرجع الأصلي لدى المورد تلقائيًا" : "نتيجة الاتصال غير مؤكدة؛ تحتاج الإدارة مراجعة المورّد قبل الإعادة أو الاسترداد"
               : "تعذّر تنفيذ الخدمة لدى المورّد",
         });
       // Poll failures do not prove an order failed. Retry status later, never add again.
@@ -2664,14 +2675,19 @@ Deno.serve(async (req: Request) => {
       return out(action==="i18n.worker.claim"?await rpc("f90_i18n_claim",{}):await rpc("f90_i18n_complete",{p_lease:uuid(payload.lease_id),p_rows:payload.rows}));
     }
     // Production financial actions enabled on explicit owner request, 2026-10-20.
-    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync") {
+    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync" || action === "shihab.audit.content") {
       const token = req.headers.get("x-f90-worker");
       if (
         !token ||
         !(await rpc("f90_worker_authorized", { p_hash: await hash(token) }))
       )
         throw new AppError("F90_AUTH");
+      if (action === "shihab.audit" && b.order_uuid) {
+        const result=await providerAction(SHIHAB_ID,"status",{order:uuid(b.order_uuid),by_uuid:true});
+        return out({found:!!result,status:result?.status || null});
+      }
       if (action === "shihab.audit") return out(await providerAction("9c95e9bc-8930-490d-bb23-92d67a0dc428", "services"));
+      if (action === "shihab.audit.content") return out(await providerAction(SHIHAB_ID,"content",{category:0}));
       if (action === "shihab.sync") return out(await syncShihab());
       return out(action === "worker" ? await work() : await smmCatalogFetch());
     }

@@ -77,3 +77,37 @@ test("manager edits cannot erase confirmed supplier evidence, stock or hidden gu
   for(const key of Object.keys(existing))assert.equal(JSON.stringify(updated[key]),JSON.stringify(existing[key]));
   assert.equal(clean({prices:{USD:10},fulfillment_status:"unconfirmed"}).fulfillment_status,"unconfirmed");
 });
+test("UUID status recovery is read-only, accepts an external ID and rejects a mismatched reference",async()=>{
+  const result=await callProvider(provider,"test","status",{order:ref,by_uuid:true},async(url,options)=>{
+    assert.equal(options.method,"GET");assert.equal(url.pathname,"/client/api/check");
+    assert.equal(url.searchParams.get("orders"),`[${ref}]`);assert.equal(url.searchParams.get("uuid"),"1");
+    return new Response(JSON.stringify({status:"OK",data:[{order_id:"ID_original",order_uuid:ref,status:"wait"}]}));
+  });
+  assert.equal(result.order_id,"ID_original");assert.equal(result.status,"pending");
+  assert.equal(await callProvider(provider,"test","status",{order:ref,by_uuid:true},async()=>
+    new Response(JSON.stringify({status:"OK",data:[]}))),null);
+  await assert.rejects(callProvider(provider,"test","status",{order:ref,by_uuid:true},async()=>
+    new Response(JSON.stringify({status:"OK",data:[{order_id:"ID_other",order_uuid:"other",status:"accept"}]}))));
+});
+test("uncertain-order worker recovers by UUID without add, debit or refund; empty lookup stays safe",async()=>{
+  const src=readFileSync(new URL("../supabase/functions/f90-platform/index.ts",import.meta.url),"utf8");
+  const chunk=src.slice(src.indexOf("async function work()"),src.indexOf("function cleanCommerce("));
+  for(const found of [true,false]){
+    const calls=[],transitions=[],updates=[];
+    const db={from:table=>({update:patch=>({eq:async()=>{updates.push({table,patch});return {data:null}}}),
+      delete:()=>({lt:async()=>({data:null})})})};
+    const work=vm.runInNewContext(stripTypeScriptTypes(chunk)+";work",{
+      db,SHIHAB_ID:"shihab",ProviderError:class extends Error{},check:r=>r.data,text:v=>String(v),
+      backfillCompletedSupplierNames:async()=>0,
+      rpc:async(name,args)=>{
+        if(name==="f90_claim_work")return [{id:ref,provider_id:"shihab",status:"review",provider_status:"submission_uncertain"}];
+        transitions.push({name,args});return {};
+      },providerAction:async(id,action,args)=>{calls.push({id,action,args});
+        return found?{order_id:"ID_original",supplier_status:"wait",status:"pending"}:null;}});
+    await work();
+    assert.equal(calls.length,1);assert.equal(calls[0].action,"status");assert.equal(calls[0].args.by_uuid,true);
+    assert.equal(transitions.length,found?1:0);
+    if(found){assert.equal(transitions[0].args.p_status,"processing");assert.equal(transitions[0].args.p_external,"ID_original");}
+    assert.ok(updates.every(u=>u.table==="f90_orders"));
+  }
+});

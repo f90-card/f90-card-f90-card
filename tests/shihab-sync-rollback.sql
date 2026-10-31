@@ -24,6 +24,12 @@ BEGIN
  SELECT md5(string_agg(jsonb_build_array(id,name,image_url,category_id,price,commerce->'prices',is_active)::text,',' ORDER BY id))
  INTO after_details FROM public.products;
  IF before_details<>after_details THEN RAISE EXCEPTION 'Merchant product details changed'; END IF;
+ -- A missing upstream service must not disappear from the mapped classification totals.
+ SELECT jsonb_agg(e) INTO items FROM jsonb_array_elements(items)e WHERE e->>'id'<>service;
+ result:=public.f90_shihab_apply_snapshot(items);
+ IF (result->>'automatic')::int+(result->>'manual')::int+(result->>'unconfirmed')::int<>
+    (SELECT count(*) FROM public.f90_product_internal WHERE provider_id=(SELECT id FROM public.f90_providers WHERE adapter='shihab'))
+ THEN RAISE EXCEPTION 'Missing service lost from classification counts'; END IF;
  BEGIN
    PERFORM public.f90_shihab_apply_snapshot(items||jsonb_build_array(items->0));
    RAISE EXCEPTION 'Duplicate supplier IDs accepted';
