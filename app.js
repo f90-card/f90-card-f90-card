@@ -92,6 +92,7 @@
       failed:"لم يكتمل",
       review:"بانتظار مراجعة النتيجة",
       refunded:"مسترد"
+      ,rejected:"مرفوض",cancelled:"ملغي"
     };
     return '<span class="badge status-'+e(value)+'">'+e(labels[value]||"قيد التنفيذ")+'</span>';
   }
@@ -490,7 +491,7 @@
       const result=await A.call("catalog.private");
       const categories=result?.categories||[], products=result?.products||[];
       const privateCategoryIds=new Set(categories.map(c=>c.id));
-      S.categories=[...S.categories.filter(c=>!String(c.slug||"").startsWith("f90-shihab-")),...categories];
+      S.categories=[...S.categories.filter(c=>!privateCategoryIds.has(c.id)),...categories];
       S.products=[...S.products.filter(p=>!privateCategoryIds.has(p.category_id)),...products];
     } catch(err) { console.warn("Private catalog unavailable",err); }
   }
@@ -1097,7 +1098,7 @@
         <div class="product-info">
           <h1>${e(p.name)}</h1>
           <p class="f90-visa-subtitle">${e(c.fulfillment === "automatic" ? "شحن إلكتروني مباشر" : "خدمة رقمية عبر F90 CARD")}</p>
-          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment === "automatic" ? "الشحن: آلي" : "الشحن: يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "الحالة: غير متوفر" : "الحالة: متوفر"}</span></div>
+          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment_status === "unconfirmed" ? "نوع التنفيذ غير مؤكد · الإرسال للمورد تلقائي" : c.fulfillment === "automatic" ? "الشحن: آلي" : "الشحن: يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "الحالة: غير متوفر" : "الحالة: متوفر"}</span></div>
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>

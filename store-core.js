@@ -26,6 +26,7 @@
     refunded: "مسترد",
     approved: "مقبول",
     rejected: "مرفوض",
+    cancelled: "ملغي",
     active: "نشط",
     suspended: "موقوف",
     banned: "محظور",
@@ -105,7 +106,7 @@
     return `${new Intl.NumberFormat("ar").format(n)} دقيقة`;
   }
   function unavailable(p) {
-    return p?.stock === 0 || p?.commerce?.availability === "refilling";
+    return p?.stock === 0 || p?.commerce?.availability === "refilling" || p?.commerce?.supplier_available === false;
   }
   function categoryUnavailable(c, categories, products, seen = new Set()) {
     if (c.presentation?.availability === "refilling") return true;

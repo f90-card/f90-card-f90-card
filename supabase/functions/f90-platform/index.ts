@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { parentRefilling } from "./catalog.mjs";
 import { recipientNameFromSupplier } from "./recipient-name.mjs";
 import { cleanCurrencyPricing, nativePrice } from "./currency-pricing.mjs";
+import { SHIHAB_ID, shihabSnapshot, shihabStatus, shihabPublicProduct } from "./shihab.mjs";
 import {
   callProvider,
   endpointURL,
@@ -25,6 +26,11 @@ const cors = {
 };
 function customerOrder(order: any) {
   const o = { ...order };
+  if (order.provider_id === SHIHAB_ID && order.provider_status) {
+    const supplierState = shihabStatus(order.provider_status);
+    if ((order.status === "failed" && ["rejected","cancelled"].includes(supplierState)) ||
+        (order.status === "processing" && supplierState === "pending")) o.status = supplierState;
+  }
   for (const k of [
     "cost_usd",
     "provider_id",
@@ -351,6 +357,8 @@ async function assertProviderAvailable(productId: string) {
   ]);
   const product=check(productResult);
   const p=check(providerResult);
+  if (link.provider_id === SHIHAB_ID && (product?.commerce?.supplier_available === false ||
+      p?.config?.automatic_orders_enabled !== true)) throw new AppError("F90_UNAVAILABLE",409);
   if (!p?.is_enabled || p.config?.disconnected || p.config?.archived_at)
     throw new AppError("F90_UNAVAILABLE", 409, "الخدمة قيد التعبئة لدى المورّد");
   if (product?.commerce?.fulfillment === "automatic" &&
@@ -405,9 +413,12 @@ async function buildPublicCatalog() {
     db.from("f90_store_news").select("id,kind,title_ar,body_ar,product_id,created_at")
       .order("created_at", { ascending: false }).limit(40),
   ]);
-  const privateSlugs = new Set(["f90-shihab-private","f90-shihab-apps","f90-shihab-games","f90-shihab-social","f90-shihab-streaming","f90-shihab-other"]);
-  const privateIds = new Set(check(rows[1]).filter((c:any)=>privateSlugs.has(c.slug)).map((c:any)=>c.id));
-  const privateProductIds = new Set(check(rows[2]).filter((p:any)=>privateIds.has(p.category_id)).map((p:any)=>p.id));
+  const shihabProvider = check(rows[7]).find((p:any)=>p.id===SHIHAB_ID);
+  const privateIds = new Set(check(rows[1]).filter((c:any)=>String(c.slug||"").startsWith("f90-shihab-") &&
+    (shihabProvider?.config?.catalog_visibility !== "public" || c.presentation?.catalog_visibility === "hidden" ||
+     (Array.isArray(c.presentation?.visibility_roles) && c.presentation.visibility_roles.length>0))).map((c:any)=>c.id));
+  const privateProductIds = new Set(check(rows[6]).filter((i:any)=>i.provider_id===SHIHAB_ID &&
+    !shihabPublicProduct(check(rows[2]).find((p:any)=>p.id===i.product_id),shihabProvider)).map((i:any)=>i.product_id));
   const categories = check(rows[1]);
   const products = check(rows[2]);
   const linked = check(rows[6]);
@@ -474,7 +485,7 @@ async function buildPublicCatalog() {
     if (seen.has(id)) return false;
     seen.add(id);
     const item: any = categoriesById.get(id);
-    const allowed = !!item && (!item.parent_id || visible(item.parent_id,seen));
+    const allowed = !!item && !privateIds.has(id) && (!item.parent_id || visible(item.parent_id,seen));
     visibilityMemo.set(id,allowed);
     seen.delete(id);
     return allowed;
@@ -613,6 +624,20 @@ async function dns(host: string) {
 async function providerAction(id: string, action: string, args: any = {}) {
   const { p, secret } = await provider(id, ["services", "balance", "status"].includes(action));
   return callProvider(p, secret, action, args, fetch, dns);
+}
+async function syncShihab() {
+  // This path only fetches catalog data. It never invokes add or order transitions.
+  const {p,secret}=await provider(SHIHAB_ID,true);
+  if (!p.is_enabled || p.config?.sync_enabled !== true || p.config?.disconnected)
+    throw new AppError("F90_UNAVAILABLE",409);
+  const items=await callProvider(p,secret,"services",{},fetch,dns);
+  return rpc("f90_shihab_apply_snapshot",{p_items:shihabSnapshot(items)});
+}
+async function assertShihabCatalogAccess(productId:string,a:Actor|null) {
+  const link=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",productId).maybeSingle());
+  if(link?.provider_id!==SHIHAB_ID || (a && ["manager","trader"].includes(a.role)))return;
+  const catalog=await publicCatalog();
+  if(!catalog.products.some((p:any)=>p.id===productId))throw new AppError("F90_FORBIDDEN",403);
 }
 // The database cron and the manager's button use the same restartable catalog
 // fetch. Staging only inserts unseen supplier IDs; the SQL worker creates drafts.
@@ -772,6 +797,8 @@ async function work() {
           order: o.provider_order_id,
         });
         const state = normalizeStatus(data, o.total_usd, o.quantity);
+        if (o.provider_id === SHIHAB_ID) check(await db.from("f90_orders")
+          .update({provider_status:text(data.supplier_status || data.status,100)}).eq("id",o.id));
         await rememberSupplierNickname(o.id,data);
         if (state.status !== "processing")
           await rpc("f90_order_transition", {
@@ -785,7 +812,7 @@ async function work() {
           await db
             .from("f90_orders")
             .update({
-              provider_status: text(data.status, 100),
+              provider_status: text(data.supplier_status || data.status, 100),
               next_sync_at: new Date(Date.now() + 120000).toISOString(),
             })
             .eq("id", o.id);
@@ -2158,7 +2185,7 @@ async function staff(a: Actor, b: any) {
       throw new AppError("F90_FIELDS", 400, "تغيير عملة المورّد يحتاج إعادة تسعير منتجاته أولًا؛ استخدم إعدادات الصرف والمزامنة");
     if (connectionChanged && !b.token && !["f90","shihab"].includes(adapter))
       throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد بعد تغيير رابط أو بروتوكول الاتصال");
-    const autoOrders = adapter === "f90" || adapter === "shihab" ? false : b.automatic_orders_enabled == null
+    const autoOrders = adapter === "f90" ? false : b.automatic_orders_enabled == null
       ? old?.config?.automatic_orders_enabled === true
       : b.automatic_orders_enabled === true;
     if (adapter === "f90_merchant" && currency !== "USD")
@@ -2404,7 +2431,8 @@ async function staff(a: Actor, b: any) {
             ...(p.adapter === "f90_merchant" ? {
               availability: s.availability, pack_quantity: s.pack_quantity,
             } : {}),
-            fulfillment: p.config?.automatic_orders_enabled === true &&
+            ...(p.adapter === "shihab" ? {fulfillment_status:"unconfirmed"} : {}),
+            fulfillment: p.adapter === "shihab" ? "manual" : p.config?.automatic_orders_enabled === true &&
               !s.allowed_quantities && p.adapter !== "omega" ? "automatic" : "manual",
             prices: { USD: price },
             unit_quantity: s.unit_quantity,
@@ -2628,13 +2656,15 @@ Deno.serve(async (req: Request) => {
       return out(action==="i18n.worker.claim"?await rpc("f90_i18n_claim",{}):await rpc("f90_i18n_complete",{p_lease:uuid(payload.lease_id),p_rows:payload.rows}));
     }
     // Production financial actions enabled on explicit owner request, 2026-10-20.
-    if (action === "worker" || action === "smm.catalog") {
+    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync") {
       const token = req.headers.get("x-f90-worker");
       if (
         !token ||
         !(await rpc("f90_worker_authorized", { p_hash: await hash(token) }))
       )
         throw new AppError("F90_AUTH");
+      if (action === "shihab.audit") return out(await providerAction("9c95e9bc-8930-490d-bb23-92d67a0dc428", "services"));
+      if (action === "shihab.sync") return out(await syncShihab());
       return out(action === "worker" ? await work() : await smmCatalogFetch());
     }
     if (action === "media.state") {
@@ -2707,8 +2737,7 @@ Deno.serve(async (req: Request) => {
     }
     if (action === "quote") {
       if (a?.keyId) scoped(a, "orders");
-      const privateLink=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",quoteProductId!).maybeSingle());
-      if(privateLink?.provider_id==="9c95e9bc-8930-490d-bb23-92d67a0dc428" && (!a || !["manager","trader"].includes(a.role))) throw new AppError("F90_FORBIDDEN",403);
+      await assertShihabCatalogAccess(quoteProductId!,a);
       return out(
         await rpc("f90_quote_currency", {
           p_user: a && !a.needsMfa ? a.id : null,
@@ -2888,8 +2917,7 @@ Deno.serve(async (req: Request) => {
       const purchaseConfig=check(await db.from("site_settings").select("config").eq("id",1).single()).config||{};
       if(purchaseConfig.purchase_requires_verification===true && !verification.is_verified) throw new AppError("F90_VERIFICATION_REQUIRED",403,"يجب توثيق الحساب قبل الشراء.");
       const product = uuid(b.product_id || b.service);
-      const privateLink=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",product).maybeSingle());
-      if(privateLink?.provider_id==="9c95e9bc-8930-490d-bb23-92d67a0dc428" && !["manager","trader"].includes(a.role)) throw new AppError("F90_FORBIDDEN",403);
+      await assertShihabCatalogAccess(product,a);
       const fields = b.fields || { account_id: b.link || b.account_id };
       const reference = paymentReference(b.idempotency_key);
       const requestedQuantity = integer(b.quantity || 1);

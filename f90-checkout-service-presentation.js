@@ -92,7 +92,7 @@
     const title=String(product?.name||"الخدمة").trim();
     const description=String(product?.description||"").trim();
     const original=isBoilerplate(description)?"":description;
-    const fulfillment=commerce?.fulfillment==="automatic"?"automatic":commerce?.fulfillment==="manual"?"manual":"unknown";
+    const fulfillment=commerce?.fulfillment_status==="unconfirmed"?"unknown":commerce?.fulfillment==="automatic"?"automatic":commerce?.fulfillment==="manual"?"manual":"unknown";
     const automatic=fulfillment==="automatic";
     const manual=fulfillment==="manual";
     // These are user-provided estimates, not server-side execution guarantees.

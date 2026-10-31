@@ -1,4 +1,5 @@
 // Pure adapter helpers shared by the Edge Function and Node integration tests.
+import { shihabStatus } from "./shihab.mjs";
 export class ProviderError extends Error {
   constructor(message, uncertain = false) {
     super(message);
@@ -318,6 +319,13 @@ export async function callProvider(
     if (yassen && action === "status") {
       if (data?.status !== "OK" || !Array.isArray(data.data) || data.data.length !== 1)
         throw new ProviderError("حالة طلب ياسين غير واضحة");
+      if (provider.adapter === "shihab") {
+        const row=data.data[0];
+        const returnedId=row.order_id ?? row.id;
+        if (returnedId != null && String(returnedId)!==String(args.order))
+          throw new ProviderError("معرّف نتيجة شهاب لا يطابق الطلب");
+        return {...row, supplier_status:String(row.status??""), status:shihabStatus(row.status)};
+      }
       return { ...data.data[0], status: data.data[0].status === "reject" ? "rejected" :
         data.data[0].status === "accept" ? "completed" : "processing" };
     }
