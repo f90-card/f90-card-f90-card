@@ -1098,7 +1098,7 @@
         <div class="product-info">
           <h1>${e(p.name)}</h1>
           <p class="f90-visa-subtitle">${e(c.fulfillment === "automatic" ? "شحن إلكتروني مباشر" : "خدمة رقمية عبر F90 CARD")}</p>
-          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment_status === "unconfirmed" ? "نوع التنفيذ غير مؤكد · الإرسال للمورد تلقائي" : c.fulfillment === "automatic" ? "الشحن: آلي" : "الشحن: يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "الحالة: غير متوفر" : "الحالة: متوفر"}</span></div>
+          <div class="f90-visa-statuses"><span class="f90-visa-status">${I(c.fulfillment === "automatic" ? "link" : "clock")}${c.fulfillment_status === "unconfirmed" ? "إرسال الطلب إلى المورّد: تلقائي" : c.fulfillment === "automatic" ? "الشحن: آلي" : "الشحن: يدوي"}</span><span class="f90-visa-available ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "is-unavailable" : ""}"><span aria-hidden="true">●</span> ${C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id)) ? "الحالة: غير متوفر" : "الحالة: متوفر"}</span></div>
         </div>
         <button type="button" class="f90-favorite-icon f90-visa-favorite ${S.favorites.includes(p.id) ? "is-saved" : ""}" data-action="favorite" data-id="${e(p.id)}" aria-pressed="${S.favorites.includes(p.id)}" aria-label="${S.favorites.includes(p.id) ? "إزالة من المفضلة" : "حفظ بالمفضلة"}" title="المفضلة">${I("heart")}</button>
       </div>
