@@ -897,6 +897,14 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     fields: cleanCommerce(c, existing, true).fields,
     pricing_tiers: [],
   };
+  // Supplier evidence and purchase/publication guards survive ordinary manager edits.
+  // Only the trusted catalog sync can replace an established supplier classification.
+  if (["confirmed","unconfirmed"].includes(existing.fulfillment_status)) {
+    for (const key of ["fulfillment_status","fulfillment_evidence","fulfillment_reason",
+      "supplier_available","catalog_visibility","admin_only"])
+      if (Object.hasOwn(existing,key)) result[key]=existing[key];
+    result.fulfillment=existing.fulfillment;
+  } else if (c.fulfillment_status === "unconfirmed") result.fulfillment_status="unconfirmed";
   if (existing.supplier_refilling === true) {
     result.supplier_refilling = true;
     result.supplier_previous_availability = result.availability;

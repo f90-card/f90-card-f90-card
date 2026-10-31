@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {stripTypeScriptTypes} from "node:module";
+import vm from "node:vm";
 import {executionEvidence,shihabSnapshot,shihabStatus,shihabPublicProduct} from "../supabase/functions/f90-platform/shihab.mjs";
 import {callProvider,normalizeStatus} from "../supabase/functions/f90-platform/provider.mjs";
 const provider={adapter:"shihab",endpoint:"https://api.shihabcard.com",config:{}};
@@ -62,4 +65,15 @@ test("publication preserves explicit hidden, admin-only and inactive products",(
   assert.equal(shihabPublicProduct({is_active:true,commerce:{admin_only:true}},pr),false);
   assert.equal(shihabPublicProduct({is_active:false},pr),false);
   assert.equal(shihabPublicProduct({is_active:true},{config:{catalog_visibility:"hidden"}}),false);
+});
+test("manager edits cannot erase confirmed supplier evidence, stock or hidden guards",()=>{
+  const src=readFileSync(new URL("../supabase/functions/f90-platform/index.ts",import.meta.url),"utf8");
+  const chunk=src.slice(src.indexOf("function cleanCommerce("),src.indexOf("async function catalogSave("));
+  const clean=vm.runInNewContext(stripTypeScriptTypes(chunk)+";cleanCommerce",{
+    cleanCurrencyPricing:()=>({}),integer:v=>Number(v),num:v=>Number(v),text:v=>String(v??""),AppError:Error});
+  const existing={fulfillment:"automatic",fulfillment_status:"confirmed",fulfillment_evidence:{source:"supplier"},
+    supplier_available:false,catalog_visibility:"hidden",admin_only:true};
+  const updated=clean({fulfillment:"manual",prices:{USD:10},fields:[]},existing);
+  for(const key of Object.keys(existing))assert.equal(JSON.stringify(updated[key]),JSON.stringify(existing[key]));
+  assert.equal(clean({prices:{USD:10},fulfillment_status:"unconfirmed"}).fulfillment_status,"unconfirmed");
 });
