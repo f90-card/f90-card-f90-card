@@ -3044,19 +3044,13 @@
         toast("تم تحديث ظهور خدمات المورد");
         return providers();
       } else if (action === "provider-archive") {
-        const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
-        if (!provider) throw new Error("المورّد غير موجود");
-        modal("حذف المورد وخدماته نهائيًا", `<p>سيُحذف المورد <strong>${e(provider.name)}</strong> وجميع خدماته وبيانات الاستيراد ومفتاح الاتصال الخاص به نهائيًا. تبقى الطلبات السابقة والأرصدة والسجلات المالية محفوظة. يجب إنهاء الطلبات الجارية أو المراجعة أولًا.</p><p class="notice warning">لا يمكن التراجع عن هذه العملية. اكتب اسم المورد للتأكيد.</p><label>اسم المورد<input id="providerDeleteName" autocomplete="off"></label><div class="actions"><button class="button secondary" data-action="close-modal">إلغاء</button><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد حذف المورد وجميع خدماته</button></div>`);
-      } else if (action === "provider-archive-confirm") {
         if (S.providerDeleteBusy) return;
         const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
-        if (!provider || $("providerDeleteName")?.value.trim() !== provider.name.trim())
-          throw new Error("اكتب اسم المورد كما يظهر لتأكيد الحذف النهائي");
+        if (!provider) throw new Error("المورّد غير موجود");
         S.providerDeleteBusy = true;
         b.disabled = true;
         try {
           await A.call("provider.archive", { id: provider.id });
-          closeModal();
           toast("حُذف المورد وجميع خدماته نهائيًا، وحُفظت الطلبات السابقة");
           return await providers();
         } finally {

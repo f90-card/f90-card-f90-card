@@ -5,37 +5,38 @@ async function setup(archived=false){
  const h=await harness('admin.html',{role:'manager'});
  const base=h.window.F90API.call; const calls=[];
  let rows=[{id:'delete-supplier',name:'مورد الاختبار',adapter:'smm',endpoint:'https://example.invalid',currency:'USD',config:archived?{archived_at:"2026-01-01"}:{}}];
- let resolve;
+ let resolve, reject;
  h.window.F90API.call=(action,args)=>{
   if(action==='staff.providers')return Promise.resolve(rows);
-  if(action==='provider.archive'){calls.push(args);return new Promise(r=>{resolve=()=>{rows=[];r({deleted:true});};});}
+  if(action==='provider.archive'){calls.push(args);return new Promise((r,j)=>{resolve=()=>{rows=[];r({deleted:true});};reject=j;});}
   return base(action,args);
  };
  h.window.location.hash='#/providers'; await h.settle();
- return Object.assign(h,{deletions:calls,finish:()=>resolve()});
+ return Object.assign(h,{deletions:calls,finish:()=>resolve(), fail:()=>reject(new Error("لا يمكن حذف المورد قبل إنهاء طلباته"))});
 }
-test('supplier delete requires matching name, prevents duplicate requests and refreshes supplier list',async()=>{
+test('one click deletes without name entry or modal and prevents duplicate requests',async()=>{
  const h=await setup();
  try{
   const button=h.document.querySelector('[data-action="provider-archive"]');assert.ok(button);
-  button.click();await h.settle();assert.equal(h.deletions.length,0);
-  const confirm=h.document.querySelector('[data-action="provider-archive-confirm"]');
-  h.document.getElementById('providerDeleteName').value='اسم آخر';confirm.click();await h.settle();
-  assert.equal(h.deletions.length,0,'wrong name must not send deletion');
-  h.document.getElementById('providerDeleteName').value='مورد الاختبار';confirm.click();await h.settle();
-  assert.equal(h.deletions.length,1);assert.equal(h.deletions[0].id,'delete-supplier');assert.equal(confirm.disabled,true);
-  confirm.click();await h.settle();assert.equal(h.deletions.length,1);
+  assert.equal(h.deletions.length,0,'rendering must never delete');
+  button.click();await h.settle();
+  assert.equal(h.document.getElementById('modalRoot').innerHTML,'');
+  assert.equal(h.document.getElementById('providerDeleteName'),null);
+  assert.equal(h.deletions.length,1);assert.equal(h.deletions[0].id,'delete-supplier');assert.equal(button.disabled,true);
+  button.click();await h.settle();assert.equal(h.deletions.length,1);
   h.finish();await h.settle();await h.settle();
   assert.equal(h.document.querySelector('[data-action="provider-archive"]'),null);
  }finally{h.cleanup();}
 });
-test('canceling supplier delete sends no mutation',async()=>{
+test('failed deletion retains supplier and re-enables the button for retry',async()=>{
  const h=await setup();
  try{
-  h.document.querySelector('[data-action="provider-archive"]').click();await h.settle();
-  const cancel=h.document.querySelector('#modalRoot [data-action="close-modal"]');assert.ok(cancel);cancel.click();await h.settle();
-  assert.equal(h.document.getElementById('modalRoot').innerHTML,'');
-  assert.equal(h.deletions.length,0);
+  const button=h.document.querySelector('[data-action="provider-archive"]');
+  button.click();await h.settle();h.fail();await h.settle();
+  assert.equal(button.isConnected,true);assert.equal(button.disabled,false);
+  assert.match(h.document.body.textContent,/لا يمكن حذف المورد قبل إنهاء طلباته/);
+  button.click();await h.settle();assert.equal(h.deletions.length,2);
+  h.finish();await h.settle();
  }finally{h.cleanup();}
 });
 
