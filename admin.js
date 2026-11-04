@@ -1376,18 +1376,23 @@
         )}<button class="button" type="submit">حفظ جميع السياسات</button></div></form>`;
   }
   async function providers() {
-    S.providerRows = await A.call("staff.providers");
+    S.providerRows = await A.call("staff.providers", { include_archived: true });
     main.innerHTML =
       head(
         "مصادر خدماتك",
         "مفاتيح المورّدين تُحفظ مشفّرة على الخادم. لا تدخل المتصفح مع بيانات المتجر.",
         "",
       ) +
-      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.config?.disconnected ? "الاتصال مفصول والخدمات مخفية" : p.is_enabled ? "مفعّل" : "قيد التعبئة"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.adapter === "f90" ? "خدمات يدوية داخل المتجر" : p.endpoint)}</small><p class="muted small" aria-label="حالة المزامنة">المزامنة: ${e(p.config?.sync_state === "ok" ? "ناجحة" : p.config?.sync_state === "pending" ? "جارٍ التحديث" : p.config?.sync_state === "error" ? "حدث خطأ" : "لم تُسجّل بعد")} · آخر نجاح: ${e(p.config?.sync_last_success ? C.date(p.config.sync_last_success) : "غير متوفر")}${p.config?.sync_error ? " · الخطأ: " + e(String(p.config.sync_error).slice(0,180)) : ""}${p.config?.sync_last_success && Date.now()-Date.parse(p.config.sync_last_success)>900000 ? " · تنبيه: لم تنجح المزامنة منذ أكثر من 15 دقيقة" : ""}</p></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button ghost small" data-action="provider-visibility" data-id="${p.id}">${p.config?.disconnected ? "إعادة الاتصال والإظهار" : "قطع الاتصال وإخفاء الخدمات"}</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note"><strong>تمييز التوقف اليدوي عن توقف المورّد:</strong> قد تُعيد واجهة API خدمة متاحة بينما يظل المنتج «قيد التعبئة» إذا أوقفته الإدارة يدوياً. المزامنة لا تلغي إيقاف الإدارة حفاظاً على سلامة الشراء. راجع حالة المنتج في إدارة المنتجات قبل إعادة تفعيله، ولا تعتمد على حالة المورد وحدها. آخر مزامنة وحالة اتصال المورد تظهر في فحص الموردين.</div><div class="admin-note">ياسين كارد: استخدم عنوان https://api.yassen-card.com والبروتوكول المخصص. الاستيراد يحفظ الخدمات كمسودات مخفية حتى مراجعتها. تُعرض منتجات كل مورد مرتبط على حدة، ولا يُعاد نشر منتجات الموردين المؤرشفين. سجلات الطلبات القديمة محفوظة.</div><div class="actions" style="margin-top:20px"><button class="button" data-action="provider-new">إضافة مورّد جديد</button><a href="#/products" class="button secondary">إدارة منتجات المورّدين</a><button class="button secondary" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button></div>`;
+      `<section class="panel" style="margin-bottom:18px"><h3>مركز فحص المورّدين</h3><p class="muted">افحص الرصيد وقائمة الخدمات قبل الاستيراد. لا ينفّذ الفحص أي طلب مدفوع.</p><button class="button secondary" data-action="provider-diagnose-all">فحص جميع المورّدين</button><div id="providerDiagnostics" aria-live="polite"></div></section><div class="catalog-list">${S.providerRows.map((p) => `<article class="catalog-row">${I("link")}<div class="row-content"><h3>${e(p.name)}</h3><p>${p.config?.disconnected ? "الاتصال مفصول والخدمات مخفية" : p.is_enabled ? "مفعّل" : "قيد التعبئة"} · هامش ${e(p.margin_percent)}٪ · عملة التسعير ${e(C.currencyNames[p.currency] || p.currency)} · الطلبات الآلية ${p.config?.automatic_orders_enabled ? "مسموحة" : "موقوفة"} · مهلة ${e((p.config?.request_timeout_ms ?? 20000) / 1000)} ث</p><small class="muted">${e(p.adapter === "f90" ? "خدمات يدوية داخل المتجر" : p.endpoint)}</small><p class="muted small" aria-label="حالة المزامنة">المزامنة: ${e(p.config?.sync_state === "ok" ? "ناجحة" : p.config?.sync_state === "pending" ? "جارٍ التحديث" : p.config?.sync_state === "error" ? "حدث خطأ" : "لم تُسجّل بعد")} · آخر نجاح: ${e(p.config?.sync_last_success ? C.date(p.config.sync_last_success) : "غير متوفر")}${p.config?.sync_error ? " · الخطأ: " + e(String(p.config.sync_error).slice(0,180)) : ""}${p.config?.sync_last_success && Date.now()-Date.parse(p.config.sync_last_success)>900000 ? " · تنبيه: لم تنجح المزامنة منذ أكثر من 15 دقيقة" : ""}</p></div><div class="row-actions"><button class="button ${p.is_enabled ? "secondary" : "ghost"} small" data-action="provider-toggle" data-id="${p.id}" data-enabled="${p.is_enabled ? "false" : "true"}">${p.is_enabled ? "إيقاف جميع خدماته" : "إعادة تفعيل خدماته"}</button><button class="button secondary small" data-action="provider-edit" data-id="${p.id}">تعديل</button><button class="button ghost small" data-action="provider-visibility" data-id="${p.id}">${p.config?.disconnected ? "إعادة الاتصال والإظهار" : "قطع الاتصال وإخفاء الخدمات"}</button><button class="button secondary small" data-action="provider-import" data-id="${p.id}">استعراض واستيراد الخدمات</button><button class="button ghost small" data-action="provider-sync" data-id="${p.id}">مزامنة الأسعار</button><button class="button ghost small" data-action="provider-balance" data-id="${p.id}">رصيد المورّد</button><button class="button secondary small" data-action="provider-diagnose" data-id="${p.id}">فحص الاتصال</button><button class="button danger small" data-action="provider-archive" data-id="${p.id}">حذف المورد وخدماته نهائيًا</button></div></article>`).join("") || empty("لا يوجد مورّد مضاف")}<div class="admin-note"><strong>تمييز التوقف اليدوي عن توقف المورّد:</strong> قد تُعيد واجهة API خدمة متاحة بينما يظل المنتج «قيد التعبئة» إذا أوقفته الإدارة يدوياً. المزامنة لا تلغي إيقاف الإدارة حفاظاً على سلامة الشراء. راجع حالة المنتج في إدارة المنتجات قبل إعادة تفعيله، ولا تعتمد على حالة المورد وحدها. آخر مزامنة وحالة اتصال المورد تظهر في فحص الموردين.</div><div class="admin-note">ياسين كارد: استخدم عنوان https://api.yassen-card.com والبروتوكول المخصص. الاستيراد يحفظ الخدمات كمسودات مخفية حتى مراجعتها. تُعرض منتجات كل مورد مرتبط على حدة، ولا يُعاد نشر منتجات الموردين المؤرشفين. سجلات الطلبات القديمة محفوظة.</div><div class="actions" style="margin-top:20px"><button class="button" data-action="provider-new">إضافة مورّد جديد</button><a href="#/products" class="button secondary">إدارة منتجات المورّدين</a><button class="button secondary" data-action="worker">تشغيل متابعة الطلبات الآلية الآن</button></div>`;
     S.providerRows.forEach((p, i) => {
-      if (p.adapter !== "f90") return;
       const row = main.querySelectorAll(".catalog-list .catalog-row")[i];
       if (!row) return;
+      if (p.config?.archived_at) {
+        row.querySelector(".row-content p").textContent = "مورد مؤرشف — يمكن حذفه وخدماته نهائيًا مع حفظ الطلبات السابقة";
+        row.querySelectorAll('.row-actions button:not([data-action="provider-archive"])').forEach((button) => button.remove());
+        return;
+      }
+      if (p.adapter !== "f90") return;
       row.querySelectorAll('[data-action="provider-import"], [data-action="provider-sync"], [data-action="provider-balance"], [data-action="provider-diagnose"]').forEach((button) => button.remove());
       row.querySelector(".row-actions")?.insertAdjacentHTML("beforeend", '<a class="button secondary small" href="#/products">إدارة المنتجات اليدوية</a>');
     });
@@ -3041,12 +3046,23 @@
       } else if (action === "provider-archive") {
         const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
         if (!provider) throw new Error("المورّد غير موجود");
-        modal("حذف المورّد ومنتجاته", `<p>ستُحذف جميع خدمات ${e(provider.name)} من المتجر ويُلغى مفتاحه. تبقى بيانات الطلبات السابقة محفوظة.</p><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد الحذف</button>`);
+        modal("حذف المورد وخدماته نهائيًا", `<p>سيُحذف المورد <strong>${e(provider.name)}</strong> وجميع خدماته وبيانات الاستيراد ومفتاح الاتصال الخاص به نهائيًا. تبقى الطلبات السابقة والأرصدة والسجلات المالية محفوظة. يجب إنهاء الطلبات الجارية أو المراجعة أولًا.</p><p class="notice warning">لا يمكن التراجع عن هذه العملية. اكتب اسم المورد للتأكيد.</p><label>اسم المورد<input id="providerDeleteName" autocomplete="off"></label><div class="actions"><button class="button secondary" data-action="close-modal">إلغاء</button><button class="button danger" data-action="provider-archive-confirm" data-id="${e(provider.id)}">تأكيد حذف المورد وجميع خدماته</button></div>`);
       } else if (action === "provider-archive-confirm") {
-        await A.call("provider.archive", { id: b.dataset.id });
-        closeModal();
-        toast("حُذف المورّد من التشغيل");
-        return providers();
+        if (S.providerDeleteBusy) return;
+        const provider = S.providerRows?.find((p) => p.id === b.dataset.id);
+        if (!provider || $("providerDeleteName")?.value.trim() !== provider.name.trim())
+          throw new Error("اكتب اسم المورد كما يظهر لتأكيد الحذف النهائي");
+        S.providerDeleteBusy = true;
+        b.disabled = true;
+        try {
+          await A.call("provider.archive", { id: provider.id });
+          closeModal();
+          toast("حُذف المورد وجميع خدماته نهائيًا، وحُفظت الطلبات السابقة");
+          return await providers();
+        } finally {
+          S.providerDeleteBusy = false;
+          if (b.isConnected) b.disabled = false;
+        }
       } else if (action === "omega-import-all") {
         const provider = S.importProvider;
         if (!provider || !["omega", "yassen", "shihab", "smm"].includes(provider.adapter)) throw new Error("المورّد غير مدعوم");

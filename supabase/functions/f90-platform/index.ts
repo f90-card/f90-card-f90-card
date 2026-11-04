@@ -27,7 +27,7 @@ const cors = {
 };
 function customerOrder(order: any) {
   const o = { ...order };
-  if (order.provider_id === SHIHAB_ID && order.provider_status) {
+  if ((order.provider_id || order.deleted_provider_snapshot?.id) === SHIHAB_ID && order.provider_status) {
     const supplierState = shihabStatus(order.provider_status);
     if ((order.status === "failed" && ["rejected","cancelled"].includes(supplierState)) ||
         (order.status === "processing" && supplierState === "pending")) o.status = supplierState;
@@ -35,6 +35,7 @@ function customerOrder(order: any) {
   for (const k of [
     "cost_usd",
     "provider_id",
+    "deleted_provider_snapshot",
     "provider_service",
     "provider_order_id",
     "provider_status",
@@ -59,6 +60,7 @@ const roleNames = [
 const errors: Record<string, [number, string]> = {
   F90_FORBIDDEN: [403, "لا تملك الصلاحية المطلوبة أو حسابك موقوف"],
   F90_NOT_FOUND: [404, "العنصر غير موجود"],
+  F90_PROVIDER_ACTIVE_ORDERS: [409, "لا يمكن حذف المورد وخدماته قبل إنهاء طلباته قيد التنفيذ أو المراجعة"],
   F90_REFILLING: [409, "الخدمة قيد التعبئة حاليًا"],
   F90_QUANTITY: [400, "الكمية لا تطابق الحدود والخطوة المسموحة"],
   F90_CURRENCY_CODE: [400, "استخدم رمز عملة من 3 إلى 8 أحرف إنجليزية مثل SAR"],
@@ -2183,7 +2185,7 @@ async function staff(a: Actor, b: any) {
           "id,name,endpoint,adapter,currency,is_enabled,margin_percent,config,created_at",
         )
         .order("created_at"),
-    ).filter((p: any) => !p.config?.archived_at);
+    ).filter((p: any) => b.include_archived === true || !p.config?.archived_at);
   }
   if (action === "provider.save") {
     requireRole(a, "manager");
@@ -2317,8 +2319,7 @@ async function staff(a: Actor, b: any) {
     requireRole(a, "manager");
     const id = uuid(b.id);
     await rpc("f90_archive_provider", { p_actor: a.id, p_provider: id });
-    await auditSafe(a.id, "provider.archive", id, {});
-    return { id, removed_from_catalog: true };
+    return { id, removed_from_catalog: true, deleted: true };
   }
   if (action === "catalog.bulk_products") {
     requireRole(a, "manager", "designer");
