@@ -23,6 +23,7 @@ begin
  insert into public.f90_orders(id,order_number,user_id,product_id,product_name,quantity,unit_quantity,
  subtotal_usd,total_usd,fulfillment,status,provider_id,provider_service,provider_order_id,idempotency_key) overriding system value
  values(o,-(random()*1000000000000000)::bigint-1,u,p,'Preserved product name',1,1,1,1,'automatic','processing',v,'fixture-1','supplier-reference','delete-fixture-'||o);
+ execute 'set local role service_role'; -- same database role as the production Edge Function
  begin
   perform public.f90_archive_provider(u,v);
   raise exception 'Unauthorized delete accepted';
