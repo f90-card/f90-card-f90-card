@@ -53,10 +53,9 @@
     const prayerSection=main.querySelector(".f90-prayer-section");
     main.querySelector(".f90-quran").insertBefore(prayerSection,main.querySelector(".f90-quran-hero"));
     const prayerForm=main.querySelector("#f90PrayerForm");
-    prayerForm.innerHTML='<label for="f90PrayerCountry">الدولة</label><input id="f90PrayerCountry" type="text" value="Palestine" placeholder="الدولة، مثال: Egypt" autocomplete="country-name" required maxlength="80"><label for="f90PrayerCity">المدينة</label><input id="f90PrayerCity" type="text" value="Hebron" placeholder="المدينة، مثال: Cairo" required maxlength="90"><button type="submit">تحديث المواقيت</button><button type="button" id="f90PrayerLocation">استخدام موقعي</button>';
+    prayerForm.innerHTML='<label for="f90PrayerCountry">الدولة</label><input id="f90PrayerCountry" type="text" value="Palestine" placeholder="الدولة، مثال: Egypt" autocomplete="country-name" required maxlength="80"><label for="f90PrayerCity">المدينة</label><input id="f90PrayerCity" type="text" value="Hebron" placeholder="المدينة، مثال: Cairo" required maxlength="90"><button type="submit">تحديث المواقيت</button>';
     const countryInput=main.querySelector("#f90PrayerCountry");
     const cityInput=main.querySelector("#f90PrayerCity");
-    const locationButton=main.querySelector("#f90PrayerLocation");
     const saved=(()=>{try{return JSON.parse(localStorage.getItem("f90-prayer-place")||"null");}catch{return null;}})();
     if(saved&&typeof saved.country==="string"&&typeof saved.city==="string"){countryInput.value=saved.country;cityInput.value=saved.city;}
     let prayerRequest=0,prayerTimer=null,coords=null,activeController=null;
@@ -113,12 +112,6 @@
       if(document.visibilityState==="visible" && prayerTimer===null && !activeController && Date.now()-lastPrayerLoadedAt>30*60*1000)loadPrayer();
     };
     document.addEventListener("visibilitychange",onPrayerVisible);
-    locationButton.addEventListener("click",()=>{
-      if(!navigator.geolocation){main.querySelector("#f90PrayerStatus").textContent="تحديد الموقع غير مدعوم في المتصفح.";return;}
-      clearTimeout(prayerTimer);prayerTimer=null;
-      locationButton.disabled=true;
-      navigator.geolocation.getCurrentPosition(pos=>{coords={latitude:pos.coords.latitude,longitude:pos.coords.longitude};locationButton.disabled=false;lastPrayerDate="";main.querySelector("#f90PrayerTimes").replaceChildren();loadPrayer();},()=>{locationButton.disabled=false;main.querySelector("#f90PrayerStatus").textContent="تعذر تحديد الموقع؛ يمكنك إدخال الدولة والمدينة يدوياً.";},{timeout:10000,maximumAge:300000});
-    });
     loadPrayer();
     const grid=main.querySelector("#f90QuranGrid");
     const input=main.querySelector("#f90QuranSearch");
