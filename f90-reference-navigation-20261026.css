@@ -345,3 +345,7 @@ html.f90-reference-theme #f90CustomerWhatsapp:focus-visible{outline:3px solid #6
 @media(min-width:800px){
  html.f90-reference-theme #mainContent[data-page="category"] .image-grid{max-width:940px!important;margin-inline:auto!important;}
 }
+
+/* Verified badge beside the reference navigation username */
+html.f90-reference-theme #drawer .f90-drawer-username .f90-verified-mark{display:inline-flex!important;width:19px!important;height:19px!important;vertical-align:-4px!important;margin-inline:3px!important;align-items:center!important;justify-content:center!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+html.f90-reference-theme #drawer .f90-drawer-username .f90-verified-mark svg{display:block!important;width:19px!important;height:19px!important;max-width:none!important}
