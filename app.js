@@ -1924,7 +1924,7 @@ async function history(kind){
         ? r.items
             .map(
               (v) =>
-                `<div class="notice">${status(v.status)}<p class="small">${e(C.date(v.created_at))}</p>${v.review_note ? `<p>${e(v.review_note)}</p>` : ""}</div>`,
+                `<div class="notice f90-verification-history-item">${status(v.status)}<p class="small">${e(C.date(v.created_at))}</p>${v.review_note ? `<p>${e(v.review_note)}</p>` : ""}<div class="f90-verification-photos"><span>صور الطلب (عرض فقط):</span>${[["front","وجه الهوية / الجواز","front_path"],["back","ظهر الهوية","back_path"],["selfie","صورة السيلفي","selfie_path"]].filter(([, , key])=>Boolean(v[key])).map(([part,label])=>`<button type="button" class="button secondary small" data-action="verification-view-photo" data-id="${e(v.id)}" data-part="${part}">${I("eye")} ${label}</button>`).join("")}</div></div>`,
             )
             .join("")
         : empty("لم تقدّم طلب توثيق بعد", "shield");
@@ -2831,7 +2831,18 @@ async function history(kind){
     }
     const action = button.dataset.action;
     try {
-      if (action === "channel-dismiss") {
+      if (action === "verification-view-photo") {
+        const part=button.dataset.part;
+        if(!["front","back","selfie"].includes(part))return;
+        button.disabled=true;
+        try {
+          const result=await A.call("verification.file",{id:button.dataset.id,part});
+          const url=result?.url;
+          if(typeof url!=="string"||!url.startsWith("https://"))throw new Error("تعذّر فتح صورة التوثيق");
+          const title=({front:"وجه الهوية أو الجواز",back:"ظهر الهوية",selfie:"صورة السيلفي"})[part];
+          modal(title,`<div class="f90-private-document"><img src="${e(url)}" alt="${e(title)}" referrerpolicy="no-referrer"><p class="muted small">الصورة للعرض فقط، ولا يمكن تعديلها من السجل.</p></div>`);
+        } finally {button.disabled=false;}
+      } else if (action === "channel-dismiss") {
         try { localStorage.setItem(button.dataset.key, "1"); } catch {}
         closeModal();
       } else if (action === "popup-read") {
