@@ -2244,8 +2244,10 @@ body.f90-in-maintenance main{max-width:none!important;width:100%;margin:0!import
 @media(prefers-reduced-motion:reduce){.f90-maintenance-decor{animation:none}}
 
 /* Distinct VIP tiers with consistent F90 identity and clear verified accounts. */
-.f90-verified-mark{display:inline-flex;align-items:center;gap:5px;color:#e9f6ff!important;border:1px solid #4aafff88!important;background:linear-gradient(135deg,#0872c5,#179cf2);box-shadow:0 2px 12px #128cef3a;font-weight:800}
-.f90-verified-mark svg{width:15px;height:15px;stroke:#fff;stroke-width:3}
+.f90-verified-mark{display:inline-flex!important;align-items:center;justify-content:center;vertical-align:-3px;flex:none;width:19px;height:19px;margin-inline:3px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;line-height:1}
+.f90-verified-mark svg{display:block;width:19px;height:19px;max-width:none;stroke:none}
+.f90-verified-name{display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:wrap}
+.f90-drawer-identity .f90-verified-mark{vertical-align:middle}
 .f90-vip-rank{display:inline-flex;align-items:center;gap:6px}
 .profile-cover.f90-vip-1,.vip-card.f90-vip-1{--vip-color:#9ca3af;--vip-glow:#9ca3af30}
 .profile-cover.f90-vip-2,.vip-card.f90-vip-2{--vip-color:#59c2af;--vip-glow:#59c2af38}
