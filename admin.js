@@ -711,6 +711,7 @@
         : '<section class="panel"><h3>اعتماد الحساب يدويًا للإيداع والشراء</h3><p class="muted small">هذا اعتماد داخلي بالمتجر، وليس إثبات هوية قانونيًا. لا تستخدمه إلا بعد مراجعة بيانات العميل. سيُسجّل اسم المدير وسبب الاعتماد في سجل الإدارة.</p>'+
           '<form id="f90ManualVerificationForm">'+field("reason","سبب الاعتماد وما الذي تمت مراجعته","textarea","",'required minlength="8" maxlength="500"')+
           '<button class="button" type="submit">اعتماد الحساب للإيداع والشراء</button></form></section>')+
+      '<section class="panel"><h3>مستوى VIP وعملة الحساب</h3><p class="muted small">الرصيد الأساسي محفوظ بالدولار USD ولا يمكن تغيير عملته. العملة المختارة للعرض والتعاملات فقط، وهامش السعر الخاص مستقل لكل عميل.</p><p>مستوى VIP الحالي: <strong>'+e(u.vip_override||u.vip_level||1)+'</strong> '+(u.vip_override?'(مخصص يدويًا)':'(تلقائي)')+'</p><form id="userCurrencyForm">'+select("currency","عملة الحساب",S.rates.filter(x=>x.is_enabled).map(x=>[x.currency,x.name_ar+" ("+x.currency+")"]),u.account_currency||"USD")+'<button class="button secondary" type="submit">حفظ عملة الحساب</button></form></section>'+
       '<form id="userForm">'+select("role","الصلاحية",Object.entries(C.roles),u.role)+
       select("status","حالة الحساب",[["active","تفعيل الحساب"],["suspended","إيقاف مؤقت"],["banned","حظر الحساب"]],u.account_status)+
       select("vip","المستوى",[["","تلقائي بحسب الإنفاق"],...S.vip.map(t=>[t.level,"تخصيص المستوى "+t.level])],u.vip_override||"")+
@@ -1349,6 +1350,7 @@
         "مستويات VIP من 1 إلى 15",
         "ترقية تلقائية وفق الإنفاق المكتمل. المدير يستطيع تخصيص مستوى العميل.",
       ) +
+      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">يزيل التخصيص اليدوي للمستوى من الفئة المحددة، ويعيد حساب المستوى تلقائيًا بحسب الإنفاق المكتمل. لا يحذف أرصدة المستخدمين أو إنفاقهم أو سجلاتهم.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
       `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="3" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٣٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
   }
   function policies() {
@@ -2729,6 +2731,12 @@
       toast("تم اعتماد الحساب داخليًا للإيداع والشراء وتسجيل العملية");
       return detailUser(S.detail);
     }
+    if (form.id === "userCurrencyForm") {
+      if (!manager()) throw new Error("للمدير فقط");
+      await A.call("staff.currency",{id:S.detail.id,currency:d.currency});
+      toast("تم تحديث عملة الحساب، والرصيد الأساسي باقٍ بالدولار");
+      return detailUser({...S.detail,account_currency:d.currency});
+    }
     if (form.id === "userForm") {
       await A.call("staff.user", {
         id: S.detail.id,
@@ -2753,6 +2761,16 @@
       rates();
       toast("تم ضبط الصرف");
       return;
+    }
+    if (form.id === "bulkVipResetForm") {
+      if (!manager()) throw new Error("للمدير فقط");
+      const scope=d.scope;
+      const label=({all:"جميع المستخدمين",trader:"التجار فقط",charging_agent:"وكلاء الشحن فقط"})[scope];
+      if(!label)throw new Error("فئة غير صالحة");
+      if(!window.confirm("هل تؤكد إزالة مستويات VIP المخصصة يدويًا عن "+label+"؟ سيعود المستوى للحساب التلقائي، ولن تتغير الأرصدة أو الإنفاق."))return;
+      const result=await A.call("staff.vip_bulk_reset",{scope});
+      toast("تمت إعادة ضبط التخصيص لـ "+Number(result?.cleared_overrides||0)+" حساب");
+      return vip();
     }
     if (form.matches(".vipForm")) {
       await A.call("staff.vip", {
