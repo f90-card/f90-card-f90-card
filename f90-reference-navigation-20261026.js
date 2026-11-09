@@ -92,9 +92,8 @@
    if(ctx.me?.profile?.customer_id)userId.textContent="#"+ctx.me.profile.customer_id;
    const inline=document.createElement("span");
    inline.className="f90-drawer-id-line";
-   const rank=document.createElement("a");
+   const rank=document.createElement("span");
    rank.className="f90-drawer-vip-rank";
-   rank.href="#/vip";
    const level=ctx.me?num(ctx.me.vip_level,1,15):1;
    rank.dataset.vipLevel=String(level);
    rank.innerHTML=ctx.me
