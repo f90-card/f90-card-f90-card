@@ -2165,7 +2165,15 @@ async function history(kind){
       else if (page === "product") product(id);
       else if (page === "auth") auth("login");
       else if (page === "register") auth("register");
-      else if (page === "profile") profile();
+      else if (page === "profile") {
+        if (S.me && !S.me.needs_mfa) {
+          const previousVerified = S.me.profile?.is_verified;
+          if (await refreshMe() && seq === S.route &&
+              previousVerified !== S.me.profile?.is_verified) chrome();
+          if (seq !== S.route) return;
+        }
+        profile();
+      }
       else if (page === "recipients") profile();
       else if (page === "install") installPage();
       else if (page === "wallet") await wallet();
@@ -3289,8 +3297,25 @@ async function history(kind){
   // Restore stale account details after an offline/mobile background interval.
   // Never refresh while hidden, interrupt an active form, or turn an offline
   // read failure into an explicit logout.
+  let lastVerifiedStatusCheck = 0;
   function recoverVisibleSession() {
-    if (document.visibilityState !== "visible" || !S.walletStale || !S.settings?.store_name) return;
+    if (document.visibilityState !== "visible" || !S.settings?.store_name) return;
+    if (!S.walletStale) {
+      if (!S.me?.profile || S.me.needs_mfa ||
+          Date.now() - lastVerifiedStatusCheck < 30000) return;
+      lastVerifiedStatusCheck = Date.now();
+      const wasVerified = S.me.profile.is_verified === true;
+      void refreshMe().then((ok) => {
+        if (!ok || wasVerified === (S.me?.profile?.is_verified === true)) return;
+        chrome();
+        const page = (location.hash || "#/").split("/")[1] || "";
+        if (page === "profile" &&
+            !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) {
+          profile();
+        }
+      }).catch(() => {});
+      return;
+    }
     void refreshMe().then(async (ok) => {
       if (!ok) return;
       chrome();
@@ -3306,6 +3331,9 @@ async function history(kind){
   }
   document.addEventListener("visibilitychange", recoverVisibleSession);
   window.addEventListener("online", recoverVisibleSession);
+  window.addEventListener("focus", recoverVisibleSession);
+  // Reconcile a recently approved account without requiring logout or a hard refresh.
+  setInterval(() => { if (document.visibilityState === "visible") recoverVisibleSession(); }, 60000);
 
   let bootRetryTimer = null;
   let bootRetryAttempts = 0;
