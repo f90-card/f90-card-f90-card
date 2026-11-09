@@ -36,3 +36,12 @@
 .main-content[data-page="vip"] .vip-card.f90-vip-15{--f90-rank-primary:#fff0a5;--f90-rank-secondary:#cf7714}
 :root[data-theme="cream"] .main-content[data-page="vip"] .vip-card{background:radial-gradient(circle at 85% 5%,color-mix(in srgb,var(--f90-rank-primary) 23%,transparent),transparent 60%),linear-gradient(145deg,#fff,#f3edf1)!important;box-shadow:0 9px 22px #35223815!important}
 @media(prefers-reduced-motion:reduce){.main-content[data-page="vip"] .vip-card .f90-vip-artwork{transition:none}}
+
+/* One coherent premium shield silhouette; hierarchy comes from metallic finishes and increasing ornament. */
+.main-content[data-page="vip"] .vip-card{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:8px!important;min-height:208px!important;text-align:center!important;padding:17px 10px!important}
+.main-content[data-page="vip"] .vip-card .f90-vip-artwork{display:block!important;width:104px!important;height:118px!important;max-width:100%!important;margin:0 auto!important;flex:none!important}
+.main-content[data-page="vip"] .vip-card strong{font-size:15px!important;letter-spacing:.1px!important}
+.main-content[data-page="vip"] .vip-card .discount{font-weight:900!important}
+.main-content[data-page="vip"] .vip-emblem .f90-vip-artwork{width:150px!important;height:168px!important;max-width:100%!important}
+.main-content[data-page="vip"] .vip-card.f90-vip-15{box-shadow:inset 0 1px 0 #fff7,0 0 24px #f8dc7740,0 16px 32px #0004!important}
+@media(max-width:600px){.main-content[data-page="vip"] .vip-card{min-height:180px!important;padding:12px 6px!important}.main-content[data-page="vip"] .vip-card .f90-vip-artwork{width:82px!important;height:94px!important}.main-content[data-page="vip"] .vip-card strong{font-size:13px!important}}
