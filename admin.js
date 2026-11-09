@@ -1350,7 +1350,7 @@
         "مستويات VIP من 1 إلى 15",
         "ترقية تلقائية وفق الإنفاق المكتمل. المدير يستطيع تخصيص مستوى العميل.",
       ) +
-      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">يزيل التخصيص اليدوي للمستوى من الفئة المحددة، ويعيد حساب المستوى تلقائيًا بحسب الإنفاق المكتمل. لا يحذف أرصدة المستخدمين أو إنفاقهم أو سجلاتهم.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
+      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">اختر إرجاع الفئة إلى VIP 1 أو العودة للاحتساب التلقائي بحسب الإنفاق. لا تتغير الأرصدة أو الطلبات.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+select("mode","طريقة إعادة الضبط",[["level1","إرجاع الجميع إلى VIP 1"],["automatic","إعادة الاحتساب التلقائي بحسب الإنفاق"]],"level1")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
       `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="3" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٣٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
   }
   function policies() {
@@ -2767,9 +2767,10 @@
       const scope=d.scope;
       const label=({all:"جميع المستخدمين",trader:"التجار فقط",charging_agent:"وكلاء الشحن فقط"})[scope];
       if(!label)throw new Error("فئة غير صالحة");
-      if(!window.confirm("هل تؤكد إزالة مستويات VIP المخصصة يدويًا عن "+label+"؟ سيعود المستوى للحساب التلقائي، ولن تتغير الأرصدة أو الإنفاق."))return;
-      const result=await A.call("staff.vip_bulk_reset",{scope});
-      toast("تمت إعادة ضبط التخصيص لـ "+Number(result?.cleared_overrides||0)+" حساب");
+      const mode=d.mode==="automatic"?"automatic":"level1";
+      if(!window.confirm("تأكيد إعادة الضبط للفئة: "+label+"؟ "+(mode==="level1"?"سيصبح مستوى الجميع VIP 1":"سيعود المستوى للاحتساب التلقائي")+". لا تتغير الأرصدة أو الإنفاق."))return;
+      const result=await A.call("staff.vip_bulk_reset",{scope,mode});
+      toast("تم تحديث "+Number(result?.affected||0)+" حساب");
       return vip();
     }
     if (form.matches(".vipForm")) {
