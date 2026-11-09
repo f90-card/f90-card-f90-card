@@ -92,10 +92,18 @@
    if(ctx.me?.profile?.customer_id)userId.textContent="#"+ctx.me.profile.customer_id;
    const inline=document.createElement("span");
    inline.className="f90-drawer-id-line";
-   inline.append(label,userId);
+   const rank=document.createElement("a");
+   rank.className="f90-drawer-vip-rank";
+   rank.href="#/vip";
+   const level=ctx.me?num(ctx.me.vip_level,1,15):1;
+   rank.dataset.vipLevel=String(level);
+   rank.innerHTML=ctx.me
+     ? (window.F90VipArtwork?.seal(level)||svgCrown)+'<span>VIP '+level+'</span>'
+     : svgCrown+'<span>VIP</span>';
+   inline.append(rank,userId);
    old.replaceChildren();
    if(avatar)old.append(avatar);
-   old.append(inline);
+   old.append(label,inline);
    old.dataset.referenceNavigation="1";
    let balance=identity.querySelector(".f90-drawer-balance");
    if(!balance){balance=document.createElement("a");balance.href="#/wallet";balance.className="f90-drawer-balance";identity.append(balance);}
@@ -103,6 +111,7 @@
    balance.hidden=!ctx.me;
    const oldVip=host.querySelector(".f90-drawer-vip-link");
    if(oldVip){
+     oldVip.hidden=true;
      oldVip.innerHTML=svgCrown+'<span></span>';
      oldVip.querySelector("span").textContent=ctx.me?"⭐ VIP"+num(ctx.me.vip_level,1,Math.max(1,ctx.tierCount||15)):"⭐ مستويات VIP";
      identity.append(oldVip);
