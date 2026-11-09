@@ -663,3 +663,7 @@
 }
 
 .catalog-list .catalog-row[hidden]{display:none!important}
+
+/* F90 verified rosette in admin customer lists */
+.user-cell strong .f90-verified-mark{display:inline-flex!important;align-items:center;justify-content:center;vertical-align:-4px;width:18px;height:18px;margin-inline:3px;line-height:1;border:0!important;box-shadow:none!important;background:transparent!important}
+.user-cell strong .f90-verified-mark svg{width:18px;height:18px;display:block;flex:none}
