@@ -2956,3 +2956,9 @@ body{background-image:radial-gradient(ellipse at 75% 7%,var(--f90-page-glow),tra
 .f90-verification-photos>span{flex-basis:100%;font-size:12px;color:var(--muted)}
 .f90-private-document{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px}
 .f90-private-document img{display:block;max-width:100%;max-height:65vh;object-fit:contain;border-radius:10px;border:1px solid var(--line)}
+
+/* Reserve decorative brand watermark for the home page only. Interior routes use solid, readable surfaces. */
+body:has(#mainContent[data-page]:not([data-page="home"])){background:var(--bg)!important;background-image:none!important}
+body:has(#mainContent[data-page]:not([data-page="home"]))::before,
+body:has(#mainContent[data-page]:not([data-page="home"]))::after{background:none!important;background-image:none!important;animation:none!important}
+body:has(#mainContent[data-page]:not([data-page="home"])) #mainContent{background-image:none!important}
