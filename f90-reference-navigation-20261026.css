@@ -349,3 +349,29 @@ html.f90-reference-theme #f90CustomerWhatsapp:focus-visible{outline:3px solid #6
 /* Verified badge beside the reference navigation username */
 html.f90-reference-theme #drawer .f90-drawer-username .f90-verified-mark{display:inline-flex!important;width:19px!important;height:19px!important;vertical-align:-4px!important;margin-inline:3px!important;align-items:center!important;justify-content:center!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
 html.f90-reference-theme #drawer .f90-drawer-username .f90-verified-mark svg{display:block!important;width:19px!important;height:19px!important;max-width:none!important}
+
+/* F90 identity: photo > name with verification > VIP and ID > wallet balance */
+html.f90-reference-theme #drawer .f90-drawer-identity .drawer-profile{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;text-align:center!important}
+html.f90-reference-theme #drawer .f90-drawer-identity .drawer-profile>.avatar{margin:0 auto 3px!important}
+html.f90-reference-theme #drawer .f90-drawer-username{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;font-size:14px!important;line-height:1.5!important}
+html.f90-reference-theme #drawer .f90-drawer-id-line{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:9px!important;direction:rtl!important;margin-top:1px!important}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank{--rank-a:#dbe5f4;--rank-b:#5f7085;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-height:30px;padding:3px 9px!important;border-radius:999px!important;border:1px solid var(--rank-a)!important;background:linear-gradient(130deg,var(--rank-b),#10121e)!important;color:var(--rank-a)!important;box-shadow:0 3px 14px color-mix(in srgb,var(--rank-b) 35%,transparent)!important;font-weight:900!important;font-size:12px!important;text-decoration:none!important}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank .f90-vip-artwork{width:24px!important;height:26px!important;display:block!important;flex:none!important}
+html.f90-reference-theme #drawer .f90-drawer-customerid{font-size:11px!important;direction:ltr!important;font-weight:700!important}
+html.f90-reference-theme #drawer .f90-drawer-balance{display:block!important;text-align:center!important;margin:7px auto 0!important;font-size:19px!important;font-weight:900!important}
+html.f90-reference-theme #drawer .f90-drawer-vip-link[hidden]{display:none!important}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="1"]{--rank-a:#dbe5f4;--rank-b:#5f7085}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="2"]{--rank-a:#58d7ff;--rank-b:#0666d7}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="3"]{--rank-a:#619dff;--rank-b:#1532bd}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="4"]{--rank-a:#ffd06b;--rank-b:#9b5008}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="5"]{--rank-a:#68ecff;--rank-b:#0084cd}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="6"]{--rank-a:#e191ff;--rank-b:#6d17b9}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="7"]{--rank-a:#ffab53;--rank-b:#c12b09}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="8"]{--rank-a:#f6da77;--rank-b:#754009}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="9"]{--rank-a:#ff6680;--rank-b:#a30c2d}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="10"]{--rank-a:#ffbd5e;--rank-b:#c51b14}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="11"]{--rank-a:#47f5b9;--rank-b:#007a67}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="12"]{--rank-a:#8b9dff;--rank-b:#4433b4}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="13"]{--rank-a:#ff9bcd;--rank-b:#a41a79}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="14"]{--rank-a:#63edec;--rank-b:#006d8f}
+html.f90-reference-theme #drawer .f90-drawer-vip-rank[data-vip-level="15"]{--rank-a:#fff0a5;--rank-b:#cf7714}
