@@ -1,64 +1,35 @@
-/* Fifteen individually designed customer VIP emblems.
- * Decoration only. Eligibility, rank, thresholds and discounts remain server-provided. */
+/* Unified luxury VIP insignia. One design language, fifteen progressively richer ranks. */
 (function(root){
- "use strict";
- const palettes=[
-  ["#dbe5f4","#5f7085","#f6fbff"],   // 1 silver
-  ["#58d7ff","#0666d7","#defbff"],   // 2 cyan
-  ["#619dff","#1532bd","#e6edff"],   // 3 sapphire
-  ["#ffd06b","#9b5008","#fff3c8"],   // 4 amber
-  ["#68ecff","#0084cd","#edfbff"],   // 5 ice
-  ["#e191ff","#6d17b9","#f9e9ff"],   // 6 amethyst
-  ["#ffab53","#c12b09","#ffe5a5"],   // 7 flame
-  ["#f6da77","#754009","#fff4bf"],   // 8 antique gold
-  ["#ff6680","#a30c2d","#ffe3e7"],   // 9 ruby
-  ["#ffbd5e","#c51b14","#ffefd5"],   // 10 crimson
-  ["#47f5b9","#007a67","#e6fff3"],   // 11 emerald
-  ["#8b9dff","#4433b4","#efefff"],   // 12 violet
-  ["#ff9bcd","#a41a79","#ffe8fa"],   // 13 rose
-  ["#63edec","#006d8f","#e5ffff"],   // 14 arctic
-  ["#fff0a5","#cf7714","#fffbe2"]    // 15 royal
- ];
- const silhouettes=[
-  "M44 12 66 20 69 50 59 70 44 81 29 70 19 50 22 20Z",
-  "M44 11 70 22 66 56 44 82 22 56 18 22Z",
-  "M44 9 64 16 73 42 60 66 44 84 28 66 15 42 24 16Z",
-  "M44 12 65 19 74 37 65 64 44 83 23 64 14 37 23 19Z",
-  "M44 10 69 19 71 49 58 72 44 85 30 72 17 49 19 19Z"
- ];
- const gems=[
-  '<path d="M32 39 44 29 56 39 44 56Z"/>',
-  '<path d="M31 41 37 33 51 33 57 41 44 56Z"/>',
-  '<path d="m44 29 4 9 10 2-7 7 2 10-9-5-9 5 2-10-7-7 10-2Z"/>',
-  '<path d="M44 28c10 11 13 15 8 23-6 10-17 8-19-1-1-5 7-16 11-22Z"/>',
-  '<circle cx="44" cy="42" r="12"/><path d="M44 31v22M33 42h22"/>'
- ];
- function seal(level){
-  const n=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
-  const [light,dark,highlight]=palettes[n-1];
-  const variant=(n-1)%5;
-  const g="f90-rank-"+n;
-  const s=silhouettes[variant];
-  const gem=gems[variant];
-  const rays=Array.from({length:2+n%4},(_,i)=>{
-   const angle=(-66+i*132/(1+n%4))*Math.PI/180;
-   const x=(44+38*Math.sin(angle)).toFixed(1),y=(43-38*Math.cos(angle)).toFixed(1);
-   return '<circle cx="'+x+'" cy="'+y+'" r="'+(1.1+n%3*.3)+'" fill="'+light+'" opacity=".95"/>';
-  }).join("");
-  const wings=n>2
-   ?'<path d="M24 30 8 22 13 39 2 48 20 52M64 30 80 22 75 39 86 48 68 52" stroke="'+light+'" stroke-width="'+(1.2+n/15*1.6)+'" fill="none" opacity=".86"/>'
-   :'';
-  const flourishes=n>7?'<path d="M28 75 12 68 25 63M60 75 76 68 63 63" stroke="'+light+'" stroke-width="2" fill="none"/>':'';
-  return '<svg class="f90-vip-artwork f90-vip-artwork-'+n+'" viewBox="0 0 88 94" role="img" aria-label="شارة VIP'+n+'" xmlns="http://www.w3.org/2000/svg">'
-   +'<defs><linearGradient id="'+g+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+light+'"/><stop offset=".48" stop-color="'+dark+'"/><stop offset="1" stop-color="'+light+'"/></linearGradient></defs>'
-   +rays+wings
-   +'<path d="'+s+'" fill="#0e172a" stroke="'+light+'" stroke-width="3"/>'
-   +'<path d="'+s+'" fill="none" stroke="url(#'+g+')" stroke-width="7" stroke-dasharray="'+(variant%2?'18 2':'100 0')+'" opacity=".42"/>'
-   +'<path d="M29 17 36 7 44 15 52 7 59 17 57 23 31 23Z" fill="url(#'+g+')" stroke="'+highlight+'" stroke-width="1.4"/>'
-   +'<g fill="url(#'+g+')" stroke="'+highlight+'" stroke-width="1.6">'+gem+'</g>'
-   +'<path d="M26 60 Q44 55 62 60L59 74H29Z" fill="url(#'+g+')" stroke="'+highlight+'" stroke-width="1.3"/>'
-   +'<text x="44" y="68" text-anchor="middle" fill="#101526" font-weight="900" font-size="'+(n>9?'10':'12')+'" font-family="Arial,sans-serif">VIP'+n+'</text>'
-   +flourishes+'</svg>';
- }
- root.F90VipArtwork={seal,palettes};
+"use strict";
+const palettes=[
+["#dbe5f4","#64748b","#f8fbff"],["#6ce8ff","#0b83b9","#effdff"],["#75aaff","#2048a7","#eaf0ff"],
+["#f8c976","#a36a22","#fff5d7"],["#8df3f6","#118da6","#edffff"],["#d5a0ff","#7435ae","#f9eaff"],
+["#ffb66c","#b84d1c","#fff0d9"],["#f7dc83","#a67b25","#fff9d8"],["#ff809e","#a72253","#ffe6ee"],
+["#ffcb7a","#b62e32","#fff1d7"],["#76efc7","#0b9a77","#e5fff4"],["#a9a2ff","#5043b6","#f0efff"],
+["#ffabd9","#b13a8b","#fff0fa"],["#86f4ff","#0877ad","#e9fcff"],["#fff2b3","#ca8a27","#ffffff"]
+];
+function seal(level){
+const n=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
+const [light,dark,shine]=palettes[n-1];
+const id="f90vip"+n;
+const prestige=Math.ceil(n/3);
+const stars=Array.from({length:Math.min(5,prestige)},(_,i)=>{const x=44+(i-(Math.min(5,prestige)-1)/2)*12;return '<path d="M'+x+' 11l1.7 3.5 3.8.5-2.8 2.6.7 3.7-3.4-1.9-3.4 1.9.7-3.7-2.8-2.6 3.8-.5Z" fill="'+light+'"/>';}).join("");
+const laurel=n>=4?'<g fill="none" stroke="'+light+'" stroke-width="'+(n>=11?2.3:1.5)+'" opacity=".92"><path d="M24 35Q5 51 26 77M64 35Q83 51 62 77"/>'+Array.from({length:5},(_,i)=>{let y=42+i*7;return '<path d="M'+(19-i%2*2)+' '+y+'l-8 -5 4 11M'+(69+i%2*2)+' '+y+'l8 -5 -4 11"/>';}).join("")+'</g>':'';
+const wings=n>=8?'<path d="M20 43 5 34 11 50 2 58 22 63M68 43 83 34 77 50 86 58 66 63" stroke="'+light+'" stroke-width="2.3" fill="none" opacity=".86"/>':'';
+const crown=n>=12?'<path d="M30 28 27 15 37 21 44 10 51 21 61 15 58 28Z" fill="url(#'+id+'metal)" stroke="'+shine+'" stroke-width="1.5"/>':'<path d="M34 28 31 20 39 23 44 17 49 23 57 20 54 28Z" fill="url(#'+id+'metal)" stroke="'+shine+'" stroke-width="1.1"/>';
+const halo=n>=14?'<circle cx="44" cy="48" r="38" fill="none" stroke="'+light+'" stroke-width="1.8" stroke-dasharray="2 3" opacity=".8"/>':'';
+return '<svg class="f90-vip-artwork f90-vip-artwork-'+n+'" viewBox="0 0 88 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شارة VIP '+n+'">'
++'<defs><linearGradient id="'+id+'metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+shine+'"/><stop offset=".28" stop-color="'+light+'"/><stop offset=".52" stop-color="'+dark+'"/><stop offset=".8" stop-color="'+light+'"/><stop offset="1" stop-color="'+shine+'"/></linearGradient><radialGradient id="'+id+'core"><stop stop-color="'+dark+'"/><stop offset="1" stop-color="#080d19"/></radialGradient></defs>'
++halo+wings+laurel
++'<path d="M44 21 66 29 71 49 64 70 44 88 24 70 17 49 22 29Z" fill="#0c101c" stroke="'+dark+'" stroke-width="5"/>'
++'<path d="M44 21 66 29 71 49 64 70 44 88 24 70 17 49 22 29Z" fill="url(#'+id+'core)" stroke="url(#'+id+'metal)" stroke-width="3.5"/>'
++'<path d="M44 28 60 34 64 50 58 66 44 78 30 66 24 50 28 34Z" fill="none" stroke="'+light+'" stroke-width="1" opacity=".65"/>'
++crown+stars
++'<path d="M44 35 53 44 44 54 35 44Z" fill="url(#'+id+'metal)" stroke="'+shine+'" stroke-width="1.4"/>'
++'<path d="M29 59Q44 55 59 59L57 72H31Z" fill="url(#'+id+'metal)" stroke="'+shine+'" stroke-width="1.1"/>'
++'<text x="44" y="68" text-anchor="middle" fill="#0a0e17" font-size="'+(n>=10?10:12)+'" font-weight="900" font-family="Arial,sans-serif">VIP'+n+'</text>'
++'<path d="M35 82 44 91 53 82" fill="none" stroke="'+light+'" stroke-width="2" opacity=".9"/>'
++'</svg>';
+}
+root.F90VipArtwork={seal,palettes};
 })(window);
