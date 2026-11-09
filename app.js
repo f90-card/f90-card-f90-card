@@ -201,7 +201,7 @@
   }
   function verified(p) {
     return p?.is_verified
-      ? `<span class="badge verified f90-verified-mark" title="حساب موثّق" aria-label="حساب موثّق">${I("check")}<span>موثّق</span></span>`
+      ? `<span class="f90-verified-mark" title="حساب موثّق" aria-label="حساب موثّق" role="img"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="#1d9bf0" d="M12 1.8 14.35 3.4 17.15 3.2 18.4 5.75 21 6.85 20.8 9.65 22.4 12 20.8 14.35 21 17.15 18.4 18.4 17.15 21 14.35 20.8 12 22.4 9.65 20.8 6.85 21 5.6 18.4 3 17.15 3.2 14.35 1.6 12 3.2 9.65 3 6.85 5.6 5.75 6.85 3.2 9.65 3.4Z"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m7.6 12 2.8 2.8 6-6"/></svg></span>`
       : `<span class="badge">غير موثّق</span>`;
   }
   function f90SocialLinks() {
