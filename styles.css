@@ -2962,3 +2962,27 @@ body:has(#mainContent[data-page]:not([data-page="home"])){background:var(--bg)!i
 body:has(#mainContent[data-page]:not([data-page="home"]))::before,
 body:has(#mainContent[data-page]:not([data-page="home"]))::after{background:none!important;background-image:none!important;animation:none!important}
 body:has(#mainContent[data-page]:not([data-page="home"])) #mainContent{background-image:none!important}
+
+/* Merchant API pages: compact Yassen-style documentation and token console. */
+.f90-y-docs{direction:ltr;text-align:left;background:#f7f8fa;color:#202333;border-radius:12px;overflow:hidden;margin:0 auto 35px;max-width:1120px}
+.f90-y-doc-title{display:flex;align-items:center;justify-content:space-between;background:white;padding:24px 30px;color:#e3413e;font-size:22px;border-bottom:1px solid #e6e8ee}
+.f90-y-doc-title a{font-size:13px;color:#e3413e;text-decoration:none}
+.f90-y-doc-content{padding:28px 30px}
+.f90-y-base{display:inline-block;background:#202033;color:white;padding:12px 17px;border-radius:5px;font:13px monospace}
+.f90-y-auth{background:#fff2f2;border-left:3px solid #e53c3d;padding:17px;margin:20px 0 35px}
+.f90-y-doc-section{margin:28px 0}.f90-y-doc-section h2{font-size:19px!important;color:#252839!important;border-bottom:1px solid #e1e4eb;padding-bottom:12px;margin-bottom:14px}
+.f90-y-doc-card{background:white;border:1px solid #eaedf2;border-left:3px solid #e83c3c;border-radius:5px;padding:18px}
+.f90-y-route{margin:10px 0 20px;border-bottom:1px solid #edf0f4;padding-bottom:17px}.f90-y-route:last-child{border-bottom:0;margin-bottom:0}
+.f90-y-route-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.f90-y-route-head code{background:#fff2f2;color:#cf4d4b;padding:7px 10px;border-radius:3px;font-size:12px;overflow-wrap:anywhere}
+.f90-y-verb{background:#12ae87;color:white;border-radius:3px;padding:6px 9px;font:700 12px monospace}
+.f90-y-docs p{color:#515665;font-size:13px;line-height:1.75}.f90-y-docs h4{font-size:14px;color:#252839}
+.f90-y-docs .f90-api-code{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:#202032;color:#e8eaf4;border:0;border-radius:5px;padding:17px;margin:12px 0;font-size:12px;line-height:1.65}
+.f90-y-alert{background:#fff1f0;padding:15px;border-left:3px solid #e94040;margin-bottom:22px}.f90-y-errors{width:100%;border-collapse:collapse;font-size:13px}.f90-y-errors th,.f90-y-errors td{border-bottom:1px solid #e5e7ec;padding:10px;text-align:left;color:#333}
+.f90-y-footer{text-align:center;color:#7d8290;padding:28px;font-size:12px}
+.f90-y-token{max-width:1000px;margin:0 auto;direction:rtl}.f90-y-token-top{background:#220743;border-radius:12px 12px 0 0;padding:20px 24px;color:#fff;text-align:right}.f90-y-token-top img{width:55px;height:55px;object-fit:contain;float:left}.f90-y-token-top h1{font-size:30px;color:#fff;margin:0 0 8px}.f90-y-token-top p{color:#d6c5ed}
+.f90-y-token-panel{background:#240749;color:#f6f0ff;padding:22px;border-radius:10px;margin:16px 0;border:1px solid #5c3483}.f90-y-token-panel h2{color:#fff;font-size:20px}.f90-y-token-panel p{color:#e0d3f0}
+.f90-y-token-form{display:grid;gap:15px}.f90-y-token-form>label{display:grid;gap:8px;font-size:14px;font-weight:600}.f90-y-token-form input:not([type=checkbox]),.f90-y-token-form textarea{width:100%;border:1px solid #6a448e;background:#391b63;color:#fff;border-radius:12px;padding:13px;font-size:14px}
+.f90-y-token-form .f90-y-check{display:flex;align-items:center;gap:10px}.f90-y-token-form .f90-y-check input{width:19px;height:19px}
+.f90-y-warning{background:#f35d68;color:white!important;border-radius:6px;padding:13px}.f90-y-save{justify-self:start;background:#08c985;color:white;border:0;border-radius:24px;padding:11px 24px;font-weight:700}
+.f90-y-existing{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:15px 0}.f90-y-existing code,.f90-y-link code{overflow-wrap:anywhere;color:#5fe7c7}.f90-y-link{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#371b5b;padding:12px;border-radius:10px}.f90-y-link button{border:0;background:#674c8b;color:#fff;border-radius:7px;padding:8px}
+@media(max-width:650px){.f90-y-doc-content{padding:14px}.f90-y-doc-title{padding:18px;font-size:17px}.f90-y-doc-card{padding:11px}.f90-y-docs .f90-api-code{font-size:11px;padding:12px}.f90-y-token-panel{padding:16px}}
