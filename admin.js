@@ -236,6 +236,9 @@
     const ungrouped=allowed.filter(item=>!seen.has(item[0]));
     if(ungrouped.length)$("adminNav").insertAdjacentHTML("beforeend",
       '<details class="f90-admin-group" data-admin-group="أدوات إضافية" data-default-open="false"><summary><span>أدوات إضافية</span><small>'+ungrouped.length+'</small></summary><div class="f90-admin-group-links">'+ungrouped.map(link).join("")+'</div></details>');
+    if(manager()&&!adminSearchTerm){
+      $("adminNav").insertAdjacentHTML("afterbegin",'<a class="button secondary" href="#/vip-reset" style="display:flex;align-items:center;justify-content:center;margin:8px 0 12px">عرض حسابات VIP والتصفير الجماعي</a>');
+    }
     filterAdminNavigation(adminSearchTerm);
     const search=$("adminNavSearch");
     if(search&&search.value!==adminSearchTerm)search.value=adminSearchTerm;
@@ -326,6 +329,7 @@
         `<button class="button secondary small" data-action="report">${I("download")}تنزيل التقرير</button>`,
       ) +
       `<div class="toolbar">${field("month", "الشهر", "month", S.month, 'id="reportMonth"')}</div>`;
+    if(!leader&&manager())main.insertAdjacentHTML("beforeend",'<section class="panel"><h3>إدارة مستويات VIP للعملاء والتجار</h3><p class="muted small">عرض كل الحسابات ومستوياتها الحالية بحسب الفئة، مع إمكانية التصفير الجماعي بعد التأكيد.</p><a class="button secondary" href="#/vip-reset">عرض حسابات VIP</a></section>');
     if (!leader)
       main.insertAdjacentHTML(
         "beforeend",
@@ -1378,8 +1382,8 @@
       const label=({all:"جميع المستخدمين",trader:"التجار فقط",charging_agent:"وكلاء الشحن فقط"})[requestScope]||requestScope;
       const items=result.items||[];
       box.innerHTML='<h3>الفئة المستهدفة: '+e(label)+'</h3><p><strong>إجمالي الحسابات: '+e(vipResetPreviewTotal)+'</strong> · المعروض '+e(items.length?offset+1:0)+'–'+e(offset+items.length)+'</p>'+
-        (items.length?'<div class="table-wrap"><table><thead><tr><th>اسم الحساب</th><th>معرّف العميل</th><th>البريد الإلكتروني</th><th>VIP المخصص</th></tr></thead><tbody>'+
-          items.map(p=>'<tr><td>'+e(p.name||"بدون اسم")+'</td><td>'+e(p.customer_id||"—")+'</td><td>'+e(p.email||"—")+'</td><td>'+e(p.vip_override||"تلقائي")+'</td></tr>').join("")+
+        (items.length?'<div class="table-wrap"><table><thead><tr><th>الحساب</th><th>الفئة</th><th>المستوى الحالي</th><th>طريقة المستوى</th></tr></thead><tbody>'+
+          items.map(p=>'<tr><td><strong>'+e(p.name||"بدون اسم")+'</strong><small class="muted" style="display:block">'+e(p.customer_id||"—")+'</small><small class="muted" style="display:block">'+e(p.email||"—")+'</small></td><td>'+e(({customer:"مستخدم",trader:"تاجر",charging_agent:"وكيل شحن",manager:"مدير",admin:"إداري",amin_card:"أمين كارد"})[p.role]||p.role||"مستخدم")+'</td><td><strong>VIP '+e(p.vip_level||1)+'</strong></td><td>'+e(p.vip_override?"مخصص من الإدارة":"تلقائي")+'</td></tr>').join("")+
           '</tbody></table></div>':'<p class="notice">لا توجد حسابات ضمن هذه الفئة.</p>')+
         '<div class="pagination"><button type="button" class="button secondary small" id="vipPreviewPrev" '+(offset<=0?'disabled':'')+'>السابق</button><span>'+e(Math.floor(offset/50)+1)+' / '+e(Math.max(1,Math.ceil(vipResetPreviewTotal/50)))+'</span><button type="button" class="button secondary small" id="vipPreviewNext" '+(offset+50>=vipResetPreviewTotal?'disabled':'')+'>التالي</button></div>';
       document.getElementById("vipPreviewPrev")?.addEventListener("click",()=>loadVipResetPreview(requestScope,Math.max(0,offset-50)));
