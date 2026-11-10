@@ -32,17 +32,26 @@ function docs(endpoint,logo){
 }
 function tokens(keys,verified,logo,endpoint){
  const active=keys.find(k=>k.is_active);
- const form=verified?'<form id="keyForm" class="f90-y-token-form"><label><span>اسم المفتاح</span><input name="name" required maxlength="100" value="متجري"></label><label><span>بروتوكول الربط</span><input readonly value="F90 CARD API" dir="ltr"></label><label><span>IP المسموح لها بالوصول لحسابك (اختياري)</span><textarea name="allowed_ips" rows="4" dir="ltr" placeholder="عنوان IP واحد في كل سطر"></textarea></label><label class="f90-y-check"><input type="checkbox" name="allow_all_ips" checked> السماح بكل عناوين IP</label><p class="f90-y-warning">السماح بكل عناوين IP مناسب للاختبار فقط. عند تشغيل المتجر يُفضّل تحديد عنوان خادمك.</p><button type="submit" class="f90-y-save">'+(active?'إصدار مفتاح بديل':'إنشاء مفتاح API')+'</button></form>':'<p>يلزم توثيق حساب التاجر لإنشاء مفتاح API.</p>';
- return '<div class="f90-y-token" dir="rtl"><div class="f90-y-token-top"><img src="'+esc(logo)+'" alt="F90 CARD"><h1>API</h1><p>معلومات حسابك</p></div><section class="f90-y-token-panel"><h2>API TOKEN</h2><p>مفتاح التاجر خاص بحسابك ويظهر كاملًا عند إصداره فقط.</p>'+(active?'<div class="f90-y-existing"><span>المفتاح النشط</span><code dir="ltr">'+esc(active.token_prefix)+'</code><button class="button secondary small" data-action="key-revoke" data-id="'+esc(active.id)+'">إلغاء المفتاح</button></div>':'<p>لم تُصدر مفتاحًا بعد.</p>')+form+'</section><section class="f90-y-token-panel"><h2>ما يلزمه المبرمج</h2><p>انسخ الرابط التالي للمبرمج:</p><div class="f90-y-link"><code dir="ltr">https://www.f90card.online/#/api-guide</code><button type="button" data-f90-copy-guide>نسخ</button></div><p>أرسل مفتاح API للمبرمج عبر قناة خاصة وآمنة. لا تضعه في عنوان الرابط أو واجهة موقعك.</p><a href="#/api-guide" class="button secondary">API Documentation</a></section></div>';
+ const info=active?'<div class="f90-y-current"><span>المفتاح الحالي</span><code dir="ltr">'+esc(active.token_prefix)+'</code><span class="f90-y-key-state">نشط</span><button class="f90-y-revoke" data-action="key-revoke" data-id="'+esc(active.id)+'">إلغاء المفتاح</button></div>':'<p class="f90-y-no-key">لا يوجد مفتاح API نشط.</p>';
+ const form=verified?'<form id="keyForm" class="f90-y-token-form"><input type="hidden" name="protocol" value="api_token_get"><label class="f90-y-field"><span>اسم المفتاح</span><input name="name" required maxlength="100" value="متجري"></label><label class="f90-y-field"><span>الآي بي المسموح لها بالوصول لحسابك</span><textarea name="allowed_ips" rows="5" dir="ltr" placeholder="ضع عنوان IP الخاص بخادمك في كل سطر"></textarea></label><label class="f90-y-check"><input type="checkbox" name="allow_all_ips" checked> السماح لكل عناوين IP</label><p class="f90-y-warning">لأمان حسابك، السماح بكل عناوين IP مناسب للاختبار فقط. حدّد عناوين خادمك عند تشغيل الربط الفعلي.</p><div class="f90-y-form-actions"><button type="submit" class="f90-y-save">'+(active?'إصدار مفتاح جديد بدل الحالي':'إنشاء مفتاح API')+'</button></div></form>':'<p>يجب توثيق حساب التاجر لإصدار مفتاح API.</p>';
+ return '<div class="f90-y-token" dir="rtl"><header class="f90-y-token-top"><img src="'+esc(logo)+'" alt="F90 CARD"><h1>API</h1><p>معلومات حسابك</p></header><section class="f90-y-token-panel"><h2>API TOKEN</h2><div class="f90-y-token-display" id="f90MerchantSecret"><span>رمز الربط الخاص بك</span><div class="f90-y-secret-line"><code dir="ltr">'+esc(active?.token_prefix||"لم يتم إنشاء مفتاح بعد")+'</code><button type="button" class="f90-y-copy" data-f90-copy-secret disabled title="الرمز الكامل يظهر مرة واحدة فقط عند إنشائه">نسخ</button></div><small>يظهر الرمز كاملًا عند إنشائه فقط. لا يمكن استرجاع المفتاح القديم لأسباب أمنية.</small></div>'+info+form+'</section><section class="f90-y-token-panel f90-y-programmer"><h2>ما يلزمه المبرمج</h2><p>API Documentation</p><div class="f90-y-link"><code dir="ltr">https://www.f90card.online/#/api-guide</code><button type="button" data-f90-copy-guide>نسخ الرابط</button></div><p>أرسل الرابط للمبرمج، وشاركه الرمز السري بشكل خاص. جميع عمليات الشراء تُرسل من خادم المتجر باستخدام POST.</p><a href="#/api-guide" class="f90-y-doc-button">فتح دليل المبرمجين</a></section></div>';
+}
+function showNewToken(token){
+ const box=document.getElementById("f90MerchantSecret");if(!box||!token)return false;
+ const line=box.querySelector(".f90-y-secret-line");if(!line)return false;
+ line.querySelector("code").textContent=token;
+ const button=line.querySelector("button");button.disabled=false;button.dataset.f90Secret=token;button.textContent="نسخ الرمز";
+ const note=box.querySelector("small");if(note)note.textContent="انسخ الرمز الآن واحتفظ به في خادمك؛ لن يظهر كاملًا بعد مغادرة الصفحة.";
+ box.classList.add("f90-y-secret-new");return true;
 }
 document.addEventListener("click",async event=>{
-const button=event.target.closest?.("[data-f90-copy-api], [data-f90-copy-get], [data-f90-copy-guide]");
+const button=event.target.closest?.("[data-f90-copy-api], [data-f90-copy-get], [data-f90-copy-guide], [data-f90-copy-secret]");
 if(!button)return;
-const value=button.hasAttribute("data-f90-copy-guide")?"https://www.f90card.online/#/api-guide":button.hasAttribute("data-f90-copy-get")
+const value=button.hasAttribute("data-f90-copy-secret")?button.dataset.f90Secret:button.hasAttribute("data-f90-copy-guide")?"https://www.f90card.online/#/api-guide":button.hasAttribute("data-f90-copy-get")
   ?"https://www.f90card.online/client/api/products"
   :"https://www.f90card.online/api/v1";
 try{await navigator.clipboard.writeText(value);button.textContent="تم نسخ الرابط";}
 catch{button.textContent="انسخ الرابط الظاهر أعلاه";}
 });
-window.F90MerchantViews={docs,tokens};
+window.F90MerchantViews={docs,tokens,showNewToken};
 })();
