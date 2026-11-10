@@ -2971,6 +2971,17 @@ async function history(kind){
       } else if (action === "key-logs") {
         const logs = await A.call("key.logs", { id: button.dataset.id });
         modal("API token usage", `<div class="records" dir="ltr">${logs.map((x) => `<article class="record"><strong>${e(x.action)}</strong><span>HTTP ${e(x.http_status)} · ${e(new Date(x.created_at).toLocaleString("en-US"))}</span></article>`).join("") || "<p>No usage recorded yet.</p>"}</div>`);
+      } else if (action === "key-reveal") {
+        const result=await A.call("key.reveal",{id:button.dataset.id});
+        if(!result.available){
+          toast("هذا مفتاح قديم لا يمكن استرجاعه. أصدر مفتاحًا بديلًا مرة واحدة لتتمكن من نسخه لاحقًا.");
+          return;
+        }
+        if(!window.F90MerchantViews?.showNewToken?.(result.token)){
+          toast("تعذر عرض المفتاح. افتح صفحة API وحاول مجددًا.");
+          return;
+        }
+        toast("تم عرض المفتاح. يمكنك نسخه من الخانة.");
       } else if (action === "key-revoke") {
         if(!window.confirm("Revoke this API token? Your connected integration will stop working immediately."))return;
         await A.call("key.revoke", { id: button.dataset.id });
