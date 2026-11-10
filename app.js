@@ -384,12 +384,12 @@
     } else document.querySelector("#f90AdminShortcut")?.remove();
     const enabled = S.rates.filter((r) => r.is_enabled && r.per_usd);
     if (!enabled.some((r) => r.currency === S.currency)) S.currency = S.settings.currency && enabled.some(r=>r.currency===S.settings.currency) ? S.settings.currency : "USD";
-    $("currencySelect").innerHTML = enabled
-      .map(
-        (r) =>
-          `<option value="${e(r.currency)}" ${r.currency === S.currency ? "selected" : ""}>${e(r.name_ar)}</option>`,
-      )
-      .join("");
+    // Base account currency is manager-controlled, regardless of the user's role.
+    const fixedCurrency=S.me?.profile?.account_currency||"USD";
+    S.currency=C.enabledCurrency(fixedCurrency,S.rates)?fixedCurrency:"USD";
+    $("currencySelect").innerHTML='<option value="'+e(S.currency)+'">'+e(C.currencyNames[S.currency]||S.currency)+' ('+e(S.currency)+') · العملة الأساسية ثابتة</option>';
+    $("currencySelect").disabled=true;
+    $("currencySelect").setAttribute("aria-label","العملة الأساسية يحددها المدير فقط");
     // Secondary currency is a DISPLAY preference only, never a wallet/account change.
     const secondaryHost=document.querySelector("#drawer .drawer-preferences");
     if(secondaryHost){
@@ -520,28 +520,7 @@
       }
       try {
         const me = await A.call("me");
-        // Google creates the auth user on callback. Respect a pre-login currency
-        // choice only when the Supabase user was actually created by this flow.
-        let pendingGoogle = null;
-        try { pendingGoogle = JSON.parse(localStorage.getItem("f90-google-currency-pending") || "null"); } catch {}
-        if (pendingGoogle) {
-          const started = Number(pendingGoogle.started_at);
-          const created = Date.parse(authResult.data.session.user?.created_at || "");
-          const isNewGoogleAccount = authResult.data.session.user?.app_metadata?.provider === "google" &&
-            Number.isFinite(started) && Date.now() - started >= 0 && Date.now() - started < 600000 &&
-            Number.isFinite(created) && created >= started - 10000 && created <= Date.now() &&
-            /^[A-Z]{3,8}$/.test(String(pendingGoogle.currency||""));
-          try {
-            if (isNewGoogleAccount && me?.profile?.account_currency !== pendingGoogle.currency) {
-              const result = await A.call("profile.currency", {currency:pendingGoogle.currency});
-              if (result?.currency === pendingGoogle.currency) me.profile.account_currency = pendingGoogle.currency;
-            }
-          } catch (error) {
-            console.warn("F90 first Google account currency could not be saved", error);
-          } finally {
-            try { localStorage.removeItem("f90-google-currency-pending"); } catch {}
-          }
-        }
+        try { localStorage.removeItem("f90-google-currency-pending"); } catch {}
         S.me = me;
         await mergePrivateCatalog();
 
@@ -1161,8 +1140,8 @@
       '<input id="f90-auth-password" name="password" type="password" placeholder="كلمة السر" required minlength="' + (registration ? '10' : '1') + '" autocomplete="' + (registration ? 'new-password' : 'current-password') + '" dir="rtl">' +
       '<button type="button" class="f90-auth-eye" data-action="auth-password-visibility" aria-label="إظهار كلمة المرور" aria-pressed="false">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-linecap="round"/></svg></button></div>';
-    const extra = '<details class="f90-auth-extra"><summary>العملة ورقم الهاتف (اختياري)</summary><div class="f90-auth-extra-fields">' +
-      select("account_currency", "عملة الحساب (يمكن تغييرها لاحقًا)", C.currencyOptions(S.rates), C.enabledCurrency(S.currency, S.rates) ? S.currency : "USD") +
+    const extra = '<details class="f90-auth-extra"><summary>العملة الأساسية ورقم الهاتف (اختياري)</summary><div class="f90-auth-extra-fields">' +
+      '<div class="f90-fixed-account-currency">العملة الأساسية: <strong>USD · الدولار الأمريكي</strong> (يغيرها المدير فقط)</div><input type="hidden" name="account_currency" value="USD">' +
       '<div class="f90-auth-phone-fields">' +
       select("phone_country", "رمز الدولة", [
         ["+970", "فلسطين +970"],["+972", "+972"],["+962", "الأردن +962"],
@@ -2265,7 +2244,7 @@ async function history(kind){
               username: String(data.username || "").trim(),
               first_name: String(data.first_name || "").trim(),
               last_name: String(data.last_name || "").trim(),
-              account_currency: C.enabledCurrency(String(data.account_currency),S.rates) ? String(data.account_currency) : "USD",
+              account_currency: "USD",
               phone: data.phone || null,
               phone_country: data.phone_country,
             },
@@ -2776,16 +2755,6 @@ async function history(kind){
     }
   });
   document.addEventListener("change", (ev) => {
-    if (ev.target.name === "account_currency" && ev.target.closest("#authForm") && !S.me) {
-      const chosen = String(ev.target.value || "");
-      if (!C.enabledCurrency(chosen,S.rates)) return;
-      S.currency = chosen;
-      S.currencyPreference = true;
-      try { localStorage.setItem("f90-currency", chosen); } catch {}
-      const drawerSelect = $("currencySelect");
-      if (drawerSelect?.querySelector('option[value="' + chosen + '"]')) drawerSelect.value = chosen;
-      return;
-    }
     if (ev.target.id !== "savedRecipient") return;
     const item = S.savedRecipients.find((row) => row.id === ev.target.value);
     const form = $("checkoutForm");
@@ -2901,14 +2870,6 @@ async function history(kind){
         }
       }
       else if (action === "google") {
-        // Carry the guest's currency choice only into a newly created Google account.
-        // Existing accounts always retain their saved profile currency.
-        if (!S.me) {
-          const chosen = String(document.querySelector("#authForm [name=account_currency]")?.value || S.currency);
-          if (C.enabledCurrency(chosen,S.rates)) {
-            try { localStorage.setItem("f90-google-currency-pending", JSON.stringify({currency:chosen,started_at:Date.now()})); } catch {}
-          }
-        }
         const r = await A.client.auth.signInWithOAuth({
           provider: "google",
           options: { redirectTo: "https://www.f90card.online/" },
@@ -3070,28 +3031,6 @@ async function history(kind){
   $("drawerClose").addEventListener("click", () => toggleDrawer(false));
   $("drawerBackdrop").addEventListener("click", () => toggleDrawer(false));
   $("themeToggle").addEventListener("click", () => theme(document.documentElement.dataset.theme === "cream" ? "dark" : "cream"));
-  $("currencySelect").addEventListener("change", async (ev) => {
-    const chosen=String(ev.target.value||"");
-    const before=S.me?.profile?.account_currency||S.currency;
-    if(!C.enabledCurrency(chosen,S.rates)){ev.target.value=before;return;}
-    if(S.me){
-      ev.target.disabled=true;
-      try{
-        const result=await A.call("profile.currency",{currency:chosen});
-        if(result?.currency!==chosen)throw Error("تعذّر حفظ عملة الحساب");
-        S.me.profile.account_currency=chosen;
-      }catch(error){
-        ev.target.value=before;
-        toast(message(error)||"تعذّر تغيير عملة الحساب");
-        ev.target.disabled=false;return;
-      }
-      ev.target.disabled=false;
-    }
-    S.currency=chosen;
-    try{localStorage.setItem("f90-currency",chosen)}catch{}
-    S.currencyPreference = true;
-    chrome();route();
-  });
   document.addEventListener("click",(event)=>{
     const control=event.target.closest?.("[data-f90-secondary-currency]");
     if(!control)return;
