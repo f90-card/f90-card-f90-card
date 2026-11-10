@@ -2592,10 +2592,13 @@ async function history(kind){
         return;
       }
       developers();
-      modal(
-        "احفظ مفتاح التاجر",
-        `<p>${e(apiTestMessage)}</p><p>انسخ المفتاح الآن، يظهر مرة واحدة فقط. احتفظ به في خادم متجرك ولا تنشره في الواجهة.</p><p><strong>GET / api-token:</strong> <code dir="ltr">https://www.f90card.online/client/api/products</code></p><p><strong>POST / JSON:</strong> <code dir="ltr">https://www.f90card.online/api/v1</code></p><p class="muted small">نفس المفتاح يعمل في الطريقتين؛ أرسله في الترويسة وليس الرابط، ولا تستخدم GET لإنشاء طلب شحن.</p><div class="key-token" data-f90-api-secret dir="ltr">${e(key.token)}</div><button class="button secondary" style="margin-top:16px" data-action="copy-text" data-text="${e(key.token)}">نسخ مفتاح التاجر</button>`,
-      );
+      if(!window.F90MerchantViews?.showNewToken?.(key.token)){
+        modal("مفتاح التاجر الجديد",'<p>انسخ المفتاح الآن؛ يظهر مرة واحدة فقط.</p><div class="key-token" dir="ltr">'+e(key.token)+'</div><button class="button secondary" data-action="copy-text" data-text="'+e(key.token)+'">نسخ المفتاح</button>');
+      }else{
+        const info=document.getElementById("f90MerchantSecret");
+        info?.scrollIntoView({behavior:"smooth",block:"center"});
+        toast(apiTestMessage);
+      }
       return;
     }
   }
