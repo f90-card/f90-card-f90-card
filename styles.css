@@ -2997,3 +2997,23 @@ body:has(#mainContent[data-page]:not([data-page="home"])) #mainContent{backgroun
 .f90-y-current{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 22px;color:#ddcdec;font-size:13px}.f90-y-current code{color:#8cf0d4}.f90-y-key-state{background:#0a9e78;color:white;border-radius:30px;padding:3px 10px}.f90-y-revoke{background:transparent;border:1px solid #b76b93;color:#f4c0d7;border-radius:9px;padding:7px 11px}
 .f90-y-token-form .f90-y-field{display:grid;gap:10px}.f90-y-token-form textarea{min-height:125px;background:#34145e;border:1px solid #59377d}.f90-y-form-actions{display:flex;justify-content:flex-start}.f90-y-save{border-radius:22px;font-size:14px}.f90-y-programmer{background:#1e1e22;border:1px solid #525057}.f90-y-programmer .f90-y-link{background:#29292d}.f90-y-doc-button{display:inline-flex;background:#6141a3;color:#fff;text-decoration:none;border-radius:9px;padding:11px 16px;margin-top:14px}
 .f90-y-docs{box-shadow:0 16px 40px #0003}.f90-y-docs .f90-y-doc-card{box-shadow:0 2px 12px #0e122009}.f90-y-docs .f90-y-route-head{margin-bottom:9px}
+
+/* Merchant API console and developer reference: deep indigo + electric cyan design. */
+.f90-y-token{background:linear-gradient(150deg,#0b1933,#11142d 65%,#152947);border:1px solid #294465;box-shadow:0 20px 55px #0005}
+.f90-y-token-top{background:linear-gradient(110deg,#172d50,#101a32);border-bottom:1px solid #365779}
+.f90-y-token-panel{background:#111e35;border:1px solid #2b4967;box-shadow:0 8px 25px #0002}
+.f90-y-token-panel h2{color:#81e8f1}.f90-y-token-display{background:#08192c;border:1px solid #368aab}
+.f90-y-token-form input:not([type=checkbox]),.f90-y-token-form textarea{background:#0c1d34;border-color:#315678}
+.f90-y-warning{background:#47371c;color:#ffe5a6!important;border:1px solid #987335}
+.f90-y-save{background:#07b9a8;color:#031e28}.f90-y-programmer{background:#0b1b2c;border-color:#365b77}
+.f90-y-programmer .f90-y-link{background:#102b42}.f90-y-doc-button{background:#087c9a}
+.f90-y-docs{background:#f0f5f9;color:#14263b;border:1px solid #dbe5ed}
+.f90-y-doc-title{background:linear-gradient(110deg,#102943,#163e59);color:#e5fcff;border:0}
+.f90-y-doc-title a{color:#7cebe9}.f90-y-base{background:#0e3046;color:#c5f8f5}
+.f90-y-auth{background:#e6f6f7;border-left:4px solid #06a7a9}
+.f90-y-doc-section h2{color:#123a53!important;border-bottom-color:#cddfe8}
+.f90-y-doc-card{border:1px solid #dce8ee;border-left:4px solid #10a6a8;box-shadow:0 5px 18px #1838500a}
+.f90-y-route-head code{background:#eaf6fa;color:#166b88}
+.f90-y-verb{background:#059c91}.f90-y-docs .f90-api-code{background:#11263d;color:#d5f7ff}
+.f90-y-alert{background:#fff6e6;border-left:4px solid #df9b2c}
+.f90-y-errors td:first-child{font-family:monospace;color:#0a6888;font-weight:700}
