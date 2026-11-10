@@ -1359,10 +1359,46 @@
       ) +
       `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="3" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٣٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
   }
+  let vipResetPreviewScope="",vipResetPreviewTotal=0,vipResetPreviewOffset=0;
+  async function loadVipResetPreview(scope,offset=0) {
+    const box=document.getElementById("vipResetPreview");
+    if(!box)return;
+    const requestScope=String(scope||"all");
+    vipResetPreviewScope="";
+    box.innerHTML='<p class="muted">جارٍ تحميل الحسابات المستهدفة…</p>';
+    const submit=document.querySelector('#bulkVipResetForm button[type="submit"]');
+    if(submit)submit.disabled=true;
+    try {
+      const result=await A.call("staff.vip_reset_preview",{scope:requestScope,offset});
+      const form=document.getElementById("bulkVipResetForm");
+      if(!form||form.elements.scope.value!==requestScope)return;
+      vipResetPreviewScope=requestScope;
+      vipResetPreviewTotal=Number(result.total||0);
+      vipResetPreviewOffset=offset;
+      const label=({all:"جميع المستخدمين",trader:"التجار فقط",charging_agent:"وكلاء الشحن فقط"})[requestScope]||requestScope;
+      const items=result.items||[];
+      box.innerHTML='<h3>الفئة المستهدفة: '+e(label)+'</h3><p><strong>إجمالي الحسابات: '+e(vipResetPreviewTotal)+'</strong> · المعروض '+e(items.length?offset+1:0)+'–'+e(offset+items.length)+'</p>'+
+        (items.length?'<div class="table-wrap"><table><thead><tr><th>اسم الحساب</th><th>معرّف العميل</th><th>البريد الإلكتروني</th><th>VIP المخصص</th></tr></thead><tbody>'+
+          items.map(p=>'<tr><td>'+e(p.name||"بدون اسم")+'</td><td>'+e(p.customer_id||"—")+'</td><td>'+e(p.email||"—")+'</td><td>'+e(p.vip_override||"تلقائي")+'</td></tr>').join("")+
+          '</tbody></table></div>':'<p class="notice">لا توجد حسابات ضمن هذه الفئة.</p>')+
+        '<div class="pagination"><button type="button" class="button secondary small" id="vipPreviewPrev" '+(offset<=0?'disabled':'')+'>السابق</button><span>'+e(Math.floor(offset/50)+1)+' / '+e(Math.max(1,Math.ceil(vipResetPreviewTotal/50)))+'</span><button type="button" class="button secondary small" id="vipPreviewNext" '+(offset+50>=vipResetPreviewTotal?'disabled':'')+'>التالي</button></div>';
+      document.getElementById("vipPreviewPrev")?.addEventListener("click",()=>loadVipResetPreview(requestScope,Math.max(0,offset-50)));
+      document.getElementById("vipPreviewNext")?.addEventListener("click",()=>loadVipResetPreview(requestScope,offset+50));
+      if(submit)submit.disabled=vipResetPreviewTotal===0;
+    } catch(err) {
+      box.innerHTML='<p class="notice error">تعذر عرض الحسابات المستهدفة: '+e(errorMessage(err))+'</p>';
+    }
+  }
   function vipResetPage() {
-    main.innerHTML=head("تصفير مستويات VIP للمستخدمين","قسم مستقل ضمن العملاء والتجار. اختر الفئة وطريقة إعادة الضبط قبل التنفيذ.")+
-      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">اختر إرجاع الفئة إلى VIP 1 أو العودة للاحتساب التلقائي بحسب الإنفاق. لا تتغير الأرصدة أو الطلبات.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+select("mode","طريقة إعادة الضبط",[["level1","إرجاع الجميع إلى VIP 1"],["automatic","إعادة الاحتساب التلقائي بحسب الإنفاق"]],"level1")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
-      '<p class="notice">لن يُنفّذ أي تغيير حتى تختار الفئة وتؤكد العملية. لا يتم تعديل أرصدة المستخدمين أو سجلات مشترياتهم.</p>';
+    main.innerHTML=head("تصفير مستويات VIP للمستخدمين","اختر الفئة وشاهد عدد الحسابات وأسماءها قبل تأكيد أي تعديل.")+
+      '<section class="panel"><h3>اختيار الفئة المستهدفة</h3><form id="bulkVipResetForm">'+
+      select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+
+      select("mode","طريقة إعادة الضبط",[["level1","إرجاع الجميع إلى VIP 1"],["automatic","إعادة الاحتساب التلقائي بحسب الإنفاق"]],"level1")+
+      '<section class="panel" id="vipResetPreview" aria-live="polite">جارٍ تحميل الحسابات المستهدفة…</section>'+
+      '<button class="button secondary" type="submit" disabled>تأكيد إعادة ضبط الفئة المعروضة</button></form></section>'+
+      '<p class="notice">معاينة فقط حتى تضغط تأكيد. لن تتغير الأرصدة أو سجلات المشتريات.</p>';
+    document.querySelector('#bulkVipResetForm [name="scope"]')?.addEventListener("change",ev=>loadVipResetPreview(ev.target.value,0));
+    loadVipResetPreview("all",0);
   }
   function policies() {
     const titles = {
@@ -2782,7 +2818,8 @@
       const label=({all:"جميع المستخدمين",trader:"التجار فقط",charging_agent:"وكلاء الشحن فقط"})[scope];
       if(!label)throw new Error("فئة غير صالحة");
       const mode=d.mode==="automatic"?"automatic":"level1";
-      if(!window.confirm("تأكيد إعادة الضبط للفئة: "+label+"؟ "+(mode==="level1"?"سيصبح مستوى الجميع VIP 1":"سيعود المستوى للاحتساب التلقائي")+". لا تتغير الأرصدة أو الإنفاق."))return;
+      if(scope!==vipResetPreviewScope || vipResetPreviewTotal===0)throw new Error("اعرض الحسابات المستهدفة أولًا");
+      if(!window.confirm("تأكيد إعادة الضبط لـ "+vipResetPreviewTotal+" حساب ضمن الفئة: "+label+"؟ "+(mode==="level1"?"سيصبح مستوى الجميع VIP 1":"سيعود المستوى للاحتساب التلقائي")+". لا تتغير الأرصدة أو الإنفاق."))return;
       const result=await A.call("staff.vip_bulk_reset",{scope,mode});
       toast("تم تحديث "+Number(result?.affected||0)+" حساب");
       return vipResetPage();
