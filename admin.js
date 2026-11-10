@@ -52,6 +52,7 @@
     ["security-alerts", "التنبيهات الأمنية", "shield", ["manager"]],
     ["customer-security", "أمان العملاء والأجهزة", "shield", ["manager"]],
     ["users", "العملاء والأرصدة", "user", ["manager"]],
+    ["vip-reset", "تصفير VIP جماعيًا", "crown", ["manager"]],
     ["traders", "التجار ومفاتيح API", "link", ["manager"]],
     ["agents", "وكلاؤنا", "user", ["manager", "admin"]],
     ["leaderboard", "المتصدرون والتقارير", "crown", ["manager", "admin"]],
@@ -186,7 +187,7 @@
   let adminSearchTerm = "";
   const adminBuckets = [
     ["الطلبات والمتابعة",["dashboard","alerts","orders","order-requests","deposits","verification"]],
-    ["العملاء والتجار",["users","traders","agents"]],
+    ["العملاء والتجار",["users","traders","agents","vip-reset"]],
     ["الخدمات والمورّدون",["categories","products","providers","refilling"]],
     ["الأرصدة والأسعار",["ledger","payments","credit-codes","rates","vip"]],
     ["المظهر والإعلانات",["banners","notifications","settings"]],
@@ -502,7 +503,7 @@
       rows = r.items
         .map(
           (u) =>
-            `<tr><td>${customer(u)}</td><td>${e(u.email)}</td><td>${e(C.roles[u.role])}</td><td>${status(u.account_status)}</td><td>${e(C.money(u.balance_usd))}</td><td><button class="button secondary small" data-action="detail-user" data-id="${u.id}">إدارة الحساب</button></td></tr>`,
+            `<tr><td>${customer(u)}</td><td>${e(u.email)}</td><td>${e(C.roles[u.role])}</td><td>${status(u.account_status)}</td><td><strong>${e(customerCurrency(u.balance_usd,u.account_currency))}</strong><small class="muted">أساسي: ${e(C.money(u.balance_usd,"USD",true))}</small></td><td><button class="button secondary small" data-action="detail-user" data-id="${u.id}">إدارة الحساب</button></td></tr>`,
         )
         .join("");
     } else if (kind === "ledger") {
@@ -667,18 +668,24 @@
       $("identityImage").innerHTML =
         `<img class="receipt-preview" src="${e(r.signedUrl)}" alt="مستند هوية خاص">`;
   }
+  function customerCurrency(amountUsd,currency) {
+    const code=String(currency||"USD").toUpperCase();
+    const rate=S.rates.find(r=>r.currency===code&&r.is_enabled&&!r.is_archived&&Number(r.per_usd)>0);
+    const amount=Number(amountUsd||0);
+    return C.money(code==="USD"?amount:(rate?amount*Number(rate.per_usd):amount),rate?code:"USD",true);
+  }
   async function detailUser(u) {
     if (!u?.id) throw new Error("حساب العميل غير موجود");
     const data = await A.call("staff.finance", { id: u.id });
     const bal = Number(data.balance_usd || 0);
     let live={};
     try{const res=await A.client.rpc("f90_manager_customer_overview",{p_user:u.id});if(!res.error&&res.data)live=res.data;}catch(_){}
-    const actual={...u,...live};
+    const actual={...u,...live,account_currency:data.account_currency||u.account_currency||"USD"};
     const fact=(label,value)=>'<div class="f90-user-fact"><span>'+e(label)+'</span><strong>'+e(value===null||value===undefined||value===""?"غير متوفر":value)+'</strong></div>';
     const overview='<section class="panel f90-user-overview"><h3>معلومات الحساب المسجلة</h3><div class="f90-user-facts">'+
       fact("اسم العميل",actual.display_name)+fact("معرّف العميل",actual.customer_id)+fact("البريد الإلكتروني",actual.email)+
       fact("رقم الهاتف",actual.phone?String(actual.phone_country||"")+" "+String(actual.phone):"غير متوفر")+
-      fact("عملة الحساب",actual.account_currency)+fact("دولة الشبكة التقريبية",actual.country_code)+
+      fact("عملة الحساب المعتمدة",actual.account_currency)+fact("دولة الشبكة التقريبية",actual.country_code)+
       fact("المنطقة",actual.region)+fact("المدينة",actual.city)+
       fact("نوع الجهاز",actual.device_type)+fact("طراز الجهاز",actual.device_model)+
       fact("النظام",actual.os_name)+fact("المتصفح",actual.browser_name)+
@@ -688,7 +695,7 @@
     const ledger = data.ledger || [];
     modal("العميل والمحفظة: " + u.display_name,
       '<section class="f90-admin-customer"><div class="f90-admin-customer-head">'+customer(u)+
-      '<div class="f90-customer-current"><small>رصيد المحفظة</small><strong>'+e(C.money(bal,"USD",true))+'</strong><small>الرصيد الأساسي بالدولار</small></div></div>'+
+      '<div class="f90-customer-current"><small>رصيد المحفظة بعملة الحساب ('+e(actual.account_currency)+')</small><strong>'+e(customerCurrency(bal,actual.account_currency))+'</strong><small>القيمة الأساسية: '+e(C.money(bal,"USD",true))+' · الرصيد محفوظ بالدولار</small></div></div>'+
       overview+'<div class="f90-finance-editor-grid"><section class="panel"><h3>خصم إضافي للعميل</h3><p class="muted small">يُضاف إلى خصم VIP، ويُحسب تلقائيًا عند تسعير الطلب.</p>'+
       '<form id="userDiscountForm">'+field("percent","الخصم الإضافي ٪","number",data.extra_discount_percent || 0,'required min="0" max="50" step="0.001"')+
       '<button class="button secondary" type="submit">حفظ الخصم الخاص</button></form></section>'+
@@ -1350,8 +1357,12 @@
         "مستويات VIP من 1 إلى 15",
         "ترقية تلقائية وفق الإنفاق المكتمل. المدير يستطيع تخصيص مستوى العميل.",
       ) +
-      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">اختر إرجاع الفئة إلى VIP 1 أو العودة للاحتساب التلقائي بحسب الإنفاق. لا تتغير الأرصدة أو الطلبات.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+select("mode","طريقة إعادة الضبط",[["level1","إرجاع الجميع إلى VIP 1"],["automatic","إعادة الاحتساب التلقائي بحسب الإنفاق"]],"level1")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
       `<div class="docs-grid">${S.vip.map((t) => `<form class="panel vipForm" data-level="${t.level}"><h3>المستوى ${t.level}</h3>${field("minimum_spend", "الإنفاق المطلوب بالدولار", "number", t.minimum_spend, 'required min="0" step="0.000001" ' + (t.level === 1 ? "readonly" : ""))}${field("discount_percent", "نسبة الخصم", "number", t.discount_percent, 'required min="0" max="3" step="0.001" ' + (t.level === 1 ? "readonly" : ""))}<button class="button secondary" type="submit">حفظ</button></form>`).join("")}</div><div class="notice">المستوى الأول دون خصم، والمستوى الأعلى لا يتجاوز ٣٪. اضبط حدود الإنفاق تصاعديًا بين المستويات.</div>`;
+  }
+  function vipResetPage() {
+    main.innerHTML=head("تصفير مستويات VIP للمستخدمين","قسم مستقل ضمن العملاء والتجار. اختر الفئة وطريقة إعادة الضبط قبل التنفيذ.")+
+      '<section class="panel"><h3>إعادة ضبط مستويات VIP جماعيًا</h3><p class="muted small">اختر إرجاع الفئة إلى VIP 1 أو العودة للاحتساب التلقائي بحسب الإنفاق. لا تتغير الأرصدة أو الطلبات.</p><form id="bulkVipResetForm">'+select("scope","الفئة المستهدفة",[["all","جميع المستخدمين"],["trader","التجار فقط"],["charging_agent","وكلاء الشحن فقط"]],"all")+select("mode","طريقة إعادة الضبط",[["level1","إرجاع الجميع إلى VIP 1"],["automatic","إعادة الاحتساب التلقائي بحسب الإنفاق"]],"level1")+'<button class="button secondary" type="submit">مراجعة وإعادة ضبط الفئة</button></form></section>'+
+      '<p class="notice">لن يُنفّذ أي تغيير حتى تختار الفئة وتؤكد العملية. لا يتم تعديل أرصدة المستخدمين أو سجلات مشترياتهم.</p>';
   }
   function policies() {
     const titles = {
@@ -2605,6 +2616,7 @@
       else if (page === "credit-codes") await window.F90CreditAdmin.render(main,S.rates);
       else if (page === "rates") rates();
       else if (page === "vip") vip();
+      else if (page === "vip-reset") vipResetPage();
       else if (page === "policies") policies();
       else if (page === "providers") await providers();
       else if (page === "infrastructure") await infrastructurePage();
@@ -2735,7 +2747,9 @@
       if (!manager()) throw new Error("للمدير فقط");
       await A.call("staff.currency",{id:S.detail.id,currency:d.currency});
       toast("تم تحديث عملة الحساب، والرصيد الأساسي باقٍ بالدولار");
-      return detailUser({...S.detail,account_currency:d.currency});
+      const current={...S.detail,account_currency:d.currency};
+      S.list=S.list.map(item=>item.id===current.id?{...item,account_currency:d.currency}:item);
+      return detailUser(current);
     }
     if (form.id === "userForm") {
       await A.call("staff.user", {
@@ -2771,7 +2785,7 @@
       if(!window.confirm("تأكيد إعادة الضبط للفئة: "+label+"؟ "+(mode==="level1"?"سيصبح مستوى الجميع VIP 1":"سيعود المستوى للاحتساب التلقائي")+". لا تتغير الأرصدة أو الإنفاق."))return;
       const result=await A.call("staff.vip_bulk_reset",{scope,mode});
       toast("تم تحديث "+Number(result?.affected||0)+" حساب");
-      return vip();
+      return vipResetPage();
     }
     if (form.matches(".vipForm")) {
       await A.call("staff.vip", {
