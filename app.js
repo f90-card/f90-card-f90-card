@@ -2981,7 +2981,8 @@ async function history(kind){
           toast("تعذر عرض المفتاح. افتح صفحة API وحاول مجددًا.");
           return;
         }
-        toast("تم عرض المفتاح. يمكنك نسخه من الخانة.");
+        try {await navigator.clipboard.writeText(result.token);toast("تم عرض المفتاح ونسخه.");}
+        catch {toast("تم عرض المفتاح؛ انسخه من الخانة.");}
       } else if (action === "key-revoke") {
         if(!window.confirm("Revoke this API token? Your connected integration will stop working immediately."))return;
         await A.call("key.revoke", { id: button.dataset.id });
