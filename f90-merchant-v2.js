@@ -12,22 +12,22 @@ function docs(endpoint,logo){
  const getCode=(path)=>code('GET '+base+path+'\napi-token: YOUR_F90_API_TOKEN');
  const postCode=(obj)=>code('POST '+api+'\nContent-Type: application/json\nx-f90-key: YOUR_F90_API_TOKEN\n\n'+JSON.stringify(obj,null,2));
  const example=(obj)=>'<h4>Response Example</h4>'+code(JSON.stringify(obj,null,2));
- return '<div class="f90-y-docs" dir="ltr"><header class="f90-y-doc-title"><strong>◉ API Documentation</strong><a href="#/developers">API TOKEN</a></header><main class="f90-y-doc-content">'+
+ return '<div class="f90-y-docs" dir="ltr"><header class="f90-y-doc-title"><strong>F90 CARD · دليل المبرمجين</strong><a href="#/developers">API TOKEN</a></header><main class="f90-y-doc-content">'+
  '<p class="f90-y-base">Base URL: '+base+'/</p>'+
  '<div class="f90-y-auth"><strong>Authentication Required</strong><p>Include this header in API requests:</p>'+code('api-token: YOUR_F90_API_TOKEN')+'<p>Requests that create orders use POST /api/v1 with x-f90-key and JSON. Never put your token in a URL.</p></div>'+
- block('Profile',route('GET','/client/api/profile','Retrieves your merchant balance and profile.',getCode('/client/api/profile')))+
- block('Products',route('GET','/client/api/products','Retrieves available services, prices, quantity rules and required fields.',getCode('/client/api/products')+example({data:{products:[{service:"product-uuid",name:"Example service",rate:1.25,currency:"USD",min:1000,max:1000000,fields:[{id:"account_id",required:true}]}]}}))+
+ block('01 · الحساب والرصيد',route('GET','/client/api/profile','Retrieves your merchant balance and profile.',getCode('/client/api/profile')))+
+ block('02 · المنتجات والخدمات',route('GET','/client/api/products','يعيد الخدمات وأسعار التاجر والحقول المطلوبة وحدود الكميات. استخدم معرّف الخدمة الفعلي.',getCode('/client/api/products')+example({data:{products:[{service:"product-uuid",name:"Example service",rate:1.25,currency:"USD",min:1000,max:1000000,fields:[{id:"account_id",required:true}]}]}}))+
  route('GET','/client/api/products?products_id=id1,id2','Filter by product IDs only if supported by the endpoint; for guaranteed filtering use POST services and filter by service UUID locally.')+
  route('POST','/api/v1','Retrieve all service categories.',postCode({action:"categories"})))+
- block('Content',route('POST','/api/v1','Read categories and service details using the official JSON API.',postCode({action:"services"})+postCode({action:"service",service:"product-uuid"})))+
- block('Order', '<div class="f90-y-alert"><strong>Important: Idempotent orders</strong><p>Generate one unique idempotency_key for each order and reuse the same key with the same payload when retrying. Never send an order through GET.</p></div>'+
- route('POST','/api/v1','Get the final price before submitting an order.',postCode({action:"quote",product_id:"product-uuid",quantity:1000}))+
- route('POST','/api/v1','Creates an order and returns its F90 order ID. The fields must match the selected service.',postCode({action:"checkout",product_id:"product-uuid",quantity:1000,fields:{account_id:"123456"},idempotency_key:"ecbdd545-e616-4aee-8770-7eefa977bcd0",expected_total_usd:1.25})+example({data:{id:"order-uuid",status:"queued",total_usd:1.25}})))+
- block('Check Orders',route('GET','/client/api/check?orders=%5B%22ORDER_UUID%22%5D','Checks existing orders by their returned IDs.',getCode('/client/api/check?orders=%5B%22ORDER_UUID%22%5D'))+
+ block('03 · الأقسام وتفاصيل الخدمات',route('POST','/api/v1','Read categories and service details using the official JSON API.',postCode({action:"services"})+postCode({action:"service",service:"product-uuid"})))+
+ block('04 · التسعير وإنشاء الطلب', '<div class="f90-y-alert"><strong>Important: Idempotent orders</strong><p>Generate one unique idempotency_key for each order and reuse the same key with the same payload when retrying. Never send an order through GET.</p></div>'+
+ route('POST','/api/v1','احصل على السعر النهائي قبل الشراء، ولا تستخدم سعر المثال.',postCode({action:"quote",product_id:"product-uuid",quantity:1000}))+
+ route('POST','/api/v1','ينشئ طلبًا بمعرّف الخدمة وحقولها الفعلية، مع مرجع فريد يمنع التكرار.',postCode({action:"checkout",product_id:"product-uuid",quantity:1000,fields:{account_id:"123456"},idempotency_key:"ecbdd545-e616-4aee-8770-7eefa977bcd0",expected_total_usd:1.25})+example({data:{id:"order-uuid",status:"queued",total_usd:1.25}})))+
+ block('05 · متابعة الطلبات',route('GET','/client/api/check?orders=%5B%22ORDER_UUID%22%5D','Checks existing orders by their returned IDs.',getCode('/client/api/check?orders=%5B%22ORDER_UUID%22%5D'))+
  route('POST','/api/v1','Read order status and events.',postCode({action:"status",order:"order-uuid"}))+
  route('POST','/api/v1','List order history.',postCode({action:"history",kind:"orders",offset:0})))+
- block('Error Codes','<table class="f90-y-errors"><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody>'+
- [['F90_AUTH','Invalid or missing token'],['F90_FORBIDDEN','Insufficient permission or IP not allowed'],['F90_INSUFFICIENT_BALANCE','Insufficient balance'],['F90_QUANTITY','Invalid quantity'],['F90_FIELDS','Invalid or missing fields'],['F90_REFILLING','Service temporarily unavailable'],['F90_PRICE_CHANGED','Price changed: request a new quote'],['F90_IDEMPOTENCY_CONFLICT','Order key reused with different details']].map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[1])+'</td></tr>').join('')+'</tbody></table>')+
+ block('06 · رموز الأخطاء الفعلية','<table class="f90-y-errors"><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody>'+
+ [['F90_AUTH','401 · رمز الوصول مفقود أو غير صالح'],['F90_FORBIDDEN','403 · لا تملك الصلاحية أو عنوان IP غير مسموح'],['F90_MFA','403 · يلزم التحقق الثنائي'],['F90_NOT_FOUND','404 · العنصر غير موجود'],['F90_INSUFFICIENT_BALANCE','402 · الرصيد غير كافٍ'],['F90_QUANTITY','400 · الكمية خارج الحدود'],['F90_FIELDS','400 · الحقول المطلوبة غير مكتملة'],['F90_IDEMPOTENCY','400 · مرجع الطلب غير صحيح'],['F90_IDEMPOTENCY_CONFLICT','409 · المرجع مستخدم لطلب مختلف'],['F90_REFILLING','409 · الخدمة قيد التعبئة'],['F90_PRICE_CHANGED','409 · تغيّر السعر'],['F90_RATE_MISSING','409 · سعر الصرف غير متاح'],['F90_LIMIT','429 · تجاوز حد الطلبات']].map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+esc(x[1])+'</td></tr>').join('')+'</tbody></table>')+
  '<footer class="f90-y-footer">F90 CARD API Documentation · All rights reserved.</footer></main></div>';
 }
 function tokens(keys,verified,logo,endpoint){
