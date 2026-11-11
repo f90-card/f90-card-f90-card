@@ -310,6 +310,24 @@ async function auditSafe(actorId: string, action: string, targetId: string, deta
     console.error("Audit insertion failed");
   }
 }
+// Encrypt recoverable merchant keys at rest using the server-only service secret.
+async function merchantCipherKey(): Promise<CryptoKey> {
+  const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if(!secret)throw new AppError("F90_ERROR",500);
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("F90-MERCHANT-KEY-V1:"+secret));
+  return crypto.subtle.importKey("raw",digest,{name:"AES-GCM"},false,["encrypt","decrypt"]);
+}
+async function sealMerchantToken(value:string):Promise<string>{
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const bytes=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},await merchantCipherKey(),new TextEncoder().encode(value)));
+  return btoa(String.fromCharCode(...iv,...bytes));
+}
+async function openMerchantToken(value:string):Promise<string>{
+  const bytes=Uint8Array.from(atob(value),c=>c.charCodeAt(0));
+  if(bytes.length<29)throw new AppError("F90_NOT_FOUND");
+  const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes.slice(0,12)},await merchantCipherKey(),bytes.slice(12));
+  return new TextDecoder().decode(plain);
+}
 function keySettings(b: any, current: any = {}) {
   const name = String(b.name ?? current.name ?? "مفتاح متجر").trim();
   if (!name || name.length > 100) throw new AppError("F90_FIELDS");
@@ -368,12 +386,12 @@ async function assertProviderAvailable(productId: string) {
       (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new AppError("F90_PROVIDER_NOT_READY");
 }
-async function allCatalogRows(table: "products" | "f90_product_internal") {
+async function allCatalogRows(table: "products" | "f90_product_internal", activeOnly = true) {
   const rows: any[] = [];
   const pageSize = 900;
   for (let offset = 0; offset < 20000; offset += pageSize) {
     const result = table === "products"
-      ? await db.from("products").select("*").eq("is_active", true)
+      ? await db.from("products").select("*").in("is_active", activeOnly ? [true] : [true,false])
         .order("sort_order").order("id").range(offset, offset + pageSize - 1)
       : await db.from("f90_product_internal").select("product_id,provider_id")
         .not("provider_id", "is", null).order("product_id")
@@ -417,9 +435,12 @@ async function buildPublicCatalog() {
       .order("created_at", { ascending: false }).limit(40),
   ]);
   const shihabProvider = check(rows[7]).find((p:any)=>p.id===SHIHAB_ID);
+  const brandProvider = check(rows[7]).find((p:any)=>p.adapter==="brand_one");
+  const brandPrivate = brandProvider && (brandProvider.config?.catalog_visibility !== "public" || brandProvider.config?.disconnected || brandProvider.config?.archived_at);
   const privateIds = new Set(check(rows[1]).filter((c:any)=>String(c.slug||"").startsWith("f90-shihab-") &&
     (shihabProvider?.config?.catalog_visibility !== "public" || c.presentation?.catalog_visibility === "hidden" ||
      (Array.isArray(c.presentation?.visibility_roles) && c.presentation.visibility_roles.length>0))).map((c:any)=>c.id));
+  if(brandPrivate)for(const c of check(rows[1]))if(c.presentation?.provider_id===brandProvider.id)privateIds.add(c.id);
   const privateProductIds = new Set(check(rows[6]).filter((i:any)=>i.provider_id===SHIHAB_ID &&
     !shihabPublicProduct(check(rows[2]).find((p:any)=>p.id===i.product_id),shihabProvider)).map((i:any)=>i.product_id));
   const categories = check(rows[1]);
@@ -532,7 +553,7 @@ async function buildPublicCatalog() {
     banners: check(rows[3]),
     rates: check(rows[4]).filter((r: any) => !r.is_archived),
     vip: check(rows[5]),
-    news: check(rows[8]).filter((n: any) => !n.product_id || allowedProductIds.has(n.product_id)),
+    news: check(rows[8]).filter((n: any) => !n.product_id || (allowedProductIds.has(n.product_id) && !privateIds.has((productById.get(n.product_id) as any)?.category_id))),
     version: 3,
   };
 }
@@ -647,6 +668,10 @@ async function syncShihabDetails() {
 }
 async function assertShihabCatalogAccess(productId:string,a:Actor|null) {
   const link=check(await db.from("f90_product_internal").select("provider_id").eq("product_id",productId).maybeSingle());
+  if(link?.provider_id){
+    const p=check(await db.from("f90_providers").select("adapter,config").eq("id",link.provider_id).single());
+    if(p.adapter==="brand_one" && p.config?.catalog_visibility!=="public" && a?.role!=="manager")throw new AppError("F90_FORBIDDEN",403);
+  }
   if(link?.provider_id!==SHIHAB_ID || (a && ["manager","trader"].includes(a.role)))return;
   const catalog=await publicCatalog();
   if(!catalog.products.some((p:any)=>p.id===productId))throw new AppError("F90_FORBIDDEN",403);
@@ -771,7 +796,7 @@ async function work() {
         const currentProvider = check(await db.from("f90_providers")
           .select("adapter").eq("id", o.provider_id).single());
         let params: Record<string, string> = {};
-        if (currentProvider.adapter === "yassen" || currentProvider.adapter === "shihab") {
+        if (["yassen","shihab","brand_one"].includes(currentProvider.adapter)) {
           const products = (await providerAction(o.provider_id, "services"))
             .map(normalizeService).filter(Boolean);
           const service = products.find((item: any) => item.id === String(o.provider_service));
@@ -1384,7 +1409,7 @@ async function staff(a: Actor, b: any) {
     requireRole(a, "manager", "designer");
     const rows = await Promise.all(
       ["categories", "products", "banners"].map((t) =>
-        db.from(t).select("*").order("sort_order"),
+        t === "products" ? allCatalogRows("products",false) : db.from(t).select("*").order("sort_order"),
       ),
     );
     const allProviders = check(await db.from("f90_providers")
@@ -1407,8 +1432,7 @@ async function staff(a: Actor, b: any) {
     const linkedProductIds = new Set(internals.map((i: any) => i.product_id));
     return {
       categories: check(rows[0]),
-      products: check(rows[1]).filter((p: any) => p.is_active === false || managedProductIds.has(p.id) ||
-        (ownerCategoryIds.has(p.category_id) && !linkedProductIds.has(p.id))),
+      products: check(rows[1]),
       banners: check(rows[2]),
       internal: a.role === "manager" ? internals.filter((i: any) => managedProviderIds.has(i.provider_id) || !i.provider_id) : [],
       providers: a.role === "manager" ? managedProviders.map(({ id, name, is_enabled, adapter }: any) =>
@@ -1915,8 +1939,21 @@ async function staff(a: Actor, b: any) {
         .eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
       db.from("profiles").select("id,display_name,customer_id,email").eq("id",userId).single(),
     ]);
+    const [spendRows,tiersRows,overrideRow]=await Promise.all([
+      db.from("f90_orders").select("total_usd,refunded_usd").eq("user_id",userId).in("status",["completed","partial"]),
+      db.from("f90_vip_tiers").select("level,minimum_spend").order("level"),
+      db.from("profiles").select("vip_override,account_currency").eq("id",userId).single()
+    ]);
+    const spent=check(spendRows).reduce((sum:any,o:any)=>sum+Number(o.total_usd||0)-Number(o.refunded_usd||0),0);
+    const tiers=check(tiersRows);
+    const account=check(overrideRow);
+    const automatic=tiers.filter((t:any)=>spent>=Number(t.minimum_spend)).at(-1)?.level||1;
     return {
       profile: check(profile),
+      spent_usd:spent,
+      vip_level:account.vip_override||automatic,
+      vip_override:account.vip_override,
+      account_currency:account.account_currency,
       balance_usd: check(wallet).balance_usd,
       extra_discount_percent: check(discount)?.extra_discount_percent ?? 0,
       purchase_markup_percent: check(discount)?.purchase_markup_percent ?? 0,
@@ -1992,6 +2029,54 @@ async function staff(a: Actor, b: any) {
       p_vip: b.vip ? integer(b.vip, 1, 15) : null,
       p_clear_vip: !!b.clear_vip,
     });
+  }
+  if (action === "staff.currency") {
+    securityManager(a);
+    const userId=uuid(b.id);
+    const currency=text(b.currency,8).toUpperCase();
+    if(!/^[A-Z]{3}$/.test(currency))throw new AppError("F90_FIELDS");
+    const rate=check(await db.from("f90_rates").select("currency,is_enabled").eq("currency",currency).maybeSingle());
+    if(!rate || rate.is_enabled!==true)throw new AppError("F90_FIELDS",400,"عملة غير مفعلة");
+    const updated=check(await db.from("profiles").update({account_currency:currency}).eq("id",userId).select("id,account_currency").single());
+    check(await db.from("f90_audit").insert({actor_id:a.id,action:"user.currency",target_id:userId,details:{currency}}));
+    return updated;
+  }
+  if (action === "staff.vip_reset_preview") {
+    requireRole(a,"manager");
+    if(a.keyId)throw new AppError("F90_FORBIDDEN");
+    const scope=String(b.scope||"");
+    if(!["all","trader","charging_agent"].includes(scope))throw new AppError("F90_FIELDS");
+    const offset=integer(b.offset||0,0,100000),limit=50;
+    let ids:string[]=[],total=0,profiles:any[]=[];
+    if(scope==="all"){
+      const result=await db.from("profiles").select("id,display_name,customer_id,email,vip_override,account_currency",{count:"exact"}).order("created_at",{ascending:false}).range(offset,offset+limit-1);
+      profiles=check(result);total=result.count||0;ids=profiles.map((p:any)=>p.id);
+    }else{
+      const result=await db.from("f90_user_roles").select("user_id",{count:"exact"}).eq("role",scope).order("user_id",{ascending:true}).range(offset,offset+limit-1);
+      const roles=check(result);total=result.count||0;ids=roles.map((p:any)=>p.user_id);
+      profiles=ids.length?check(await db.from("profiles").select("id,display_name,customer_id,email,vip_override,account_currency").in("id",ids)):[];
+    }
+    const [tiersResult,rolesResult,ordersResult]=await Promise.all([
+      db.from("f90_vip_tiers").select("level,minimum_spend").order("level",{ascending:true}),
+      ids.length?db.from("f90_user_roles").select("user_id,role").in("user_id",ids):Promise.resolve({data:[],error:null}),
+      ids.length?db.from("f90_orders").select("user_id,total_usd,refunded_usd").in("user_id",ids).in("status",["completed","partial"]).limit(10000):Promise.resolve({data:[],error:null})
+    ]);
+    const tiers=check(tiersResult),roles=check(rolesResult),orders=check(ordersResult);
+    const spending=new Map<string,number>();
+    for(const order of orders){
+      spending.set(order.user_id,(spending.get(order.user_id)||0)+Math.max(0,Number(order.total_usd||0)-Number(order.refunded_usd||0)));
+    }
+    return {scope,total,offset,items:ids.map(id=>profiles.find((p:any)=>p.id===id)).filter(Boolean).map((p:any)=>{
+      const spent=spending.get(p.id)||0;
+      const automatic=tiers.filter((t:any)=>spent>=Number(t.minimum_spend)).at(-1)?.level||1;
+      return {id:p.id,name:p.display_name,customer_id:p.customer_id,email:p.email,role:roles.find((r:any)=>r.user_id===p.id)?.role||"customer",vip_level:p.vip_override||automatic,vip_override:p.vip_override,account_currency:p.account_currency};
+    })};
+  }
+  if (action === "staff.vip_bulk_reset") {
+    securityManager(a);
+    if(!["all","trader","charging_agent"].includes(b.scope))throw new AppError("F90_FIELDS");
+    const mode=b.mode==="automatic"?"automatic":"level1";
+    return rpc("f90_manager_bulk_reset_vip",{p_actor:a.id,p_scope:b.scope,p_mode:mode});
   }
   if (action === "staff.reset_password") {
     requireRole(a, "manager");
@@ -2190,7 +2275,7 @@ async function staff(a: Actor, b: any) {
   if (action === "provider.save") {
     requireRole(a, "manager");
     const adapter = b.adapter === "f90_merchant_get" ? "f90_merchant" :
-      ["f90", "f90_merchant", "smm", "json", "omega", "yassen", "shihab"].includes(b.adapter) ? b.adapter : "smm";
+      ["f90", "f90_merchant", "smm", "json", "omega", "yassen", "shihab", "brand_one"].includes(b.adapter) ? b.adapter : "smm";
     if (adapter !== "f90") endpointURL(b.endpoint);
     const old = b.id ? check(await db.from("f90_providers")
       .select("id,endpoint,adapter,currency,is_enabled,margin_percent,config")
@@ -2199,6 +2284,7 @@ async function staff(a: Actor, b: any) {
     if (!old && !b.token && !["f90","shihab"].includes(adapter)) throw new AppError("F90_FIELDS", 400, "أدخل مفتاح المورّد");
     if (adapter !== "f90" && new URL(b.endpoint).hostname === "api.yassen-card.com" && adapter !== "yassen")
       throw new AppError("F90_FIELDS", 400, "يجب اختيار بروتوكول ياسين كارد لهذا الرابط");
+    if (adapter === "brand_one" && new URL(b.endpoint).origin !== "https://api.brand-one-card.com")throw new AppError("F90_FIELDS",400,"عنوان API غير صحيح");
     if (adapter === "shihab" && new URL(b.endpoint).origin !== "https://api.shihabcard.com")
       throw new AppError("F90_FIELDS", 400, "استخدم رابط API شهاب المعتمد");
     if (adapter === "yassen" && new URL(b.endpoint).origin !== "https://api.yassen-card.com")
@@ -2236,6 +2322,7 @@ async function staff(a: Actor, b: any) {
       margin_percent: num(b.margin_percent ?? 20, 0, 10000),
       config: {
         ...(old?.config || {}),
+        ...(adapter === "brand_one" ? {catalog_visibility: b.catalog_visibility === "public" ? "public" : b.catalog_visibility === "manager" ? "manager" : old?.config?.catalog_visibility || "manager"} : {}),
         request_timeout_ms: integer(b.request_timeout_ms ?? old?.config?.request_timeout_ms ?? 20000, 5000, 30000),
         ...(adapter === "f90_merchant" ? { f90_transport: f90Transport } : {}),
         automatic_orders_enabled: autoOrders,
@@ -2297,6 +2384,17 @@ async function staff(a: Actor, b: any) {
       details: { is_enabled: b.is_enabled },
     });
     return changed;
+  }
+  if (action === "provider.catalog_visibility") {
+    requireRole(a,"manager");
+    const id=uuid(b.id);
+    if(!["public","manager"].includes(b.visibility))throw new AppError("F90_FIELDS");
+    const current=check(await db.from("f90_providers").select("adapter,config").eq("id",id).single());
+    if(current.adapter!=="brand_one"||current.config?.archived_at)throw new AppError("F90_FIELDS");
+    check(await db.from("f90_providers").update({config:{...current.config,catalog_visibility:b.visibility}}).eq("id",id));
+    cachedPublicCatalog=null;cachedPublicCatalogUntil=0;
+    await auditSafe(a.id,action,id,{visibility:b.visibility});
+    return {id,visibility:b.visibility};
   }
   if (action === "provider.visibility") {
     requireRole(a, "manager");
@@ -2502,6 +2600,12 @@ async function staff(a: Actor, b: any) {
     requireRole(a, "manager");
     const id = uuid(b.id);
     const p = check(await db.from("f90_providers").select("*").eq("id", id).single());
+    if(p.adapter==="brand_one") {
+      const items=await providerAction(id,"services");
+      if(!Array.isArray(items)||!items.length)throw new AppError("F90_FIELDS");
+      await rpc("f90_brand_stage",{p_products:items.map(({_f90_yassen,...raw}:any)=>raw)});
+      const result=await rpc("f90_brand_apply",{});cachedPublicCatalog=null;cachedPublicCatalogUntil=0;return result;
+    }
     const services = (await providerAction(id, "services"))
       .map(normalizeService)
       .filter(Boolean);
@@ -2766,9 +2870,11 @@ Deno.serve(async (req: Request) => {
     if (action === "catalog.private") {
       if (!a || !["manager","trader"].includes(a.role) || a.needsMfa || a.keyId)
         throw new AppError("F90_FORBIDDEN",403);
-      const cats = check(await db.from("categories").select("*").like("slug","f90-shihab-%"));
+      const privateProviders=check(await db.from("f90_providers").select("id,adapter,config").eq("adapter","brand_one"));
+      const privateProviderIds=new Set(a.role==="manager" ? privateProviders.filter((p:any)=>!p.config?.archived_at).map((p:any)=>p.id) : []);
+      const cats = check(await db.from("categories").select("*")).filter((c:any)=>String(c.slug||"").startsWith("f90-shihab-") || privateProviderIds.has(c.presentation?.provider_id));
       const ids = cats.map((c:any)=>c.id);
-      const items = ids.length ? check(await db.from("products").select("*").in("category_id",ids).eq("is_active",true)) : [];
+      const items = ids.length ? check(await allCatalogRows("products")).filter((p:any)=>ids.includes(p.category_id)) : [];
       return out({categories:cats.filter((c:any)=>c.is_active),products:items.filter((p:any)=>cats.some((c:any)=>c.id===p.category_id&&c.is_active))});
     }
     if (action === "quote") {
@@ -3171,8 +3277,9 @@ Deno.serve(async (req: Request) => {
       const rate = check(await db.from("f90_rates")
         .select("currency,is_enabled,per_usd,is_archived").eq("currency",currency).single());
       if (!rate.is_enabled || rate.is_archived || Number(rate.per_usd)<=0) throw new AppError("F90_RATE_MISSING");
-      check(await db.from("profiles").update({account_currency:currency}).eq("id",a.id));
-      return out({currency});
+      // Account base currency is manager-controlled; customers may only choose display currency.
+      throw new AppError("F90_FORBIDDEN",403,"العملة الأساسية للحساب يحددها مدير الموقع فقط");
+
     }
     if (action === "profile.save") {
       const d: any = {
@@ -3193,6 +3300,17 @@ Deno.serve(async (req: Request) => {
       }
       check(await db.from("profiles").update(d).eq("id", a.id));
       return out({ saved: true });
+    }
+    if (action === "verification.file") {
+      if (a.keyId) throw new AppError("F90_FORBIDDEN");
+      const part = ({front:"front_path",back:"back_path",selfie:"selfie_path"} as Record<string,"front_path"|"back_path"|"selfie_path">)[text(b.part,20)];
+      if (!part) throw new AppError("F90_FIELDS");
+      const item = check(await db.from("f90_verifications")
+        .select("front_path,back_path,selfie_path")
+        .eq("id",uuid(b.id)).eq("user_id",a.id).maybeSingle());
+      if (!item || !item[part]) throw new AppError("F90_NOT_FOUND");
+      const ticket = check(await db.storage.from("f90-identity").createSignedUrl(item[part],120));
+      return out({url:ticket.signedUrl});
     }
     if (action === "verification.submit") {
       const front = await privatePath(a, "f90-identity", b.front_path),
@@ -3264,10 +3382,22 @@ Deno.serve(async (req: Request) => {
         p_expiry:settings.expires_at,p_allow_all:settings.allow_all_ips,
         p_allowed_ips:settings.allowed_ips
       })) as any;
+      check(await db.from("f90_api_keys").update({token_ciphertext:await sealMerchantToken(token)}).eq("id",key.id));
       await auditSafe(a.id, "key.create", key.id,
         { owner, scopes: settings.scopes,
           requests_per_minute: settings.requests_per_minute });
       return out({ ...key, token }, 201);
+    }
+    if (action === "key.reveal") {
+      if(a.keyId)throw new AppError("F90_FORBIDDEN");
+      requireRole(a,"trader","manager");
+      const key=check(await db.from("f90_api_keys")
+        .select("user_id,token_ciphertext,is_active").eq("id",uuid(b.id))
+        .eq("user_id",a.id).maybeSingle());
+      if(!key||!key.is_active)throw new AppError("F90_NOT_FOUND");
+      if(!key.token_ciphertext)return out({available:false,reason:"legacy_key"});
+      const token=await openMerchantToken(key.token_ciphertext);
+      return out({available:true,token});
     }
     if (action === "key.update") {
       if (a.keyId) throw new AppError("F90_FORBIDDEN");
@@ -3348,3 +3478,4 @@ Deno.serve(async (req: Request) => {
   }
   return response;
 });
+

@@ -253,8 +253,9 @@ export async function callProvider(
     if (!data?.id) throw new ProviderError("لم تؤكد F90 رقم الطلب", true);
     return { order_id: data.id, status: data.status };
   }
-  if (provider.adapter === "omega" || provider.adapter === "yassen" || provider.adapter === "shihab") {
-    const yassen = provider.adapter === "yassen" || provider.adapter === "shihab";
+  if (provider.adapter === "omega" || provider.adapter === "yassen" || provider.adapter === "shihab" || provider.adapter === "brand_one") {
+    const yassen = ["yassen","shihab","brand_one"].includes(provider.adapter);
+    if (provider.adapter === "brand_one" && u.origin !== "https://api.brand-one-card.com") throw new ProviderError("عنوان المورد غير معتمد");
     if (provider.adapter === "shihab" && u.origin !== "https://api.shihabcard.com")
       throw new ProviderError("عنوان API شهاب غير معتمد");
     if (provider.adapter === "yassen" && u.origin !== "https://api.yassen-card.com")
@@ -267,14 +268,14 @@ export async function callProvider(
     } else if (yassen && action === "status") {
       if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(args.order ?? "")))
         throw new ProviderError("معرّف طلب ياسين غير صالح");
-    } else if (provider.adapter === "shihab" && action === "content") {
+    } else if (["shihab","brand_one"].includes(provider.adapter) && action === "content") {
       if (!/^[0-9]{1,100}$/.test(String(args.category ?? ""))) throw new ProviderError("معرّف قسم شهاب غير صالح");
     } else if (!["services", "balance"].includes(action))
       throw new ProviderError(yassen ? "عملية المورّد غير متاحة" : "طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
     let path = "/client/api/products";
     if (action === "balance") path = "/client/api/profile";
     if (action === "status") path = "/client/api/check";
-    if (provider.adapter === "shihab" && action === "content") path = `/client/api/content/${args.category}`;
+    if (["shihab","brand_one"].includes(provider.adapter) && action === "content") path = `/client/api/content/${args.category}`;
     if (action === "add") path = `/client/api/newOrder/${args.service}/params`;
     const target = new URL(path, u.origin);
     if (action === "status") target.searchParams.set("orders", `[${args.order}]`);
@@ -293,11 +294,13 @@ export async function callProvider(
         target.searchParams.set(name, value);
       }
     }
+    const requestTarget = provider.adapter === "brand_one" && action === "add" ? new URL(target.origin + target.pathname) : target;
     let response;
     try {
-      response = await fetcher(target, {
-        method: "GET",
-        headers: { Accept: "application/json", "api-token": key },
+      response = await fetcher(requestTarget, {
+        method: provider.adapter === "brand_one" && action === "add" ? "POST" : "GET",
+        headers: { Accept: "application/json", "api-token": key, ...(provider.adapter === "brand_one" && action === "add" ? {"Content-Type":"application/json"} : {}) },
+        ...(provider.adapter === "brand_one" && action === "add" ? {body:JSON.stringify(Object.fromEntries(target.searchParams))} : {}),
         redirect: "manual",
         signal: AbortSignal.timeout(timeout),
       });
@@ -310,7 +313,7 @@ export async function callProvider(
     if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا", provider.adapter === "shihab" && action === "add");
     let data;
     try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة المورّد غير مفهومة", action === "add"); }
-    if (data?.status === "error" || data?.error)
+    if (String(data?.status || "").toLowerCase() === "error" || data?.error)
       throw new ProviderError("رفض المورّد الطلب، تحقق من الصلاحيات");
     if (yassen && action === "add") {
       if (data?.status !== "OK" || !data?.data?.order_id)
@@ -394,4 +397,5 @@ export async function callProvider(
   if (data?.error) throw new ProviderError("رفض المورّد تنفيذ الطلب");
   return data;
 }
+
 
