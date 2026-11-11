@@ -490,7 +490,7 @@ async function buildPublicCatalog() {
   const hiddenProductIds = new Set(
     linked.filter((entry: any) => {
       const provider: any = providerById.get(entry.provider_id);
-      return !provider || !!provider.config?.archived_at || !!provider.config?.disconnected;
+      return !provider || !!provider.config?.archived_at || !!provider.config?.disconnected || (provider.adapter==="brand_one" && provider.config?.catalog_visibility!=="public");
     })
       .map((entry: any) => entry.product_id),
   );
