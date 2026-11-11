@@ -386,14 +386,14 @@ async function assertProviderAvailable(productId: string) {
       (p.adapter === "omega" || p.config?.automatic_orders_enabled !== true))
     throw new AppError("F90_PROVIDER_NOT_READY");
 }
-async function allCatalogRows(table: "products" | "f90_product_internal", activeOnly = true) {
+async function allCatalogRows(table: "products" | "f90_product_internal", activeOnly = true, fullInternal = false) {
   const rows: any[] = [];
   const pageSize = 900;
   for (let offset = 0; offset < 20000; offset += pageSize) {
     const result = table === "products"
       ? await db.from("products").select("*").in("is_active", activeOnly ? [true] : [true,false])
         .order("sort_order").order("id").range(offset, offset + pageSize - 1)
-      : await db.from("f90_product_internal").select("product_id,provider_id")
+      : await db.from("f90_product_internal").select(fullInternal ? "*" : "product_id,provider_id")
         .not("provider_id", "is", null).order("product_id")
         .range(offset, offset + pageSize - 1);
     const page = check(result);
@@ -1414,7 +1414,7 @@ async function staff(a: Actor, b: any) {
     );
     const allProviders = check(await db.from("f90_providers")
       .select("id,name,is_enabled,config"));
-    const internals = check(await db.from("f90_product_internal").select("*"));
+    const internals = check(await allCatalogRows("f90_product_internal",false,true));
     const managedProviders = allProviders.filter((p: any) => !p.config?.archived_at && !p.config?.disconnected);
     const managedProviderIds = new Set(managedProviders.map((p: any) => p.id));
     const managedProductIds = new Set(internals.filter((i: any) => managedProviderIds.has(i.provider_id))
