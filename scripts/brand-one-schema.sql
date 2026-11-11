@@ -9,9 +9,9 @@ CREATE FUNCTION public.f90_brand_stage(p_products jsonb DEFAULT '[]',p_categorie
 BEGIN
  IF jsonb_array_length(p_products)>0 THEN UPDATE f90_private.brand_products SET source=jsonb_set(source,'{available}','false') WHERE source_id NOT IN (SELECT e->>'id' FROM jsonb_array_elements(p_products) e); END IF;
  INSERT INTO f90_private.brand_products(source_id,source) SELECT e->>'id',e FROM jsonb_array_elements(p_products) e
- ON CONFLICT(source_id) DO UPDATE SET source=excluded.source;
+ ON CONFLICT(source_id) DO UPDATE SET source=excluded.source || CASE WHEN f90_private.brand_products.source ? 'web' THEN jsonb_build_object('web',f90_private.brand_products.source->'web') ELSE '{}'::jsonb END;
  INSERT INTO f90_private.brand_categories(source_id,source) SELECT e->>'id',e FROM jsonb_array_elements(p_categories) e
- ON CONFLICT(source_id) DO UPDATE SET source=excluded.source;
+ ON CONFLICT(source_id) DO UPDATE SET source=excluded.source || CASE WHEN f90_private.brand_categories.source ? 'web' THEN jsonb_build_object('web',f90_private.brand_categories.source->'web') ELSE '{}'::jsonb END;
  UPDATE f90_private.brand_categories SET fetched=true WHERE source_id=ANY(p_fetched);
  RETURN jsonb_build_object('pending',(SELECT coalesce(jsonb_agg(source_id ORDER BY source_id),'[]') FROM f90_private.brand_categories WHERE NOT fetched),'products',(SELECT count(*) FROM f90_private.brand_products),'categories',(SELECT count(*) FROM f90_private.brand_categories));
 END $$;

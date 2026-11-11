@@ -927,6 +927,7 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
     throw new AppError("F90_FIELDS",400,err.message);
   }
   const result: any = {
+    ...(existing.supplier_catalog === "brand_one" ? {supplier_catalog:"brand_one",supplier_card:existing.supplier_card} : {}),
     currency_pricing: cleanedCurrencyPricing,
     type: c.type === "quantity" ? "quantity" : "fixed",
     availability: c.availability === "refilling" ? "refilling" : "available",

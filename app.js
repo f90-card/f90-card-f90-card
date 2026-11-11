@@ -661,12 +661,19 @@
     const specialRoutes={"money-transfer":"transfer","account-sales":"account","design-services":"design","complete-website":"website"};
     const specialRoute=specialRoutes[c.slug];
     const categoryLink=specialRoute==="website" ? href("product","f90-full-website-500") : specialRoute && !["account","design","transfer"].includes(specialRoute) ? "#/special/"+specialRoute : href("category",c.slug||c.id);
+    if(window.F90BrandCards?.isCategory(c))return window.F90BrandCards.render(c,"category",{
+      escape:e,href:categoryLink,search:window.F90CatalogSearch?.keys(c.name)||c.name,
+      image:image(c.image_url,c.name,++f90PriorityTileCount<=8?"f90-eager-image":"")});
     const disabled = String(c.slug||"").startsWith("f90-shihab-") ? false : categoryIsUnavailable(c);
     return `<a class="image-tile f90-category-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${categoryLink}"`} data-search="${e(window.F90CatalogSearch?.keys(c.name) || c.name)}" aria-label="${e(c.name)}">${f90TileArt(c.image_url,c.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(c.name)}</span></a>`;
   }
   function productTile(p, pack = false, inline = false) {
     const disabled = C.unavailable(p) || categoryIsUnavailable(findCategory(p.category_id));
     const quick = inline ? ` data-action="quick-product" data-id="${e(p.id)}"` : "";
+    if(window.F90BrandCards?.isProduct(p))return window.F90BrandCards.render(p,"product",{
+      escape:e,href:href("product",p.slug||p.id),quick,disabled,
+      search:window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases||[])||p.name,
+      image:image(p.image_url,p.name,++f90PriorityTileCount<=8?"f90-eager-image":"")});
     if (pack)
       return `<a class="pack ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}"><strong>${e(p.commerce?.pack_label || p.name)}</strong><span>${disabled ? "قيد التعبئة" : e(displayMoney(previewUsd(p, p.commerce?.quantity_min || 1), true))}</span></a>`;
     return `<a class="image-tile f90-product-tile f90-flip-tile ${disabled ? "refilling" : ""}" ${disabled ? 'aria-disabled="true" tabindex="-1" data-refilling="true"' : `href="${href("product", p.slug || p.id)}"${quick}`} data-search="${e(window.F90CatalogSearch?.keys(p.name,p.commerce?.search_aliases || []) || p.name)}" aria-label="${e(p.name)}">${f90TileArt(p.image_url,p.name,disabled)}${disabled ? '<span class="refill-badge">قيد التعبئة</span>' : ""}<span class="tile-caption">${e(p.name)}</span></a>`;
@@ -853,7 +860,7 @@
       location.hash="#/special/transfer/"+encodeURIComponent(c.slug.slice("transfer-".length));
       return;
     }
-    if (!String(c.slug||"").startsWith("f90-shihab-") && categoryIsUnavailable(c)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
+    if (!window.F90BrandCards?.isCategory(c) && !String(c.slug||"").startsWith("f90-shihab-") && categoryIsUnavailable(c)) { main.innerHTML = pageHead(c.name) + `<div class="f90-closed-service">${f90RefillArt(c.image_url,c.name)}<h2>قيد التعبئة</h2><p>هذا القسم غير متاح مؤقتًا.</p><a class="button secondary" href="#/">العودة للرئيسية</a></div>`; return; }
     if (
       c.presentation?.routing === "direct" &&
       c.presentation.direct_product_id
@@ -874,7 +881,7 @@
     }
     const children = S.categories.filter((x) => x.parent_id === c.id),
       products = S.products.filter((p) => p.category_id === c.id);
-    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" data-category-id="${e(c.id)}" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid" id="categoryBaseGrid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
+    main.innerHTML = `<div class="breadcrumb"><a href="#/">الرئيسية</a>${parents.map((p) => `<span>‹</span><a href="${href("category", p.slug)}">${e(p.name)}</a>`).join("")}<span>‹</span><span>${e(c.name)}</span></div>${children.length || products.length ? `<label class="field f90-category-search"><input id="categoryFilter" data-category-id="${e(c.id)}" type="search" autocomplete="off" placeholder="بحث في ${e(c.name)}..." aria-label="البحث داخل القسم"></label>` : ""}${children.length || products.length ? `<div class="image-grid${window.F90BrandCards?.isCategory(c) ? " f90-brand-grid" : ""}" ${window.F90BrandCards?.isCategory(c) ? `style="${window.F90BrandCards.gridStyle(c)}"` : ""} id="categoryBaseGrid">${[...children.map((item) => ({ kind: "category", item })), ...products.map((item) => ({ kind: "product", item }))].sort((a, b) => (a.kind === "category" ? a.item.sort_order || 0 : a.item.sort_order || 0) - (b.kind === "category" ? b.item.sort_order || 0 : b.item.sort_order || 0) || a.item.name.localeCompare(b.item.name, "ar")).map(({kind,item}) => kind === "category" ? categoryTile(item) : productTile(item, false, true)).join("")}</div>` : ""}${!children.length && !products.length ? empty("هذا القسم قيد التعبئة. عُد قريبًا") : ""}${products.length ? '<div id="quickProductBackdrop" class="f90-quick-backdrop" data-action="close-quick-product" hidden></div><section id="quickProductPanel" class="f90-quick-product" role="dialog" aria-modal="true" aria-label="تفاصيل الخدمة" hidden></section>' : ""}`;
     const copySection=main.querySelector(".f90-category-top button");
     if(copySection){copySection.innerHTML=I("copy");copySection.title="نسخ رابط القسم";}
     if ($("categoryFilter")) main.insertAdjacentHTML("beforeend",'<section id="categorySearchResults" hidden></section>');
@@ -1039,7 +1046,7 @@
     S.quote = null;
     S.quoteSeq = 0;
     S.checkoutKey = C.key();
-    const fields = c.fields?.length
+    const fields = c.supplier_catalog === "brand_one" && Array.isArray(c.fields) ? c.fields : c.fields?.length
       ? c.fields
       : [
           {

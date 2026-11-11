@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION public.f90_brand_apply() RETURNS jsonb LANGUAGE plpgsql SET search_path='' AS $$
-DECLARE provider public.f90_providers%rowtype; root uuid; cat record; item record; cid uuid; pid uuid; src jsonb; c jsonb; fields jsonb; unit numeric; cost numeric; price numeric; minq bigint; maxq bigint; imported integer:=0; updated integer:=0; invalid integer:=0; started timestamptz:=clock_timestamp(); existing record;
+DECLARE provider public.f90_providers%rowtype; root uuid; cat record; item record; cid uuid; pid uuid; src jsonb; c jsonb; fields jsonb; unit numeric; cost numeric; sale_price numeric; minq bigint; maxq bigint; imported integer:=0; updated integer:=0; invalid integer:=0; started timestamptz:=clock_timestamp(); existing record;
 BEGIN
  IF NOT pg_try_advisory_xact_lock(hashtext('brand-one-import')) THEN RETURN '{"busy":true}'; END IF;
  SELECT * INTO STRICT provider FROM public.f90_providers WHERE adapter='brand_one' AND NOT config ? 'archived_at';
@@ -28,20 +28,20 @@ BEGIN
   maxq:=CASE WHEN src->>'product_type'='amount' THEN least(coalesce((src#>>'{qty_values,max}')::bigint,1),1000000000) ELSE 1 END;
   IF minq<1 OR maxq<minq THEN invalid:=invalid+1; CONTINUE; END IF;
   unit:=CASE WHEN src->>'product_type'<>'amount' THEN 1 WHEN (src->>'price')::numeric<0.00001 THEN 1000000 WHEN (src->>'price')::numeric<0.01 THEN 1000 ELSE 1 END;
-  cost:=round((src->>'price')::numeric*unit,6); price:=round(cost*(1+provider.margin_percent/100),6);
+  cost:=round((src->>'price')::numeric*unit,6); sale_price:=round(cost*(1+provider.margin_percent/100),6);
   SELECT coalesce(jsonb_agg(jsonb_build_object('id','param_'||n,'label_ar',coalesce((SELECT z->>'label' FROM jsonb_array_elements(coalesce(src->'params_info','[]')) z WHERE z->>'key'=v LIMIT 1),v),'type','text','required',true) ORDER BY n),'[]') INTO fields FROM jsonb_array_elements_text(coalesce(src->'params','[]')) WITH ORDINALITY x(v,n);
   SELECT p.id,p.commerce,i.auto_margin INTO existing FROM public.f90_product_internal i JOIN public.products p ON p.id=i.product_id WHERE i.provider_id=provider.id AND i.provider_service=item.source_id;
   IF FOUND THEN
    UPDATE public.f90_product_internal SET cost_usd=cost WHERE product_id=existing.id;
    c:=jsonb_set(existing.commerce,'{supplier_available}',coalesce(src->'available','false'));
    c:=jsonb_set(c,'{availability}',to_jsonb(CASE WHEN src->>'available'='true' THEN coalesce(c->>'manual_availability_override','available') ELSE 'refilling' END));
-   IF existing.auto_margin THEN c:=jsonb_set(c,'{prices,USD}',to_jsonb(price)); END IF;
-   UPDATE public.products SET commerce=c,price=CASE WHEN existing.auto_margin THEN price ELSE public.products.price END WHERE id=existing.id;
+   IF existing.auto_margin THEN c:=jsonb_set(c,'{prices,USD}',to_jsonb(sale_price)); END IF;
+   UPDATE public.products SET commerce=c,price=CASE WHEN existing.auto_margin THEN sale_price ELSE public.products.price END WHERE id=existing.id;
    updated:=updated+1;
   ELSE
-   c:=jsonb_build_object('type',CASE WHEN src->>'product_type'='amount' THEN 'quantity' ELSE 'fixed' END,'fulfillment','automatic','supplier_catalog','brand_one','supplier_available',coalesce(src->'available','false'),'availability',CASE WHEN src->>'available'='true' THEN 'available' ELSE 'refilling' END,'unit_quantity',unit,'pack_quantity',1,'quantity_min',minq,'quantity_max',maxq,'quantity_step',1,'prices',jsonb_build_object('USD',price),'fields',fields,'delivery_time','تُرسل الطلبات تلقائيًا، ومدة التنفيذ حسب الخدمة لدى المورد','expected_minutes',0,'pricing_tiers','[]'::jsonb);
+   c:=jsonb_build_object('type',CASE WHEN src->>'product_type'='amount' THEN 'quantity' ELSE 'fixed' END,'fulfillment','automatic','supplier_catalog','brand_one','supplier_available',coalesce(src->'available','false'),'availability',CASE WHEN src->>'available'='true' THEN 'available' ELSE 'refilling' END,'unit_quantity',unit,'pack_quantity',1,'quantity_min',minq,'quantity_max',maxq,'quantity_step',1,'prices',jsonb_build_object('USD',sale_price),'fields',fields,'delivery_time','تُرسل الطلبات تلقائيًا، ومدة التنفيذ حسب الخدمة لدى المورد','expected_minutes',0,'pricing_tiers','[]'::jsonb);
    INSERT INTO public.products(category_id,name,slug,description,price,currency,image_url,commerce,is_active,sort_order)
-   VALUES(cid,left(regexp_replace(src->>'name','(?i)(brand[- ]?one[- ]?card|براند ون كارد)','','g'),200),'f90-brand-one-service-'||item.source_id,coalesce(src->>'description',''),price,'USD',(SELECT image_url FROM public.categories WHERE id=cid),c,true,0) RETURNING id INTO pid;
+   VALUES(cid,left(regexp_replace(src->>'name','(?i)(brand[- ]?one[- ]?card|براند ون كارد)','','g'),200),'f90-brand-one-service-'||item.source_id,coalesce(src->>'description',''),sale_price,'USD',(SELECT image_url FROM public.categories WHERE id=cid),c,true,0) RETURNING id INTO pid;
    INSERT INTO public.f90_product_internal(product_id,provider_id,provider_service,cost_usd,auto_margin) VALUES(pid,provider.id,item.source_id,cost,true);
    imported:=imported+1;
   END IF;

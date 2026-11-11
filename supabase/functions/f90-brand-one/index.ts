@@ -1,3 +1,4 @@
+import { productPresentation } from "./media.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {auth:{persistSession:false}});
 const headers = {"Content-Type":"application/json","Cache-Control":"no-store"};
@@ -30,6 +31,10 @@ Deno.serve(async req => {
    return new Response(JSON.stringify(state),{headers});
   }
   const profile=await read("profile");
+  if(b.action==="health") {
+   const products=await read("products");
+   return new Response(JSON.stringify({currency:profile.currency,services:Array.isArray(products)?products.length:null,order_confirmation_required:profile.towFactor===true || profile.towFactor==="true",provider_2fa:profile.provider_2fa||null}),{headers});
+  }
   if(b.action==="sync") {
    if(profile.currency!=="USD")throw Error("Supplier account currency changed; sync stopped");
    const products=await read("products");
@@ -38,7 +43,19 @@ Deno.serve(async req => {
    if(staged.error)throw Error(staged.error.message);
    const applied=await db.rpc("f90_brand_apply",{});
    if(applied.error)throw Error(applied.error.message);
-   return new Response(JSON.stringify(applied.data),{headers});
+   let media={updated:0,missing:[] as string[],error:""};
+   try {
+    const response=await fetch("https://api.brand-one-card.com/products",{redirect:"error",signal:AbortSignal.timeout(30000)});
+    if(!response.ok)throw Error("Supplier image catalog unavailable");
+    const storefront=await response.json();
+    const prepared=productPresentation(products,storefront.products);
+    const saved=await db.rpc("f90_brand_present",{p_payload:{products:prepared.products}});
+    if(saved.error)throw Error(saved.error.message);
+    media={updated:saved.data.products,missing:prepared.missing,error:""};
+   } catch(e) {media.error=String(e.message||e).slice(0,180);}
+   const current=await db.from("f90_providers").select("config").eq("id",p.data.id).single();
+   await db.from("f90_providers").update({config:{...current.data?.config,sync_error:null,media_sync:media}}).eq("id",p.data.id);
+   return new Response(JSON.stringify({...applied.data,media}),{headers});
   }
   if(b.action==="audit") {
    const products=await read("products");

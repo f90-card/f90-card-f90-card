@@ -1,0 +1,32 @@
+/* Supplier image proportions and tile shapes, scoped to this catalog. */
+#mainContent .image-grid.f90-brand-grid {
+  grid-template-columns:repeat(var(--bc-phone-cols,3),minmax(0,1fr));
+  gap:16px 8px; align-items:start; margin:16px auto 8px;max-width:1062px;
+}
+#mainContent .image-grid .image-tile.f90-brand-card {
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  width:100%;min-width:0;aspect-ratio:auto;overflow:visible;
+  padding:0;border:0!important;border-radius:0;background:transparent!important;
+  box-shadow:none!important;text-align:center;text-decoration:none;transform:none;
+}
+#mainContent .f90-brand-card .f90-brand-card-art {
+  display:grid;place-items:center;position:relative;overflow:hidden;
+  width:min(100%,var(--bc-width,100%));max-width:100%;
+  aspect-ratio:var(--bc-ratio,1);border-radius:var(--bc-radius,22%);
+  background:transparent;box-shadow:none;transition:transform .18s ease;
+}
+#mainContent .f90-brand-card .f90-brand-card-art img {
+  display:block;width:var(--bc-image-pct,100%);height:var(--bc-height,100%);
+  max-width:100%;max-height:100%;aspect-ratio:auto;
+  object-fit:var(--bc-fit,contain);border-radius:0;background:transparent;
+  filter:none!important;opacity:1!important;
+}
+#mainContent .image-grid .f90-brand-card .tile-caption {
+  display:block;min-height:0;margin:0;padding:0 2px;border:0;
+  font-size:12px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;color:var(--text);
+}
+#mainContent .f90-brand-card.refilling .refill-badge {inset:auto 6px 32px;}
+@media(min-width:480px){#mainContent .image-grid.f90-brand-grid{grid-template-columns:repeat(var(--bc-phone-cols,4),minmax(0,1fr));}}
+@media(min-width:768px){#mainContent .image-grid.f90-brand-grid{grid-template-columns:repeat(var(--bc-desktop-cols,5),minmax(0,1fr));gap:22px 12px;}}
+@media(hover:hover) and (pointer:fine){#mainContent .f90-brand-card:hover .f90-brand-card-art{transform:translateY(-4px);}}
+@media(prefers-reduced-motion:reduce){#mainContent .f90-brand-card .f90-brand-card-art{transition:none;}}
