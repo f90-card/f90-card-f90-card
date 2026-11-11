@@ -34,3 +34,12 @@ test('application uses supplier grid and does not invent an account field for ke
  assert.ok(checkout.document.getElementById('checkoutForm'));
  assert.equal(checkout.document.querySelector('[name="customer_account_id"]'),null);checkout.cleanup();
 });
+
+test('category artwork retains its original proportions while only new supplier products are round',()=>{
+ const item={presentation:{supplier_card:{image:{width:588,height:1000}}}};
+ assert.match(cards.style(item,'category'),/--bc-ratio:0.588/);
+ assert.match(cards.style(item,'category'),/--bc-radius:22%/);
+ const css=require('node:fs').readFileSync(require('node:path').join(__dirname,'../f90-clean-circles.css'),'utf8');
+ assert.doesNotMatch(css,/\.image-tile/);
+ assert.match(css,/\.f90-brand-product/);
+});
