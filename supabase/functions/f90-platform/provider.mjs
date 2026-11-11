@@ -313,8 +313,13 @@ export async function callProvider(
     if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا", provider.adapter === "shihab" && action === "add");
     let data;
     try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة المورّد غير مفهومة", action === "add"); }
-    if (String(data?.status || "").toLowerCase() === "error" || data?.error)
-      throw new ProviderError("رفض المورّد الطلب، تحقق من الصلاحيات");
+    if (String(data?.status || "").toLowerCase() === "error" || data?.error) {
+      const messages={123:"رفض المورّد عنوان IP لخادم الاتصال. راجع قائمة عناوين الخوادم المسموحة لدى المورّد.",121:"مفتاح المورّد غير صحيح أو ملغى.",122:"المورّد لم يسمح باستخدام API لهذا الحساب.",120:"مفتاح المورّد مطلوب.",111:"وصل الاتصال إلى حد الطلبات لدى المورّد؛ حاول بعد دقيقة.",108:"الحساب لدى المورّد يطلب تأكيد الشراء؛ راجع إعداداته.",100:"رصيد حساب المورّد غير كافٍ."};
+      const code=Number(data?.code),error=new ProviderError(messages[code]||"رفض المورّد الطلب، تحقق من الصلاحيات");
+      error.publicMessage=messages[code]||"رفض المورّد الطلب، تحقق من الصلاحيات";
+      error.supplierCode=Number.isFinite(code)?code:null;
+      throw error;
+    }
     if (yassen && action === "add") {
       if (data?.status !== "OK" || !data?.data?.order_id)
         throw new ProviderError("نتيجة إرسال الطلب تحتاج مراجعة", true);

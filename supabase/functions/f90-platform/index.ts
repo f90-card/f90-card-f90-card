@@ -120,6 +120,7 @@ function out(data: unknown, status = 200) {
   });
 }
 function fail(e: any) {
+  if(e instanceof ProviderError && e.publicMessage)return new Response(JSON.stringify({error:{code:"F90_PROVIDER",message:e.publicMessage}}),{status:400,headers:{...cors,"Content-Type":"application/json"}});
   const code =
     Object.keys(errors).find((c) => String(e?.message).includes(c)) ||
     e.code ||
@@ -647,6 +648,12 @@ async function dns(host: string) {
 }
 async function providerAction(id: string, action: string, args: any = {}) {
   const { p, secret } = await provider(id, ["services", "balance", "status", "content"].includes(action));
+  if(p.adapter==="brand_one") {
+    const response=await fetch(url+"/functions/v1/f90-brand-one",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),"x-region":"ap-south-1"},body:JSON.stringify({action:"bridge",operation:action,args}),signal:AbortSignal.timeout(40000)});
+    const result=await response.json();
+    if(!response.ok){const error=new ProviderError("تعذّر اتصال المورّد عبر خادم الربط",action==="add" && result.uncertain!==false);error.publicMessage=typeof result.error==="string"?result.error.slice(0,220):"تعذّر اتصال المورّد عبر خادم الربط";throw error;}
+    return result.data;
+  }
   return callProvider(p, secret, action, args, fetch, dns);
 }
 async function syncShihab() {
@@ -928,6 +935,7 @@ function cleanCommerce(raw: any, existing: any = {}, designer = false) {
   }
   const result: any = {
     ...(existing.supplier_catalog === "brand_one" ? {supplier_catalog:"brand_one",supplier_card:existing.supplier_card} : {}),
+    ...(existing.image_policy ? {image_policy:existing.image_policy} : {}),
     currency_pricing: cleanedCurrencyPricing,
     type: c.type === "quantity" ? "quantity" : "fixed",
     availability: c.availability === "refilling" ? "refilling" : "available",
@@ -2791,13 +2799,21 @@ Deno.serve(async (req: Request) => {
       return out(action==="i18n.worker.claim"?await rpc("f90_i18n_claim",{}):await rpc("f90_i18n_complete",{p_lease:uuid(payload.lease_id),p_rows:payload.rows}));
     }
     // Production financial actions enabled on explicit owner request, 2026-10-20.
-    if (action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync" || action === "shihab.audit.content" || action === "shihab.details") {
+    if (action === "provider.audit" || action === "worker" || action === "smm.catalog" || action === "shihab.audit" || action === "shihab.sync" || action === "shihab.audit.content" || action === "shihab.details") {
       const token = req.headers.get("x-f90-worker");
       if (
         !token ||
         !(await rpc("f90_worker_authorized", { p_hash: await hash(token) }))
       )
         throw new AppError("F90_AUTH");
+      if (action === "provider.audit") {
+        const id=uuid(b.provider_id),result:any={};
+        for(const operation of ["balance","services"]){
+          try {const data=await providerAction(id,operation);result[operation]={ok:true,...(operation==="services"?{count:Array.isArray(data)?data.length:null}:{currency:data?.currency})};}
+          catch(e){result[operation]={ok:false,error:String(e.message||e).slice(0,300),type:e.name,supplier_code:e.supplierCode};}
+        }
+        return out(result);
+      }
       if (action === "shihab.audit" && b.order_uuid) {
         const result=await providerAction(SHIHAB_ID,"status",{order:uuid(b.order_uuid),by_uuid:true});
         return out({found:!!result,status:result?.status || null});

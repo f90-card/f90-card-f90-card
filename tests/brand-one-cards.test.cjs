@@ -1,16 +1,16 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const cards=require('../f90-brand-one-cards.js');
-test('supplier portrait images retain their actual aspect ratio and have no extra F90 frame',()=>{
+test('supplier cards use a clean circular image even with old portrait metadata',()=>{
  const item={name:'Jawaker',commerce:{supplier_card:{image:{width:588,height:1000}}}};
  const html=cards.render(item,'product',{href:'#/product/7',image:'<img src="original.png">'});
- assert.match(html,/--bc-ratio:0.588/);assert.match(html,/original.png/);
+ assert.match(html,/--bc-ratio:1/);assert.match(html,/original.png/);
  assert.doesNotMatch(html,/f90-flip|f90-product-tile/);
 });
-test('supplier circle size, image fit and image percentage are preserved',()=>{
+test('supplier card dimensions use the universal circular layout',()=>{
  const item={commerce:{supplier_card:{image_tile:{all:{shape:'circle',widthCm:2.5,heightCm:2.5,imagePct:90,fit:'contain'}}}}};
  assert.match(cards.style(item,'product'),/--bc-radius:50%/);
- assert.match(cards.style(item,'product'),/--bc-width:2.5cm/);
- assert.match(cards.style(item,'product'),/--bc-image-pct:90%/);
+ assert.match(cards.style(item,'product'),/--bc-width:100%/);
+ assert.match(cards.style(item,'product'),/--bc-image-pct:100%/);
 });
 test('supplier category remains browsable while unavailable products cannot start checkout',()=>{
  const item={name:'قسم',presentation:{},commerce:{}};

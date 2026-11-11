@@ -40,6 +40,7 @@ BEGIN
    updated:=updated+1;
   ELSE
    c:=jsonb_build_object('type',CASE WHEN src->>'product_type'='amount' THEN 'quantity' ELSE 'fixed' END,'fulfillment','automatic','supplier_catalog','brand_one','supplier_available',coalesce(src->'available','false'),'availability',CASE WHEN src->>'available'='true' THEN 'available' ELSE 'refilling' END,'unit_quantity',unit,'pack_quantity',1,'quantity_min',minq,'quantity_max',maxq,'quantity_step',1,'prices',jsonb_build_object('USD',sale_price),'fields',fields,'delivery_time','تُرسل الطلبات تلقائيًا، ومدة التنفيذ حسب الخدمة لدى المورد','expected_minutes',0,'pricing_tiers','[]'::jsonb);
+   IF provider.config->>'media_policy'='clean_circle' THEN c:=c||jsonb_build_object('image_policy','clean_circle','supplier_card',jsonb_build_object('image',jsonb_build_object('width',512,'height',512),'image_tile',jsonb_build_object('all',jsonb_build_object('shape','circle','fit','contain','imagePct',100)))); END IF;
    INSERT INTO public.products(category_id,name,slug,description,price,currency,image_url,commerce,is_active,sort_order)
    VALUES(cid,left(regexp_replace(src->>'name','(?i)(brand[- ]?one[- ]?card|براند ون كارد)','','g'),200),'f90-brand-one-service-'||item.source_id,coalesce(src->>'description',''),sale_price,'USD',(SELECT image_url FROM public.categories WHERE id=cid),c,true,0) RETURNING id INTO pid;
    INSERT INTO public.f90_product_internal(product_id,provider_id,provider_service,cost_usd,auto_margin) VALUES(pid,provider.id,item.source_id,cost,true);

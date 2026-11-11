@@ -1,3 +1,4 @@
+import { callProvider } from "./provider.mjs";
 import { productPresentation } from "./media.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {auth:{persistSession:false}});
@@ -6,8 +7,9 @@ Deno.serve(async req => {
  try {
   const token=req.headers.get("x-f90-worker")||"";
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)))).map(n=>n.toString(16).padStart(2,"0")).join("");
-  const auth=await db.rpc("f90_worker_authorized",{p_hash:hash});
-  if(!token||auth.error||!auth.data)return new Response('{}',{status:403,headers});
+  const internal=req.headers.get("authorization")==="Bearer "+Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const auth=internal?{data:true,error:null}:await db.rpc("f90_worker_authorized",{p_hash:hash});
+  if((!internal&&!token)||auth.error||!auth.data)return new Response('{}',{status:403,headers});
   const b=await req.json();
   const p=await db.from("f90_providers").select("*").eq("endpoint","https://api.brand-one-card.com").single();
   if(p.error)throw Error(p.error.message);
@@ -18,6 +20,12 @@ Deno.serve(async req => {
    const data=await response.json();
    if(!response.ok||String(data?.status||"").toUpperCase()==="ERROR")throw Error("Supplier refused: "+JSON.stringify({status:response.status,code:data.code,msg:data.msg}));
    return data;
+  }
+  if(b.action==="bridge") {
+   if(!internal||!["services","balance","status","add"].includes(b.operation))return new Response('{}',{status:403,headers});
+   if(b.operation==="add" && (!p.data.is_enabled || !p.data.config?.automatic_orders_enabled || p.data.config?.disconnected || p.data.config?.archived_at))throw Error("المورّد غير جاهز للطلبات");
+   const data=await callProvider(p.data,secret.data,b.operation,b.args||{},fetch);
+   return new Response(JSON.stringify({data}),{headers});
   }
   if(b.action==="tree") {
    let state=(await db.rpc("f90_brand_stage",{})).data;
@@ -66,5 +74,5 @@ Deno.serve(async req => {
   return new Response('{}',{status:400,headers});
  } catch(e) {
   await db.from("f90_providers").update({config: await (async()=>{const r=await db.from("f90_providers").select("config").eq("adapter","brand_one").single();return {...r.data?.config,sync_state:"error",sync_error:String(e.message||e).slice(0,240)};})()}).eq("adapter","brand_one");
-  return new Response(JSON.stringify({error:String(e.message||e)}),{status:502,headers}); }
+  return new Response(JSON.stringify({error:String(e.message||e),uncertain:typeof e.uncertain==="boolean"?e.uncertain:null}),{status:502,headers}); }
 });

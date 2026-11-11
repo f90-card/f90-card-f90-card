@@ -1,0 +1,406 @@
+// Pure adapter helpers shared by the Edge Function and Node integration tests.
+import { shihabStatus } from "./shihab.mjs";
+export class ProviderError extends Error {
+  constructor(message, uncertain = false) {
+    super(message);
+    this.uncertain = uncertain;
+  }
+}
+export function publicAddress(ip) {
+  const x = ip.toLowerCase();
+  if (x.includes(":"))
+    return !(/^(::|fc|fd|fe[89ab]|ff)/.test(x) || x.startsWith("::ffff:"));
+  const a = x.split(".").map(Number);
+  if (a.length !== 4 || a.some((n) => !Number.isInteger(n) || n < 0 || n > 255))
+    return false;
+  return !(
+    a[0] === 0 ||
+    a[0] === 10 ||
+    a[0] === 127 ||
+    a[0] >= 224 ||
+    (a[0] === 169 && a[1] === 254) ||
+    (a[0] === 172 && a[1] >= 16 && a[1] <= 31) ||
+    (a[0] === 192 && [0, 168].includes(a[1])) ||
+    (a[0] === 100 && a[1] >= 64 && a[1] <= 127) ||
+    (a[0] === 198 && [18, 19].includes(a[1]))
+  );
+}
+export function endpointURL(value) {
+  let u;
+  try {
+    u = new URL(value);
+  } catch {
+    throw new ProviderError("عنوان المورّد غير صحيح");
+  }
+  if (
+    u.protocol !== "https:" ||
+    u.username ||
+    u.password ||
+    u.hash ||
+    (u.port && u.port !== "443") ||
+    /^(localhost|.*\.local|.*\.internal)$/i.test(u.hostname)
+  )
+    throw new ProviderError("استخدم عنوان HTTPS عامًا للمورّد");
+  if (
+    (u.hostname.includes(":") || /^\d+\./.test(u.hostname)) &&
+    !publicAddress(u.hostname.replace(/[\[\]]/g, ""))
+  )
+    throw new ProviderError("عنوان المورّد غير مسموح");
+  return u;
+}
+export function f90SelfEndpoint(value) {
+  const host = endpointURL(value).hostname.toLowerCase();
+  return ["www.f90card.online", "f90card.online", "f90-card-acceptance.pages.dev",
+    "ogkipkavlywgwhtomoca.supabase.co"].includes(host) || host.endsWith(".f90-card-acceptance.pages.dev");
+}
+export function normalizeService(s) {
+  if (!s || typeof s !== "object" || s.available === false) return null;
+  // Omega's product API uses qty_values and product_type, and prices one
+  // product unit. SMM panels conventionally quote per 1000 units.
+  const omega = s.product_type != null || s.qty_values != null;
+  const productType = String(s.product_type ?? "").toLowerCase();
+  // A known empty stock must not be offered as a purchasable product.
+  // Unknown stock is deliberately not treated as zero.
+  if (omega && s.stock != null && Number(s.stock) === 0) return null;
+  const rate = Number(s.rate ?? s.price);
+  // Yassen prices amount products per one item. Quote very cheap products
+  // per 1,000/1,000,000 so the storefront's two-decimal price stays useful.
+  const scale = s._f90_yassen === true && rate < 0.00001 ? 1000000 :
+    s._f90_yassen === true && rate < 0.01 ? 1000 : 1;
+  const allowed = Array.isArray(s.qty_values) ? s.qty_values.map(Number) : null;
+  const min = Number(s.min ?? s.qty_values?.min ?? (allowed?.length ? Math.min(...allowed) : 1)),
+    rawMax = Number(s.max ?? s.qty_values?.max ??
+      (allowed?.length ? Math.max(...allowed) : omega && productType !== "amount" ? 1 : 1000000)),
+    // Yassen can advertise a maximum larger than F90's 1-billion checkout cap.
+    // Clamp it instead of rejecting a valid, available supplier service.
+    // Never allow quantities greater than F90's existing checkout limit.
+    max = s._f90_yassen === true && Number.isFinite(rawMax)
+      ? Math.min(rawMax, 1000000000) : rawMax,
+    unit = Number(s.unit_quantity ?? (omega ? scale : 1000));
+  if (
+    (s.service == null && s.id == null) ||
+    !Number.isFinite(rate) ||
+    rate <= 0 ||
+    !Number.isSafeInteger(min) ||
+    !Number.isSafeInteger(max) ||
+    !Number.isSafeInteger(unit) ||
+    unit < 1 ||
+    unit > 1000000000 ||
+    min < 1 ||
+    max < min ||
+    max > 1000000000 ||
+    (allowed && (!allowed.length || allowed.some((v) => !Number.isSafeInteger(v) || v < 1)))
+  )
+    return null;
+  const params = Array.isArray(s.params)
+    ? s.params.filter((v) => typeof v === "string" && v.trim())
+      .slice(0, 20).map((v) => v.trim().slice(0, 120))
+    : [];
+  const name = String(s.name ?? "").trim();
+  if (!name) return null;
+  return {
+    id: String(s.service ?? s.id),
+    name: name.slice(0, 200),
+    category: String(s.category_name ?? s.category ?? "").slice(0, 200),
+    rate: rate * scale, min, max,
+    type: String(s.product_type ?? s.type ?? "Default"),
+    unit_quantity: unit,
+    params,
+    allowed_quantities: allowed,
+    omega,
+    ...(s._f90_yassen === true && typeof s.category_img === "string" && /^https:\/\//.test(s.category_img) ? { image_url: s.category_img.slice(0,2000) } : {}),
+    ...(s._f90_merchant === true ? {
+      fields: Array.isArray(s.fields) ? s.fields : [],
+      quantity_step: s.quantity_step || 1,
+      pack_quantity: s.pack_quantity || 1,
+      image_url: s.image_url || "",
+      description: s.description || "",
+      availability: s.availability,
+    } : {}),
+    raw: s,
+  };
+}
+export function recoveryRedirect(value, origins) {
+  const redirect = new URL(value);
+  const fragment = redirect.hash;
+  redirect.hash = "";
+  endpointURL(redirect.href);
+  if (!Array.isArray(origins) || !origins.includes(redirect.origin))
+    throw new ProviderError("رابط العودة غير معتمد للمتجر");
+  redirect.hash = fragment;
+  return redirect;
+}
+export function normalizeStatus(data, total, quantity) {
+  const s = String(data.status ?? data.state ?? "")
+    .toLowerCase()
+    .replace(/[ _-]/g, "");
+  if (["completed", "complete", "success", "successful"].includes(s))
+    return { status: "completed" };
+  if (["canceled", "cancelled", "failed", "rejected", "error"].includes(s))
+    return { status: "failed" };
+  if (s === "partial") {
+    const remains = Number(data.remains);
+    if (!Number.isFinite(remains) || remains < 0 || remains > quantity)
+      return { status: "review", note: "نتيجة جزئية تحتاج مراجعة الكمية" };
+    return {
+      status: "partial",
+      refund: Math.round(((Number(total) * remains) / quantity) * 1e6) / 1e6,
+    };
+  }
+  return { status: "processing" };
+}
+/** @param {null|((hostname:string)=>Promise<string[]>)} resolver */
+export async function callProvider(
+  provider,
+  key,
+  action,
+  args = {},
+  fetcher = fetch,
+  resolver = null,
+) {
+  const u = endpointURL(provider.endpoint);
+  const configuredTimeout = Number(provider.config?.request_timeout_ms ?? 20000);
+  const timeout = Number.isSafeInteger(configuredTimeout) &&
+    configuredTimeout >= 5000 && configuredTimeout <= 30000
+    ? configuredTimeout : 20000;
+  if (resolver && !u.hostname.includes(":") && !/^\d+\./.test(u.hostname)) {
+    const addresses = await resolver(u.hostname);
+    if (!addresses.length || addresses.some((x) => !publicAddress(x)))
+      throw new ProviderError("عنوان الشبكة الخاص بالمورّد غير مسموح");
+  }
+  const headers = { Accept: "application/json" };
+  if (provider.adapter === "f90_merchant") {
+    if (u.search) throw new ProviderError("رابط F90 لا يقبل معاملات أو مفاتيح في العنوان");
+    if (!["services", "balance", "status", "add"].includes(action))
+      throw new ProviderError("عملية F90 غير مدعومة");
+    if (action === "add" && f90SelfEndpoint(u.href))
+      throw new ProviderError("ربط المتجر بنفسه للفحص والاستيراد كمسودات فقط؛ الطلبات الآلية لنفس المتجر ممنوعة");
+    const useGet=provider.config?.f90_transport==="get";
+    const requestGET=async (path, searchParams=null) => {
+      const url=new URL(path,u.origin);
+      if(searchParams)for(const [name,value] of Object.entries(searchParams))url.searchParams.set(name,String(value));
+      let response,data,raw;
+      try{
+        response=await fetcher(url,{method:"GET",redirect:"manual",
+          headers:{Accept:"application/json","api-token":key},
+          signal:AbortSignal.timeout(timeout)});
+        raw=await response.text();
+      }catch{throw new ProviderError("تعذّر الاتصال بواجهة F90 GET");}
+      if(raw.length>15000000)throw new ProviderError("استجابة F90 GET كبيرة جدًا");
+      try{data=JSON.parse(raw)}catch{throw new ProviderError("استجابة F90 GET ليست JSON صالحًا")}
+      if(!response.ok||data?.error){
+        const code=String(data?.error?.code||"");
+        if(code==="F90_AUTH")throw new ProviderError("مفتاح التاجر غير صحيح أو ملغى");
+        if(code==="F90_FORBIDDEN")throw new ProviderError("صلاحيات حساب التاجر غير كافية");
+        throw new ProviderError("رفضت واجهة F90 GET الطلب");
+      }
+      if(!Object.hasOwn(data||{},"data"))throw new ProviderError("استجابة F90 GET لا تحتوي على data");
+      return data.data;
+    };
+    const request = async (payload, write = false) => {
+      let response, raw, data;
+      try {
+        response = await fetcher(u, { method: "POST", redirect: "manual",
+          headers: { ...headers, "Content-Type": "application/json", "x-f90-key": key },
+          body: JSON.stringify(payload), signal: AbortSignal.timeout(timeout) });
+        raw = await response.text();
+      } catch { throw new ProviderError("تعذّر تأكيد الاتصال بواجهة F90", write); }
+      if (raw.length > 5000000) throw new ProviderError("استجابة F90 أكبر من الحد", write);
+      try { data = JSON.parse(raw); }
+      catch { throw new ProviderError("استجابة F90 ليست JSON صالحًا", write); }
+      // Never forward upstream messages, which may contain secrets or client data.
+      if (!response.ok || data?.error) {
+        const code = String(data?.error?.code || "");
+        const known = { F90_AUTH: "مفتاح التاجر غير صحيح أو ملغى", F90_FORBIDDEN: "صلاحيات مفتاح التاجر غير كافية",
+          F90_INSUFFICIENT_BALANCE: "رصيد حساب التاجر لدى F90 غير كافٍ",
+          F90_PRICE_CHANGED: "تغيّر سعر F90؛ حدّث الأسعار قبل الطلب",
+          F90_IDEMPOTENCY_CONFLICT: "مرجع الطلب مستخدم ببيانات مختلفة" };
+        throw new ProviderError(known[code] || "رفضت واجهة F90 الطلب",
+          write && (response.status >= 500 || (response.status >= 300 && response.status < 400) || response.status === 408));
+      }
+      if (!Object.hasOwn(data || {}, "data")) throw new ProviderError("عقد استجابة F90 غير متوافق", write);
+      return data.data;
+    };
+    if (action === "services") {
+      if(useGet){
+        const result=await requestGET("/client/api/products");
+        const items=result?.products;
+        if(!Array.isArray(items))throw new ProviderError("قائمة F90 GET غير صالحة");
+        return items.map(item=>({...item,_f90_merchant:true}));
+      }
+      const [items, categories] = await Promise.all([request({ action }), request({ action: "categories" })]);
+      if (!Array.isArray(items) || !Array.isArray(categories)) throw new ProviderError("كتالوج F90 غير صالح");
+      const names = new Map(categories.map(c => [c.id, c.name]));
+      return items.map(item => ({ ...item, _f90_merchant: true, category_name: names.get(item.category) || item.category }));
+    }
+    if (action === "balance") return useGet?requestGET("/client/api/profile"):request({ action });
+    if (action === "status") {
+      const data=useGet
+        ? (await requestGET("/client/api/check",{orders:JSON.stringify([args.order])}))?.[0]
+        : (await request({ action, order: args.order }))?.order;
+      if(!data?.id&&!data?.order_id)throw new ProviderError("حالة طلب F90 غير واضحة");
+      if(typeof data.status!=="string")throw new ProviderError("نتيجة حالة F90 غير صالحة");
+      return {...data,status:data.status==="refunded"?"failed":data.status};
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(String(args.client_reference || "")) ||
+        !Number.isSafeInteger(Number(args.quantity)) || Number(args.quantity) < 1 ||
+        !Number.isFinite(Number(args.expected_total_usd)) || Number(args.expected_total_usd) <= 0 ||
+        !args.fields || typeof args.fields !== "object" || Array.isArray(args.fields))
+      throw new ProviderError("مرجع الطلب أو تكلفته أو حقوله غير صالحة لواجهة F90");
+    const data = await request({ action: "checkout", product_id: args.service,
+      quantity: Number(args.quantity), fields: args.fields, idempotency_key: args.client_reference,
+      expected_total_usd: Number(args.expected_total_usd) }, true);
+    if (!data?.id) throw new ProviderError("لم تؤكد F90 رقم الطلب", true);
+    return { order_id: data.id, status: data.status };
+  }
+  if (provider.adapter === "omega" || provider.adapter === "yassen" || provider.adapter === "shihab" || provider.adapter === "brand_one") {
+    const yassen = ["yassen","shihab","brand_one"].includes(provider.adapter);
+    if (provider.adapter === "brand_one" && u.origin !== "https://api.brand-one-card.com") throw new ProviderError("عنوان المورد غير معتمد");
+    if (provider.adapter === "shihab" && u.origin !== "https://api.shihabcard.com")
+      throw new ProviderError("عنوان API شهاب غير معتمد");
+    if (provider.adapter === "yassen" && u.origin !== "https://api.yassen-card.com")
+      throw new ProviderError("عنوان API ياسين الفعلي هو https://api.yassen-card.com");
+    if (yassen && action === "add") {
+      if (!/^[0-9]+$/.test(String(args.service ?? "")) ||
+          !Number.isSafeInteger(Number(args.quantity)) || Number(args.quantity) < 1 ||
+          !/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(String(args.client_reference ?? "")))
+        throw new ProviderError("بيانات الطلب لدى ياسين غير صالحة");
+    } else if (yassen && action === "status") {
+      if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(args.order ?? "")))
+        throw new ProviderError("معرّف طلب ياسين غير صالح");
+    } else if (["shihab","brand_one"].includes(provider.adapter) && action === "content") {
+      if (!/^[0-9]{1,100}$/.test(String(args.category ?? ""))) throw new ProviderError("معرّف قسم شهاب غير صالح");
+    } else if (!["services", "balance"].includes(action))
+      throw new ProviderError(yassen ? "عملية المورّد غير متاحة" : "طلبات أوميغا الآلية غير متاحة حتى تهيئة حقول المنتجات");
+    let path = "/client/api/products";
+    if (action === "balance") path = "/client/api/profile";
+    if (action === "status") path = "/client/api/check";
+    if (["shihab","brand_one"].includes(provider.adapter) && action === "content") path = `/client/api/content/${args.category}`;
+    if (action === "add") path = `/client/api/newOrder/${args.service}/params`;
+    const target = new URL(path, u.origin);
+    if (action === "status") target.searchParams.set("orders", `[${args.order}]`);
+    if (provider.adapter === "shihab" && action === "status" && args.by_uuid === true) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(args.order)))
+        throw new ProviderError("مرجع طلب شهاب غير صالح");
+      target.searchParams.set("uuid", "1");
+    }
+    if (action === "add") {
+      target.searchParams.set("qty", String(args.quantity));
+      target.searchParams.set("order_uuid", String(args.client_reference));
+      for (const [name, value] of Object.entries(args.params || {})) {
+        if (!name || name.length > 120 || ["qty", "order_uuid"].includes(name) ||
+            typeof value !== "string" || value.length > 500)
+          throw new ProviderError("حقول طلب ياسين غير صالحة");
+        target.searchParams.set(name, value);
+      }
+    }
+    const requestTarget = provider.adapter === "brand_one" && action === "add" ? new URL(target.origin + target.pathname) : target;
+    let response;
+    try {
+      response = await fetcher(requestTarget, {
+        method: provider.adapter === "brand_one" && action === "add" ? "POST" : "GET",
+        headers: { Accept: "application/json", "api-token": key, ...(provider.adapter === "brand_one" && action === "add" ? {"Content-Type":"application/json"} : {}) },
+        ...(provider.adapter === "brand_one" && action === "add" ? {body:JSON.stringify(Object.fromEntries(target.searchParams))} : {}),
+        redirect: "manual",
+        signal: AbortSignal.timeout(timeout),
+      });
+    } catch {
+      throw new ProviderError("تعذر الاتصال بالمورّد", action === "add");
+    }
+    if (!response.ok || response.status >= 300)
+      throw new ProviderError("رفض المورّد الاتصال، تحقق من الرابط والتوكن", action === "add" && response.status >= 500);
+    const raw = await response.text();
+    if (raw.length > 2000000) throw new ProviderError("استجابة المورّد كبيرة جدًا", provider.adapter === "shihab" && action === "add");
+    let data;
+    try { data = JSON.parse(raw); } catch { throw new ProviderError("استجابة المورّد غير مفهومة", action === "add"); }
+    if (String(data?.status || "").toLowerCase() === "error" || data?.error) {
+      const messages={123:"رفض المورّد عنوان IP لخادم الاتصال. راجع قائمة عناوين الخوادم المسموحة لدى المورّد.",121:"مفتاح المورّد غير صحيح أو ملغى.",122:"المورّد لم يسمح باستخدام API لهذا الحساب.",120:"مفتاح المورّد مطلوب.",111:"وصل الاتصال إلى حد الطلبات لدى المورّد؛ حاول بعد دقيقة.",108:"الحساب لدى المورّد يطلب تأكيد الشراء؛ راجع إعداداته.",100:"رصيد حساب المورّد غير كافٍ."};
+      const code=Number(data?.code),error=new ProviderError(messages[code]||"رفض المورّد الطلب، تحقق من الصلاحيات");
+      error.publicMessage=messages[code]||"رفض المورّد الطلب، تحقق من الصلاحيات";
+      error.supplierCode=Number.isFinite(code)?code:null;
+      throw error;
+    }
+    if (yassen && action === "add") {
+      if (data?.status !== "OK" || !data?.data?.order_id)
+        throw new ProviderError("نتيجة إرسال الطلب تحتاج مراجعة", true);
+      // Preserve an explicitly returned recipient nickname, if Yassen supplies one.
+      // Do not use generic product names or infer names from account IDs.
+      const nickname = ["account_name","player_name","nickname","username",
+        "user_name","character_name","recipient_name","in_game_name"]
+        .map((key) => data.data[key]).find((value) => typeof value === "string" &&
+          value.trim().length >= 2 && value.trim().length <= 120 && !/^[0-9]+$/.test(value.trim()));
+      return { order_id: data.data.order_id, status: data.data.status,
+        ...(nickname ? { account_name: nickname.trim() } : {}) };
+    }
+    if (yassen && action === "status") {
+      if (provider.adapter === "shihab" && args.by_uuid === true && data?.status === "OK" &&
+          Array.isArray(data.data) && data.data.length === 0) return null;
+      if (data?.status !== "OK" || !Array.isArray(data.data) || data.data.length !== 1)
+        throw new ProviderError("حالة طلب ياسين غير واضحة");
+      if (provider.adapter === "shihab") {
+        const row=data.data[0];
+        const returnedId=row.order_id ?? row.id;
+        if (args.by_uuid === true && (!returnedId || (row.order_uuid != null && String(row.order_uuid)!==String(args.order))))
+          throw new ProviderError("مرجع نتيجة شهاب لا يطابق الطلب");
+        if (args.by_uuid !== true && returnedId != null && String(returnedId)!==String(args.order))
+          throw new ProviderError("معرّف نتيجة شهاب لا يطابق الطلب");
+        return {...row, supplier_status:String(row.status??""), status:shihabStatus(row.status)};
+      }
+      return { ...data.data[0], status: data.data[0].status === "reject" ? "rejected" :
+        data.data[0].status === "accept" ? "completed" : "processing" };
+    }
+    if (action === "services") {
+      const items = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data :
+        Array.isArray(data?.data?.products) ? data.data.products :
+        Array.isArray(data?.products) ? data.products : Array.isArray(data?.result) ? data.result : data;
+      return yassen && Array.isArray(items)
+        ? items.map((item) => ({ ...item, _f90_yassen: true })) : items;
+    }
+    return data;
+  }
+  let body;
+  if (provider.adapter === "smm") {
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    body = new URLSearchParams({
+      key,
+      action,
+      ...Object.fromEntries(
+        Object.entries(args).map(([k, v]) => [k, String(v)]),
+      ),
+    });
+  } else {
+    headers["Content-Type"] = "application/json";
+    headers.Authorization = `Bearer ${key}`;
+    body = JSON.stringify({ action, ...args });
+  }
+  let response;
+  try {
+    response = await fetcher(u, {
+      method: "POST",
+      headers,
+      body,
+      redirect: "manual",
+      signal: AbortSignal.timeout(timeout),
+    });
+  } catch {
+    throw new ProviderError("تعذّر تأكيد نتيجة المورّد", action === "add");
+  }
+  if (response.status >= 300 && response.status < 400)
+    throw new ProviderError("تحويل عنوان المورّد غير مسموح", action === "add");
+  // A server error after POST may still have created an upstream order.
+  if (!response.ok)
+    throw new ProviderError("رفض اتصال المورّد", action === "add");
+  const raw = await response.text();
+  if (raw.length > (provider.adapter === "smm" && action === "services" ? 15000000 : 2000000))
+    throw new ProviderError("استجابة المورّد أكبر من الحد", action === "add");
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new ProviderError("استجابة المورّد غير مفهومة", action === "add");
+  }
+  if (data?.error) throw new ProviderError("رفض المورّد تنفيذ الطلب");
+  return data;
+}
+
+

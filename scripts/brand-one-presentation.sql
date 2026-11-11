@@ -10,9 +10,9 @@ BEGIN
    IF image IS NULL OR image !~ '^https://api[.]brand-one-card[.]com/uploads/' THEN CONTINUE; END IF;
    card:=jsonb_build_object('image',coalesce(cat->'image','{}'),'display',coalesce(cat->'display','{}'),'source','brand_one','original_url',image,'public_slug',cat->>'public_slug');
    UPDATE f90_private.brand_categories SET source=source||jsonb_build_object('web',cat)||CASE WHEN nullif(cat->>'parent_source_id','') IS NOT NULL AND cat->>'parent_source_id'<>cat->>'source_id' THEN jsonb_build_object('parent_id',cat->>'parent_source_id') ELSE '{}'::jsonb END,image_url=image WHERE source_id=cat->>'source_id';
-   UPDATE public.categories SET image_url=image,
+   UPDATE public.categories SET image_url=CASE WHEN presentation->>'image_policy'='clean_circle' THEN public.categories.image_url ELSE image END,
     parent_id=coalesce((SELECT parent.id FROM public.categories parent WHERE parent.slug='f90-brand-one-cat-'||(cat->>'parent_source_id') AND parent.presentation->>'provider_id'=provider::text AND parent.id<>public.categories.id),parent_id),
-    presentation=presentation||jsonb_build_object('supplier_card',card),
+    presentation=presentation||jsonb_build_object('supplier_card',CASE WHEN presentation->>'image_policy'='clean_circle' THEN presentation->'supplier_card' ELSE card END),
     sort_order=coalesce((cat->>'sort_order')::integer,sort_order)
     WHERE slug='f90-brand-one-cat-'||(cat->>'source_id') AND presentation->>'provider_id'=provider::text;
    categories:=categories+1;
@@ -27,10 +27,10 @@ BEGIN
    IF pid IS NULL THEN RAISE EXCEPTION 'Unmapped supplier service'; END IF;
    card:=jsonb_build_object('image',coalesce(item->'image',old#>'{supplier_card,image}','{}'),'image_tile',coalesce(item->'image_tile','{}'),'source','brand_one','original_url',image,'image_source',item->>'image_source','public_id',item->>'public_id','category_slug',item->>'category_slug');
    UPDATE f90_private.brand_products SET source=source||jsonb_build_object('web',item) WHERE source_id=item->>'source_id';
-   UPDATE public.products SET image_url=image,name=coalesce(nullif(item->>'title',''),name),
+   UPDATE public.products SET image_url=CASE WHEN old->>'image_policy'='clean_circle' THEN public.products.image_url ELSE image END,name=coalesce(nullif(item->>'title',''),name),
     description=coalesce(nullif(item->>'description',''),description),
     sort_order=1000+coalesce((item->>'sort_order')::integer,position),
-    commerce=old||jsonb_build_object('supplier_catalog','brand_one','supplier_card',card)
+    commerce=old||jsonb_build_object('supplier_catalog','brand_one','supplier_card',CASE WHEN old->>'image_policy'='clean_circle' THEN old->'supplier_card' ELSE card END)
     WHERE id=pid;
    position:=position+1;changed:=changed+1;
   END LOOP;

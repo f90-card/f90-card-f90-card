@@ -7,7 +7,7 @@
  }
  window.F90GlobalFrame={apply(config,logo){
   const root=document.documentElement,o=config?.card_frame||{};
-  root.classList.toggle("f90-global-frame-on",o.enabled!==false);
+  root.classList.toggle("f90-global-frame-on",config?.catalog_cards?.show_frames!==false && o.enabled!==false);
   root.classList.toggle("f90-frame-no-logo",o.show_logo===false);
   const frame=imageUrl(o.image_url);
   // Backward compatibility: older admin saved an uploaded image alongside mode=soft.
