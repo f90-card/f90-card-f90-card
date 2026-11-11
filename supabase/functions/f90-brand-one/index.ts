@@ -37,6 +37,7 @@ Deno.serve(async req => {
   }
   if(b.action==="sync") {
    if(profile.currency!=="USD")throw Error("Supplier account currency changed; sync stopped");
+   if(profile.towFactor===true || profile.towFactor==="true")throw Error("Supplier purchase confirmation must be configured before automatic orders");
    const products=await read("products");
    if(!Array.isArray(products)||!products.length||new Set(products.map(x=>String(x.id))).size!==products.length)throw Error("Invalid supplier catalog");
    const staged=await db.rpc("f90_brand_stage",{p_products:products});

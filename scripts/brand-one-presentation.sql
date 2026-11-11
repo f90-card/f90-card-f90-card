@@ -9,8 +9,9 @@ BEGIN
    image:=cat->>'image_url';
    IF image IS NULL OR image !~ '^https://api[.]brand-one-card[.]com/uploads/' THEN CONTINUE; END IF;
    card:=jsonb_build_object('image',coalesce(cat->'image','{}'),'display',coalesce(cat->'display','{}'),'source','brand_one','original_url',image,'public_slug',cat->>'public_slug');
-   UPDATE f90_private.brand_categories SET source=source||jsonb_build_object('web',cat),image_url=image WHERE source_id=cat->>'source_id';
+   UPDATE f90_private.brand_categories SET source=source||jsonb_build_object('web',cat)||CASE WHEN nullif(cat->>'parent_source_id','') IS NOT NULL AND cat->>'parent_source_id'<>cat->>'source_id' THEN jsonb_build_object('parent_id',cat->>'parent_source_id') ELSE '{}'::jsonb END,image_url=image WHERE source_id=cat->>'source_id';
    UPDATE public.categories SET image_url=image,
+    parent_id=coalesce((SELECT parent.id FROM public.categories parent WHERE parent.slug='f90-brand-one-cat-'||(cat->>'parent_source_id') AND parent.presentation->>'provider_id'=provider::text AND parent.id<>public.categories.id),parent_id),
     presentation=presentation||jsonb_build_object('supplier_card',card),
     sort_order=coalesce((cat->>'sort_order')::integer,sort_order)
     WHERE slug='f90-brand-one-cat-'||(cat->>'source_id') AND presentation->>'provider_id'=provider::text;
