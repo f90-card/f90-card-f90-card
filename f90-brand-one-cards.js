@@ -6,7 +6,13 @@
   function isProduct(item) { return item?.commerce?.supplier_catalog === "brand_one"; }
   function meta(item, kind) { return (kind === "category" ? item.presentation : item.commerce)?.supplier_card || {}; }
   function style(item, kind) {
-    return "--bc-ratio:1;--bc-radius:50%;--bc-fit:contain;--bc-image-pct:100%;--bc-width:100%;--bc-height:100%";
+    if(kind === "product") return "--bc-ratio:1;--bc-radius:50%;--bc-fit:contain;--bc-image-pct:100%;--bc-width:100%;--bc-height:100%";
+    const m=meta(item,kind), tile=m.image_tile?.all || {}, image=m.image || {};
+    const width=finite(tile.widthCm,0,0.1,30),height=finite(tile.heightCm,0,0.1,30);
+    const knownSize=(width && height) || (Number(image.width)>0 && Number(image.height)>0);
+    const ratio=width && height ? width/height : knownSize ? finite(image.width,1,1,30000)/finite(image.height,1,1,30000) : "auto";
+    const radius=tile.shape==="circle" ? "50%" : tile.shape==="square" ? "0" : "22%";
+    return `--bc-ratio:${ratio};--bc-radius:${radius};--bc-fit:${tile.fit==="cover" ? "cover" : "contain"};--bc-image-pct:${finite(tile.imagePct,100,10,100)}%;--bc-width:${width ? width+"cm" : "100%"};--bc-height:${knownSize ? finite(tile.imagePct,100,10,100)+"%" : "auto"}`;
   }
   function gridStyle(category) {
     const display=category?.presentation?.supplier_card?.display || {};

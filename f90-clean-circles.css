@@ -1,41 +1,41 @@
 /* One unframed circular image per service/category. Captions remain outside. */
-:root #mainContent .image-grid .image-tile {
+:root #mainContent .image-grid .f90-brand-product {
  display:flex!important;flex-direction:column!important;align-items:center!important;
  gap:9px!important;padding:0!important;border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;aspect-ratio:auto!important;
  overflow:visible!important;transform:none!important;
 }
-:root #mainContent .image-grid .image-tile::before,
-:root #mainContent .image-grid .image-tile::after,
-:root #mainContent .image-grid .image-tile .f90-flip-inner::before,
-:root #mainContent .image-grid .image-tile .f90-flip-inner::after,
-:root #mainContent .image-grid .image-tile .f90-flip-face::before,
-:root #mainContent .image-grid .image-tile .f90-flip-face::after {content:none!important;display:none!important;}
-:root #mainContent .image-grid .image-tile .f90-flip-inner,
-:root #mainContent .image-grid .image-tile .f90-brand-card-art {
+:root #mainContent .image-grid .f90-brand-product::before,
+:root #mainContent .image-grid .f90-brand-product::after,
+:root #mainContent .image-grid .f90-brand-product .f90-flip-inner::before,
+:root #mainContent .image-grid .f90-brand-product .f90-flip-inner::after,
+:root #mainContent .image-grid .f90-brand-product .f90-flip-face::before,
+:root #mainContent .image-grid .f90-brand-product .f90-flip-face::after {content:none!important;display:none!important;}
+:root #mainContent .image-grid .f90-brand-product .f90-flip-inner,
+:root #mainContent .image-grid .f90-brand-product .f90-brand-card-art {
  position:relative!important;inset:auto!important;display:block!important;
  width:min(100%,160px)!important;max-width:100%!important;height:auto!important;
  aspect-ratio:1!important;margin:0 auto!important;padding:0!important;
  overflow:hidden!important;border:0!important;border-radius:50%!important;
  background:#fff!important;box-shadow:none!important;transform:none!important;
 }
-:root #mainContent .image-grid .image-tile .f90-flip-face {
+:root #mainContent .image-grid .f90-brand-product .f90-flip-face {
  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
  border:0!important;border-radius:50%!important;padding:0!important;background:transparent!important;
  transform:none!important;box-shadow:none!important;
 }
-:root #mainContent .image-grid .image-tile img {
+:root #mainContent .image-grid .f90-brand-product img {
  position:static!important;display:block!important;width:100%!important;height:100%!important;
  max-width:100%!important;max-height:100%!important;aspect-ratio:1!important;
  object-fit:contain!important;object-position:center!important;margin:0!important;
  padding:0!important;border:0!important;border-radius:50%!important;
  box-shadow:none!important;filter:none!important;transform:none!important;
 }
-:root #mainContent .image-grid .image-tile .tile-caption {
+:root #mainContent .image-grid .f90-brand-product .tile-caption {
  display:block!important;width:100%!important;min-height:2.6em!important;
  margin:0!important;padding:0 3px!important;border:0!important;border-radius:0!important;
  background:transparent!important;box-shadow:none!important;color:var(--text)!important;
  font-size:12px!important;line-height:1.4!important;font-weight:700!important;text-align:center!important;
 }
-:root #mainContent .image-grid .image-tile[hidden] {display:none!important;}
-@media(max-width:700px){:root #mainContent .image-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px 10px!important;}}
+:root #mainContent .image-grid .f90-brand-product[hidden] {display:none!important;}
+@media(max-width:700px){:root #mainContent .image-grid:has(.f90-brand-product){grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px 10px!important;}}
