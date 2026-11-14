@@ -1467,6 +1467,7 @@
           ["yassen", "Yassen Card API (api-token / GET)"],
           ["shihab", "شهاب كارد API (api-token / GET)"],
           ["brand_one", "Brand One Card API"],
+          ["salehcard", "Saleh Card API (api-token / GET)"],
         ],
         p?.adapter === "f90_merchant" && p?.config?.f90_transport === "get" ? "f90_merchant_get" : (p?.adapter || "smm"),
       )}${select(
@@ -1474,7 +1475,7 @@
         "عملة أسعار المورّد",
         S.rates.filter((r) => r.is_enabled).map((r) => [r.currency, r.name_ar]),
         p?.currency || "USD",
-      )}${p?.adapter === "brand_one" ? select("catalog_visibility","رؤية القسم وجميع خدمات المورد",[["public","ظاهر لجميع المستخدمين"],["manager","مخفي عن المستخدمين — مدير الموقع فقط"]],p.config?.catalog_visibility || "manager") : ""}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div id="f90MerchantProtocolGuide" class="admin-note" hidden><strong>بروتوكول F90 Merchant API v1:</strong> الرابط https://www.f90card.online/api/v1 · طريقة الطلب POST وJSON · مفتاح التاجر في x-f90-key · العملة USD. يمكن فحص الرصيد واستيراد الخدمات كمسودات، لكن يُحظر إرسال طلبات آلية لنفس المتجر لتجنّب الشراء الدائري. استخرج المفتاح من حساب تاجر موثق في «مفتاح ربط المتاجر»؛ لا تضعه في الرابط أو تشاركه.</div><div id="f90GetProtocolGuide" class="admin-note" hidden><strong>F90 Card API (api-token / GET):</strong> نفس مفتاح f90_live_ · الرابط https://www.f90card.online/api/v1 · الطلبات القرائية GET: /client/api/products و/client/api/profile و/client/api/check · الترويسة api-token · العملة USD. الشحن POST فقط، والربط بنفس المتجر للقراءة والمسودات دون طلبات تلقائية.</div><div id="f90YassenProtocolGuide" class="admin-note" hidden><strong>بروتوكول Yassen Card API:</strong> الرابط https://api.yassen-card.com · طلبات GET · المفتاح في api-token · استعراض المنتجات والرصيد، والشحن التلقائي عند السماح به بعد الفحص. لا يعمل مفتاح f90_live_ مع هذا البروتوكول.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
+      )}${p?.adapter === "brand_one" ? select("catalog_visibility","رؤية القسم وجميع خدمات المورد",[["public","ظاهر لجميع المستخدمين"],["manager","مخفي عن المستخدمين — مدير الموقع فقط"]],p.config?.catalog_visibility || "manager") : ""}${field("token", "مفتاح المورّد <small>اتركه فارغًا للإبقاء على المفتاح الحالي</small>", "password", "", 'autocomplete="new-password" ' + (p ? "" : "required"))}${field("margin_percent", "هامش الربح بالنسبة المئوية", "number", p?.margin_percent ?? 20, 'required min="0" max="10000" step="0.01"')}${field("request_timeout_ms", "مهلة الاتصال بالمللي ثانية (5,000–30,000)", "number", p?.config?.request_timeout_ms ?? 20000, 'required min="5000" max="30000" step="1000"')}${check("automatic_orders_enabled", "السماح بإرسال الطلبات الآلية بعد اختبار المحوّل", p?.config?.automatic_orders_enabled === true)}<div id="f90MerchantProtocolGuide" class="admin-note" hidden><strong>بروتوكول F90 Merchant API v1:</strong> الرابط https://www.f90card.online/api/v1 · طريقة الطلب POST وJSON · مفتاح التاجر في x-f90-key · العملة USD. يمكن فحص الرصيد واستيراد الخدمات كمسودات، لكن يُحظر إرسال طلبات آلية لنفس المتجر لتجنّب الشراء الدائري. استخرج المفتاح من حساب تاجر موثق في «مفتاح ربط المتاجر»؛ لا تضعه في الرابط أو تشاركه.</div><div id="f90GetProtocolGuide" class="admin-note" hidden><strong>F90 Card API (api-token / GET):</strong> نفس مفتاح f90_live_ · الرابط https://www.f90card.online/api/v1 · الطلبات القرائية GET: /client/api/products و/client/api/profile و/client/api/check · الترويسة api-token · العملة USD. الشحن POST فقط، والربط بنفس المتجر للقراءة والمسودات دون طلبات تلقائية.</div><div id="f90YassenProtocolGuide" class="admin-note" hidden><strong>بروتوكول Yassen Card API:</strong> الرابط https://api.yassen-card.com · طلبات GET · المفتاح في api-token · استعراض المنتجات والرصيد، والشحن التلقائي عند السماح به بعد الفحص. لا يعمل مفتاح f90_live_ مع هذا البروتوكول.</div><div id="f90SalehProtocolGuide" class="admin-note" hidden><strong>بروتوكول Saleh Card API:</strong> الرابط https://api.salehcard.com · طلبات GET · أرسل المفتاح في الترويسة api-token · جلب الخدمات من /client/api/products · فحص الرصيد من /client/api/profile · العملة USD. أدخل مفتاح API الصادر من حساب صالح كارد في خانة مفتاح المورد. اترك الطلبات الآلية متوقفة حتى ينجح فحص الاتصال ومراجعة أسعار الخدمات.</div><div class="admin-note"><strong>خطوات الربط:</strong> ١. أدخل رابط API الرسمي للمورّد. ٢. اختر نوع الربط حسب توثيق المورّد. ٣. احفظ التوكن. ٤. من صفحة المورّدين اضغط «فحص الاتصال». ٥. فعّل المورّد من البطاقة بعد نجاح الفحص، ثم استورد الخدمات كمسودات وراجع أسعارها قبل نشرها. تغيير الرابط أو المحوّل أو المفتاح يوقف المورّد حتى فحصه مجددًا. السماح بالطلبات الآلية منفصل عن تفعيل عرض الخدمات. <strong>تنبيه:</strong> لا تفعّل الطلبات الآلية لمورّد جديد قبل اختبار الربط. ربط أوميغا حاليًا للقراءة فقط.</div><p class="provider-secret-hint">لن يُعاد عرض المفتاح بعد الحفظ. استخدم لوحة المورّد لإلغائه أو تغييره.</p><button class="button full" type="submit">حفظ المورّد</button></form>`,
     );
     const automatic = $("modalRoot").querySelector('[name="automatic_orders_enabled"]');
     if (automatic && p?.adapter === "omega") automatic.disabled = true;
@@ -1487,6 +1488,7 @@
       const merchant = mode === "f90_merchant" || mode === "f90_merchant_get";
       const yassen = mode === "yassen";
       const shihab = mode === "shihab";
+      const saleh = mode === "salehcard";
       const u = (() => { try { return new URL(endpointInput?.value || ""); } catch { return null; } })();
       const host = u?.hostname.toLowerCase() || "";
       const self = merchant && (
@@ -1531,7 +1533,11 @@
       endpointInput.addEventListener("change", () => {
         let hostname = "";
         try { hostname = new URL(endpointInput.value).hostname.toLowerCase(); } catch { return; }
-        if (hostname === "api.yassen-card.com") {
+        if (hostname === "api.salehcard.com") {
+          adapterInput.value = "salehcard";
+          updateProviderMode();
+          toast("تم اختيار Saleh Card API؛ أدخل المفتاح ثم افحص الاتصال");
+        } else if (hostname === "api.yassen-card.com") {
           adapterInput.value = "yassen";
           updateProviderMode();
           toast("تم اختيار Yassen Card API؛ افحص الاتصال قبل التفعيل");
@@ -1554,7 +1560,7 @@
     S.importVisibleServices = visibleServices;
     const omega = p.adapter === "omega";
     const autoCategory = ["shihab"].includes(p.adapter);
-    const bulk = ["omega", "yassen", "shihab", "smm", "f90_merchant"].includes(p.adapter);
+    const bulk = ["omega", "yassen", "shihab", "smm", "f90_merchant", "salehcard"].includes(p.adapter);
     const fx = S.rates.find((rate) => rate.currency === p.currency);
     const ratePerUSD = fx?.is_enabled && Number(fx.per_usd) > 0 ? Number(fx.per_usd) : null;
     const priceNotice = ratePerUSD
