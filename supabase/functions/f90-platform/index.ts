@@ -2045,7 +2045,7 @@ async function staff(a: Actor, b: any) {
     const avatarUrl=text(b.avatar_url,2000);
     let parsed: URL;
     try { parsed=new URL(avatarUrl); } catch { throw new AppError("F90_FIELDS",400,"رابط الصورة غير صالح"); }
-    const expectedPrefix=\${url}/storage/v1/object/public/f90-images/customer-avatars/\${userId}/;
+    const expectedPrefix=`${url}/storage/v1/object/public/f90-images/customer-avatars/${userId}/`;
     if(parsed.protocol!=="https:" || !parsed.href.startsWith(expectedPrefix) || parsed.href.includes(".."))
       throw new AppError("F90_FIELDS",400,"يجب أن تكون الصورة مرفوعة في مجلد صور هذا العميل داخل تخزين F90");
     const updated=check(await db.from("profiles").update({avatar_url:parsed.href}).eq("id",userId).select("id,avatar_url").single());
