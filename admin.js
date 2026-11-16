@@ -716,7 +716,7 @@
       '<section class="panel"><h3>سجل الرصيد والعمليات</h3><div class="table-wrap"><table class="f90-finance-table"><thead><tr><th>التاريخ</th><th>التفاصيل</th><th>الحركة</th><th>الرصيد بعد</th></tr></thead><tbody>'+
       (ledger.length ? ledger.map(x=>'<tr><td>'+e(C.date(x.created_at))+'</td><td>'+e(x.description||x.kind)+'</td><td class="'+(Number(x.amount_usd)>=0?'ledger-plus':'ledger-minus')+'">'+e(C.money(x.amount_usd,"USD",true))+'</td><td>'+e(C.money(x.balance_after,"USD",true))+'</td></tr>').join("") : '<tr><td colspan="4">لا توجد حركات رصيد بعد</td></tr>')+
       '</tbody></table></div><p class="muted small">آخر 50 حركة. السجل الكامل متاح في قسم السجل المالي.</p></section>'+
-      '<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
+      '<section class="panel"><h3>صورة الملف الشخصي</h3><div class="f90-admin-customer-head">'+customer(actual)+'</div><p class="muted small">يمكنك تغيير صورة أي حساب من لوحة الإدارة. ارفع صورة JPG أو PNG أو WebP أو GIF بحد أقصى 5 ميجابايت.</p><form id="userAvatarForm">'+field("avatar_file","الصورة الجديدة","file","",'accept="image/jpeg,image/png,image/webp,image/gif" required')+'<button class="button secondary" type="submit">رفع وتحديث صورة العميل</button></form></section>'+'<section class="panel"><h3>الصلاحيات وبيانات الحساب</h3><p>'+e(u.email)+' · '+e(u.customer_id||"")+'</p>'+
       (u.is_verified
         ? '<section class="panel"><h3>أهلية الحساب للإيداع والشراء</h3><p class="notice">الحساب معتمد حاليًا.</p><form id="f90RevokeVerificationForm">'+field("reason","سبب سحب التوثيق","textarea","",'required minlength="8" maxlength="500"')+ '<button class="button secondary" type="submit">سحب توثيق الحساب</button></form></section>'
         : '<section class="panel"><h3>اعتماد الحساب يدويًا للإيداع والشراء</h3><p class="muted small">هذا اعتماد داخلي بالمتجر، وليس إثبات هوية قانونيًا. لا تستخدمه إلا بعد مراجعة بيانات العميل. سيُسجّل اسم المدير وسبب الاعتماد في سجل الإدارة.</p>'+
@@ -2789,6 +2789,17 @@
       await A.call("staff.manual_verify",{id:S.detail.id,reason});
       S.detail.is_verified=true;
       toast("تم اعتماد الحساب داخليًا للإيداع والشراء وتسجيل العملية");
+      return detailUser(S.detail);
+    }
+    if (form.id === "userAvatarForm") {
+      const file=form.elements.avatar_file?.files?.[0];
+      if(!file)throw new Error("اختر صورة أولًا");
+      if(!/^image\/(jpeg|png|webp|gif)$/i.test(file.type)||file.size>5*1024*1024)throw new Error("اختر صورة JPG أو PNG أو WebP أو GIF لا تتجاوز 5 ميجابايت");
+      const uploaded=await A.upload(file,"f90-images","customer-avatars/"+S.detail.id);
+      await A.call("staff.avatar",{id:S.detail.id,avatar_url:uploaded.url});
+      S.detail.avatar_url=uploaded.url;
+      S.list=S.list.map(item=>item.id===S.detail.id?{...item,avatar_url:uploaded.url}:item);
+      toast("تم تحديث صورة العميل بنجاح");
       return detailUser(S.detail);
     }
     if (form.id === "userCurrencyForm") {
